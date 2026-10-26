@@ -1,16 +1,36 @@
-## More ways to build. More reasons to cooperate.
+# Azeroth Survivors Extended
+### More choices. Deeper builds. Stronger teamwork.
 
-| | What ASX adds |
-|---|---|
-| 🌀 **Spell Glyphs** | Reshape your spells with meaningful benefits and drawbacks, directly on upgrade cards. |
-| 🎪 **Darkmoon Blessings** | Receive a random blessing after each boss encounter, replacing four utility trinkets in reward pools. |
-| 🤝 **Shared progression & resources** | Shared XP and gold, group chest rewards with personal choices, and adapted elite rewards. |
-| ✨ **Cooperative support** | Supported heals, shields, buffs and talent effects benefit your teammates. |
-| 🛡️ **Tanking & team synergy** | Talent-based taunts let eligible Warriors, Paladins and Druids draw ordinary enemy attacks away from allies. |
-| 👁️ **Better party information** | See teammates’ spells, equipment and buffs, with tooltips reflecting their actual builds. |
-| ⏸️ **Clearer group pauses** | See who is choosing a reward or holding the pause, with character names and a clear waiting reason. |
-| 💀 **Resurrection Sickness** | Repeated resurrections temporarily reduce damage and healing. Survive to recover. |
+**ASX expands Azeroth Survivors with new build choices, boss rewards and gameplay adjustments.** Shape your spells, discover new combinations and take on each run your way — alone or with friends.
 
-**Built on official co-op:** native encounters, enemy scaling and host difficulty options remain in control.
+### Make each run your own
+
+🌀 **Spell Glyphs**  
+Reshape your spells with powerful benefits and meaningful drawbacks, directly on upgrade cards.
+
+🎪 **Darkmoon Blessings**  
+Earn random blessings from boss encounters, with different rarities and bonuses that evolve as you progress.
+
+💀 **Resurrection Sickness**  
+Repeated resurrections temporarily reduce your damage and healing. Stay alive to recover.
+
+### Go further together
+
+🤝 **Shared progression & rewards**  
+Shared XP and gold, personal choices from group chests, and adapted elite rewards.
+
+✨ **Support your party**  
+Help teammates with supported heals, shields, buffs and talent effects. Talent-based taunts give eligible builds a tanking role.
+
+👁️ **Keep your party in view**  
+See teammates’ spells, equipment and buffs with build-specific tooltips, plus clearer group pauses and waiting messages.
+
+---
+
+**Native encounters and host difficulty options remain intact.**
 
 > 🚧 Development preview — check release notes for feature availability.
+
+**[Download ASX](https://github.com/tiboutDev/azeroth-survivors-coop/releases)** · **[Report a bug](https://github.com/tiboutDev/azeroth-survivors-coop/issues)**
+
+*Unofficial mod. Original game required.*
