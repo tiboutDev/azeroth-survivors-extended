@@ -183,18 +183,15 @@ Reports are never uploaded automatically. Review them before sharing, as logs ma
 
 ## What’s next?
 
-ASX continues to evolve. Here’s what we’re working toward:
+Two new progression systems are being explored for ASX:
 
-🛠️ **Being designed — Rogue Glyphs**  
-Bringing spell customization to the Rogue’s attacks, bleeds, controls and buffs.
+🌟 **Paragon — progression beyond the level cap**  
+Turn XP earned beyond maximum class progression into points you can spend on passive stat bonuses shared across all your characters.
 
-🗺️ **Planned — Glyphs for every class**  
-Expanding the system across the remaining classes, with choices tailored to each spell’s identity.
+💍 **Ring enchantments — customize your rings during a run**  
+An in-run enchantment system for rings, opening up new ways to personalize your build as the adventure unfolds.
 
-⚖️ **Ongoing — Balance and refinement**  
-Fine-tuning Glyph trade-offs, Blessing progression and cooperative interactions through testing and player feedback.
-
-*Plans may evolve as ideas are tested. Release notes confirm what’s available.*
+*Both systems are at the concept stage. Their mechanics, balance and release timing are not final.*
 
 ## Help improve ASX
 
