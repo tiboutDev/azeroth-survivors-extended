@@ -1,28 +1,16 @@
-# Azeroth Survivors Extended
-### Your spells. Your choices. Survive together.
+## More ways to build. More reasons to cooperate.
 
-An unofficial expansion of **Azeroth Survivors’ official co-op mode**.
+| | What ASX adds |
+|---|---|
+| 🌀 **Spell Glyphs** | Reshape your spells with meaningful benefits and drawbacks, directly on upgrade cards. |
+| 🎪 **Darkmoon Blessings** | Receive a random blessing after each boss encounter, replacing four utility trinkets in reward pools. |
+| 🤝 **Shared progression & resources** | Shared XP and gold, group chest rewards with personal choices, and adapted elite rewards. |
+| ✨ **Cooperative support** | Supported heals, shields, buffs and talent effects benefit your teammates. |
+| 🛡️ **Tanking & team synergy** | Talent-based taunts let eligible Warriors, Paladins and Druids draw ordinary enemy attacks away from allies. |
+| 👁️ **Better party information** | See teammates’ spells, equipment and buffs, with tooltips reflecting their actual builds. |
+| ⏸️ **Clearer group pauses** | See who is choosing a reward or holding the pause, with character names and a clear waiting reason. |
+| 💀 **Resurrection Sickness** | Repeated resurrections temporarily reduce damage and healing. Survive to recover. |
 
-🌀 **Glyphs** — Reshape your spells with powerful benefits and meaningful drawbacks.
+**Built on official co-op:** native encounters, enemy scaling and host difficulty options remain in control.
 
-🎪 **Darkmoon Blessings** — Defeat bosses to receive random blessings with different rarities.
-
-💀 **Resurrection Sickness** — Repeated deaths leave a temporary penalty. Stay alive to recover.
-
-⚔️ **Native encounters** — Original maps, enemies and host difficulty settings.
-
-> 🚧 These features are in development. Check release notes for availability.
-
-**[Download ASX](https://github.com/tiboutDev/azeroth-survivors-coop/releases)** · **[Report a bug](https://github.com/tiboutDev/azeroth-survivors-coop/issues)**
-
-### Start playing
-
-**Windows · Game client 0.117.0 · Same ASX version for everyone**
-
-1. Extract ASX into your game folder.
-2. Run **`start-asx.cmd`**.
-3. Open the official **Co-op** menu.
-
-Your existing progression is preserved and backed up before launch.
-
-*Unofficial mod. Original game required.*
+> 🚧 Development preview — check release notes for feature availability.
