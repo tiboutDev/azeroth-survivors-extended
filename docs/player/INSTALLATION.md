@@ -10,7 +10,7 @@
 - Your own copy of **Azeroth Survivors 0.121.0**.
 - An ASX release explicitly compatible with that game version.
 
-ASX does not include the original game.
+ASX does not include the original game. Check the release notes for compatibility information before installing.
 
 ## Install and launch
 
@@ -43,3 +43,45 @@ To launch without checking for updates:
 
 ```bat
 start-asx.cmd --offline
+```
+
+Offline mode skips the update check; it does not make an unsupported game version compatible.
+
+## Roll back an ASX update
+
+After a supported automatic update, you can restore the previous mod version with:
+
+```bat
+start-asx.cmd --rollback
+```
+
+This rolls back ASX, not the original game.
+
+## Uninstall
+
+Close the game, then run:
+
+```bat
+start-asx.cmd --uninstall
+```
+
+The uninstaller removes owned, unchanged ASX files while preserving your progression and settings.
+
+## Export diagnostics
+
+To create a local diagnostic archive:
+
+```bat
+start-asx.cmd --export-diagnostics
+```
+
+Reports are never uploaded automatically. Review the archive before sharing it: logs may contain player names and run details.
+
+## Need help?
+
+Open an [issue](https://github.com/tiboutDev/azeroth-survivors-coop/issues) and include:
+
+- Your game and ASX versions.
+- The step that failed and any displayed error.
+- Whether the game launches directly without ASX.
+- A diagnostic export when useful.
