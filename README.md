@@ -16,13 +16,13 @@
 
 Available in **solo and co-op**:
 
-💍 **Ring Enchantments**  
+💍 **Ring Enchantments** — *Balance in progress*  
 Choose an enchantment when upgrading a ring, then strengthen it as that ring gains ranks.
 
-💎 **Amulet Gems**  
+💎 **Amulet Gems** — *Balance in progress*  
 Your first amulet comes with a gem. Its fixed bonus stays with you through later amulet upgrades and replacements.
 
-🎪 **Sayge’s Dark Fortunes**  
+🎪 **Sayge’s Dark Fortunes** — *Balance in progress*  
 Receive a random fortune after each completed boss encounter. Keep one active at a time, with stronger bonuses as you progress.
 
 [Explore the build features →](docs/player/FEATURES.md#build-choices)
@@ -31,23 +31,29 @@ Receive a random fortune after each completed boss encounter. Keep one active at
 
 Cooperative features:
 
-🤝 **Shared resources, personal choices**  
+🤝 **Shared resources, personal choices** — *Established*  
 Share in-run XP and gold while choosing your own build rewards.
 
-✨ **Support and tanking**  
+✨ **Support and tanking** — *Playtesting*  
 Help teammates with supported heals, shields and buffs. Eligible builds can draw enemies away from their allies.
 
-👁️ **A clearer view of your party**  
+👁️ **A clearer view of your party** — *Established*  
 Inspect teammates’ spells, equipment and buffs, with clearer group pauses and waiting messages.
 
-💀 **Resurrection Sickness**  
+💀 **Resurrection Sickness** — *Established*  
 Repeated resurrections temporarily reduce your damage and healing. Stay alive to recover.
 
 [Explore the cooperative features →](docs/player/FEATURES.md#cooperative-features)
 
+## Feature maturity
+
+ASX is actively evolving. **Balance in progress** means bonus values and progression are still being tuned. **Playtesting** means a feature needs more feedback from real runs. **Established** features have a more settled design and behavior, though issues can still occur.
+
+These labels describe feature maturity, not exhaustive validation of every class, interaction or game update. See the [feature guide](docs/player/FEATURES.md) for the feedback we are looking for and each release’s notes for compatibility information.
+
 ## Start playing
 
-**Windows 64-bit · Compatible game client: 0.121.0**
+**Windows 64-bit · Game client for this version: 0.121.0**
 
 1. Close the game.
 2. Extract the compatible ASX archive into your game folder, beside `AzerothSurvivors.exe`.
