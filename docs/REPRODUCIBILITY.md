@@ -52,7 +52,8 @@ are included.
 `scripts/reproduce.ps1` retains its independent Windows-native manifest contract.
 No Windows-native compiler was available for this maintenance audit, so no such
 reference was invented. The local WSL record cannot be supplied as a substitute
-Windows hash, and the CI Windows reproduction gate remains unsatisfied.
+Windows hash. Native Windows reproduction remains unverified and requires its
+own reference before the manual comparison can pass.
 
 Source hygiene and historical local-information findings are separate release
 gates. A technically reproducible DLL does not establish that Git history is

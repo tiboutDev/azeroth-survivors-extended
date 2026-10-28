@@ -7,6 +7,10 @@ state its limits; test counts alone are not a completion criterion.
 
 ## Commands and scope
 
+Checks are run manually. There are no GitHub Actions workflows in this
+repository; pushing a branch does not launch tests, builds or reproducibility
+checks. Select and run the relevant commands before relying on their results.
+
 ```sh
 sh tools/dev/check.sh --profile official --profile tooling --dry-run
 sh tools/dev/check.sh --profile official --reason "Selected native boundary changed"

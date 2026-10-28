@@ -1,7 +1,7 @@
 """Hygiene gate for the public audit repo: fails (exit 1) if anything that must not be published is present.
 
 Run from the repo root:  python scripts/hygiene_gate.py
-CI runs it on every push (.github/workflows/audit.yml); a release must not be published while it fails.
+Run it manually before publication; a release must not be published while it fails.
 
 It refuses:
   * local filesystem paths (C:\\Users\\<name>, D:\\..., /home/<name>) that leak the author's machine;

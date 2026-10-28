@@ -117,9 +117,10 @@ The isolated trial dispatcher supports only current 0.122 extension/package mode
 and at most two clients. It rejects retired/no-mode inputs before Windows setup.
 Tests of parser/dispatch logic do not prove gameplay fixtures succeeded live.
 
-CI retains the strict publication-content gate, checks current portable/native
-source, and requires an approved ASX artifact reference for reproducibility. No
-reference or publication readiness is inferred from source cleanup.
+Run publication hygiene, portable/native checks and reproducibility checks
+manually as appropriate. Reproducibility requires its own reviewed ASX artifact
+reference. No checks run automatically on push, and source cleanup does not
+establish publication readiness.
 
 Do not keep session status, cleanup counts or generated run reports as current
 project instructions. Store them in ignored local evidence; keep lasting build
