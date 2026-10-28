@@ -1,4 +1,4 @@
-# Cooperative pause — 0.122.0
+# Cooperative pause — 0.125.0
 
 ASX retains the native Paused menu, buttons and waiting panel. It does not add a
 parallel menu, network listener or desktop/CPU control mechanism.

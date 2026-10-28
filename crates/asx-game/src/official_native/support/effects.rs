@@ -236,7 +236,7 @@ impl Adapter {
         }
     }
     pub fn elite_game(self, mem: &dyn Mem, registers: [u64; 3]) -> Result<Option<u64>> {
-        // The reviewed 0.122 site carries Game in RAX and branches before the
+        // The reviewed selected site carries Game in RAX and branches before the
         // cooperative elite counter is incremented.
         let game = registers[0];
         if game < 0x10000 || mem.read(game + self.game_field(0xc41), 1)? != [1] {
@@ -284,27 +284,30 @@ impl Adapter {
         }
         let at = |n| u64::from_le_bytes(h[n..n + 8].try_into().unwrap());
         let (cap, p, count) = (at(0), at(8), at(16));
+        use crate::official125 as layout;
+        let stride = layout::ENEMY_STRIDE;
+        let extent = count.checked_mul(stride as u64);
         if count > cap
             || cap > 65536
-            || (count > 0 && (p < 0x10000 || p.checked_add(count * 0x1e0).is_none()))
+            || (count > 0 && (p < 0x10000 || extent.is_none_or(|size| p.checked_add(size).is_none())))
         {
             return Err("Invalid guardian vector".into());
         }
         for i in 0..count {
-            let r = io.read(p + i * 0x1e0, 0x1e0)?;
-            if r.len() != 0x1e0 {
+            let r = io.read(p + i * stride as u64, stride)?;
+            if r.len() != stride {
                 return Err("Truncated guardian".into());
             }
-            if u32at(&r, 0xb0) != 1
+            if u32at(&r, layout::ENEMY_DEAD) != 1
                 && (u64::from_le_bytes(r[0x18..0x20].try_into().unwrap()) == u64::MAX
                     || u64::from_le_bytes(r[0x30..0x38].try_into().unwrap()) == 0)
                 && u64::from_le_bytes(r[0x58..0x60].try_into().unwrap()) != u64::MAX
             {
-                let hp = f32at(&r, 0x160);
+                let hp = f32at(&r, layout::ENEMY_HP);
                 if !hp.is_finite() || !(0.0..1e10).contains(&hp) {
                     continue;
                 }
-                let guid = u64::from_le_bytes(r[0xf0..0xf8].try_into().unwrap());
+                let guid = u64::from_le_bytes(r[layout::ENEMY_GUID..layout::ENEMY_GUID + 8].try_into().unwrap());
                 return Ok(Some((guid,hp)));
             }
         }
@@ -519,16 +522,20 @@ impl Adapter {
         }
         let at = |n| u64::from_le_bytes(h[n..n + 8].try_into().unwrap());
         let (cap, pointer, count) = (at(0), at(8), at(16));
+        use crate::official125 as layout;
+        let stride = layout::ENEMY_STRIDE;
+        let extent = count.checked_mul(stride as u64);
         if count > cap
             || cap > 65536
-            || (count > 0 && (pointer < 0x10000 || pointer.checked_add(count * 0x1e0).is_none()))
+            || (count > 0 && (pointer < 0x10000 || extent.is_none_or(|size| pointer.checked_add(size).is_none())))
         {
             return Err("Invalid support enemy extent".into());
         }
         let clock = mem.read(game + self.game_field(0xb9c), 4)?;
         let clock = f32at(&clock, 0);
+        let byte_len = usize::try_from(extent.unwrap_or(0)).map_err(|_| "Support enemy extent overflow")?;
         let bytes = if count > 0 {
-            mem.read(pointer, (count * 0x1e0) as usize)?
+            mem.read(pointer, byte_len)?
         } else {
             vec![]
         };
@@ -536,10 +543,10 @@ impl Adapter {
             &bytes,
             clock,
             crate::enemies::EnemyLayout {
-                stride: 0x1e0,
-                guid_offset: 0xf0,
-                guid_gap: 60,
-                hp_gap: 104,
+                stride: stride as u64,
+                guid_offset: layout::ENEMY_GUID as u64,
+                guid_gap: (layout::ENEMY_GUID - layout::ENEMY_DEAD - 4) as u64,
+                hp_gap: (layout::ENEMY_HP - (layout::ENEMY_GUID + 8)) as u64,
             },
         )?
         .0)
@@ -597,7 +604,7 @@ impl Adapter {
             ..Default::default()
         })
     }
-    /// 0.122 Rejuvenation eligibility is per producer, not per spell.
+    /// Native Rejuvenation eligibility is per producer, not per spell.
     pub fn rejuvenation_source_slots(self,mem:&dyn Mem,game:u64,caster:u64)->Result<Option<Vec<u32>>>{
         // Casts can run while a guest is swapped into Game; do not request the
         // restored-host party snapshot here. support_row translates that scope.

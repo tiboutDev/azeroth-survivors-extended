@@ -100,7 +100,7 @@ impl Adapter {
         if wire.len() > 32768 || wire.is_empty() || !wire.bytes().all(|b| b.is_ascii_hexdigit()) {
             return Err("Invalid party presentation envelope".into());
         }
-        // Native fixed array: 19 (&str, String) rows of 40 bytes. Only extend AZSRUN.
+        // Native fixed array: 20 (&str, String) rows of 40 bytes. Only extend AZSRUN.
         let row = mem.read(output.checked_add(40).ok_or("Addon output overflow")?, 16)?;
         if row.len() != 16 {
             return Err("Truncated addon prefix".into());

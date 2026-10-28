@@ -46,10 +46,41 @@ or reproducibility uses the path-remapped production builder in
 and the artifact policy before building; normal/diagnostic artifacts are distinct.
 
 Private game import requires explicit source/receiver paths through
-`tools/dev/import122.py`. It verifies the selected executable, native inventory,
+`tools/dev/import_official.py`. It verifies the selected executable, native inventory,
 copy hashes and target receipts without importing saves/settings. Preparation
 never implies deployment to an installed game or permission to launch it.
 
 Build caches, local reports and workspace notes are described in
 [local storage](LOCAL-STORAGE.md). Machine-specific setup and editor handoffs
 belong under ignored local state, not at the project root.
+
+## Live validation from WSL
+
+Keep the authoritative Git checkout on the Linux filesystem. Build there, then
+explicitly synchronize its current sources/tools and selected DLL to a disposable
+Windows receiver. Import the reviewed native assets into that receiver with the
+private importer above. A generated receiver is never a second source checkout.
+Do not copy an old installed DLL merely because its filename matches.
+
+The live dispatcher uses Windows APIs and must run with a **Windows Python** from
+the receiver, rather than Linux Python under WSL. It also requires the isolated
+runtime import receipt and an ASX-DEV.json receipt matching the installed DLL hash.
+Keep the concrete pairing, tool-cache paths and staging commands in ignored local
+workspace notes. Source checks and cross-compilation do not create that pairing.
+
+After explicit staging, these bounded Windows commands exercise different paths:
+
+    python tools/dev/background_desktop.py --extensions-trial 2 --seconds 150
+    python tools/dev/background_desktop.py --extensions-trial 2 --extensions-normal --seconds 100
+
+The first requires a diagnostic artifact; the second requires a normal artifact
+with no test hooks. They must run sequentially. Review their result.json files,
+not only process exit or launch acknowledgements. Allow for native loading and
+reward-choice time before reducing the scenario duration.
+
+Disposable profile generation separately checks its reviewed executable allowlist;
+a registry update alone does not enable profiles for a new client. The native
+save parser remains responsible for accepting the fixture's talents/progression.
+Ordinary extension trials take no screenshots. ASX_TEST_VISUAL=1 enables sparse
+captures only for an explicitly authorized visual trial; logs alone establish no
+claim about the rendered layout.

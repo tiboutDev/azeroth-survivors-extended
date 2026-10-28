@@ -300,7 +300,7 @@ mod tests {
         let _turn = crate::test_support::TEST_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
-        *LAYOUT.lock().unwrap()=Some(asx_game::official::SelectedAdapter::select(asx_game::official122::SHA256).unwrap().pause_layout());
+        *LAYOUT.lock().unwrap()=Some(asx_game::official::SelectedAdapter::select(asx_game::official125::SHA256).unwrap().pause_layout());
         BASE.store(0x10000000, Ordering::Release);
         CLICK_ORIGINAL.store(0x1234, Ordering::Release);
         *RECOVERY_ROOT.lock().unwrap() = Some(7);
@@ -310,7 +310,7 @@ mod tests {
             c.rdx = (&tag as *const u8) as u64;
             unsafe { click(&mut c) };
             assert_eq!(take_action(), Some(format!("7|{want}")));
-            assert_eq!(CLICK.load(Ordering::Acquire), 0x10000000 + asx_game::official::SelectedAdapter::select(asx_game::official122::SHA256).unwrap().pause_addresses()[10]);
+            assert_eq!(CLICK.load(Ordering::Acquire), 0x10000000 + asx_game::official::SelectedAdapter::select(asx_game::official125::SHA256).unwrap().pause_addresses()[10]);
         }
         // The rendered root retains its original generation even after a newer
         // recovery starts; the game-thread authority check will reject this action.
@@ -334,12 +334,12 @@ mod tests {
     #[test]
     fn modern_timeout_action_uses_retained_root_epoch_and_bypasses_destructive_dispatch() {
         let _turn=crate::test_support::TEST_LOCK.lock().unwrap_or_else(|e|e.into_inner());
-        *LAYOUT.lock().unwrap()=Some(asx_game::official::SelectedAdapter::select(asx_game::official122::SHA256).unwrap().pause_layout());BASE.store(0x10000000,Ordering::Release);
+        *LAYOUT.lock().unwrap()=Some(asx_game::official::SelectedAdapter::select(asx_game::official125::SHA256).unwrap().pause_layout());BASE.store(0x10000000,Ordering::Release);
         *RECOVERY_ROOT.lock().unwrap()=Some(42);*PENDING_ACTION.lock().unwrap()=None;
         let tag=2u8;let mut c:crate::stub::Context=unsafe{std::mem::zeroed()};c.rdx=(&tag as *const u8)as u64;
         unsafe{click(&mut c)};
         assert_eq!(take_action().as_deref(),Some("42|continue"));
-        assert_eq!(CLICK.load(Ordering::Acquire),0x10000000 + asx_game::official::SelectedAdapter::select(asx_game::official122::SHA256).unwrap().pause_addresses()[10]);
+        assert_eq!(CLICK.load(Ordering::Acquire),0x10000000 + asx_game::official::SelectedAdapter::select(asx_game::official125::SHA256).unwrap().pause_addresses()[10]);
         *RECOVERY_ROOT.lock().unwrap()=None;BASE.store(0,Ordering::Release);*LAYOUT.lock().unwrap()=None;
     }
     #[test]

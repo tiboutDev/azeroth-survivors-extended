@@ -1,4 +1,4 @@
-//! Exact 0.115 retained Bevy decoration. No lobby actions or replacement roots.
+//! Retained native Bevy decoration; no lobby actions or replacement roots.
 use super::Adapter;
 use crate::{official::Entry, memory::Mem, Result};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -176,8 +176,8 @@ impl MenuBindings {
     /// Called only at the verified main class-grid point after the atlas load.
     pub unsafe fn capture(self, mem: &dyn Mem, frame: u64) -> Result<Option<MenuAssets>> {
         let (atlas, color) = (
-            crate::official122::MENU_ATLAS_FRAME,
-            crate::official122::MENU_COLOR_FRAME,
+            crate::official125::MENU_ATLAS_FRAME,
+            crate::official125::MENU_COLOR_FRAME,
         );
         let image: [u8; 24] = mem
             .read(frame.checked_add(atlas).ok_or("Menu frame overflow")?, 24)?
@@ -262,5 +262,5 @@ impl MenuBindings {
  use super::*;
  struct Frame{atlas:u64,color:u64}
  impl Mem for Frame{fn read(&self,a:u64,n:usize)->Result<Vec<u8>>{if(a,n)==(self.atlas,24){let mut b=vec![0;24];b[0]=1;b[16]=73;Ok(b)}else if(a,n)==(self.color,20){Ok(vec![9;20])}else{Err("Unexpected native frame access".into())}}}
- #[test]fn selected_revision_uses_its_atlas_and_color_slots(){let a=Adapter::select(crate::official122::SHA256).unwrap();let m=Frame{atlas:0x10000+crate::official122::MENU_ATLAS_FRAME,color:0x10000+crate::official122::MENU_COLOR_FRAME};let assets=unsafe{a.menu_bindings(0).capture(&m,0x10000)}.unwrap().unwrap();assert_eq!(assets.image[16],73);assert_eq!(assets.color,[9;20]);assert!(Adapter::select(crate::official121::SHA256).is_err());}
+ #[test]fn selected_revision_uses_its_atlas_and_color_slots(){let a=Adapter::select(crate::official125::SHA256).unwrap();let m=Frame{atlas:0x10000+crate::official125::MENU_ATLAS_FRAME,color:0x10000+crate::official125::MENU_COLOR_FRAME};let assets=unsafe{a.menu_bindings(0).capture(&m,0x10000)}.unwrap().unwrap();assert_eq!(assets.image[16],73);assert_eq!(assets.color,[9;20]);assert!(Adapter::select(crate::official121::SHA256).is_err());}
 }

@@ -35,3 +35,12 @@ class MenuAcceptance(unittest.TestCase):
    self.assertFalse(self.evidence(**{key:True})["menu_clock_and_both_positions_frozen"])
  def test_last_close_does_not_hide_a_guest_that_never_resumes(self):
   self.assertFalse(self.evidence(stuck=True)["menu_actor_1_moves_after_last_close"])
+
+
+class SpawnIsNotMovement(unittest.TestCase):
+ def test_pre_world_zero_then_stationary_spawn_is_not_keyboard_motion(self):
+  from pause_evidence import moved_native_positions
+  self.assertFalse(moved_native_positions([[0,0,0],[-9396,-633,68],[-9396,-633,68]]))
+ def test_actual_motion_after_spawn_is_required(self):
+  from pause_evidence import moved_native_positions
+  self.assertTrue(moved_native_positions([[0,0,0],[-9396,-633,68],[-9395,-632,68]]))

@@ -1,7 +1,7 @@
 # Current ASX feature contracts
 
 This is the stable engineering inventory for the only supported client,
-**official 0.122.0**. Rows describe contracts to preserve, not universal runtime
+**official 0.125.0**. Rows describe contracts to preserve, not universal runtime
 validation. Source behavior, a built DLL and a distributed archive are different
 evidence scopes. Follow [testing](TESTING.md) for evidence requirements and limits.
 
@@ -15,8 +15,8 @@ marks replace duplicate-loot gold compensation.
 | ASX-02 | Shared in-run XP receipt normalization, strongest racial/fortune contribution, native choices and deferred native award bookkeeping. Preserve caller classification and rounding. | Coop | [Contract](CLIENT-ADAPTER.md) |
 | ASX-03 | One host-owned gold wallet; native actor balances/coinage/earned counters are projections. Use the strongest racial, current Gold fortune and total permanent armory-Gold contribution instead of summing equipment across participants. | Coop | [Contract](FEATURE-RULES.md) |
 | ASX-04 | Purchased caches debit once, share price/opened count and deliver a personal native item choice to every eligible participant. Deferred banks and repeated presentation must not create extra rewards. | Coop | [Contract](FEATURE-RULES.md) |
-| ASX-05 | Native guardian rewards; no supplemental item grant is installed for 0.122. Preserve each native skill/item reward once. | Coop | [Contract](FEATURE-RULES.md) |
-| ASX-06 | Complete group pause while any relevant spell/item/cache choice or manual pause remains open. Host simulation and guest prediction stop; movement is blocked after the local player has chosen too. Picking remains possible; one `picked` event cannot resume everyone. | Coop | [Contract](COOP-PAUSE-01220.md) |
+| ASX-05 | Native guardian rewards; no supplemental item grant is installed for 0.125. Preserve each native skill/item reward once. | Coop | [Contract](FEATURE-RULES.md) |
+| ASX-06 | Complete group pause while any relevant spell/item/cache choice or manual pause remains open. Host simulation and guest prediction stop; movement is blocked after the local player has chosen too. Picking remains possible; one `picked` event cannot resume everyone. | Coop | [Contract](COOP-PAUSE.md) |
 | ASX-07 | Allied direct heals, periodic heals and shields use player eligibility, range, missing-health/pressure rules and original-caster native coefficients/counters. Foreign periodic effects retain their producer and aura lifetime. | Coop | [Contract](FEATURE-RULES.md) |
 | ASX-08 | Foreign Thorns/Lightning Shield retaliation, Holy Nova/Holy Shock allied heals and shield/healing talent interactions preserve caster attribution, native proc cooldowns and current modifiers. Ice Barrier remains caster-only. | Coop | [Contract](FEATURE-RULES.md) |
 | ASX-09 | Hunter's Mark shares the strongest valid vulnerability and maintains native mark visuals without duplicate damage application. Owner death/leave and replacement must reconcile. | Coop | [Contract](FEATURE-RULES.md) |

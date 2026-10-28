@@ -10,7 +10,7 @@ use crate::{log::Log, proc::Local};
 
 pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
     let adapter = Adapter::select(sha)?;
-    log.info(&format!("ASX capabilities: glyphs={} duplicate-gold={} native-marks={}",adapter.glyphs_enabled(),adapter.duplicate_loot_enabled(),matches!(adapter.version(),"0.121.0"|"0.122.0")));
+    log.info(&format!("ASX capabilities: glyphs={} duplicate-gold={} native-marks={}",adapter.glyphs_enabled(),adapter.duplicate_loot_enabled(),adapter.version()=="0.125.0"));
     // Until gameplay capabilities are connected, activation is an explicit
     // observation trial. Never present an unmodified native run as mod parity.
     let asx = std::env::var("ASX_ACTIVE").as_deref() == Ok("1");

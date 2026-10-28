@@ -26,9 +26,9 @@ f:SetScript("OnUpdate",function()
  for n=1,2 do
   local p=f:CreateFontString(nil,"OVERLAY","GameFontNormalSmall");p:SetPoint("TOPLEFT",UIParent,"TOPLEFT",15+(n-1)*390,-185);p:SetWidth(375);p:SetHeight(380);p:SetJustifyH("LEFT");p:SetJustifyV("TOP");p:SetFont("Fonts\\FRIZQT__.TTF",12,"OUTLINE");panels[n]=p
  end
- local ownTip=CreateFrame("GameTooltip","ASXTooltip121Owner",UIParent,"GameTooltipTemplate");ownTip:SetOwner(UIParent,"ANCHOR_NONE")
+ local ownTip=GameTooltip;if not ownTip then return end;ownTip:SetOwner(UIParent,"ANCHOR_NONE")
  for slot=1,6 do if HasAction(slot)then ownTip:SetAction(slot);break end end
- panels[1]:SetText("NATIVE OWNER "..tostring(UnitName("player")).."\n"..text("ASXTooltip121Owner"));ownTip:Hide()
+ panels[1]:SetText("NATIVE OWNER "..tostring(UnitName("player")).."\n"..text("GameTooltip"));ownTip:Hide()
  local previous=this;this=button;button:GetScript("OnEnter")();panels[2]:SetText("REMOTE OWNER "..tostring(row.member.name).."\n"..text("GameTooltip"));button:GetScript("OnLeave")();this=previous
  f:SetScript("OnUpdate",nil)
 end)

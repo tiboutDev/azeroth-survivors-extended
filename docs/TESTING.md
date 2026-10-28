@@ -1,6 +1,6 @@
 # Targeted ASX validation
 
-The supported source target is official 0.122.0. Review the
+The supported source target is official 0.125.0. Review the
 [feature inventory](ASX-FEATURES.md) and [adapter boundary](CLIENT-ADAPTER.md)
 when changing native integration. Validation must cover the changed risk and
 state its limits; test counts alone are not a completion criterion.
@@ -28,17 +28,17 @@ are written under ignored `test-results/targeted/` directories.
 `official-party-ui` separately so its explicit Lua 5.1 check is not replaced by
 generic Python discovery, where that optional dependency can be skipped.
 
-`full` tests the current 0.122 Rust graph, Python suite and Clippy. Retired
+`full` tests the current 0.125 Rust graph, Python suite and Clippy. Retired
 reader/tool implementations and their exclusive tests are not part of the gate.
 
 | Profile | Current risk covered |
 | --- | --- |
-| official | Native 0.122 selection, normalized snapshots, menu ownership, native policy transactions, current source boundaries and evidence assessors |
+| official | Native 0.125 selection, normalized snapshots, menu ownership, native policy transactions, current source boundaries and evidence assessors |
 | official-party-ui | Retained native children, native owner origins, menu projection and required Lua 5.1 behavior through uv/lupa |
 | asx-install | Owned native-folder installation, signatures, transactions, interrupted-client recovery, rollback and publication inventory verification |
 | gems | Fixed gem identity, selected jewelry transactions and evidence rejection |
 | enchantments | Ring identity/ranks, selected jewelry transactions and evidence rejection |
-| glyphs | Retained rule catalogs and shared bonus representation; glyph gameplay remains disabled on 0.122 |
+| glyphs | Retained rule catalogs and shared bonus representation; glyph gameplay remains disabled on 0.125 |
 | fatigue | Resurrection penalties, recovery policy and selected native integration |
 | rules | All independent gameplay policy and contract tests |
 | combat | Marks, taunts and immunity policy plus selected native fixtures |
@@ -114,7 +114,7 @@ their dependency review establishes that they no longer protect retained code.
 
 Current Rust integrations are under `crates/asx-game/tests/current/`, with
 Cargo targets `client_binding`, `jewelry` and `enemies`. Enemy fixtures exercise
-the selected 0.122 support path, retaining bounds/life/health/motion regressions
+the selected 0.125 support path, retaining bounds/life/health/motion regressions
 without a historical reader dependency. Python evidence assessors used by current
 trials live with the current test suite; their event formats can retain native
 version tags without requiring an obsolete implementation.

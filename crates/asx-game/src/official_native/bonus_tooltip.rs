@@ -6,8 +6,8 @@ fn q(m:&dyn Mem,a:u64)->Result<u64>{Ok(u64::from_le_bytes(m.read(a,8)?.try_into(
 impl Adapter{
  pub fn supports_bonus_tooltips(self)->bool{true}
  pub fn bonus_tooltip_entries(self)->Vec<Entry>{self.tooltip_bindings().iter().map(|(rva,bytes)|Entry{rva:*rva,bytes}).collect()}
- pub fn kept_tooltip_fixture_focus(self)->Option<Entry>{let(rva,bytes)=crate::official122::KEPT_TOOLTIP_FOCUS;Some(Entry{rva,bytes})}
- pub fn kept_tooltip_row(self,frame:u64)->Option<u64>{frame.checked_add_signed(crate::official122::KEPT_TOOLTIP_ROW)}
+ pub fn kept_tooltip_fixture_focus(self)->Option<Entry>{let(rva,bytes)=crate::official125::KEPT_TOOLTIP_FOCUS;Some(Entry{rva,bytes})}
+ pub fn kept_tooltip_row(self,frame:u64)->Option<u64>{frame.checked_add_signed(crate::official125::KEPT_TOOLTIP_ROW)}
  /// Synthetic borrowed item descriptor is consumed synchronously by our body hook.
  /// The native background helper only reads rarity, then borrows this descriptor.
  pub fn kept_tooltip_descriptor(self,bonus:KeptBonus)->Option<[u64;11]>{
@@ -68,4 +68,4 @@ impl Adapter{
  }
 }
 
-impl Adapter{fn tooltip_bindings(self)-> &'static[(u64,&'static[u8]);5]{&crate::official122::KEPT_TOOLTIP_BINDINGS}}
+impl Adapter{fn tooltip_bindings(self)-> &'static[(u64,&'static[u8]);5]{&crate::official125::KEPT_TOOLTIP_BINDINGS}}

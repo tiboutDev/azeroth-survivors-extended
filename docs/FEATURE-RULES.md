@@ -1,6 +1,6 @@
 # Active feature rules
 
-This summarizes the current 0.122 policy. The portable implementations in
+This summarizes the current 0.125 policy. The portable implementations in
 `crates/asx-gameplay/src/` are the precise reference for calculations; selected
 native translation belongs in `asx-game`. Stable feature identities live in
 [ASX-FEATURES.md](ASX-FEATURES.md), and player explanations in
@@ -18,7 +18,7 @@ Never duplicate a native personal reward or retry an uncertain native commit.
 Take pending work before native callbacks and preserve successful per-actor
 acknowledgements. Current guardian rewards and personal collection marks are
 native; supplemental guardian items and duplicate-loot gold compensation are not
-installed by the selected 0.122 path.
+installed by the selected 0.125 path.
 
 ## Jewelry
 
@@ -92,6 +92,6 @@ name, icon, stacks and remaining time. Rules: `resurrection_fatigue.rs`.
 ## Presentation and validation
 
 Keep native party/menu widgets and owner-correct tooltips. See
-[party UI](OFFICIAL-PARTY-UI.md) and [pause](COOP-PAUSE-01220.md). Feature rule tests,
+[party UI](OFFICIAL-PARTY-UI.md) and [pause](COOP-PAUSE.md). Feature rule tests,
 selected-memory fixtures and native stand-ins cover different risks. Consult
 [testing](TESTING.md) rather than copying a historical live-trial recipe.

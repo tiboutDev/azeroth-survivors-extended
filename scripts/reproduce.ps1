@@ -15,7 +15,7 @@ try {
 } catch {
     throw 'Invalid reviewed Windows-native ASX reference.'
 }
-if ($expected.schema -ne 1 -or $expected.game_version -ne '0.122.0' -or
+if ($expected.schema -ne 1 -or $expected.game_version -ne '0.125.0' -or
     $expected.artifact -ne 'avrt.dll' -or $expected.builder -ne 'windows-msvc' -or
     $expected.sha256 -cnotmatch '^[0-9a-f]{64}$') {
     throw 'Invalid reviewed Windows-native ASX reference.'

@@ -1,4 +1,4 @@
-//! Selected native integration for official 0.122 and typed readers over a
+//! Selected native integration for official 0.125 and typed readers over a
 //! memory view. Pure: no Windows API and no process access, so everything here
 //! is testable offline against the executables on disk and synthetic memory.
 
@@ -21,5 +21,5 @@ pub mod official120;
 pub mod official1201;
 #[path = "bindings/inherited/official121.rs"]
 pub mod official121;
-#[path = "bindings/official122.rs"]
-pub mod official122;
+#[path="bindings/official125.rs"]
+pub mod official125;

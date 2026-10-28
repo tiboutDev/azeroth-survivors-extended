@@ -1,6 +1,6 @@
 # Native party presentation
 
-ASX enriches the official 0.122 interface. The native `PlayerFrame` and
+ASX enriches the official 0.125 interface. The native `PlayerFrame` and
 `PartyMemberFrame1..4` retain health, names, death/resurrection and connection
 behavior. Five-player capacity means the local player plus four remote frames;
 ASX does not replace lobby admission or create a second roster authority.
@@ -35,7 +35,7 @@ from gameplay state and native mutation authority.
 ## Pause and diagnostic boundaries
 
 Keep native menu/choice ownership separate from group waiting presentation.
-See [cooperative pause](COOP-PAUSE-01220.md). A local choice notification is not
+See [cooperative pause](COOP-PAUSE.md). A local choice notification is not
 permission to release the host's barrier.
 
 Diagnostic writer channels and controlled fixtures are `test-hooks` only and

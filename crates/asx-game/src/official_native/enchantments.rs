@@ -1,4 +1,4 @@
-//! Exact 0.120.1 ring choice and scoped native stat input. No saved item fields.
+//! Selected native ring choices and scoped stat inputs; no saved item fields.
 use super::*;
 use crate::official::MutableMemory;
 use crate::official1201 as v;

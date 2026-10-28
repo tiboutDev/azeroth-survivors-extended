@@ -148,7 +148,7 @@ def read_verified_build(target_dir: Path, receipt_path: Path) -> dict:
     if receipt.get("schema_version") != 1:
         raise ValueError("Unexpected production-builder receipt schema")
     if (receipt.get("game_version"), receipt.get("target"), receipt.get("package"), receipt.get("profile")) != (
-        "0.122.0", TARGET, PACKAGE, "release"
+        "0.125.0", TARGET, PACKAGE, "release"
     ):
         raise ValueError("Production-builder receipt does not describe the expected ASX build")
     if receipt.get("test_hooks") != "absent":
@@ -259,7 +259,7 @@ def create_candidate(root: Path, requested: Path, builder=None, versions_provide
         "builder_script": BUILD_SCRIPT,
         "artifact": {
             "file": ARTIFACT,
-            "game_version": "0.122.0",
+            "game_version": "0.125.0",
             "target": TARGET,
             "sha256": results[0]["sha256"],
             "size_bytes": results[0]["size_bytes"],

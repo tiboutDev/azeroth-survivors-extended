@@ -14,7 +14,7 @@ def verify(reference, candidate):
     if reference.get("builder") != "xwin-msvc" or candidate.get("builder") != "xwin-msvc":
         raise ValueError("Builder mismatch; native Windows references are separate")
     expected = reference.get("artifact", {})
-    if expected.get("file") != "avrt.dll" or expected.get("game_version") != "0.122.0":
+    if expected.get("file") != "avrt.dll" or expected.get("game_version") != "0.125.0":
         raise ValueError("Reference does not identify the supported ASX artifact")
     if candidate.get("status") != "pending-review":
         raise ValueError("Expected a fresh two-build candidate")

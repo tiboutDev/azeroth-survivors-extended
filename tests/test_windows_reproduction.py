@@ -58,7 +58,7 @@ class WindowsReproduction(unittest.TestCase):
             invalid = directory / "invalid.json"
             invalid.write_text(json.dumps({
                 "schema": 1,
-                "game_version": "0.122.0",
+                "game_version": "0.125.0",
                 "artifact": "avrt.dll",
                 "builder": "xwin-msvc",
                 "sha256": "0" * 64,
@@ -104,7 +104,7 @@ class WindowsReproduction(unittest.TestCase):
             expected = directory / "native-reference.json"
             expected.write_text(json.dumps({
                 "schema": 1,
-                "game_version": "0.122.0",
+                "game_version": "0.125.0",
                 "artifact": "avrt.dll",
                 "builder": "windows-msvc",
                 "sha256": hashlib.sha256(fixture_dll).hexdigest(),

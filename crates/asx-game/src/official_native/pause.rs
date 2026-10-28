@@ -25,7 +25,7 @@ mod tests {
 
     #[test]
     fn selected_layout_preserves_all_reviewed_contacts() {
-        let adapter = SelectedAdapter::select(crate::official122::SHA256).unwrap();
+        let adapter = SelectedAdapter::select(crate::official125::SHA256).unwrap();
         let layout = adapter.pause_layout();
         let keys = [
             0x1bf9c, 0x1bfcd, 0x346580, 0x346b4c, 0x346d29, 0x346cc9,

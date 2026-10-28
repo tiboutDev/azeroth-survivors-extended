@@ -1,6 +1,6 @@
 # Rust architecture and cleanup decisions
 
-The supported target is official 0.122.0. This document describes source ownership,
+The supported target is official 0.125.0. This document describes source ownership,
 not a promise that every feature is independent of native layouts or that the
 repository is ready to publish.
 
@@ -56,10 +56,10 @@ native-free contract.
 
 ## Current native data
 
-The selected 0.122 image still uses reviewed field/RVA translation data under
+The selected 0.125 image still uses reviewed field/RVA translation data under
 `crates/asx-game/src/bindings/inherited/`. These tables are production dependencies,
-not selectable old clients. `bindings/official122.rs` owns current-image entries
-and actor copy spans; the adapter has only its constructible V122 revision.
+not selectable old clients. `bindings/official125.rs` owns current-image entries
+and host/private field translations; the adapter selects one exact reviewed revision.
 Replace inherited maps only after comparing complete current mappings and native
 bytes, not by changing version labels.
 
@@ -67,7 +67,7 @@ Historical readers, profiles and their exclusive tools/tests are retired. They
 have no production or current-tool consumer. Their history remains in Git and
 private evidence backups; there is no inspection feature to maintain solely for
 its own tests. Current support still uses `memory.rs` and `enemies.rs`, covered
-through selected 0.122 memory fixtures.
+through selected 0.125 memory fixtures.
 
 ## Verification and publication
 

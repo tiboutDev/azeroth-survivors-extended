@@ -1,4 +1,4 @@
-"""Run bounded current 0.122 trials in an isolated Windows desktop.
+"""Run bounded current 0.125 trials in an isolated Windows desktop.
 
 No desktop switch, screen capture, focus change or input injection. A kill-on-close
 job owns the gated child and descendants; trials use normal priority and all CPUs.
@@ -26,9 +26,9 @@ def build_parser():
     modes.add_argument('--enchantments-trial', type=int, choices=(1, 2), metavar='PLAYERS')
     modes.add_argument('--reward-wallet-trial', action='store_true')
     modes.add_argument('--immunity-aggro-trial', action='store_true')
-    modes.add_argument('--asx-install122', action='store_true', help='Run the packaged normal ASX 0.122.0 trial')
-    parser.add_argument('--extensions-normal', action='store_true', help='Use the reviewed normal 0.122 binary for --extensions-trial')
-    parser.add_argument('--asx-package', type=Path, help='Prepared package archive for --asx-install122')
+    modes.add_argument('--asx-install', action='store_true', help='Run the packaged normal ASX 0.125.0 trial')
+    parser.add_argument('--extensions-normal', action='store_true', help='Use the reviewed normal 0.125 binary for --extensions-trial')
+    parser.add_argument('--asx-package', type=Path, help='Prepared package archive for --asx-install')
     parser.add_argument('--child', type=Path, help=argparse.SUPPRESS)
     return parser
 
@@ -40,12 +40,14 @@ def parse_args(argv=None):
         parser.error('Use a bounded 15..300 second trial')
     if args.extensions_normal and args.extensions_trial is None:
         parser.error('--extensions-normal requires --extensions-trial')
-    if args.asx_package and not args.asx_install122:
-        parser.error('--asx-package requires --asx-install122')
-    game_selected = bool(args.extensions_trial or args.gems_trial or args.enchantments_trial or args.reward_wallet_trial or args.immunity_aggro_trial or args.asx_install122)
+    if args.asx_package and not args.asx_install:
+        parser.error('--asx-package requires --asx-install')
+    if args.asx_install and not args.asx_package:
+        parser.error('--asx-install requires --asx-package')
+    game_selected = bool(args.extensions_trial or args.gems_trial or args.enchantments_trial or args.reward_wallet_trial or args.immunity_aggro_trial or args.asx_install)
     selected = args.resource_probe or game_selected
     if not selected:
-        parser.error('Choose a 0.122 trial mode or --resource-probe')
+        parser.error('Choose a 0.125 trial mode or --resource-probe')
     if args.resource_probe and game_selected:
         parser.error('--resource-probe must run by itself')
     return args
@@ -54,7 +56,7 @@ def parse_args(argv=None):
 def child_flags(args):
     """Return the validated mode forwarded through the gated child process."""
     flags = []
-    for name in ('resource_probe', 'asx_install122', 'extensions_normal', 'reward_wallet_trial', 'immunity_aggro_trial'):
+    for name in ('resource_probe', 'asx_install', 'extensions_normal', 'reward_wallet_trial', 'immunity_aggro_trial'):
         if getattr(args, name):
             flags.append('--' + name.replace('_', '-'))
     for name in ('extensions_trial', 'gems_trial', 'enchantments_trial'):
@@ -86,9 +88,9 @@ def run_child(args, gate):
             raise SystemExit(1)
         return
     sys.path.insert(0, str(ROOT / 'tools/dev'))
-    if args.asx_install122:
+    if args.asx_install:
         from asx_install_trial import run
-        run(args.seconds, game_version='0.122.0', package_path=args.asx_package)
+        run(args.seconds, game_version='0.125.0', package_path=args.asx_package)
         return
     from extensions_trial import run
     if args.gems_trial:

@@ -25,8 +25,9 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
  if reward_wallet and players!=2:raise ValueError("Shared wallet validation requires two participants")
  if normal and players not in (1,2):raise ValueError("Normal smoke has one or two clients")
  if players not in (1,2):raise ValueError("One solo client or two cooperative clients only")
- version=os.environ.get("ASX_TEST_GAME_VERSION","0.122.0")
- if version != "0.122.0":raise ValueError("Only the reviewed 0.122.0 extension runtime is supported")
+ visual=os.environ.get("ASX_TEST_VISUAL")=="1"
+ version=os.environ.get("ASX_TEST_GAME_VERSION","0.125.0")
+ if version != "0.125.0":raise ValueError("Only the reviewed 0.125.0 extension runtime is supported")
 
  runtime=ROOT/("runtime-official-"+version.replace(".",""));exe=runtime/"AzerothSurvivors.exe";dll=runtime/"avrt.dll"
  sha=json.loads((ROOT/"asx/supported-games.json").read_text())["games"][version]["sha256"]
@@ -77,7 +78,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     env.update(AZCOOP_TEST_COMPAT121="1",AZCOOP_TEST_GEMS="1",AZCOOP_TEST_ENCHANTMENTS="1",AZCOOP_TEST_BLESSINGS="1",AZCOOP_TEST_OFFICIAL_CHOICE_DELAY="3")
     if slot==1:
      env["AZCOOP_TEST_EXTENSIONS"]="1"
-     if version=="0.122.0":env["AZCOOP_TEST_MARKS121"]="1"
+     if version=="0.125.0":env["AZCOOP_TEST_MARKS121"]="1"
     (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\n")
    if completion in ("support","fatigue","fatigue-self"):
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
@@ -111,13 +112,14 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     with (addon/"ASX.toc").open("a")as toc:toc.write("Audit.lua\n")
    if players==2:env.update(WOW_ROGUE_COOP_PASSWORD=password);env["WOW_ROGUE_COOP_HOST"if slot==1 else"WOW_ROGUE_COOP_JOIN"]=str(port)if slot==1 else f"127.0.0.1:{port}"
    from trial_limits import environment
-   env.update(environment(visual=True));env["WOW_ROGUE_SHOTS"]=str(folder/"shots")
+   if visual:
+    env.update(environment(visual=True));env["WOW_ROGUE_SHOTS"]=str(folder/"shots")
    handle=(folder/"native-output.log").open("wb");handles.append(handle);children.append(subprocess.Popen([str(exe)],cwd=runtime,env=env,stdout=handle,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW));time.sleep(4 if slot==1 else 2)
   until=time.monotonic()+min(seconds,280 if completion in ("support","fatigue","fatigue-self") else 210 if glyph_retention else 180 if enchantments else 150)
   while time.monotonic()<until and all(p.poll()is None for p in children):
    if (ROOT/"test-results/extensions-trial-stop").exists():break
    time.sleep(.25)
-  logs=[(out/f"player-{i}/azeroth-coop-native.log").read_text(encoding="utf-8",errors="replace")for i in range(1,players+1)]
+  logs=[((out/f"player-{i}/azeroth-coop-native.log").read_text(encoding="utf-8",errors="replace") if (out/f"player-{i}/azeroth-coop-native.log").exists() else "")for i in range(1,players+1)]
   native=[(out/f"player-{i}/native-output.log").read_text(encoding="utf-8",errors="replace")for i in range(1,players+1)]
   host=logs[0];grants=[tuple(map(int,x))for x in re.findall(r"blessing granted: event=\d+ slot=(\d+) guid=\d+ boss=(\d+) category=(\d+)",host)]
   ui=[]
@@ -186,7 +188,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
    checks={k:checks[k]for k in("clients_alive","started","clean_scripts","clean_adapter","startup_ack","ui_captures_available","glyphs_disabled")}
    checks.update(strongest_mark="marks121 native: stage=1 marked=true vulnerability=0.35"in host,remaining_mark="marks121 native: stage=2 marked=true vulnerability=0.2"in host,mark_removed="marks121 native: stage=3 marked=false vulnerability=0"in host,three_taunts=all(f"marks121 taunt: spell={spell} owner=Some({slot})"in host for spell,slot in ((23922,0),(853,1),(5221,0))),native_popup_body=all("native kept tooltip body: category="in t for t in logs),native_attach=all("native kept tooltip attached: category="in t for t in logs),native_enter=all("entered=true"in t for t in logs))
   if completion=="pause":
-   from pause_evidence import assess as assess_pause
+   from pause_evidence import assess as assess_pause, moved_native_positions
    pause_result=assess_pause(out)
    # Local prediction is separate from the host's authoritative snapshots.
    # Native ROAM keyboard events must also demonstrate that motion works outside pauses.
@@ -203,7 +205,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
      if pose[1]=="true" and any(k==kind and delay==3 and 4<=elapsed<=9 for k,elapsed,delay in windows):local.append(position)
      if pose[1]=="false":outside.append(position)
     stable=len(local)>=2 and all(max(abs(a-b)for a,b in zip(local[0],row))<.01 for row in local)
-    moving=len(outside)>=2 and any(max(abs(a-b)for a,b in zip(outside[0],row))>.1 for row in outside)
+    moving=moved_native_positions(outside)
     pause_result["checks"][f"local_player_{slot}_frozen_while_waiting"]=stable
     pause_result["checks"][f"native_keyboard_moves_player_{slot}_outside_pause"]=moving
 
@@ -236,7 +238,8 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
    from enchantment_evidence import assess_fixture_party
    economy=assess_fixture_party(host);checks.update(economy["checks"])
    (out/"fixture-party-evidence.json").write_text(json.dumps(economy,indent=2)+"\n")
-  result=dict(owner_tooltip_readback=owner_tips,completion121=completion,players=players,normal=normal,game_version=version,compat121=compat121,enchantments=enchantments,gems=gems,immunity=immunity,diagnostic_inputs=not normal,dll_sha256=proof["dll_sha256"],game_sha256=sha,checks=checks,passed=all(checks.values()),grants=grants,ui=ui,desktop_input=False,screenshots=True,visual_review_required=True)
+  if not visual:checks.pop("ui_captures_available",None)
+  result=dict(owner_tooltip_readback=owner_tips,completion121=completion,players=players,normal=normal,game_version=version,compat121=compat121,enchantments=enchantments,gems=gems,immunity=immunity,diagnostic_inputs=not normal,dll_sha256=proof["dll_sha256"],game_sha256=sha,checks=checks,passed=all(checks.values()),grants=grants,ui=ui,desktop_input=False,screenshots=visual,visual_review_required=visual)
   (out/"result.json").write_text(json.dumps(result,indent=2)+"\n");print(out,flush=True);print(json.dumps(result,indent=2),flush=True)
  finally:
   for p in children:

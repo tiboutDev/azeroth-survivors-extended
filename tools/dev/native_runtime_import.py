@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 import shutil
 
-SHA122 = "ec3a5b15fa39fed63ce4516c4fc159bdac92691ca44f88befc849010338d14f7"
+SHA256 = "08f8c58d6967b94598c56b822a1e6b323a52924a299a6df70ef6055ca839b8cd"
 NAMES = ("AzerothSurvivors.exe", "Data/patch.MPQ", *(f"Data/patch-{n}.MPQ" for n in range(2, 10)), "Data/patch-A.MPQ", "Data/patch-B.MPQ")
 
 
@@ -20,25 +20,25 @@ def digest(path):
 def inspect(source, sha, names):
     source = Path(source).resolve(strict=True)
     names = tuple(names)
-    if names != NAMES or sha != SHA122:
-        raise ValueError("Only the reviewed 0.122.0 asset set is supported")
+    if names != NAMES or sha != SHA256:
+        raise ValueError("Only the reviewed 0.125.0 asset set is supported")
     data = source / "Data"
     if data.is_symlink() or {p.name for p in data.iterdir()} != {Path(n).name for n in names[1:]}:
         raise ValueError("Unexpected official archive inventory")
     if any((source / name).is_symlink() or not (source / name).is_file() for name in names):
         raise ValueError("Expected regular official files")
-    if digest(source / names[0]) != SHA122:
+    if digest(source / names[0]) != SHA256:
         raise ValueError("Exact reviewed official executable required")
     return {name: digest(source / name) for name in names}
 
 
-def import_runtime(source, receiver, hashes, version="0.122.0"):
-    if version != "0.122.0":
-        raise ValueError("Only the reviewed 0.122.0 private import is supported")
-    if tuple(hashes) != NAMES or hashes.get(NAMES[0]) != SHA122 or any(not re.fullmatch(r"[0-9a-f]{64}", value) for value in hashes.values()):
-        raise ValueError("Asset hash manifest does not match the reviewed 0.122.0 inventory")
+def import_runtime(source, receiver, hashes, version="0.125.0"):
+    if version != "0.125.0":
+        raise ValueError("Only the reviewed 0.125.0 private import is supported")
+    if tuple(hashes) != NAMES or hashes.get(NAMES[0]) != SHA256 or any(not re.fullmatch(r"[0-9a-f]{64}", value) for value in hashes.values()):
+        raise ValueError("Asset hash manifest does not match the reviewed 0.125.0 inventory")
     source = Path(source).resolve(strict=True)
-    if inspect(source, SHA122, NAMES) != hashes:
+    if inspect(source, SHA256, NAMES) != hashes:
         raise ValueError("Official source changed after inspection")
     receiver = Path(receiver).resolve(strict=True)
     tag = version.replace(".", "")

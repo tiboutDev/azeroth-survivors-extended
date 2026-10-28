@@ -1,4 +1,4 @@
-//! Reviewed 0.120.1 immunity and NPC target-pool translation.
+//! Selected native immunity and NPC target-pool translation.
 use super::Adapter;
 use crate::{official::MutableMemory,memory::Mem,Result};
 use asx_gameplay::immunity_aggro::Candidate;
@@ -34,8 +34,9 @@ impl Adapter{
   let mut candidates=vec![];
   for (slot,r)in rows.chunks_exact(16).enumerate(){let position=std::array::from_fn(|i|f(r,i*4));if position.iter().any(|v|!v.is_finite()){return Err("Invalid target position".into())}candidates.push(Candidate{slot:slot as u32,position,available:r[12]==1});}
   let (_,rows)=self.combat_rows(m,game)?;
-  let enemies=rows.chunks_exact(0x1e0).filter(|r|r[0xb0]==0&&f(r,0x160)>0.).map(|r|{
-   let target=q(r,0xf8);AggroEnemy{id:q(r,0xf0),target:(target<n).then_some(target as u32),position:std::array::from_fn(|i|f(r,0x188+i*4))}
+  use crate::official125 as layout;
+  let enemies=rows.chunks_exact(layout::ENEMY_STRIDE).filter(|r|r[layout::ENEMY_DEAD]==0&&f(r,layout::ENEMY_HP)>0.).map(|r|{
+   let target=q(r,layout::ENEMY_TARGET);AggroEnemy{id:q(r,layout::ENEMY_GUID),target:(target<n).then_some(target as u32),position:std::array::from_fn(|i|f(r,layout::ENEMY_POSITION+i*4))}
   }).collect::<Vec<_>>();
   if enemies.iter().any(|e|e.position.iter().any(|v|!v.is_finite())){return Err("Invalid enemy target position".into())}
   Ok((candidates,enemies))
@@ -46,8 +47,9 @@ impl Adapter{
   // Validate and collect all IO before mutations. The target vector is only read
   // and copied by NPC update, never resized there. No game-state mutex spans it.
   let (p,rows)=self.combat_rows(m,game)?;let mut writes=vec![];let changes=changes.iter().copied().collect::<std::collections::BTreeMap<_,_>>();
-  for (i,row)in rows.chunks_exact(0x1e0).enumerate(){if let Some(target)=changes.get(&q(row,0xf0)){
-   if row[0xb0]==0{writes.push((p+i as u64*0x1e0+0xf8,target.map(u64::from).unwrap_or(u64::MAX)));}
+  use crate::official125 as layout;
+  for (i,row)in rows.chunks_exact(layout::ENEMY_STRIDE).enumerate(){if let Some(target)=changes.get(&q(row,layout::ENEMY_GUID)){
+   if row[layout::ENEMY_DEAD]==0{writes.push((p+i as u64*layout::ENEMY_STRIDE as u64+layout::ENEMY_TARGET as u64,target.map(u64::from).unwrap_or(u64::MAX)));}
   }}
   let mut phases=vec![];for slot in blocked{let old=m.read(pointer+u64::from(*slot)*16+12,1)?[0];if old==1{phases.push((*slot,old));}}
   for (at,target)in writes{m.write(at,&target.to_le_bytes())?;}

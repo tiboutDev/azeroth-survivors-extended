@@ -65,7 +65,7 @@ For multiplayer, use the official **Co-op** menu. All participants should use th
 
 ## In the workshop
 
-**Spell Glyphs are temporarily disabled for 0.122.0** while we revisit their interaction with the new equipment set bonuses.
+**Spell Glyphs are temporarily disabled for 0.125.0** while we revisit their interaction with the new equipment set bonuses.
 
 [See what we’re exploring →](docs/player/WORKSHOP.md)
 
@@ -83,6 +83,11 @@ Found a bug or an interesting build interaction? Open an [issue](https://github.
 - A screenshot or diagnostic export when useful.
 
 ## Development
+
+Source currently targets official **0.125.0**. Normal-artifact and in-game
+validation of this port remain separate from source checks; published kits
+declare their own supported game version. See
+[client compatibility](docs/CLIENT-COMPATIBILITY.md).
 
 For source organization and engineering practices, see
 [Development](docs/DEVELOPMENT.md).

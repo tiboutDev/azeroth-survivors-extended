@@ -17,9 +17,9 @@ class Image:
  def owner(self,rva):
   i=bisect.bisect_right(self.starts,rva)-1
   return self.starts[i]if i>=0 and rva<self.ends[self.starts[i]]else None
- @functools.lru_cache(None)
+ @functools.lru_cache(maxsize=2)
  def ins(self,start):return list(MD.disasm(self.pe.get_data(start,self.ends[start]-start),start))
- @functools.lru_cache(None)
+ @functools.lru_cache(maxsize=64)
  def tokens(self,start):
   out=[]
   for i in self.ins(start):
@@ -91,17 +91,39 @@ def descriptor_inventory(path):
   pair=re.search(r"\(0x([0-9a-f]+),\s*0x([0-9a-f]+)\)",line)
   if pair:
    baseline,native=pair.groups();add(native,f"{path.name}:{n} baseline={baseline}")
-  named=re.search(r"pub const ([A-Z0-9_]+(?:_RVA|_TABLE))\s*:\s*u64\s*=\s*0x([0-9a-f]+)",line)
+  named=re.search(r"pub const ([A-Z0-9_]+(?:_RVA|_TABLE|_NATIVE_PAUSE))\s*:\s*u64\s*=\s*0x([0-9a-f]+)",line)
   if named:add(named[2],f"{path.name}:{n} {named[1]}")
- for name in ('KEPT_TOOLTIP_BINDINGS','KEPT_TOOLTIP_FOCUS'):
+ for match in re.finditer(r"pub const ([A-Z0-9_]+)\s*:\s*\(u64,\s*&\[u8\]\)\s*=\s*\(\s*0x([0-9a-f]+)",source):
+  add(match[2],f"{path.name} {match[1]}")
+ for name in ('KEPT_TOOLTIP_BINDINGS',):
   match=re.search(r'pub const '+name+r'\s*:.*?=(.*?);',source,re.S)
   if match:
    for value in re.findall(r'\(0x([0-9a-f]+),\s*&\[',match[1]):add(value,f"{path.name} {name}")
  if not out:raise ValueError("No explicit native address pairs in descriptor")
  return out
-def compare(old,new,needed,limit):
- owners=sorted({a for v in needed if(a:=old.owner(v))is not None});mapping={};refs=collections.defaultdict(set);pairs={};failures={};changes=[];branches=[]
- for start in owners[:limit]:
+def restore_checkpoint(old,new,needed,previous):
+ if previous.get("old_sha256")!=old.sha or previous.get("new_sha256")!=new.sha:
+  raise ValueError("Checkpoint executable hashes do not match")
+ if previous.get("needed")!={str(k):v for k,v in needed.items()}:
+  raise ValueError("Checkpoint descriptor inventory does not match")
+ if previous.get("approved") is not False or previous.get("offline_only") is not True:
+  raise ValueError("Only unapproved offline evidence may be resumed")
+ return previous
+
+def compare(old,new,needed,limit,previous=None,retry_failures=False,only_owners=None):
+ owners=sorted({a for v in needed if(a:=old.owner(v))is not None})
+ previous=restore_checkpoint(old,new,needed,previous)if previous is not None else {}
+ mapping={int(k):v for k,v in previous.get("mapping",{}).items()}
+ refs=collections.defaultdict(set,{int(k):set(v)for k,v in previous.get("references",{}).items()})
+ pairs={int(k):v for k,v in previous.get("functions",{}).items()}
+ failures={int(k):v for k,v in previous.get("failures",{}).items()}
+ changes=list(previous.get("changes",[]));branches=list(previous.get("branch_conflicts",[]))
+ pending=[start for start in owners if start not in pairs and (retry_failures or start not in failures)]
+ if only_owners is not None:
+  if not set(only_owners)<=set(owners):raise ValueError("Requested owner is not in the descriptor inventory")
+  pending=[start for start in pending if start in only_owners]
+ for start in pending[:limit]:
+  failures.pop(start,None)
   try:
    dest,score,kind=candidates(old,new,start);a=old.ins(start);b=new.ins(dest)
    if kind=="relocations-only":blocks=[difflib.Match(0,0,len(a))]
@@ -122,16 +144,59 @@ def compare(old,new,needed,limit):
    pairs[start]=dict(new=dest,score=score,kind=kind,old_bytes=old.ends[start]-start,new_bytes=new.ends[dest]-dest)
    print(f"{start:x}->{dest:x} {score:.4f} {kind}",flush=True)
   except ValueError as e:failures[start]=str(e);print(f"PENDING {start:x}: {e}",flush=True)
-  evidence=dict(old_sha256=old.sha,new_sha256=new.sha,needed={str(k):v for k,v in needed.items()},functions=pairs,mapping=mapping,references={str(k):sorted(v)for k,v in refs.items()},changes=changes,branch_conflicts=branches,failures=failures,approved=False,offline_only=True)
+  evidence=dict(old_sha256=old.sha,new_sha256=new.sha,needed={str(k):v for k,v in needed.items()},functions=pairs,mapping=mapping,references={str(k):sorted(v)for k,v in refs.items()},changes=changes,branch_conflicts=branches,failures=failures,approved=False,offline_only=True,owner_count=len(owners),pending_owners=[v for v in owners if v not in pairs and v not in failures])
   for k,v in refs.items():
    if len(v)==1 and k not in mapping:mapping[k]=next(iter(v))
   evidence['unresolved']=[v for v in needed if v not in mapping]
   yield evidence
-if __name__=="__main__":
- p=argparse.ArgumentParser(description=__doc__);p.add_argument("--old",type=Path,required=True);p.add_argument("--new",type=Path,required=True);p.add_argument("--out",type=Path,required=True);p.add_argument("--limit",type=int,default=200);p.add_argument("--descriptor",type=Path,help="Previous exact-build descriptor; inventory its native addresses")
- a=p.parse_args();old,new=Image(a.old),Image(a.new)
+def memory_budget(mib):
+ """Bound this analysis process, never the game or global WSL settings."""
+ if mib<256:raise ValueError("Memory limit must be at least 256 MiB")
+ try:import resource
+ except ImportError:raise ValueError("A process memory limit is required; run this CLI on a resource-capable host")
+ soft,hard=resource.getrlimit(resource.RLIMIT_AS)
+ budget=mib*1024*1024
+ if hard!=resource.RLIM_INFINITY:budget=min(budget,hard)
+ if soft!=resource.RLIM_INFINITY:budget=min(budget,soft)
+ resource.setrlimit(resource.RLIMIT_AS,(budget,hard))
+
+def write_checkpoint(path,result):
+ temporary=path.with_name(path.name+".tmp")
+ temporary.write_text(json.dumps(result,indent=2)+"\n")
+ temporary.replace(path)
+
+def main():
+ p=argparse.ArgumentParser(description=__doc__)
+ p.add_argument("--old",type=Path,required=True);p.add_argument("--new",type=Path,required=True);p.add_argument("--out",type=Path,required=True)
+ p.add_argument("--limit",type=int,default=4,help="Maximum unprocessed function owners in this batch (default: 4)")
+ p.add_argument("--memory-limit-mib",type=int,default=2048,help="Process address-space ceiling, not a WSL setting (default: 2048)")
+ p.add_argument("--owner",type=lambda value:int(value,0),action="append",help="Restrict this batch to a function owner RVA; repeat to select several")
+ p.add_argument("--retry-failures",action="store_true",help="Retry ambiguous owners from the checkpoint within this batch limit")
+ p.add_argument("--resume",type=Path,help="Resume unapproved offline evidence with identical image hashes and descriptor inventory")
+ p.add_argument("--descriptor",type=Path,help="Previous exact-build descriptor; inventory its native addresses")
+ a=p.parse_args()
+ if a.limit<1:p.error("--limit must be positive")
+ try:memory_budget(a.memory_limit_mib)
+ except ValueError as e:p.error(str(e))
+ previous=json.loads(a.resume.read_text())if a.resume else None
+ if a.out.exists() and (a.resume is None or a.out.resolve()!=a.resume.resolve()):
+  p.error("Output exists; use a new output or explicitly resume that checkpoint")
+ old,new=Image(a.old),Image(a.new)
  paths=[ROOT/"crates/asx-game/src/official_native.rs",*(ROOT/"crates/asx-game/src/official_native").rglob("*.rs")]
  needed=descriptor_inventory(a.descriptor)if a.descriptor else inventory(old,paths)
  a.out.parent.mkdir(parents=True,exist_ok=True)
- for result in compare(old,new,needed,a.limit):a.out.write_text(json.dumps(result,indent=2)+"\n")
- print("Unresolved",[hex(x)for x in result['unresolved']],flush=True)
+ completed=False
+ for result in compare(old,new,needed,a.limit,previous,a.retry_failures,a.owner):
+  completed=True
+  write_checkpoint(a.out,result)
+  print("Pending owners",len(result['pending_owners']),"ambiguous owners",len(result['failures']),"unresolved contacts",len(result['unresolved']),flush=True)
+ if not completed:
+  print("No unprocessed owners; ambiguous matches and unresolved contacts still require review.",flush=True)
+  if previous is not None and a.out.resolve()!=a.resume.resolve():write_checkpoint(a.out,previous)
+
+if __name__=="__main__":
+ try:main()
+ except MemoryError:
+  import sys
+  print("Analysis memory ceiling reached; last completed checkpoint preserved. Reduce the batch or review this owner separately.",file=sys.stderr)
+  raise SystemExit(75)

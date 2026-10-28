@@ -1,5 +1,10 @@
 # ASX build reproducibility
 
+The stored local reference identifies a prior 0.122.0 artifact. It remains
+unchanged as evidence of its exact inputs; it is not a current 0.125.0 reference.
+The current reference check must reject it until a new normal artifact is built
+and reviewed at an explicitly selected milestone.
+
 The [reviewed local WSL reference](../validation/asx-reproducible-build-xwin.json)
 records two fresh, isolated normal builds of the same source fingerprint. Both
 produce this 1,466,880-byte DLL:

@@ -1003,7 +1003,7 @@ fn fatigue_tick(r: &Runtime, server: u64) {
             if let Some(mut ability)=prototype {
                 let def=r.adapter.fixture_support_definition(spell).unwrap();
                 ability[..8].copy_from_slice(&(r.local.base as u64+def).to_le_bytes());
-                let result=support::fixture_target(Some(target),||if matches!(r.adapter.version(),"0.121.0"|"0.122.0"){r.adapter.fixture_cast_resolved(&io,game,caster,ability.as_ptr()as u64)}else{r.adapter.fixture_cast_actor(&io,game,caster,ability.as_ptr()as u64)});
+                let result=support::fixture_target(Some(target),||r.adapter.fixture_cast_resolved(&io,game,caster,ability.as_ptr()as u64));
                 r.log.info(&format!("fatigue fixture cast: caster={caster} target={target} spell={spell} result={result:?}"));
                 if let Ok(mut c)=FATIGUE_CLOCK.lock(){*c=party.clock;}
                 FATIGUE_STAGE.store(if stage==27 {4}else{stage+1},Ordering::Release);

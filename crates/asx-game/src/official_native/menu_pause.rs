@@ -1,20 +1,20 @@
-//! Native pause commands and reliable coop transport for the exact 0.122 build.
+//! Native pause commands and reliable coop transport for the exact selected build.
 use super::*;
 use crate::official::Entry;
 impl Adapter {
     pub fn menu_key_entry(self) -> Option<Entry> {
         Some(Entry {
-            rva: crate::official122::MENU_KEY.0,
-            bytes: crate::official122::MENU_KEY.1,
+            rva: crate::official125::MENU_KEY.0,
+            bytes: crate::official125::MENU_KEY.1,
         })
     }
     pub fn menu_key_target(self) -> Option<u64> {
-        Some(crate::official122::MENU_KEY_NATIVE_PAUSE)
+        Some(crate::official125::MENU_KEY_NATIVE_PAUSE)
     }
     pub fn menu_entry(self) -> Option<Entry> {
         Some(Entry {
-            rva: crate::official122::MENU_INPUT.0,
-            bytes: crate::official122::MENU_INPUT.1,
+            rva: crate::official125::MENU_INPUT.0,
+            bytes: crate::official125::MENU_INPUT.1,
         })
     }
     pub fn pause_notice(self, active: bool) -> Option<&'static str> {
@@ -48,11 +48,11 @@ impl Adapter {
                     .map_err(|_| "Truncated menu peer")?,
             ))
         };
-        if peer >= q(server + crate::official122::SERVER_PEERS)? {
+        if peer >= q(server + crate::official125::SERVER_PEERS)? {
             return Err("Menu peer departed".into());
         }
-        let row = q(server + crate::official122::SERVER_PEER_PTR)?
-            + peer * crate::official122::SERVER_PEER_STRIDE;
+        let row = q(server + crate::official125::SERVER_PEER_PTR)?
+            + peer * crate::official125::SERVER_PEER_STRIDE;
         if m.read(row, 4)? != 1u32.to_le_bytes() {
             return Err("Inactive menu peer".into());
         }
@@ -68,7 +68,7 @@ impl Adapter {
         {
             return Err("Invalid menu transport owner".into());
         }
-        let (at, expected) = crate::official122::MENU_SEND;
+        let (at, expected) = crate::official125::MENU_SEND;
         if m.read(base + at, expected.len())? != expected {
             return Err("Native menu transport changed".into());
         }
@@ -77,7 +77,7 @@ impl Adapter {
         call(
             server,
             0,
-            crate::official122::MENU_OPCODE,
+            crate::official125::MENU_OPCODE,
             bytes.as_ptr(),
             bytes.len(),
         );
@@ -98,6 +98,6 @@ impl Adapter {
         Ok((epoch, raw[8] != 0))
     }
     pub fn menu_opcode(self) -> Option<u16> {
-        Some(crate::official122::MENU_OPCODE)
+        Some(crate::official125::MENU_OPCODE)
     }
 }

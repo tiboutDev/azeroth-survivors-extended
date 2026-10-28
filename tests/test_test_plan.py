@@ -15,7 +15,7 @@ class Plans(unittest.TestCase):
         for name in ('src/new_native.rs', 'Cargo.toml', 'Cargo.lock',
                      'asx/supported-games.json', 'assets/lobby.png',
                      'validation/runtime-profile.json',
-                     'crates/asx-game/src/bindings/official122.rs',
+                     'crates/asx-game/src/bindings/official125.rs',
                      'dllshim/removed_adapter.py'):
             with self.subTest(path=name):
                 self.assertEqual(m.choose([name]), ['full'])

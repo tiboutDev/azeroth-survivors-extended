@@ -12,7 +12,7 @@ class ASXTests(unittest.TestCase):
  def setUp(self):
   self.temp=tempfile.TemporaryDirectory(prefix="ASX & native é ");self.addCleanup(self.temp.cleanup);self.root=Path(self.temp.name)
   self.exe=b"MZ official native game";core.atomic(self.root/"AzerothSurvivors.exe",self.exe);core.atomic(self.root/"Data/patch.MPQ",b"official assets")
-  registry=patch("core.supported_native_games",return_value={"0.122.0":{"sha256":core.digest(self.exe)}});registry.start();self.addCleanup(registry.stop)
+  registry=patch("core.supported_native_games",return_value={"0.125.0":{"sha256":core.digest(self.exe)}});registry.start();self.addCleanup(registry.stop)
   core.atomic(self.root/"benilla-config/config.toml",b"native settings");core.atomic(self.root/"benilla-config/AddOns/SomeoneElse/user.lua",b"other addon")
   core.atomic(self.root/"progression.txt",b"native progression")
   self.key=Ed25519PrivateKey.generate();self.public=base64key(self.key)
@@ -22,7 +22,7 @@ class ASXTests(unittest.TestCase):
   files={k:(ROOT/"asx"/source).read_bytes()for k,source in [("start-asx.cmd","start-asx.cmd"),("README-ASX.txt","README-ASX.txt"),("ASX/Client/launch.py","launch.py"),("ASX/Defaults/channel.json","channel.json"),("ASX/Client/supported-games.json","supported-games.json")]}
   files.update({"ASX/Bin/avrt.dll":b"MZ ASX normal "+str(n).encode(),"ASX/Interface/ASX.toc":b"Presentation.lua","ASX/Interface/Presentation.lua":b"-- normal addon "+str(n).encode()})
   if extra:files["ASX/Client/old.py"]=b"owned old file"
-  m={"schema":1,"product":core.PRODUCT,"version":f"0.122.0-asx.{n}","game":{"version":"0.122.0","sha256":core.digest(self.exe),"archives":["Data/patch.MPQ"]},"files":{k:{"size":len(v),"sha256":core.digest(v)}for k,v in files.items()}}
+  m={"schema":1,"product":core.PRODUCT,"version":f"0.125.0-asx.{n}","game":{"version":"0.125.0","sha256":core.digest(self.exe),"archives":["Data/patch.MPQ"]},"files":{k:{"size":len(v),"sha256":core.digest(v)}for k,v in files.items()}}
   return m,files
  def extract(self,m,data):
   for name,b in data.items():core.atomic(core.path(self.root,name),b)
@@ -46,7 +46,7 @@ class ASXTests(unittest.TestCase):
   self.configure();raw,sig,package=release
   def download(url,limit):return raw if url.endswith("asx-latest.json")else sig if url.endswith(".sig")else package
   with core.locked(self.root):return updates.automatic(self.root,core.digest(self.exe),download)
- def test_reviewed122_patch_b_inventory(self):
+ def test_current_patch_b_inventory(self):
   manifest=copy.deepcopy(self.m)
   manifest["game"]["archives"]=["Data/patch.MPQ",*[f"Data/patch-{n}.MPQ"for n in range(2,10)],"Data/patch-A.MPQ","Data/patch-B.MPQ"]
   self.assertEqual(core.validate(manifest),manifest)
@@ -104,7 +104,7 @@ class ASXTests(unittest.TestCase):
   dll=self.root/"normal.dll";dll.write_bytes(b"MZ normal test artifact")
   output=self.root/"release-output"
   with self.assertRaisesRegex(ValueError,"trust keys"):
-   package.build(output,dll,self.root/"unused-runtime",key=keyfile,game_version="0.122.0")
+   package.build(output,dll,self.root/"unused-runtime",key=keyfile,game_version="0.125.0")
   self.assertFalse(output.exists())
  def test_package_refuses_retired_game_before_reading_artifacts_or_creating_output(self):
   spec=importlib.util.spec_from_file_location("asx_package_retired",ROOT/"tools/build/asx_package.py")
@@ -113,7 +113,7 @@ class ASXTests(unittest.TestCase):
   with self.assertRaisesRegex(ValueError,"reviewed ASX distribution"):
    package.build(output,self.root/"absent.dll",self.root/"unused-runtime",game_version="0.121.0")
   self.assertFalse(output.exists())
- def test_native_122_inventory_accepts_patch_B_and_keeps_path_validation(self):
+ def test_native_current_inventory_accepts_patch_B_and_keeps_path_validation(self):
   manifest=copy.deepcopy(self.m);manifest["game"]["archives"].append("Data/patch-B.MPQ")
   core.validate(manifest)
   for name in ("Data/../patch-B.MPQ","Data/patch-B.MPQ/extra"):
@@ -176,7 +176,7 @@ class ASXTests(unittest.TestCase):
   self.install()
   registry="ASX/Client/supported-games.json";client="ASX/Client/core.py"
   old_manifest=copy.deepcopy(self.m);old_manifest["files"].pop(registry)
-  old_client=b"# previous exact-0.122 client without a registry dependency\n"
+  old_client=b"# previous exact-0.125 client without a registry dependency\n"
   old_manifest["files"][client]={"size":len(old_client),"sha256":core.digest(old_client)}
   core.atomic(core.path(self.root,client),old_client)
   core.path(self.root,registry).unlink()
@@ -243,14 +243,14 @@ if __name__=="__main__":unittest.main()
 
 
 class NativeCompatibilityTests(unittest.TestCase):
- def test_only_122_registry_entry_and_manifest_exact_hash(self):
+ def test_only_current_registry_entry_and_manifest_exact_hash(self):
   games=json.loads((ROOT/"asx/supported-games.json").read_text())["games"]
-  self.assertEqual(list(games),["0.122.0"])
-  m={"schema":1,"product":core.PRODUCT,"version":"0.122.0-asx.1","game":{"version":"0.122.0","sha256":games["0.122.0"]["sha256"],"archives":["Data/patch.MPQ"]},"files":{}}
+  self.assertEqual(list(games),["0.125.0"])
+  m={"schema":1,"product":core.PRODUCT,"version":"0.125.0-asx.1","game":{"version":"0.125.0","sha256":games["0.125.0"]["sha256"],"archives":["Data/patch.MPQ"]},"files":{}}
   required=["start-asx.cmd","README-ASX.txt","ASX/Bin/avrt.dll","ASX/Client/launch.py","ASX/Client/supported-games.json","ASX/Interface/ASX.toc","ASX/Interface/Presentation.lua","ASX/Defaults/channel.json"]
   m["files"]={name:{"size":0,"sha256":"0"*64}for name in required}
   self.assertIs(core.validate(m),m)
-  for version,sha in (("0.121.0","22f7938eb4f99f2857dc091b1c57c147bd848eaabfeaa81e444c0a3393ca8150"),("0.122.0","0"*64)):
+  for version,sha in (("0.121.0","22f7938eb4f99f2857dc091b1c57c147bd848eaabfeaa81e444c0a3393ca8150"),("0.125.0","0"*64)):
    rejected=copy.deepcopy(m);rejected["game"].update(version=version,sha256=sha)
    with self.subTest(version=version):
     with self.assertRaisesRegex(ValueError,"exact reviewed native game build"):core.validate(rejected)

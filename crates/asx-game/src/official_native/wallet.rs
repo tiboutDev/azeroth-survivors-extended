@@ -1,4 +1,4 @@
-//! Native wallet projection and reviewed currency calls for the exact 0.115 image.
+//! Native wallet projection and currency calls through the selected adapter.
 use super::Adapter;
 use crate::{
     official::{CurrencyMemory, Entry, MutableMemory},
@@ -298,7 +298,7 @@ impl Adapter {
 
 impl Adapter {
     pub fn item_choice_entry(self)->Option<Entry>{
-        Some(Entry{rva:crate::official122::ITEM_CHOICE_RVA,bytes:crate::official122::ITEM_CHOICE_BYTES})
+        Some(Entry{rva:crate::official125::ITEM_CHOICE_RVA,bytes:crate::official125::ITEM_CHOICE_BYTES})
     }
     /// Present an already earned item, without incrementing its bank or charging gold.
     /// Invoke only at a restored-host boundary; callbacks may replace private rows.

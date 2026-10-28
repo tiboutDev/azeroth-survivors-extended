@@ -1,20 +1,20 @@
-"""Read-only 0.122 image/contact preflight; semantic runtime validation is separate."""
+"""Read-only 0.125 image/contact preflight; semantic runtime validation is separate."""
 import hashlib,json,os,re,sys,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"tools/dev"))
-class Native122(unittest.TestCase):
+class Native125(unittest.TestCase):
  def test_registry_pins_distinct_exact_adapter(self):
-  source=(ROOT/"crates/asx-game/src/bindings/official122.rs").read_text()
+  source=(ROOT/"crates/asx-game/src/bindings/official125.rs").read_text()
   sha=re.search(r'SHA256:&str="([0-9a-f]{64})"',source)[1]
-  self.assertEqual(json.loads((ROOT/"asx/supported-games.json").read_text())["games"]["0.122.0"]["sha256"],sha)
-  self.assertIn("Revision::V122",(ROOT/"crates/asx-game/src/official_native.rs").read_text())
+  self.assertEqual(json.loads((ROOT/"asx/supported-games.json").read_text())["games"]["0.125.0"]["sha256"],sha)
+  self.assertIn("Revision::V125",(ROOT/"crates/asx-game/src/official_native.rs").read_text())
  def test_native_contacts_guards_and_interior_branches(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_122",ROOT/"runtime-official-01220/AzerothSurvivors.exe"))
-  if not path.exists():self.skipTest("Private pinned 0.122 image unavailable")
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_125",ROOT/"runtime-official-01250/AzerothSurvivors.exe"))
+  if not path.exists():self.skipTest("Private pinned 0.125 image unavailable")
   from compare_official import Image,MD
   from capstone import CS_GRP_JUMP,CS_GRP_CALL
-  image=Image(path);source=(ROOT/"crates/asx-game/src/bindings/official122.rs").read_text()
+  image=Image(path);source=(ROOT/"crates/asx-game/src/bindings/official125.rs").read_text()
   self.assertEqual(image.sha,re.search(r'SHA256:&str="([0-9a-f]{64})"',source)[1])
   contacts={int(a,16):int(b,16)for a,b in re.findall(r'\((0x[0-9a-f]+),(0x[0-9a-f]+)\)',source)}
   count=0
@@ -37,10 +37,10 @@ class Native122(unittest.TestCase):
   self.assertGreater(count,65)
 
  def test_retained_tooltip_contacts_and_native_row_contract(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_122",ROOT/"runtime-official-01220/AzerothSurvivors.exe"))
-  if not path.exists():self.skipTest("Private 0.122 image unavailable")
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_125",ROOT/"runtime-official-01250/AzerothSurvivors.exe"))
+  if not path.exists():self.skipTest("Private 0.125 image unavailable")
   from compare_official import Image
-  image=Image(path);source=(ROOT/"crates/asx-game/src/bindings/official122.rs").read_text()
+  image=Image(path);source=(ROOT/"crates/asx-game/src/bindings/official125.rs").read_text()
   body=source.split("pub const KEPT_TOOLTIP_BINDINGS:",1)[1].split("];",1)[0]
   rows=re.findall(r"\((0x[0-9a-f]+),&\[(.*?)\]\)",body,re.S)
   self.assertEqual(len(rows),5)
@@ -53,10 +53,10 @@ class Native122(unittest.TestCase):
   self.assertIn(at,{i.address for i in image.ins(image.owner(at))})
 
  def test_native_earned_item_presenter_matches_complete_guard(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_122",ROOT/"runtime-official-01220/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_125",ROOT/"runtime-official-01250/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private pinned 0.120 image unavailable")
   from compare_official import Image
-  image=Image(path);source=(ROOT/"crates/asx-game/src/bindings/official122.rs").read_text()
+  image=Image(path);source=(ROOT/"crates/asx-game/src/bindings/official125.rs").read_text()
   rva=int(re.search(r'ITEM_CHOICE_RVA:u64=(0x[0-9a-f]+)',source)[1],16)
   data=re.search(r'ITEM_CHOICE_BYTES:&\[u8\]=&\[(.*?)\]',source)[1]
   expected=bytes(int(x,0)for x in data.split(',') if x.strip())
@@ -65,17 +65,17 @@ class Native122(unittest.TestCase):
   self.assertIn(rva+len(expected),{i.address+i.size for i in image.ins(rva)})
 
  def test_native_encounter_helper_guard(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_122",ROOT/"runtime-official-01220/AzerothSurvivors.exe"))
-  if not path.exists():self.skipTest("Private 0.122 image unavailable")
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_125",ROOT/"runtime-official-01250/AzerothSurvivors.exe"))
+  if not path.exists():self.skipTest("Private 0.125 image unavailable")
   from compare_official import Image
-  image=Image(path);source=(ROOT/"crates/asx-game/src/bindings/official122.rs").read_text();at=int(re.search(r'\(0x5bd2d40,(0x[0-9a-f]+)\)',source)[1],16);data=re.search(r'BLESSING_SPAWN_BYTES:&\[u8\]=&\[(.*?)\]',source)[1];expected=bytes(int(x,0)for x in data.split(',')if x.strip());self.assertEqual(image.pe.get_data(at,len(expected)),expected);self.assertIn(at+len(expected),{i.address+i.size for i in image.ins(at)})
+  image=Image(path);source=(ROOT/"crates/asx-game/src/bindings/official125.rs").read_text();at=int(re.search(r'\(0x5bd2d40,(0x[0-9a-f]+)\)',source)[1],16);data=re.search(r'BLESSING_SPAWN_BYTES:&\[u8\]=&\[(.*?)\]',source)[1];expected=bytes(int(x,0)for x in data.split(',')if x.strip());self.assertEqual(image.pe.get_data(at,len(expected)),expected);self.assertIn(at+len(expected),{i.address+i.size for i in image.ins(at)})
 
  def test_zone_table_identity_and_encounter_extent(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_122",ROOT/"runtime-official-01220/AzerothSurvivors.exe"))
-  if not path.exists():self.skipTest("Private 0.122 image unavailable")
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_125",ROOT/"runtime-official-01250/AzerothSurvivors.exe"))
+  if not path.exists():self.skipTest("Private 0.125 image unavailable")
   import struct
   from compare_official import Image
-  image=Image(path);source=(ROOT/"crates/asx-game/src/bindings/official122.rs").read_text();table=int(re.search(r'\(0x729b010,(0x[0-9a-f]+)\)',source)[1],16)
+  image=Image(path);source=(ROOT/"crates/asx-game/src/bindings/official125.rs").read_text();table=int(re.search(r'\(0x729b010,(0x[0-9a-f]+)\)',source)[1],16)
   names=[]
   for index in range(12):
    row=image.pe.get_data(table+index*0xf0,0xf0);ptr,n=struct.unpack_from('<QQ',row,8);names.append(image.pe.get_data(ptr-image.pe.OPTIONAL_HEADER.ImageBase,n).decode())
@@ -83,12 +83,12 @@ class Native122(unittest.TestCase):
   self.assertEqual(names[:3],["elwynn","duskwood","wsg"]);self.assertEqual(len(set(names)),12)
 
  def test_native_glyph_spell_ids_and_keys_are_preserved(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_122",ROOT/"runtime-official-01220/AzerothSurvivors.exe"))
-  if not path.exists():self.skipTest("Private pinned 0.122.0 image unavailable")
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_125",ROOT/"runtime-official-01250/AzerothSurvivors.exe"))
+  if not path.exists():self.skipTest("Private pinned 0.125.0 image unavailable")
   import struct
   from compare_official import Image
   image=Image(path)
-  source=(ROOT/"crates/asx-game/src/bindings/official122.rs").read_text()
+  source=(ROOT/"crates/asx-game/src/bindings/official125.rs").read_text()
   contacts={int(a,16):int(b,16)for a,b in re.findall(r'\((0x[0-9a-f]+),(0x[0-9a-f]+)\)',source)}
   previous=(ROOT/"crates/asx-game/src/bindings/inherited/official117.rs").read_text().split("pub const GLYPH_DEFINITIONS:",1)[1].split(";\n",1)[0]
   spells=[(int(a,16),int(b))for a,b in re.findall(r'\((0x[0-9a-f]+),(\d+)\)',previous)]
@@ -107,11 +107,11 @@ class Native122(unittest.TestCase):
 import unittest,re,sys,os
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools/dev'))
-class Official122(unittest.TestCase):
+class Official125(unittest.TestCase):
  def test_exact_import_inventory(self):
-  from import122 import NAMES,SHA122
+  from import_official import NAMES,SHA256
   self.assertEqual(len(NAMES),12);self.assertEqual(NAMES[-1],'Data/patch-B.MPQ')
-  self.assertEqual(SHA122,'ec3a5b15fa39fed63ce4516c4fc159bdac92691ca44f88befc849010338d14f7')
+  self.assertEqual(SHA256,'08f8c58d6967b94598c56b822a1e6b323a52924a299a6df70ef6055ca839b8cd')
  def test_shared_rendering_has_no_glyph_owner_dependency(self):
   root=Path(__file__).resolve().parents[1]
   for name in ['bonus_ui.rs','run_stats.rs']:
@@ -120,7 +120,7 @@ class Official122(unittest.TestCase):
   self.assertFalse((root/'src/runtime/glyph_hover.rs').exists())
 
 
-class ContactInventory122(unittest.TestCase):
+class ContactInventory125(unittest.TestCase):
  def test_previous_descriptor_includes_tables_and_shared_tooltip_seams(self):
   try:
    from compare_official import descriptor_inventory

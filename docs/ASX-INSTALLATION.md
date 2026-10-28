@@ -1,6 +1,6 @@
 # Native-folder installation and distribution
 
-ASX targets only the reviewed official **0.122.0** client. The native selector,
+ASX targets only the reviewed official **0.125.0** client. The native selector,
 supported-game registry and manifest validator reject other builds. Player steps
 are in [Installation](player/INSTALLATION.md); this page defines ownership and
 release boundaries.

@@ -64,7 +64,7 @@ pub struct Adapter {
 impl Adapter {
     pub fn select(hash: &str) -> Result<Self> {
         let revision=match hash {
-            crate::official122::SHA256=>Revision::V122,
+            crate::official125::SHA256=>Revision::V125,
             _=>return Err("No reviewed official-engine adapter for this executable".into())
         };
         Ok(Self { revision })
@@ -405,7 +405,7 @@ impl Adapter {
     pub fn ui_receiver(self, mem: &dyn Mem, server: u64, base: u64) -> Result<u64> {
         let pair = mem.read(
             server
-                .checked_add(crate::official122::SERVER_UI_SINK)
+                .checked_add(crate::official125::SERVER_UI_SINK)
                 .ok_or("Official UI owner overflow")?,
             16,
         )?;
@@ -566,7 +566,7 @@ impl Adapter {
             return Err("Official context count exceeds native capacity".into());
         }
         let extent = count
-            .checked_mul(0x980)
+            .checked_mul(self.context_size())
             .ok_or("Official context extent overflow")?;
         if count > 0 && (pointer < 0x10000 || pointer.checked_add(extent).is_none()) {
             return Err("Invalid official context pointer".into());
@@ -630,7 +630,7 @@ impl Adapter {
         let field = |offset: u64, len: usize| {
             mem.read(
                 server
-                    .checked_add(match offset { 0xc58 => crate::official122::SERVER_ROLE, 0xc98 => crate::official122::SERVER_PEERS, 0xf49 => crate::official122::SERVER_GAME_STREAM, _ => offset })
+                    .checked_add(match offset { 0xc58 => crate::official125::SERVER_ROLE, 0xc98 => crate::official125::SERVER_PEERS, 0xf49 => crate::official125::SERVER_GAME_STREAM, _ => offset })
                     .ok_or("Official server address overflow")?,
                 len,
             )
@@ -681,9 +681,9 @@ mod tests {
                 0xc58 => self.role.to_le_bytes().to_vec(),
                 0xc98 => self.count.to_le_bytes().to_vec(),
                 0xf49 => vec![self.connected],
-                0xd60 => self.role.to_le_bytes().to_vec(),
-                0xda0 => self.count.to_le_bytes().to_vec(),
-                0x10dd => vec![self.connected],
+                0xd98 => self.role.to_le_bytes().to_vec(),
+                0xdd8 => self.count.to_le_bytes().to_vec(),
+                0x11bd => vec![self.connected],
                 _ => return Err("Unexpected union read".into()),
             };
             if bytes.len() != n {
@@ -701,7 +701,7 @@ mod tests {
     #[test]
     fn rejects_other_builds_and_does_not_read_host_union_for_guests() {
         assert!(Adapter::select("0.115.0").is_err());
-        let a = Adapter::select(crate::official122::SHA256).unwrap();
+        let a = Adapter::select(crate::official125::SHA256).unwrap();
         let guest = View(Memory {
             role: 1,
             count: u64::MAX,
@@ -754,13 +754,13 @@ mod tests {
 }
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
-enum Revision { V122 }
+enum Revision { V125 }
 impl Adapter {
- pub fn name(self)->&'static str {match self.revision{Revision::V122=>"official-coop-0.122.0"}}
- pub fn version(self)->&'static str {match self.revision{Revision::V122=>"0.122.0"}}
- fn rva(self,baseline:u64)->u64 {crate::official122::rva(baseline)}
- fn baseline_rva(self,native:u64)->u64 {crate::official122::baseline(native)}
- fn expected(self,baseline:u64,_old:&'static[u8])->&'static[u8] {crate::official122::expected(baseline)}
+ pub fn name(self)->&'static str {match self.revision{Revision::V125=>"official-coop-0.125.0"}}
+ pub fn version(self)->&'static str {match self.revision{Revision::V125=>"0.125.0"}}
+ fn rva(self,baseline:u64)->u64 {crate::official125::rva(baseline)}
+ fn baseline_rva(self,native:u64)->u64 {crate::official125::baseline(native)}
+ fn expected(self,baseline:u64,_old:&'static[u8])->&'static[u8] {crate::official125::expected(baseline)}
 }
 
 mod blessings;
@@ -771,10 +771,10 @@ mod bonus_ui;
 pub use bonus_ui::BonusUi;
 
 impl Adapter {
- fn field117(self,native:u64)->u64{crate::official122::field117(native)}
+ fn field117(self,native:u64)->u64{crate::official125::field117(native)}
  fn supports_extensions(self)->bool{true}
- fn contact117(self,old:u64)->u64{crate::official122::extension(old)}
- fn extension_bytes117(self,old:u64,_bytes:&'static[u8])->&'static[u8]{crate::official122::extension_bytes(old)}
+ fn contact117(self,old:u64)->u64{crate::official125::extension(old)}
+ fn extension_bytes117(self,old:u64,_bytes:&'static[u8])->&'static[u8]{crate::official125::extension_bytes(old)}
 }
 
 mod enchantments;
@@ -794,9 +794,9 @@ impl Adapter{pub fn glyphs_enabled(self)->bool{false}
 pub fn duplicate_loot_enabled(self)->bool{false}}
 
 impl Adapter{
- fn field1201(self,n:u64)->u64{crate::official122::field1201(n)}
- fn ring_table(self)->u64{crate::official122::RING_TABLE}
- fn amulet_table(self)->u64{crate::official122::AMULET_TABLE}
+ fn field1201(self,n:u64)->u64{crate::official125::field1201(n)}
+ fn ring_table(self)->u64{crate::official125::RING_TABLE}
+ fn amulet_table(self)->u64{crate::official125::AMULET_TABLE}
 }
 
 /// Selected retained pause presentation contacts.

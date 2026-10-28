@@ -10,21 +10,21 @@ impl MutableMemory for Memory{
  fn free_native(&self,p:u64,n:usize)->Result<(),String>{let b=self.data.borrow_mut().remove(&p).ok_or("Not owned")?;assert_eq!(b.len(),n);self.frees.set(self.frees.get()+1);Ok(())}
 }
 fn memory()->Memory{
- let mut root=vec![0;0x2000];root[0x4b0..0x4b8].copy_from_slice(&111u64.to_le_bytes());root[0xd47]=2;
+ let mut root=vec![0;0x2000];root[0x4b0..0x4b8].copy_from_slice(&111u64.to_le_bytes());root[0xd83]=2;
  root[RING_INVENTORY_PTR as usize..RING_INVENTORY_PTR as usize+8].copy_from_slice(&0x30000u64.to_le_bytes());root[RING_INVENTORY_LEN as usize..RING_INVENTORY_LEN as usize+8].copy_from_slice(&1u64.to_le_bytes());
  root[OFFER_PTR as usize..OFFER_PTR as usize+8].copy_from_slice(&0x40000u64.to_le_bytes());root[OFFER_LEN as usize..OFFER_LEN as usize+8].copy_from_slice(&1u64.to_le_bytes());
- root[0x890..0x898].copy_from_slice(&1u64.to_le_bytes());root[0x898..0x8a0].copy_from_slice(&0x50000u64.to_le_bytes());root[0x8a0..0x8a8].copy_from_slice(&1u64.to_le_bytes());
- let mut owned=vec![0;24];owned[..8].copy_from_slice(&(BASE+asx_game::official122::RING_TABLE).to_le_bytes());owned[16..20].copy_from_slice(&0.255f32.to_le_bytes());owned[20..24].copy_from_slice(&1u32.to_le_bytes());
- let mut card=vec![0;0xa0];card[0x78..0x80].copy_from_slice(&0x8000000000000002u64.to_le_bytes());card[0x80..0x88].copy_from_slice(&(BASE+asx_game::official122::RING_TABLE).to_le_bytes());
+ root[0x8b8..0x8c0].copy_from_slice(&1u64.to_le_bytes());root[0x8c0..0x8c8].copy_from_slice(&0x50000u64.to_le_bytes());root[0x8c8..0x8d0].copy_from_slice(&1u64.to_le_bytes());
+ let mut owned=vec![0;24];owned[..8].copy_from_slice(&(BASE+asx_game::official125::RING_TABLE).to_le_bytes());owned[16..20].copy_from_slice(&0.255f32.to_le_bytes());owned[20..24].copy_from_slice(&1u32.to_le_bytes());
+ let mut card=vec![0;0xa0];card[0x78..0x80].copy_from_slice(&0x8000000000000002u64.to_le_bytes());card[0x80..0x88].copy_from_slice(&(BASE+asx_game::official125::RING_TABLE).to_le_bytes());
  let mut defs=vec![0;9*72];let mut keys=vec![0;9*32];for(k,key)in v::RING_KEYS.iter().enumerate(){defs[k*72..k*72+8].copy_from_slice(&(0x60000u64+k as u64*32).to_le_bytes());defs[k*72+8..k*72+16].copy_from_slice(&(key.len()as u64).to_le_bytes());keys[k*32..k*32+key.len()].copy_from_slice(key.as_bytes());}
- Memory{data:RefCell::new([(GAME,root),(0x30000,owned),(0x40000,card),(0x50000,[9u32.to_le_bytes(),0.3f32.to_le_bytes()].concat()),(0x60000,keys),(BASE+asx_game::official122::RING_TABLE,defs)].into()),next:Cell::new(0x80000),allocs:Cell::new(0),frees:Cell::new(0)}
+ Memory{data:RefCell::new([(GAME,root),(0x30000,owned),(0x40000,card),(0x50000,[9u32.to_le_bytes(),0.3f32.to_le_bytes()].concat()),(0x60000,keys),(BASE+asx_game::official125::RING_TABLE,defs)].into()),next:Cell::new(0x80000),allocs:Cell::new(0),frees:Cell::new(0)}
 }
-fn adapter()->SelectedAdapter{SelectedAdapter::select(asx_game::official122::SHA256).unwrap()}
-// Native field positions after the selected 0.122 translator. Production reads
+fn adapter()->SelectedAdapter{SelectedAdapter::select(asx_game::official125::SHA256).unwrap()}
+// Native field positions after the selected 0.125 translator. Production reads
 // in these tests go through SelectedAdapter; the constants only seed the fixture.
-const RING_INVENTORY_PTR:u64=0x390;const RING_INVENTORY_LEN:u64=0x398;const OFFER_PTR:u64=0x6a8;const OFFER_LEN:u64=0x6b0;const STATS_HEADER:u64=0x890;const RUN_MODE:u64=0xd42;const RUN_PHASE:u64=0xd47;const RUN_ACTOR:u64=0xc30;const RUN_GUID:u64=0x4b0;
+const RING_INVENTORY_PTR:u64=0x390;const RING_INVENTORY_LEN:u64=0x398;const OFFER_PTR:u64=0x6a8;const OFFER_LEN:u64=0x6b0;const STATS_HEADER:u64=0x8b8;const RUN_MODE:u64=0xd7e;const RUN_PHASE:u64=0xd83;const RUN_ACTOR:u64=0xc78;const RUN_GUID:u64=0x4b0;
 #[test]fn acquisition_is_native_and_only_existing_ring_upgrades_are_enchantable(){let m=memory();let a=adapter();let c=a.ring_selected(&m,BASE,GAME,0).unwrap().unwrap();assert_eq!((c.slot,c.guid,c.ring,c.rank),(0,111,0,1));m.write(GAME+RING_INVENTORY_LEN,&0u64.to_le_bytes()).unwrap();assert!(a.ring_selected(&m,BASE,GAME,0).unwrap().is_none());}
-#[test]fn trinkets_spell_cards_unreviewed_builds_and_changed_definitions_are_rejected(){let m=memory();let a=adapter();m.write(0x40080,&(BASE+asx_game::official122::RING_TABLE+9*72).to_le_bytes()).unwrap();assert!(a.ring_selected(&m,BASE,GAME,0).unwrap().is_none());m.write(0x40080,&(BASE+asx_game::official122::RING_TABLE).to_le_bytes()).unwrap();m.write(0x40078,&1u64.to_le_bytes()).unwrap();assert!(a.ring_selected(&m,BASE,GAME,0).unwrap().is_none());m.write(0x40078,&0x8000000000000002u64.to_le_bytes()).unwrap();m.write(BASE+asx_game::official122::RING_TABLE+0x45,&[1]).unwrap();assert!(a.ring_selected(&m,BASE,GAME,0).is_err());assert!(a.supports_enchantments());}
+#[test]fn trinkets_spell_cards_unreviewed_builds_and_changed_definitions_are_rejected(){let m=memory();let a=adapter();m.write(0x40080,&(BASE+asx_game::official125::RING_TABLE+9*72).to_le_bytes()).unwrap();assert!(a.ring_selected(&m,BASE,GAME,0).unwrap().is_none());m.write(0x40080,&(BASE+asx_game::official125::RING_TABLE).to_le_bytes()).unwrap();m.write(0x40078,&1u64.to_le_bytes()).unwrap();assert!(a.ring_selected(&m,BASE,GAME,0).unwrap().is_none());m.write(0x40078,&0x8000000000000002u64.to_le_bytes()).unwrap();m.write(BASE+asx_game::official125::RING_TABLE+0x45,&[1]).unwrap();assert!(a.ring_selected(&m,BASE,GAME,0).is_err());assert!(a.supports_enchantments());}
 #[test]fn native_stats_are_borrowed_once_and_original_permanent_inputs_are_restored(){let m=memory();let a=adapter();let old=m.read(GAME+STATS_HEADER,24).unwrap();let permanent=m.read(0x50000,8).unwrap();for kind in Enchantment::ALL{for rank in Rank::ALL{let e=RankedEnchantment{kind,rank};let loan=a.ring_stats(&m,GAME,&[e]).unwrap().unwrap();let h=m.read(GAME+STATS_HEADER,24).unwrap();let ptr=u64::from_le_bytes(h[8..16].try_into().unwrap());let rows=m.read(ptr,16).unwrap();assert_eq!(&rows[..8],permanent);assert_eq!(u32::from_le_bytes(rows[8..12].try_into().unwrap()),v::RING_STAT_KINDS[e.kind as usize]);assert_eq!(f32::from_le_bytes(rows[12..].try_into().unwrap()),e.value());a.restore_ring_stats(&m,loan).unwrap();assert_eq!(m.read(GAME+STATS_HEADER,24).unwrap(),old);assert_eq!(m.read(0x50000,8).unwrap(),permanent);}}assert_eq!(m.allocs.get(),m.frees.get());}
 #[test]fn two_enchantments_have_two_fixed_rows_and_corrupt_native_inputs_allocate_nothing(){let m=memory();let a=adapter();let loan=a.ring_stats(&m,GAME,&[Enchantment::Might.at_ring_rank(2).unwrap(),Enchantment::Might.at_ring_rank(14).unwrap()]).unwrap().unwrap();assert_eq!(m.read(GAME+STATS_HEADER+16,8).unwrap(),3u64.to_le_bytes());a.restore_ring_stats(&m,loan).unwrap();let count=m.allocs.get();m.write(GAME+STATS_HEADER+16,&2u64.to_le_bytes()).unwrap();assert!(a.ring_stats(&m,GAME,&[Enchantment::Might.at_ring_rank(14).unwrap()]).is_err());assert_eq!(m.allocs.get(),count);}
 #[test]fn cooperative_current_actor_identity_and_stale_or_invalid_choices_remain_distinct(){let m=memory();let a=adapter();m.write(GAME+RUN_MODE,&[1]).unwrap();m.write(GAME+RUN_ACTOR,&1u64.to_le_bytes()).unwrap();m.write(GAME+RUN_GUID,&222u64.to_le_bytes()).unwrap();let c=a.ring_selected(&m,BASE,GAME,0).unwrap().unwrap();assert_eq!((c.slot,c.guid),(1,222));m.write(GAME+RUN_PHASE,&[1]).unwrap();assert!(a.ring_selected(&m,BASE,GAME,0).unwrap().is_none());m.write(GAME+RUN_PHASE,&[2]).unwrap();assert!(a.ring_selected(&m,BASE,GAME,2).unwrap().is_none());}
@@ -34,7 +34,7 @@ fn amulet_memory()->Memory{
  let mut defs=vec![0;16*80];let mut keys=vec![0;16*64];
  for(n,key)in v::AMULET_KEYS.iter().enumerate(){defs[n*80..n*80+8].copy_from_slice(&(0xa0000u64+n as u64*64).to_le_bytes());defs[n*80+8..n*80+16].copy_from_slice(&(key.len()as u64).to_le_bytes());keys[n*64..n*64+key.len()].copy_from_slice(key.as_bytes());}
  let mut amulet=vec![0;0x70];amulet[8..16].copy_from_slice(&0xa0000u64.to_le_bytes());amulet[16..24].copy_from_slice(&(v::AMULET_KEYS[0].len()as u64).to_le_bytes());
- {let mut d=m.data.borrow_mut();d.insert(BASE+asx_game::official122::AMULET_TABLE,defs);d.insert(0xa0000,keys);d.insert(0x90000,amulet);}
+ {let mut d=m.data.borrow_mut();d.insert(BASE+asx_game::official125::AMULET_TABLE,defs);d.insert(0xa0000,keys);d.insert(0x90000,amulet);}
  m.write(0x40078,&v::AMULET_CHOICE_TAG.to_le_bytes()).unwrap();m.write(0x40080,&0x90000u64.to_le_bytes()).unwrap();m
 }
 #[test]fn first_amulet_and_replacement_decode_native_owned_identity_without_ranks(){let m=amulet_memory();let a=adapter();let c=a.amulet_selected(&m,BASE,GAME,0).unwrap().unwrap();assert_eq!((c.slot,c.guid,c.amulet,c.previous),(0,111,0,None));assert_eq!(a.amulet_selected(&m,BASE,GAME,0).unwrap(),Some(c));let mut owned=m.read(0x90000,0x70).unwrap();owned[8..16].copy_from_slice(&0xa0040u64.to_le_bytes());owned[16..24].copy_from_slice(&(v::AMULET_KEYS[1].len()as u64).to_le_bytes());m.write(GAME+0x3e8,&owned).unwrap();m.write(GAME+0x450,&1u32.to_le_bytes()).unwrap();assert_eq!(a.amulet_selected(&m,BASE,GAME,0).unwrap().unwrap().previous,Some(1));m.write(GAME+0x3e8,&m.read(0x90000,0x70).unwrap()).unwrap();m.write(GAME+0x450,&1u32.to_le_bytes()).unwrap();assert_eq!(a.amulet_selected(&m,BASE,GAME,0).unwrap().unwrap().previous,Some(0));}
@@ -58,7 +58,7 @@ fn amulet_memory()->Memory{
  m.data.borrow_mut().insert(0xc0000,[0x1234567800000011u64,0,0,0xc1000,0,0].into_iter().flat_map(u64::to_le_bytes).collect());
  m.data.borrow_mut().insert(0xc1000,[64u64,0xc2000,8].into_iter().flat_map(u64::to_le_bytes).collect());m.data.borrow_mut().insert(0xc2000,vec![0xaa;64]);
  unsafe{a.kept_tooltip_target(&m,BASE as usize,0xc0000).unwrap()};
- assert_eq!(m.read(0xc1010,8).unwrap(),32u64.to_le_bytes());let command=m.read(0xc2008,24).unwrap();assert_eq!(&command[..8],&(BASE+asx_game::official122::KEPT_TOOLTIP_BINDINGS[3].0).to_le_bytes());assert_eq!(&command[8..16],&0x1234567800000011u64.to_le_bytes());assert_eq!(&command[16..19],&[0,2,1]);assert_eq!(m.read(0xc2000,8).unwrap(),vec![0xaa;8]);
+ assert_eq!(m.read(0xc1010,8).unwrap(),32u64.to_le_bytes());let command=m.read(0xc2008,24).unwrap();assert_eq!(&command[..8],&(BASE+asx_game::official125::KEPT_TOOLTIP_BINDINGS[3].0).to_le_bytes());assert_eq!(&command[8..16],&0x1234567800000011u64.to_le_bytes());assert_eq!(&command[16..19],&[0,2,1]);assert_eq!(m.read(0xc2000,8).unwrap(),vec![0xaa;8]);
  m.write(0xc1010,&65u64.to_le_bytes()).unwrap();assert!(unsafe{a.kept_tooltip_target(&m,BASE as usize,0xc0000)}.is_err());
 }
 
@@ -71,7 +71,7 @@ fn amulet_memory()->Memory{
  let m=memory();let a=adapter();MEMORY.with(|v|v.set(&m));
  m.data.borrow_mut().insert(0xc0000,[42u64,0,0,0,0xc1000,0].into_iter().flat_map(u64::to_le_bytes).collect());
  m.data.borrow_mut().insert(0xc1000,[16u64,0xc2000,8].into_iter().flat_map(u64::to_le_bytes).collect());m.data.borrow_mut().insert(0xc2000,vec![0xaa;16]);m.data.borrow_mut().insert(0xc3000,vec![0xbb;96]);
- let base=(reserve as *const ()as usize).wrapping_sub(asx_game::official122::KEPT_TOOLTIP_BINDINGS[4].0 as usize);
+ let base=(reserve as *const ()as usize).wrapping_sub(asx_game::official125::KEPT_TOOLTIP_BINDINGS[4].0 as usize);
  unsafe{a.kept_tooltip_target(&m,base,0xc0000).unwrap()};
  assert_eq!(ARGS.with(|v|v.borrow().clone()),[0xc1000,8,24,1,1]);assert_eq!(m.read(0xc1010,8).unwrap(),32u64.to_le_bytes());assert_eq!(&m.read(0xc3008,24).unwrap()[8..16],&42u64.to_le_bytes());assert_eq!(m.read(0xc2000,16).unwrap(),vec![0xaa;16]);MEMORY.with(|v|v.set(std::ptr::null()));
 }

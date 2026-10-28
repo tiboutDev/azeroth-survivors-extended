@@ -1,6 +1,6 @@
 # ASX development
 
-ASX extends the official native 0.122.0 engine. Player documentation starts at the
+ASX extends the official native 0.125.0 engine. Player documentation starts at the
 [project home](../README.md). For engineering work, read the [testing policy](TESTING.md),
 [feature inventory](ASX-FEATURES.md) and [adapter boundary](CLIENT-ADAPTER.md).
 
@@ -26,9 +26,8 @@ The [Rust architecture decisions](RUST-ARCHITECTURE.md) describe workspace
 conventions and current-build data.
 
 The internal crates use the project's `asx-` prefix. `asx-gameplay`
-contains portable rules; `asx-game` contains selected native integration and
-opt-in inspection readers. Those active packages are not the retired custom
-Coop engine. The separate `avrt-probe` checks Windows DLL exports. Cargo package
+contains portable rules; `asx-game` contains selected native integration. Those
+active packages are not the retired custom Coop engine. The separate `avrt-probe` checks Windows DLL exports. Cargo package
 names use hyphens and Rust imports use underscores.
 
 `native-ui/official-party.lua` is the retained in-game Lua presentation shipped
@@ -73,7 +72,7 @@ a complete domain migration.
 ## Active build boundary
 
 The root DLL activates only for `AZCOOP_ENGINE=official` and the exact reviewed
-0.122.0 executable. Retired measurement/custom-engine launcher modes remain inert.
+0.125.0 executable. Retired measurement/custom-engine launcher modes remain inert.
 The workspace contains the root DLL, portable game/gameplay crates and the
 independent Windows `avrt-probe`. Historical bridge, simulation, transport and
 patch-generator crates are removed.
@@ -84,7 +83,7 @@ small historical name catalog without linking the old engine. Root tests use a
 shared test lock independently of the retired breakpoint implementation.
 
 Shared types are re-exported directly from `official_native`. The exact current
-descriptor is `crates/asx-game/src/bindings/official122.rs`; inherited constants
+descriptor is `crates/asx-game/src/bindings/official125.rs`; inherited constants
 and translators live under `bindings/inherited/` because production uses them.
 Historical readers and their exclusive tools/tests are retired. The current
 memory interface and enemy parser remain active and have current-client tests.
@@ -110,10 +109,10 @@ Document configuration names and portable setup steps instead.
 
 `native_profile_codec.py` and `flight_recorder.py` retain the original standalone
 profile codec and crash decoder without depending on the retired product. The
-0.122 importer uses `native_runtime_import.py` directly. Build entry points compile
+0.125 importer uses `native_runtime_import.py` directly. Build entry points compile
 only; deployment is a separate explicitly selected action.
 
-The isolated trial dispatcher supports only current 0.122 extension/package modes
+The isolated trial dispatcher supports only current 0.125 extension/package modes
 and at most two clients. It rejects retired/no-mode inputs before Windows setup.
 Tests of parser/dispatch logic do not prove gameplay fixtures succeeded live.
 
@@ -126,6 +125,25 @@ Do not keep session status, cleanup counts or generated run reports as current
 project instructions. Store them in ignored local evidence; keep lasting build
 references under [validation](../validation/README.md). Source, installed normal
 binaries and published packages have separate identities and evidence scopes.
+
+## Offline client comparison
+
+`tools/dev/compare_official.py` produces unapproved address/ABI candidates, never
+an activation descriptor. Its CLI requires a host with `resource.RLIMIT_AS` and
+limits each analysis process to 2048 MiB of address space and four unprocessed
+function owners by default. Instruction caches are bounded. Run one comparison
+process at a time; a larger WSL allocation does not justify unbounded analysis.
+
+Use explicit `--old`, `--new`, `--descriptor` and `--out` paths, with evidence
+under ignored local storage. Continue with `--resume <checkpoint>`; executable
+hashes and the complete descriptor inventory must match. `--retry-failures`
+revisits ambiguous owners within the same batch limit; repeat `--owner <RVA>`
+to restrict a batch to specific owners. Existing evidence is not
+overwritten unless it is explicitly resumed in place. Checkpoints replace their
+previous version only after serialization succeeds. A memory-ceiling exit or
+external timeout leaves the last completed checkpoint available for review.
+Unresolved contacts and heuristic matches require native review even after all
+function owners have been visited.
 
 ## Preparing a public source import
 

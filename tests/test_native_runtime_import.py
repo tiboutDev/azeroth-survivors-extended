@@ -19,17 +19,17 @@ class NativeRuntimeImportTests(unittest.TestCase):
         (self.source / "Data/patch.MPQ").write_bytes(b"archive")
         self.sha = runtime_import.digest(self.source / "AzerothSurvivors.exe")
         self.names = ("AzerothSurvivors.exe", "Data/patch.MPQ")
-        self.old_sha122, self.old_names = runtime_import.SHA122, runtime_import.NAMES
-        runtime_import.SHA122, runtime_import.NAMES = self.sha, self.names
+        self.old_sha256, self.old_names = runtime_import.SHA256, runtime_import.NAMES
+        runtime_import.SHA256, runtime_import.NAMES = self.sha, self.names
 
     def tearDown(self):
-        runtime_import.SHA122, runtime_import.NAMES = self.old_sha122, self.old_names
+        runtime_import.SHA256, runtime_import.NAMES = self.old_sha256, self.old_names
         self.temp.cleanup()
 
     def test_inspect_requires_exact_executable_and_archive_inventory(self):
         hashes = runtime_import.inspect(self.source, self.sha, self.names)
         self.assertEqual(set(hashes), set(self.names))
-        with self.assertRaisesRegex(ValueError, "reviewed 0.122.0 asset set"):
+        with self.assertRaisesRegex(ValueError, "reviewed 0.125.0 asset set"):
             runtime_import.inspect(self.source, "0" * 64, self.names)
         (self.source / "Data/extra.MPQ").write_bytes(b"extra")
         with self.assertRaisesRegex(ValueError, "inventory"):
@@ -54,7 +54,7 @@ class NativeRuntimeImportTests(unittest.TestCase):
     def test_matching_target_links_cannot_substitute_for_owned_copies(self):
         hashes = runtime_import.inspect(self.source, self.sha, self.names)
         target = runtime_import.import_runtime(self.source, self.receiver, hashes)
-        receipt = "IMPORT-OFFICIAL-01220.json"
+        receipt = "IMPORT-OFFICIAL-01250.json"
         for index, name in enumerate((*self.names, receipt)):
             with self.subTest(name=name):
                 destination = target / name
@@ -75,13 +75,13 @@ class NativeRuntimeImportTests(unittest.TestCase):
         hashes = runtime_import.inspect(self.source, self.sha, self.names)
         target = runtime_import.import_runtime(self.source, self.receiver, hashes)
         self.assertEqual((target / "Data/patch.MPQ").read_bytes(), b"archive")
-        receipt = json.loads((target / "IMPORT-OFFICIAL-01220.json").read_text())
+        receipt = json.loads((target / "IMPORT-OFFICIAL-01250.json").read_text())
         self.assertEqual(receipt["files"], hashes)
         self.assertEqual(runtime_import.import_runtime(self.source, self.receiver, hashes), target)
 
     def test_mismatched_existing_target_is_never_overwritten(self):
         hashes = runtime_import.inspect(self.source, self.sha, self.names)
-        target = self.receiver / "runtime-official-01220"
+        target = self.receiver / "runtime-official-01250"
         target.mkdir()
         sentinel = target / "preserve.txt"
         sentinel.write_text("keep")
@@ -95,12 +95,12 @@ class NativeRuntimeImportTests(unittest.TestCase):
         outside.mkdir()
         sentinel = outside / "preserve.txt"
         sentinel.write_text("keep")
-        (self.receiver / "runtime-official-01220").symlink_to(outside, target_is_directory=True)
+        (self.receiver / "runtime-official-01250").symlink_to(outside, target_is_directory=True)
         with self.assertRaisesRegex(ValueError, "escaped paired receiver"):
             runtime_import.import_runtime(self.source, self.receiver, hashes)
         self.assertEqual(sentinel.read_text(), "keep")
 
-    def test_only_122_and_bounded_names_are_accepted(self):
+    def test_only_current_and_bounded_names_are_accepted(self):
         with self.assertRaisesRegex(ValueError, "Only the reviewed"):
             runtime_import.import_runtime(self.source, self.receiver, {}, "0.121.0")
         with self.assertRaisesRegex(ValueError, "manifest"):

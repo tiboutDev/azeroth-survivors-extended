@@ -72,7 +72,7 @@ def build(target_dir: Path, receipt_path: Path | None = None) -> Path:
     receipt = {
         "schema_version": 1,
         "artifact": {"file": ARTIFACT, "sha256": digest, "size_bytes": len(raw)},
-        "game_version": "0.122.0",
+        "game_version": "0.125.0",
         "target": TARGET,
         "package": PACKAGE,
         "profile": "release",

@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "games": {
-    "0.122.0": {
-      "sha256": "ec3a5b15fa39fed63ce4516c4fc159bdac92691ca44f88befc849010338d14f7",
+    "0.125.0": {
+      "sha256": "08f8c58d6967b94598c56b822a1e6b323a52924a299a6df70ef6055ca839b8cd",
       "archives": [
         "Data/patch.MPQ",
         "Data/patch-2.MPQ",

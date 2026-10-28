@@ -77,3 +77,9 @@ def menu_evidence(host):
   poses=[pose for _,_,actors,_ in resumed for who,phase,pose in actors if who==slot]
   checks[f"menu_actor_{slot}_moves_after_last_close"]=len(poses)>=2 and any(max(abs(a-b)for a,b in zip(poses[0],pose))>.1 for pose in poses)
  return {"checks":checks,"events":{"host_open":ho,"guest_open":go,"host_close":hc,"guest_close":gc},"frozen_samples":len(frozen),"remaining_owner_samples":len(waiting)}
+
+
+def moved_native_positions(positions):
+ """A pre-world zero followed by spawning is not evidence of keyboard motion."""
+ ready=[p for p in positions if any(abs(v)>.1 for v in p)]
+ return len(ready)>=2 and any(max(abs(a-b)for a,b in zip(ready[0],p))>.1 for p in ready)

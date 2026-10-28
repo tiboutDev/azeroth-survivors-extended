@@ -1,5 +1,5 @@
 AZEROTH SURVIVORS EXTENDED (ASX)
-For the exact supported Azeroth Survivors 0.122.0 build, Windows 64-bit.
+For the exact supported Azeroth Survivors 0.125.0 build, Windows 64-bit.
 
 INSTALL: close the game. Extract this archive beside AzerothSurvivors.exe.
 PLAY ASX: double-click start-asx.cmd. Use the same ASX version for all players.

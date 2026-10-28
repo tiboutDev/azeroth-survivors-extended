@@ -21,12 +21,12 @@ PROFILES={
  'combat':[cargo('test','-p','asx-gameplay','--test','combat','--test','immunity_aggro'),NATIVE,ARCH],
  'support':[cargo('test','-p','asx-gameplay','--test','support','--test','periodic'),NATIVE,ARCH],
  'periodic':[cargo('test','-p','asx-gameplay','--test','periodic','--test','support'),ARCH],
- 'tooling':[py('test_test_plan.py'),SOURCE,py('test_trial_limits.py'),py('test_startup_profile.py'),py('test_native_exit_evidence.py'),py('test_background_trials.py'),py('test_native_runtime_import.py'),py('test_build_only.py')],
+ 'tooling':[py('test_test_plan.py'),py('test_offline_comparison.py'),SOURCE,py('test_trial_limits.py'),py('test_startup_profile.py'),py('test_native_exit_evidence.py'),py('test_background_trials.py'),py('test_native_runtime_import.py'),py('test_build_only.py')],
  'full':[cargo('test','-p','asx-gameplay','-p','asx-game'),py('test_*.py'),cargo('clippy','-p','asx-gameplay','-p','asx-game','--all-features')]
 }
 def choose(files):
  selected=set()
- tooling={'tools/dev/check.sh','tools/dev/test_plan.py','tools/dev/trial_limits.py','tools/dev/startup_profile.py','tools/dev/assess_startup_profile.py','tools/dev/native_profile_codec.py','tools/dev/native_exit_evidence.py','tools/dev/disposable115_party.py','tools/dev/background_desktop.py','tools/dev/extensions_trial.py','tools/dev/asx_install_trial.py','tests/test_test_plan.py','tests/test_asx_source_boundary.py','tests/test_trial_limits.py','tests/test_startup_profile.py','tests/test_native_exit_evidence.py','tests/test_background_trials.py','tools/dev/native_runtime_import.py','tools/dev/import122.py','tools/dev/build-windows.sh','tools/dev/build-chest-fixture.sh','tests/test_native_runtime_import.py','tests/test_build_only.py'}
+ tooling={'tools/dev/compare_official.py','tests/test_offline_comparison.py','tools/dev/check.sh','tools/dev/test_plan.py','tools/dev/trial_limits.py','tools/dev/startup_profile.py','tools/dev/assess_startup_profile.py','tools/dev/native_profile_codec.py','tools/dev/native_exit_evidence.py','tools/dev/disposable115_party.py','tools/dev/background_desktop.py','tools/dev/extensions_trial.py','tools/dev/asx_install_trial.py','tests/test_test_plan.py','tests/test_asx_source_boundary.py','tests/test_trial_limits.py','tests/test_startup_profile.py','tests/test_native_exit_evidence.py','tests/test_background_trials.py','tools/dev/native_runtime_import.py','tools/dev/import_official.py','tools/dev/build-windows.sh','tools/dev/build-chest-fixture.sh','tests/test_native_runtime_import.py','tests/test_build_only.py'}
  for name in files:
   if name.endswith('.md')or name.startswith('docs/'):continue
   if name in tooling:selected.add('tooling')

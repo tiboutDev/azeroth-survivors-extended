@@ -1,4 +1,4 @@
-//! Native shared-XP dead guard and restored-context catch-up, exact 0.115 only.
+//! Selected native shared-XP receipt boundary and restored-context replay.
 use super::Adapter;
 use crate::{
     official::{Entry, SupportCalls},

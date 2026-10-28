@@ -574,6 +574,16 @@ pub fn immunity_fixture_tick(r:&Runtime,server:u64){
   }
   if stage==3&&p.clock>began+5.5{
    let immune=r.adapter.combat_immune(&r.local,game,slot,p.actors[slot as usize].guid)?;
+   // Another real immunity can start after the five-second fixture aura.
+   // Observe its eventual expiry too; never clear native auras to satisfy a test.
+   if immune && p.clock<began+20. {
+    static WAITING:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
+    if WAITING.fetch_or(1<<case,Ordering::Relaxed)&(1<<case)==0 {
+     let active=[642,20580,7744,1856].map(|spell|(spell,r.adapter.support_buff_slots(&r.local,game,spell)));
+     r.log.info(&format!("immunity fixture awaiting native expiry: case={case} clock={} active_spells={active:?}",p.clock));
+    }
+    return Ok(None)
+   }
    r.log.info(&format!("immunity fixture expired: case={case} active={immune} owner={:?} expected={slot}",fixture_owner(enemy)));return Ok(Some((case+1,0,p.clock,0)))
   }Ok(None)
  })();match result{Ok(Some(next))=>*STAGE.lock().unwrap()=next,Ok(None)=>{},Err(e)=>{r.log.warn(&format!("Immunity fixture rejected: {e}"));*STAGE.lock().unwrap()=(4,0,0.,0);}}

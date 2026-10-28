@@ -57,7 +57,7 @@ impl Adapter {
         let game = q(
             m,
             frame
-                .checked_add(0x1e8)
+                .checked_add(crate::official125::ENCOUNTER_GAME_FRAME)
                 .ok_or("Encounter frame overflow")?,
         )?;
         if self.run_source(m, game)?.is_none() {
@@ -155,13 +155,14 @@ impl Adapter {
     }
     pub fn blessing_fixture_targets(self, m: &dyn Mem, game: u64) -> Result<Vec<u64>> {
         let (_, rows) = self.combat_rows(m, game)?;
+        use crate::official125 as layout;
         Ok(rows
-            .chunks_exact(0x1e0)
+            .chunks_exact(layout::ENEMY_STRIDE)
             .filter(|row| {
-                row[0xb0] == 0
+                row[layout::ENEMY_DEAD] == 0
                     && u64::from_le_bytes(row[0x18..0x20].try_into().unwrap()) != u64::MAX
             })
-            .map(|row| u64::from_le_bytes(row[0xf0..0xf8].try_into().unwrap()))
+            .map(|row| u64::from_le_bytes(row[layout::ENEMY_GUID..layout::ENEMY_GUID + 8].try_into().unwrap()))
             .collect())
     }
     pub fn blessing_stat_values(self, m: &dyn Mem, game: u64) -> Result<[f32; 5]> {
@@ -180,7 +181,7 @@ impl Adapter {
     pub fn blessing_spawn_entry(self) -> Entry {
         Entry {
             rva: self.contact117(v::BLESSING_SPAWN_RVA),
-            bytes: crate::official122::BLESSING_SPAWN_BYTES,
+            bytes: crate::official125::BLESSING_SPAWN_BYTES,
         }
     }
     pub fn blessing_fixture_definition(

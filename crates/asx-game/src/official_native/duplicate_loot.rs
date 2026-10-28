@@ -1,4 +1,4 @@
-//! Exact 0.120.1 loot ownership, native stream and UI translation.
+//! Retained loot ownership codec and native reward UI helpers; no loot interception.
 use super::*;
 use crate::official::{Entry, MutableMemory};
 fn q(m: &dyn Mem, a: u64) -> Result<u64> {
@@ -116,14 +116,14 @@ impl Adapter {
 impl Adapter {
  /// Diagnostic-only caller. Grow and retain a real native Vec<u32>; never fake a
  /// collection result or an ASX credit. No gameplay lock may span native reserve.
- pub unsafe fn loot_fixture_append(self,_m:&dyn MutableMemory,_game:u64,_base:u64,_slot:u32,_item:u32)->Result<bool>{Err("Duplicate-loot fixture is retired for 0.122.0".into())}
+ pub unsafe fn loot_fixture_append(self,_m:&dyn MutableMemory,_game:u64,_base:u64,_slot:u32,_item:u32)->Result<bool>{Err("Duplicate-loot fixture is retired for 0.125.0".into())}
 }
 
 impl Adapter {
  pub fn loot_fixture_entry(self)->Option<Entry>{None}
  /// This owned Vec has already been captured from the native guest context.
  /// Reserve before the native length branch, then refresh its cached cap/ptr.
- pub unsafe fn loot_fixture_dispatch(self,_m:&dyn MutableMemory,_frame:u64,_base:u64,_peer:u64,_item:u32)->Result<u64>{Err("Duplicate-loot fixture is retired for 0.122.0".into())}
+ pub unsafe fn loot_fixture_dispatch(self,_m:&dyn MutableMemory,_frame:u64,_base:u64,_peer:u64,_item:u32)->Result<u64>{Err("Duplicate-loot fixture is retired for 0.125.0".into())}
 }
 
 #[cfg(test)]
@@ -161,7 +161,7 @@ mod tests {
     }
     #[test]
     fn only_reviewed_build_and_bounded_packets() {
-        let a = Adapter::select(crate::official122::SHA256).unwrap();
+        let a = Adapter::select(crate::official125::SHA256).unwrap();
         let m = Memory::default();
         assert!(a.loot_entries().is_empty());
         m.write(0x10000, &0x8000000000000006u64.to_le_bytes())
@@ -181,7 +181,7 @@ mod tests {
     }
     #[test]
     fn inactive_duplicate_ui_codec_keeps_its_ownership_guards() {
-        let a = Adapter::select(crate::official122::SHA256).unwrap();
+        let a = Adapter::select(crate::official125::SHA256).unwrap();
         assert!(a.loot_entries().is_empty());
         let m = Memory::default();
         let original = br#"{"type":"drop","name":"Sword","new":false,"icon":"Sword_01"}"#;

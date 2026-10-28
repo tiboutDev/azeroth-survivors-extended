@@ -1,4 +1,4 @@
-//! Exact 0.120.1 amulet identities and scoped gem stat input.
+//! Selected native amulet identities and scoped gem stat inputs.
 use super::*;
 use crate::official::MutableMemory;
 use crate::official1201 as v;

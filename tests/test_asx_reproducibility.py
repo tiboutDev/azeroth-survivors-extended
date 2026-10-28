@@ -34,10 +34,10 @@ class CandidateWorkflowTests(unittest.TestCase):
             "crates/app/Cargo.toml": "[package]\nname='app'\n",
             "crates/app/src/lib.rs": "pub fn answer() -> u32 { 42 }\n",
             "crates/app/build.rs": "fn main() {}\n",
-            "crates/app/resources/ids.json": '{"game":"0.122.0"}\n',
+            "crates/app/resources/ids.json": '{"game":"0.125.0"}\n',
             "src/runtime.rs": "pub fn runtime() {}\n",
             "native-ui/interface.lua": "return true\n",
-            "asx/supported-games.json": '{"versions":["0.122.0"]}\n',
+            "asx/supported-games.json": '{"versions":["0.125.0"]}\n',
             "tools/build/asx_release_binary.py": "# reviewed builder source\n",
             "tools/build/asx_reproducibility.py": "# reviewed candidate workflow\n",
             "docs/BUILD.md": "Documentation is outside the build fingerprint.\n",
@@ -48,7 +48,7 @@ class CandidateWorkflowTests(unittest.TestCase):
             path = self.root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content, encoding="utf-8")
-        self.candidate = self.root / "test-results/native122-candidate.json"
+        self.candidate = self.root / "test-results/current-native-candidate.json"
 
     @staticmethod
     def versions():
@@ -79,7 +79,7 @@ class CandidateWorkflowTests(unittest.TestCase):
                     "sha256": hashlib.sha256(raw).hexdigest(),
                     "size_bytes": len(raw),
                 },
-                "game_version": "0.122.0",
+                "game_version": "0.125.0",
                 "target": repro.TARGET,
                 "package": repro.PACKAGE,
                 "profile": "release",

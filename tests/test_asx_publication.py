@@ -12,10 +12,10 @@ class PublicationTests(unittest.TestCase):
  def prepare(self,legacy=False):
   temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup);root=Path(temp.name);(root/"UPLOAD").mkdir()
   key=Ed25519PrivateKey.generate();archive=b"static hash fixture, not an executable archive"
-  feed=json.dumps(dict(product="azeroth-survivors-extended",sequence=12,manifest=dict(version="0.122.0-asx.2"),package=dict(asset="asx-0.122.0-asx.2.zip",sha256=publication.digest(archive)))).encode()
-  data={"ASX.zip":archive,"asx-0.122.0-asx.2.zip":archive,"asx-latest.json":feed,"asx-latest.json.sig":key.sign(feed)}
+  feed=json.dumps(dict(product="azeroth-survivors-extended",sequence=12,manifest=dict(version="0.125.0-asx.2"),package=dict(asset="asx-0.125.0-asx.2.zip",sha256=publication.digest(archive)))).encode()
+  data={"ASX.zip":archive,"asx-0.125.0-asx.2.zip":archive,"asx-latest.json":feed,"asx-latest.json.sig":key.sign(feed)}
   if legacy:data.update({"latest.json":b"legacy feed","latest.json.sig":key.sign(b"legacy feed"),"coop-old.zip":b"legacy archive"})
-  meta=dict(repository="example/asx",tag="v0.122.0-asx.2",version="0.122.0-asx.2",sequence=12,public_key=base64.b64encode(key.public_key().public_bytes(serialization.Encoding.Raw,serialization.PublicFormat.Raw)).decode(),assets={n:dict(size=len(b),sha256=publication.digest(b))for n,b in data.items()})
+  meta=dict(repository="example/asx",tag="v0.125.0-asx.2",version="0.125.0-asx.2",sequence=12,public_key=base64.b64encode(key.public_key().public_bytes(serialization.Encoding.Raw,serialization.PublicFormat.Raw)).decode(),assets={n:dict(size=len(b),sha256=publication.digest(b))for n,b in data.items()})
   for n,b in data.items():(root/"UPLOAD"/n).write_bytes(b)
   (root/"PUBLICATION.json").write_text(json.dumps(meta));return root,meta
  def test_minimal_four_files_verify_without_network_or_legacy_assets(self):
