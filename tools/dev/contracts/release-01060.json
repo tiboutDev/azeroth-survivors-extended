@@ -1,0 +1,974 @@
+{
+  "runtime_activation_allowed": true,
+  "development_status": "Experimental: three short Elwynn rounds, shared chests and final release Internet relay validated. Other maps/classes/full victories remain to test.",
+  "adapter_profile": {
+    "sha256": "8f8de1512420dd6c9fefcbbf90a6a6feaf7388ba1cda3b6c3d5eaa7a74927514",
+    "release_version": "0.106.0",
+    "adapter_contracts_verified": false,
+    "addresses": [
+      {
+        "reference": 8656,
+        "candidate": 8656
+      },
+      {
+        "reference": 87664256,
+        "candidate": 93038448
+      },
+      {
+        "reference": 87664313,
+        "candidate": 93038505
+      },
+      {
+        "reference": 87664464,
+        "candidate": 93038656
+      },
+      {
+        "reference": 87760336,
+        "candidate": 93961584
+      },
+      {
+        "reference": 87801968,
+        "candidate": 92896224
+      },
+      {
+        "reference": 87827014,
+        "candidate": 92903289
+      },
+      {
+        "reference": 87828352,
+        "candidate": 92903846
+      },
+      {
+        "reference": 87863152,
+        "candidate": 92954464
+      },
+      {
+        "reference": 87865342,
+        "candidate": 92955330
+      },
+      {
+        "reference": 87884672,
+        "candidate": 93259056
+      },
+      {
+        "reference": 87932880,
+        "candidate": 93416544
+      },
+      {
+        "reference": 87950800,
+        "candidate": 93438608
+      },
+      {
+        "reference": 87979557,
+        "candidate": 93476785
+      },
+      {
+        "reference": 87979572,
+        "candidate": 93476800
+      },
+      {
+        "reference": 88000068,
+        "candidate": 93510916
+      },
+      {
+        "reference": 88001649,
+        "candidate": 93513951
+      },
+      {
+        "reference": 88001651,
+        "candidate": 93513953
+      },
+      {
+        "reference": 88001672,
+        "candidate": 93513975
+      },
+      {
+        "reference": 88002366,
+        "candidate": 93527803
+      },
+      {
+        "reference": 88002380,
+        "candidate": 93527817
+      },
+      {
+        "reference": 88006763,
+        "candidate": 93531372
+      },
+      {
+        "reference": 88007336,
+        "candidate": 93532661
+      },
+      {
+        "reference": 88008577,
+        "candidate": 93534011
+      },
+      {
+        "reference": 88009502,
+        "candidate": 93535349
+      },
+      {
+        "reference": 88009519,
+        "candidate": 93535366
+      },
+      {
+        "reference": 88017008,
+        "candidate": 93546649
+      },
+      {
+        "reference": 88017335,
+        "candidate": 93517256
+      },
+      {
+        "reference": 88020131,
+        "candidate": 93517275
+      },
+      {
+        "reference": 88022882,
+        "candidate": 93549153
+      },
+      {
+        "reference": 88024086,
+        "candidate": 93550758
+      },
+      {
+        "reference": 88025647,
+        "candidate": 93551513
+      },
+      {
+        "reference": 88027614,
+        "candidate": 93553302
+      },
+      {
+        "reference": 88027813,
+        "candidate": 93553493
+      },
+      {
+        "reference": 88027928,
+        "candidate": 93553606
+      },
+      {
+        "reference": 88037088,
+        "candidate": 93564877
+      },
+      {
+        "reference": 88037384,
+        "candidate": 93565183
+      },
+      {
+        "reference": 88067200,
+        "candidate": 93619408
+      },
+      {
+        "reference": 88067255,
+        "candidate": 93619463
+      },
+      {
+        "reference": 88067664,
+        "candidate": 93619872
+      },
+      {
+        "reference": 88079296,
+        "candidate": 93638016
+      },
+      {
+        "reference": 88084880,
+        "candidate": 93645472
+      },
+      {
+        "reference": 88085792,
+        "candidate": 93647296
+      },
+      {
+        "reference": 88085847,
+        "candidate": 93647351
+      },
+      {
+        "reference": 88113920,
+        "candidate": 93731552
+      },
+      {
+        "reference": 88114034,
+        "candidate": 93732012
+      },
+      {
+        "reference": 88121152,
+        "candidate": 93743968
+      },
+      {
+        "reference": 88121597,
+        "candidate": 93744413
+      },
+      {
+        "reference": 88121600,
+        "candidate": 93744416
+      },
+      {
+        "reference": 88121724,
+        "candidate": 93744564
+      },
+      {
+        "reference": 88123300,
+        "candidate": 93746282
+      },
+      {
+        "reference": 88123632,
+        "candidate": 93741776
+      },
+      {
+        "reference": 88124015,
+        "candidate": 93747023
+      },
+      {
+        "reference": 88124082,
+        "candidate": 93747090
+      },
+      {
+        "reference": 88124480,
+        "candidate": 93747792
+      },
+      {
+        "reference": 88124603,
+        "candidate": 93747922
+      },
+      {
+        "reference": 88124609,
+        "candidate": 93747928
+      },
+      {
+        "reference": 88125791,
+        "candidate": 93749122
+      },
+      {
+        "reference": 88128096,
+        "candidate": 93750951
+      },
+      {
+        "reference": 88128983,
+        "candidate": 93751671
+      },
+      {
+        "reference": 88130458,
+        "candidate": 93754084
+      },
+      {
+        "reference": 88133493,
+        "candidate": 93756206
+      },
+      {
+        "reference": 88138520,
+        "candidate": 93761128
+      },
+      {
+        "reference": 88138957,
+        "candidate": 93761638
+      },
+      {
+        "reference": 88146272,
+        "candidate": 93770672
+      },
+      {
+        "reference": 88151072,
+        "candidate": 93775792
+      },
+      {
+        "reference": 88155248,
+        "candidate": 93780688
+      },
+      {
+        "reference": 88159648,
+        "candidate": 93786336
+      },
+      {
+        "reference": 88181920,
+        "candidate": 93838128
+      },
+      {
+        "reference": 88214224,
+        "candidate": 93879200
+      },
+      {
+        "reference": 88248704,
+        "candidate": 93687040
+      },
+      {
+        "reference": 88331808,
+        "candidate": 92970992
+      },
+      {
+        "reference": 88535120,
+        "candidate": 44160
+      },
+      {
+        "reference": 88573248,
+        "candidate": 93959312
+      },
+      {
+        "reference": 88634928,
+        "candidate": 94302160
+      },
+      {
+        "reference": 90742287,
+        "candidate": 96353463
+      },
+      {
+        "reference": 90745872,
+        "candidate": 96360736
+      },
+      {
+        "reference": 90758800,
+        "candidate": 96374000
+      },
+      {
+        "reference": 107179872,
+        "candidate": 113016096
+      },
+      {
+        "reference": 107187424,
+        "candidate": 113025144
+      },
+      {
+        "reference": 107361120,
+        "candidate": 119223393
+      },
+      {
+        "reference": 107367192,
+        "candidate": 119234552
+      }
+    ],
+    "fields": [
+      {
+        "domain": "game",
+        "reference": 720,
+        "candidate": 648
+      },
+      {
+        "domain": "game",
+        "reference": 728,
+        "candidate": 656
+      },
+      {
+        "domain": "game",
+        "reference": 760,
+        "candidate": 688
+      },
+      {
+        "domain": "game",
+        "reference": 844,
+        "candidate": 772
+      },
+      {
+        "domain": "game",
+        "reference": 960,
+        "candidate": 888
+      },
+      {
+        "domain": "game",
+        "reference": 1176,
+        "candidate": 1224
+      },
+      {
+        "domain": "game",
+        "reference": 1184,
+        "candidate": 1232
+      },
+      {
+        "domain": "game",
+        "reference": 1192,
+        "candidate": 1240
+      },
+      {
+        "domain": "game",
+        "reference": 1196,
+        "candidate": 1244
+      },
+      {
+        "domain": "game",
+        "reference": 1200,
+        "candidate": 1248
+      },
+      {
+        "domain": "game",
+        "reference": 1208,
+        "candidate": 1256
+      },
+      {
+        "domain": "game",
+        "reference": 1288,
+        "candidate": 1144
+      },
+      {
+        "domain": "game",
+        "reference": 1292,
+        "candidate": 1148
+      },
+      {
+        "domain": "game",
+        "reference": 1312,
+        "candidate": 1168
+      },
+      {
+        "domain": "game",
+        "reference": 1316,
+        "candidate": 1172
+      },
+      {
+        "domain": "game",
+        "reference": 1336,
+        "candidate": 1192
+      },
+      {
+        "domain": "game",
+        "reference": 1400,
+        "candidate": 1376
+      },
+      {
+        "domain": "game",
+        "reference": 1408,
+        "candidate": 1384
+      },
+      {
+        "domain": "game",
+        "reference": 1416,
+        "candidate": 1464
+      },
+      {
+        "domain": "game",
+        "reference": 1440,
+        "candidate": 1488
+      },
+      {
+        "domain": "game",
+        "reference": 1472,
+        "candidate": 1520
+      },
+      {
+        "domain": "game",
+        "reference": 1496,
+        "candidate": 1544
+      },
+      {
+        "domain": "game",
+        "reference": 1512,
+        "candidate": 1560
+      },
+      {
+        "domain": "game",
+        "reference": 1520,
+        "candidate": 1568
+      },
+      {
+        "domain": "game",
+        "reference": 1536,
+        "candidate": 1584
+      },
+      {
+        "domain": "game",
+        "reference": 1544,
+        "candidate": 1592
+      },
+      {
+        "domain": "game",
+        "reference": 1552,
+        "candidate": 1600
+      },
+      {
+        "domain": "game",
+        "reference": 1576,
+        "candidate": 1624
+      },
+      {
+        "domain": "game",
+        "reference": 1608,
+        "candidate": 1656
+      },
+      {
+        "domain": "game",
+        "reference": 1616,
+        "candidate": 1664
+      },
+      {
+        "domain": "game",
+        "reference": 1624,
+        "candidate": 1672
+      },
+      {
+        "domain": "game",
+        "reference": 1756,
+        "candidate": 1888
+      },
+      {
+        "domain": "game",
+        "reference": 1760,
+        "candidate": 1892
+      },
+      {
+        "domain": "game",
+        "reference": 1764,
+        "candidate": 1896
+      },
+      {
+        "domain": "game",
+        "reference": 1856,
+        "candidate": 1984
+      },
+      {
+        "domain": "game",
+        "reference": 2048,
+        "candidate": 2416
+      },
+      {
+        "domain": "game",
+        "reference": 2056,
+        "candidate": 2424
+      },
+      {
+        "domain": "game",
+        "reference": 2072,
+        "candidate": 2464
+      },
+      {
+        "domain": "game",
+        "reference": 2080,
+        "candidate": 2472
+      },
+      {
+        "domain": "game",
+        "reference": 2088,
+        "candidate": 2480
+      },
+      {
+        "domain": "game",
+        "reference": 2096,
+        "candidate": 2488
+      },
+      {
+        "domain": "game",
+        "reference": 2112,
+        "candidate": 2520
+      },
+      {
+        "domain": "game",
+        "reference": 2156,
+        "candidate": 2612
+      },
+      {
+        "domain": "game",
+        "reference": 2160,
+        "candidate": 2628
+      },
+      {
+        "domain": "game",
+        "reference": 2164,
+        "candidate": 2632
+      },
+      {
+        "domain": "game",
+        "reference": 2212,
+        "candidate": 2696
+      },
+      {
+        "domain": "game",
+        "reference": 2245,
+        "candidate": 2740
+      },
+      {
+        "domain": "game",
+        "reference": 2249,
+        "candidate": 2748
+      },
+      {
+        "domain": "game",
+        "reference": 2255,
+        "candidate": 2755
+      },
+      {
+        "domain": "game",
+        "reference": 67000,
+        "candidate": 1496
+      },
+      {
+        "domain": "game",
+        "reference": 67304,
+        "candidate": 1884
+      },
+      {
+        "domain": "game",
+        "reference": 67720,
+        "candidate": 2628
+      },
+      {
+        "domain": "game",
+        "reference": 67905,
+        "candidate": 2739
+      },
+      {
+        "domain": "game_extent",
+        "reference": 2256,
+        "candidate": 2760
+      },
+      {
+        "domain": "game_update_frame",
+        "reference": 392,
+        "candidate": 824
+      },
+      {
+        "domain": "game_update_frame",
+        "reference": 968,
+        "candidate": 848
+      },
+      {
+        "domain": "game_update_frame",
+        "reference": 992,
+        "candidate": 1328
+      },
+      {
+        "domain": "enemy_frame",
+        "reference": 992,
+        "candidate": 1328
+      },
+      {
+        "domain": "enemy_frame",
+        "reference": 976,
+        "candidate": 1312
+      },
+      {
+        "domain": "enemy_frame",
+        "reference": 208,
+        "candidate": 48
+      },
+      {
+        "domain": "enemy_frame",
+        "reference": 740,
+        "candidate": 160
+      },
+      {
+        "domain": "batch_frame",
+        "reference": 2456,
+        "candidate": 904
+      },
+      {
+        "domain": "batch_frame",
+        "reference": 2464,
+        "candidate": 912
+      },
+      {
+        "domain": "server",
+        "reference": 16,
+        "candidate": 16
+      },
+      {
+        "domain": "server",
+        "reference": 2328,
+        "candidate": 2832
+      },
+      {
+        "domain": "map",
+        "reference": 0,
+        "candidate": 8
+      },
+      {
+        "domain": "map",
+        "reference": 8,
+        "candidate": 16
+      },
+      {
+        "domain": "map",
+        "reference": 64,
+        "candidate": 136
+      },
+      {
+        "domain": "map",
+        "reference": 160,
+        "candidate": 240
+      }
+    ],
+    "patches": [
+      {
+        "reference": 87664256,
+        "expected": "55",
+        "candidate_bytes": "55"
+      },
+      {
+        "reference": 87801968,
+        "expected": "55",
+        "candidate_bytes": "55"
+      },
+      {
+        "reference": 87828352,
+        "expected": "ff5020",
+        "candidate_bytes": "ff5020"
+      },
+      {
+        "reference": 87863152,
+        "expected": "55",
+        "candidate_bytes": "55"
+      },
+      {
+        "reference": 87932880,
+        "expected": "55",
+        "candidate_bytes": "55"
+      },
+      {
+        "reference": 87950800,
+        "expected": "55",
+        "candidate_bytes": "55"
+      },
+      {
+        "reference": 87979557,
+        "expected": "0f85dde10000",
+        "candidate_bytes": "0f8548590100"
+      },
+      {
+        "reference": 88001649,
+        "expected": "7215",
+        "candidate_bytes": "7216"
+      },
+      {
+        "reference": 88002366,
+        "expected": "498d8588050000488985e8020000",
+        "candidate_bytes": "498d85d809000048898508040000"
+      },
+      {
+        "reference": 88008577,
+        "expected": "f30f10862c0100000f2ec70f868e000000",
+        "candidate_bytes": "f3410f108748010000410f2ec00f8692000000"
+      },
+      {
+        "reference": 88009502,
+        "expected": "450f28cf440f5c8dd0000000f3450f16e9",
+        "candidate_bytes": "440f28d6440f5c5530410f28c2410f59c2"
+      },
+      {
+        "reference": 88017335,
+        "expected": "f2410f108998040000",
+        "candidate_bytes": "450f134d30f30f108d68030000f3410f114d38"
+      },
+      {
+        "reference": 88020131,
+        "expected": "0f82c7f3ffff",
+        "candidate_bytes": "418b4500"
+      },
+      {
+        "reference": 88022882,
+        "expected": "f20f10be980400008b86a0040000",
+        "candidate_bytes": "f2410f10bdc8040000418b85d0040000"
+      },
+      {
+        "reference": 88024086,
+        "expected": "f30f598624050000e8ec792900f3410f5fc5",
+        "candidate_bytes": "f30f598694040000e804c42a00f3410f5fc3"
+      },
+      {
+        "reference": 88025647,
+        "expected": "8b8eb804000001c1898eb8040000",
+        "candidate_bytes": "8b8ee804000001c1898ee8040000"
+      },
+      {
+        "reference": 88027614,
+        "expected": "8b8eb804000001c1898eb8040000",
+        "candidate_bytes": "8b8ee804000001c1898ee8040000"
+      },
+      {
+        "reference": 88027813,
+        "expected": "f30f598624050000e85d6b2900f3410f5fc2",
+        "candidate_bytes": "f30f598694040000e855b92a00f3410f5fc1"
+      },
+      {
+        "reference": 88027928,
+        "expected": "8b8eb804000001c1898eb8040000",
+        "candidate_bytes": "8b8ee804000001c1898ee8040000"
+      },
+      {
+        "reference": 88067200,
+        "expected": "55",
+        "candidate_bytes": "55"
+      },
+      {
+        "reference": 88067664,
+        "expected": "55",
+        "candidate_bytes": "55"
+      },
+      {
+        "reference": 88079296,
+        "expected": "55",
+        "candidate_bytes": "55"
+      },
+      {
+        "reference": 88085792,
+        "expected": "55",
+        "candidate_bytes": "55"
+      },
+      {
+        "reference": 88121152,
+        "expected": "55",
+        "candidate_bytes": "55"
+      },
+      {
+        "reference": 88121597,
+        "expected": "4839d10f839e060000488b8ed8020000",
+        "candidate_bytes": "4839d10f8344070000488b8e90020000"
+      },
+      {
+        "reference": 88121600,
+        "expected": "0f839e060000",
+        "candidate_bytes": "0f8344070000"
+      },
+      {
+        "reference": 88123632,
+        "expected": "4156",
+        "candidate_bytes": "4157"
+      },
+      {
+        "reference": 88151072,
+        "expected": "55",
+        "candidate_bytes": "55"
+      },
+      {
+        "reference": 88214224,
+        "expected": "55",
+        "candidate_bytes": "55"
+      },
+      {
+        "reference": 88248704,
+        "expected": "55",
+        "candidate_bytes": "55"
+      },
+      {
+        "reference": 88331808,
+        "expected": "4157",
+        "candidate_bytes": "4157"
+      },
+      {
+        "reference": 88634928,
+        "expected": "55",
+        "candidate_bytes": "55"
+      }
+    ],
+    "dispatch_guards": [
+      {
+        "kind": "area_shape",
+        "rva": 93518233,
+        "expected": "488d0dc8688801486304814801c8ffe0",
+        "table_rva": 119235176,
+        "maximum": 3,
+        "continuation_rva": 93518249,
+        "mandatory_runtime_guard": true
+      },
+      {
+        "kind": "loot_tag",
+        "rva": 93551024,
+        "expected": "4489f0496304874c01f8ffe0",
+        "table_rva": 119235256,
+        "maximum": 6,
+        "continuation_rva": 93551036,
+        "mandatory_runtime_guard": true
+      }
+    ],
+    "projectile_layout": {
+      "stride": 128,
+      "target": 80,
+      "attacker": 88,
+      "spell": 112,
+      "arrival": 108,
+      "ordinary": 121,
+      "hurt_return": 93511266,
+      "victim_register": 12
+    },
+    "boss_death_contract": {
+      "game_register": 7,
+      "definition_register": 12,
+      "counter_offset": 1888,
+      "instruction": "ff8760070000"
+    },
+    "native_surrender": {
+      "rva": 93642400,
+      "flag": 2739,
+      "expected": "5541565657534883ec50488d6c245048c745f8feffffff"
+    },
+    "native_live_contracts": {
+      "batch": {
+        "return_rva": "0x5899779"
+      }
+    }
+  },
+  "menu_contract": {
+    "map_select": 93038448,
+    "host_map_return": 92955330,
+    "enter_tag": 11,
+    "login": {
+      "branch": 92923033,
+      "continuation": 92923161,
+      "requested_length_stack": 9704
+    },
+    "map_clamp": {
+      "site": 93038505,
+      "expected": "488b4b20488b532848c1e2044531c00f1f8400",
+      "allocation_path": 93038656
+    },
+    "map_selection": {
+      "names": [
+        "elwynn",
+        "duskwood",
+        "wsg",
+        "ungoro",
+        "ab",
+        "feralas",
+        "arena",
+        "sm",
+        "av",
+        "brm",
+        "aq",
+        "naxx"
+      ]
+    }
+  },
+  "variant_constants": {
+    "code_family": "7264",
+    "version": "0.106.0",
+    "family": {
+      "impact_return": 93511266,
+      "impact_victim_slot": 0,
+      "world_slots": null,
+      "path_field": null,
+      "path_field_slots": null,
+      "recycle": [
+        [
+          94104882,
+          94104911,
+          94105070
+        ],
+        [
+          94105186,
+          94105215,
+          94105353
+        ]
+      ],
+      "run_meter": [
+        93749888,
+        93749893,
+        93893344
+      ],
+      "skipped_pointer_locals": []
+    },
+    "result_evaluation": {
+      "lock": 4450,
+      "last_phase": 4454,
+      "account": 2848,
+      "class_id": 788,
+      "victory": 2432,
+      "sites": [
+        92946111,
+        92946152
+      ]
+    },
+    "enemy_layout": {
+      "stride": 368,
+      "guid_offset": 144,
+      "guid_gap": 28
+    },
+    "pursuit": {
+      "cursor": 15,
+      "xy": 6
+    }
+  }
+}

@@ -1,0 +1,9 @@
+[package]
+name = "asx-gameplay"
+version.workspace = true
+edition.workspace = true
+description = "ASX portable gameplay contracts and rules"
+license.workspace = true
+publish.workspace = true
+
+[dependencies]

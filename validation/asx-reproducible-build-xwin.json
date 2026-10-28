@@ -1,0 +1,787 @@
+{
+  "approved": false,
+  "artifact": {
+    "file": "avrt.dll",
+    "game_version": "0.122.0",
+    "sha256": "45a5a48134536a6050359cbecf6f25dcac7248541625fac69ac7bf9651aa05ba",
+    "size_bytes": 1466880,
+    "target": "x86_64-pc-windows-msvc"
+  },
+  "build_recipe": {
+    "cargo_build_jobs": "2",
+    "cargo_lock_sha256": "2bc978d053b8716d7de5d1b1cb853fb8aceeb0b8477c8f9f7e001dc172a707c4",
+    "command": [
+      "cargo",
+      "xwin",
+      "build",
+      "--release",
+      "--locked",
+      "--target",
+      "x86_64-pc-windows-msvc",
+      "--target-dir",
+      "<isolated-target-dir>",
+      "-p",
+      "azeroth-coop-native",
+      "--jobs",
+      "2"
+    ],
+    "external_environment": {
+      "configuration_sha256": "02e163cff9b5f83d5d004c18ed5240f3ab73f51c8edc074f7c8f52dcdf295d03",
+      "scope": "Same reviewed external toolchain environment; no cross-host reproduction claim",
+      "sdk_overlay_sha256": [
+        "a8ab1b9689a46161e19394d770da7815b7aeeb9c6f1b6095a1ac292e1246571b"
+      ]
+    },
+    "release_debug": "0",
+    "rustflags": [
+      "--remap-path-prefix=<checkout>=/asx",
+      "--remap-path-prefix=<cargo-home>=/cargo",
+      "--remap-path-prefix=<rust-sysroot>=/rust",
+      "-Cdebuginfo=0",
+      "-Clink-arg=/DEBUG:NONE",
+      "-Clink-arg=/TIMESTAMP:1"
+    ],
+    "source_fingerprint_sha256": "5672da934a2a1a0a77a2984b714a7e3cb761ce96a26ee1ab466085f4c76882c5",
+    "test_hooks": "disabled-and-checked-absent",
+    "tool_versions": {
+      "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+      "cargo_xwin": "cargo-xwin-xwin 0.23.1",
+      "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+      "pefile": "2023.2.7",
+      "python": "3.12.3",
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+    }
+  },
+  "build_recipe_sha256": "9d21d392bcd834dfc4f7b691f6a27f10250f306eaedc40d5833fbbba8dc04929",
+  "builder": "xwin-msvc",
+  "builder_script": "tools/build/asx_release_binary.py",
+  "cargo_lock_sha256": "2bc978d053b8716d7de5d1b1cb853fb8aceeb0b8477c8f9f7e001dc172a707c4",
+  "requires_human_approval": true,
+  "schema_version": 1,
+  "source_fingerprint": {
+    "algorithm": "sha256",
+    "files": [
+      {
+        "path": ".cargo/config.toml",
+        "sha256": "7fbbc52062e5681e8dfac48e43bc90424edeb624a9ad20605612b3094cc6415e",
+        "size_bytes": 193
+      },
+      {
+        "path": "Cargo.lock",
+        "sha256": "2bc978d053b8716d7de5d1b1cb853fb8aceeb0b8477c8f9f7e001dc172a707c4",
+        "size_bytes": 8300
+      },
+      {
+        "path": "Cargo.toml",
+        "sha256": "5c2d686f6f0049b5c1c0544483dada722f14ccd12732fd9d826bd98ee282468e",
+        "size_bytes": 2028
+      },
+      {
+        "path": "asx/README-ASX.txt",
+        "sha256": "f441cbc4dfb241154ac629add253c5bf1075d114fb4efa3764b3b156952f3dce",
+        "size_bytes": 1912
+      },
+      {
+        "path": "asx/channel.json",
+        "sha256": "041c80e5de514b1985b6003f559291107e2912e207e3ef7d49cb12ab6f48b2cf",
+        "size_bytes": 175
+      },
+      {
+        "path": "asx/core.py",
+        "sha256": "3c80f0405d48b3db9ca8330af3306d38c3b767f70a2a9cbc816b8d4e67dd8faf",
+        "size_bytes": 16012
+      },
+      {
+        "path": "asx/launch.py",
+        "sha256": "d474e1d8ee7aa5caf3e6ef9806716d406b9038d832705306c5f893bd73d6cb9c",
+        "size_bytes": 7312
+      },
+      {
+        "path": "asx/remove.ps1",
+        "sha256": "e55fb6a7c2a66e972cc472a426c3e26d3102b2fcb2cce6db8e06dd1b0058f128",
+        "size_bytes": 3904
+      },
+      {
+        "path": "asx/remove.py",
+        "sha256": "3dc67218b0b9d36b446ce3425b147268225411292ef54764e23a8e8764e0db6c",
+        "size_bytes": 1564
+      },
+      {
+        "path": "asx/start-asx.cmd",
+        "sha256": "dbe3b2b58e3de63df27f15b8025f95b74f1061426e644f177ab8d5e19cd01d80",
+        "size_bytes": 372
+      },
+      {
+        "path": "asx/supported-games.json",
+        "sha256": "2552c5034717146de0a436b2b465b55ba93fd5d10bc6e7f5fbead9294e280c5c",
+        "size_bytes": 476
+      },
+      {
+        "path": "asx/updates.py",
+        "sha256": "49e04968623ec2428f3167961fd8922fc135495d425127969a83958f6354ac44",
+        "size_bytes": 5037
+      },
+      {
+        "path": "build.rs",
+        "sha256": "3ebf2b7489afb0b71abf69495f0970d91662e27ef3e22a4a3b37fda05fa11f38",
+        "size_bytes": 5341
+      },
+      {
+        "path": "crates/asx-game/Cargo.toml",
+        "sha256": "a2a7c100761a082ba2a819ab538f73703db27102f4d7305cfa9f52fe89591ad9",
+        "size_bytes": 621
+      },
+      {
+        "path": "crates/asx-game/src/bindings/inherited/official117.rs",
+        "sha256": "855c89d966d3f0eb9468269154de7fe2e0c2a98c35cc22cc94626d228a740445",
+        "size_bytes": 14565
+      },
+      {
+        "path": "crates/asx-game/src/bindings/inherited/official120.rs",
+        "sha256": "4cf39da1fe83c3cfe87bdc93dfa65ce25945da9d6c798d5c560caeb36b49ca6b",
+        "size_bytes": 12626
+      },
+      {
+        "path": "crates/asx-game/src/bindings/inherited/official1201.rs",
+        "sha256": "ea3f08436785826e7b82cb1152685ed658bb32bd3bcdc65230081ffe389d573c",
+        "size_bytes": 16030
+      },
+      {
+        "path": "crates/asx-game/src/bindings/inherited/official121.rs",
+        "sha256": "dbb3cc5db8c71915d661ea7eb639b43d76e404a14598f6b3a39b216cc3369cdd",
+        "size_bytes": 14422
+      },
+      {
+        "path": "crates/asx-game/src/bindings/official122.rs",
+        "sha256": "2109fb08bb937fff02dc4983d3b846ffff8456ecb572710bfde004bfe96e76a7",
+        "size_bytes": 15783
+      },
+      {
+        "path": "crates/asx-game/src/enemies.rs",
+        "sha256": "3cc048964142f5fa31518fbe91276c51f519db962679ecdddd4811614106e82d",
+        "size_bytes": 3386
+      },
+      {
+        "path": "crates/asx-game/src/lib.rs",
+        "sha256": "a18e8ab552d3474411bcc1ee5c64230aca211468c524dc189244c5e84bea2bc2",
+        "size_bytes": 788
+      },
+      {
+        "path": "crates/asx-game/src/memory.rs",
+        "sha256": "a1aff271765b0783fca7a8906361cc4adcc3d12619ec5a93d78621bdb8e2fc2d",
+        "size_bytes": 288
+      },
+      {
+        "path": "crates/asx-game/src/official.rs",
+        "sha256": "f1e22772280ff6e47f332ea6eb7cfb408559aa8139b9dfe054d31b93f12f6a48",
+        "size_bytes": 42003
+      },
+      {
+        "path": "crates/asx-game/src/official_native.rs",
+        "sha256": "9e6d56bafc48036360eee4e2c8766f2920dde8e846ef844739549f55d577e0d7",
+        "size_bytes": 31364
+      },
+      {
+        "path": "crates/asx-game/src/official_native/blessings.rs",
+        "sha256": "4c37706cde3821df4e9a19ff97960824b312952b1534debcca9e99840a253483",
+        "size_bytes": 8812
+      },
+      {
+        "path": "crates/asx-game/src/official_native/bonus_tooltip.rs",
+        "sha256": "8c704ce9b2f254ead9306b247d8cba13f63f0a7c21433938f4c9c49d20c064cf",
+        "size_bytes": 5582
+      },
+      {
+        "path": "crates/asx-game/src/official_native/bonus_ui.rs",
+        "sha256": "09760a9ee6534b298f038f91b3a89333a9147cf7e9631b5701260f178aa05c37",
+        "size_bytes": 6982
+      },
+      {
+        "path": "crates/asx-game/src/official_native/combat.rs",
+        "sha256": "a479784884e02b811d9524cdc4b94c446cb0165328bb6e7b6196e2b00f7bd6f2",
+        "size_bytes": 17202
+      },
+      {
+        "path": "crates/asx-game/src/official_native/difficulty.rs",
+        "sha256": "3f0c55f82b0106be13d2154521b0c547ae6f9ecee3ce4fac35b629f36045dfa9",
+        "size_bytes": 1689
+      },
+      {
+        "path": "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "sha256": "56025f30a74ac692987a0317c805c9618d7ea51df78847c7c83ed6551befa2e0",
+        "size_bytes": 8519
+      },
+      {
+        "path": "crates/asx-game/src/official_native/enchantments.rs",
+        "sha256": "c131f000952538677871d68c1cd440d4530d473302508ed971a8f4949e2eeded",
+        "size_bytes": 6977
+      },
+      {
+        "path": "crates/asx-game/src/official_native/experience.rs",
+        "sha256": "33708309fc41a63a6bca3ecc4befff165373eec6cc593aca35cd6297afb6f427",
+        "size_bytes": 2837
+      },
+      {
+        "path": "crates/asx-game/src/official_native/fatigue.rs",
+        "sha256": "22b3df06b37f6232b59501cb19d75565aa7930aa685d93002bc031596d5e96d0",
+        "size_bytes": 3459
+      },
+      {
+        "path": "crates/asx-game/src/official_native/gems.rs",
+        "sha256": "998832189edbdddf728283fc083b496254dd689cd5af33b53b9216630cc305d7",
+        "size_bytes": 3929
+      },
+      {
+        "path": "crates/asx-game/src/official_native/glyphs.rs",
+        "sha256": "a8c846b5b998e1453035e9bca0167daff92e87f6a9fce56409e084124af5593d",
+        "size_bytes": 25581
+      },
+      {
+        "path": "crates/asx-game/src/official_native/immunity_aggro.rs",
+        "sha256": "80cbbd5760574f59be473aabf4fdee1a33b4e13bc485e6ccbd37c3a6d3e2c88b",
+        "size_bytes": 5944
+      },
+      {
+        "path": "crates/asx-game/src/official_native/layout.rs",
+        "sha256": "cb8456ef5a67d963ad1b858e52b4e3a67fc913e6800844101d970f2cb208cb8c",
+        "size_bytes": 1651
+      },
+      {
+        "path": "crates/asx-game/src/official_native/menu_icons.rs",
+        "sha256": "84d41a6b8591739f16f3b12ae98c19b7be7ec1d0ea1313737c3a85d9f7b78caf",
+        "size_bytes": 10038
+      },
+      {
+        "path": "crates/asx-game/src/official_native/menu_pause.rs",
+        "sha256": "be057c8f0f63311250312b59da7a1265b19be887dd7d7dc4d851c0bfad33fb0d",
+        "size_bytes": 3740
+      },
+      {
+        "path": "crates/asx-game/src/official_native/pause.rs",
+        "sha256": "0de4462fd8b663ebf2030dd90ca0d52aafa34630970c7e1776ce9cb2d7930f0a",
+        "size_bytes": 1187
+      },
+      {
+        "path": "crates/asx-game/src/official_native/presentation.rs",
+        "sha256": "00d613f10d608e5a4980314d8b21b231ce65d3c32a32e3e811f0e2d0b40fb86a",
+        "size_bytes": 8599
+      },
+      {
+        "path": "crates/asx-game/src/official_native/support.rs",
+        "sha256": "76a77442d3e2b35fbfda9c638c43dc8d88785177a7b5602f3f4414579a6ad4c8",
+        "size_bytes": 22753
+      },
+      {
+        "path": "crates/asx-game/src/official_native/support/advanced.rs",
+        "sha256": "c7a02af28039e3f1c5d22110751d86b2b48295f483cfea1630487bea27f65152",
+        "size_bytes": 9640
+      },
+      {
+        "path": "crates/asx-game/src/official_native/support/effects.rs",
+        "sha256": "192b5eb0cfe22db28ebe7fc2a17a30e1272ef647047e134c26f6e78600b3261f",
+        "size_bytes": 36999
+      },
+      {
+        "path": "crates/asx-game/src/official_native/wallet.rs",
+        "sha256": "e98e95200f7663760e4796e2743cdf081e8bc15fd4c6f826130cf50cb73d8158",
+        "size_bytes": 17963
+      },
+      {
+        "path": "crates/asx-game/src/pe.rs",
+        "sha256": "93a749497e1cf74d0f65047c87bf50a5e2a6dc1c35f7f31ba641c2329a52270e",
+        "size_bytes": 3480
+      },
+      {
+        "path": "crates/asx-gameplay/Cargo.toml",
+        "sha256": "6c6ec9e56e5c577255919de18ac2bde68ec2ba3ffc0929593dc238569ca9f6dc",
+        "size_bytes": 206
+      },
+      {
+        "path": "crates/asx-gameplay/src/blessings.rs",
+        "sha256": "72c92ea698e9d59136c9ca2d13327372fd1b71de1dd9cf60e27326a589f10632",
+        "size_bytes": 5899
+      },
+      {
+        "path": "crates/asx-gameplay/src/client_contract.rs",
+        "sha256": "899362c4f3daf6fca34ac7d4ff42dbbec878b4a3e7a40eece7246216dbd77b9b",
+        "size_bytes": 2232
+      },
+      {
+        "path": "crates/asx-gameplay/src/duplicate_loot.rs",
+        "sha256": "d07a8ed7512757075bbf781d425279433842ef61623fe160689c1022df88b23f",
+        "size_bytes": 5184
+      },
+      {
+        "path": "crates/asx-gameplay/src/enchantments.rs",
+        "sha256": "747bfb100c1b26e86a28d3a8896d49fc74a54b16e34ee7e1d9d8bf6d7cc3764d",
+        "size_bytes": 6547
+      },
+      {
+        "path": "crates/asx-gameplay/src/gems.rs",
+        "sha256": "e24234d3db73888163f5c37d36a0e9ccfc37b4b9890d8876edb14cbe6a68b58d",
+        "size_bytes": 2971
+      },
+      {
+        "path": "crates/asx-gameplay/src/glyphs.rs",
+        "sha256": "a972aca057f6ec7ef9ad58cc7692c8c6644ae8d350089ef797df37f3c0badff5",
+        "size_bytes": 54869
+      },
+      {
+        "path": "crates/asx-gameplay/src/immunity_aggro.rs",
+        "sha256": "2a9bc39a7aeddb73f4d277d1ab5044a779f6c00e2cb567794af7c07d058bb39a",
+        "size_bytes": 1612
+      },
+      {
+        "path": "crates/asx-gameplay/src/kept_bonus.rs",
+        "sha256": "3eb9cc25663aa448768486cdba3c76042c3c04fbac326ecddf3959825fdc6812",
+        "size_bytes": 1976
+      },
+      {
+        "path": "crates/asx-gameplay/src/lib.rs",
+        "sha256": "49c9156b0b6bb9cb201c1800508d478e1412a00255c2995b70dcf66c1a04f416",
+        "size_bytes": 5288
+      },
+      {
+        "path": "crates/asx-gameplay/src/marks.rs",
+        "sha256": "c34becd394ebec0a15449deb5fde77623f35043ff0021182cffdad7e417e43a1",
+        "size_bytes": 2450
+      },
+      {
+        "path": "crates/asx-gameplay/src/menu_projection.rs",
+        "sha256": "2cb934ad27b26349cb2840a706bd605d807d3dbf1c24659dbfc2865ed05eb115",
+        "size_bytes": 2611
+      },
+      {
+        "path": "crates/asx-gameplay/src/offensive.rs",
+        "sha256": "02b952644af62912a5bd13021fed81fe7a258434e07d04fe3d7d9506b8f51f6f",
+        "size_bytes": 1794
+      },
+      {
+        "path": "crates/asx-gameplay/src/official.rs",
+        "sha256": "128498ab46c17665863b8e9113e22c951ce9ba3fc64db2995f19ca39432cb636",
+        "size_bytes": 18039
+      },
+      {
+        "path": "crates/asx-gameplay/src/party_text.rs",
+        "sha256": "91d7886474ba1d1d3b09a29e6e3f05a7004058eafe73781c3cea826dc4860e0f",
+        "size_bytes": 4726
+      },
+      {
+        "path": "crates/asx-gameplay/src/periodic.rs",
+        "sha256": "73c301765aab24aaf9d2e9d30292f39c297611ff84980e6ee8f6729a72dfa009",
+        "size_bytes": 1825
+      },
+      {
+        "path": "crates/asx-gameplay/src/resurrection_fatigue.rs",
+        "sha256": "96596e6a81bd98806119fe7b4fdb2a8732ebf148c8fa85e6275a89bfd880ed76",
+        "size_bytes": 3083
+      },
+      {
+        "path": "crates/asx-gameplay/src/snapshot.rs",
+        "sha256": "6f63fe692c6cfbb8a3743d27b90b34bf24b0cb09e57acfb011baf01b098c472f",
+        "size_bytes": 1435
+      },
+      {
+        "path": "crates/asx-gameplay/src/spells.rs",
+        "sha256": "2ea14672efe1ba0a006613d7222c8cc48472cb5f0403bf48c949f160f4bf4b50",
+        "size_bytes": 6455
+      },
+      {
+        "path": "crates/asx-gameplay/src/support.rs",
+        "sha256": "f6c9f051def057d551427584be11d0231959bb48bc3d2c5875630cc7d62284ca",
+        "size_bytes": 11149
+      },
+      {
+        "path": "crates/asx-gameplay/src/taunts.rs",
+        "sha256": "810d7178ff22bbb5164819457f0ab25eec7f0c7681abfb2359cd0bd115ac8b71",
+        "size_bytes": 3248
+      },
+      {
+        "path": "crates/avrt-probe/Cargo.toml",
+        "sha256": "cea4eee61a4965969e4a91fd5f9b55ae1382044785e156e3038dbe34270ccb41",
+        "size_bytes": 403
+      },
+      {
+        "path": "crates/avrt-probe/src/main.rs",
+        "sha256": "4575fc920b52463c031ee91bd9c42658e861ae4723bc1366754679de0002467e",
+        "size_bytes": 2247
+      },
+      {
+        "path": "native-ui/official-party.lua",
+        "sha256": "0a7c1b660fa09aa635248cfd413e0b3b6bd4a612ea45eaca63f98ff7b342f9a5",
+        "size_bytes": 23059
+      },
+      {
+        "path": "resources/windows/avrt-exports.txt",
+        "sha256": "35a913a3ae0346cb1e4bc78f86a22dcd51e6e2b83d559d583f9e7bc516ba4cc9",
+        "size_bytes": 963
+      },
+      {
+        "path": "resources/windows/version.rc",
+        "sha256": "c03342cebbd784f8ab1eb1721a849722d672c65c2df9d8e9345d30b0c52f6b4f",
+        "size_bytes": 1043
+      },
+      {
+        "path": "resources/windows/version.res",
+        "sha256": "a6f67c43eab06f32b9cb887f9e7053af4056a58feaa8551fae0dd768d93b1263",
+        "size_bytes": 1076
+      },
+      {
+        "path": "rust-toolchain.toml",
+        "sha256": "515c80a149c1e927d497dbebc399e241822aa0197e8f778c21bf5c136c90afd2",
+        "size_bytes": 51
+      },
+      {
+        "path": "src/crash.rs",
+        "sha256": "0de2715f267cda44e58711e88444a3091750ee05ffae934b5a71d104c9b171ca",
+        "size_bytes": 41453
+      },
+      {
+        "path": "src/heap_count.rs",
+        "sha256": "0ebb8265d894881bc327a8dd5d81c009213235df6601a993872d83169c6b84bf",
+        "size_bytes": 3189
+      },
+      {
+        "path": "src/install.rs",
+        "sha256": "62ca681981646603ff1899d4d9ddc05facf6b492d68d8301a15a20aed6ee5425",
+        "size_bytes": 2449
+      },
+      {
+        "path": "src/lib.rs",
+        "sha256": "ce2b87097cfde35da45d7c4a87c92da12ea68c8818935d8137bb309b2794e129",
+        "size_bytes": 6804
+      },
+      {
+        "path": "src/log.rs",
+        "sha256": "92ccf49f5f253e9e59ce717285129e275f090a86eaa47cb6aee17b120e0798b4",
+        "size_bytes": 4659
+      },
+      {
+        "path": "src/presentation/mod.rs",
+        "sha256": "1980cba041c1074f29f80920e0c419139f34ab7e87aa63800798be3e880b48a3",
+        "size_bytes": 98
+      },
+      {
+        "path": "src/presentation/pause.rs",
+        "sha256": "2204b444bff9730319ccc0c1b2b80e927246afd2cde17c5017558f7dbe5ff4a1",
+        "size_bytes": 14675
+      },
+      {
+        "path": "src/proc.rs",
+        "sha256": "b143fb0bdfb7d7209b3ed54222896808359f9f491bce8c5846ab656dcfaaf958",
+        "size_bytes": 8687
+      },
+      {
+        "path": "src/runtime.rs",
+        "sha256": "a832576b45c9da8b8d80eddc5cc31bda1f2f31c9837f8f5b6352a0bba29e7583",
+        "size_bytes": 1690
+      },
+      {
+        "path": "src/runtime/addon_activation.rs",
+        "sha256": "7ed60afc2f731c8030e385170011a9ab7188031825970a11836cd7ed3dd0c965",
+        "size_bytes": 9507
+      },
+      {
+        "path": "src/runtime/blessings.rs",
+        "sha256": "0ae257aa9e781166a3ad0ece4d955d0bb9bae1db2dbcc8ebbaaf68db33a1ef43",
+        "size_bytes": 8188
+      },
+      {
+        "path": "src/runtime/blessings/services.rs",
+        "sha256": "75e54575794d161d53a1e02fedcc7f5a9bce49ea6753ad9beb18fc6540206753",
+        "size_bytes": 2886
+      },
+      {
+        "path": "src/runtime/blessings/services/tests.rs",
+        "sha256": "961c144fd3e83cb9c6f93c641a24c91dcb75f0a5b6758e28ce670b44576190ec",
+        "size_bytes": 2255
+      },
+      {
+        "path": "src/runtime/blessings/tests.rs",
+        "sha256": "aca5ae681b2192896e5c06abb5fc26a18134f0b72b577847d04b755e7089480d",
+        "size_bytes": 1847
+      },
+      {
+        "path": "src/runtime/bonus_catalog.rs",
+        "sha256": "5abb2596431c9b8989d43a7dda6104d947b12d979b33d8fae6aab3c44544b502",
+        "size_bytes": 1706
+      },
+      {
+        "path": "src/runtime/bonus_tooltip.rs",
+        "sha256": "9082a5937bc2a39e2ef8c19a0a6dd46091fecec6427d0aa57d69711b4f339e74",
+        "size_bytes": 5523
+      },
+      {
+        "path": "src/runtime/bonus_ui.rs",
+        "sha256": "182b0b0b25a91bb6b8eadeaa91aafb2e21b745d85c676e8f7df882425169d20f",
+        "size_bytes": 10998
+      },
+      {
+        "path": "src/runtime/bootstrap.rs",
+        "sha256": "6c8e97eb5d4d3c4d89aab774cc5e140917d098bff9f3ee68d7e96e8cad9c06be",
+        "size_bytes": 7948
+      },
+      {
+        "path": "src/runtime/combat.rs",
+        "sha256": "291ea4e6f173be74138563a95145ef923839a71a7181404c71de1d268136f72e",
+        "size_bytes": 23760
+      },
+      {
+        "path": "src/runtime/duplicate_loot.rs",
+        "sha256": "16271af64caaa167500004520241bb3cbf4cf708fef0c6962da1943f462f7b22",
+        "size_bytes": 28848
+      },
+      {
+        "path": "src/runtime/elites.rs",
+        "sha256": "a1dd3ba919e1a9cc7e335af7b76651c49f43f1f184c219f8afa433b8d90899cf",
+        "size_bytes": 2401
+      },
+      {
+        "path": "src/runtime/elites/services.rs",
+        "sha256": "29a85eb2ee0a3d0dc36f55bf80ab02b07943d77160371e09d32b7a484adbe82a",
+        "size_bytes": 1434
+      },
+      {
+        "path": "src/runtime/elites/tests.rs",
+        "sha256": "e10e2394764148a1ae408b00d1836055fc5483d3d31d2c118be3ea4072b19eca",
+        "size_bytes": 1938
+      },
+      {
+        "path": "src/runtime/enchantments.rs",
+        "sha256": "3e3827bec05a92eb5eae92194ba9977bc3c786dde4f27636beb3f364973b4f0b",
+        "size_bytes": 10769
+      },
+      {
+        "path": "src/runtime/experience.rs",
+        "sha256": "17fb4cfefdc262c1f57619096eef18925f57e218c228b00b1ba101ff748a74d2",
+        "size_bytes": 4111
+      },
+      {
+        "path": "src/runtime/experience/services.rs",
+        "sha256": "09bf958384f1da388b5b254dd886576483e40ac5f9490ea708c19d0aad35fda8",
+        "size_bytes": 1358
+      },
+      {
+        "path": "src/runtime/experience/tests.rs",
+        "sha256": "0013e67e74fc3ad1893461a9912a9223547634b36c2f6b1663c3e895d88857c3",
+        "size_bytes": 5893
+      },
+      {
+        "path": "src/runtime/fatigue.rs",
+        "sha256": "52fd44dc4ecc1e34e2f90f6e3996b09a7ac3c19c771927990ee3e62379980a49",
+        "size_bytes": 10040
+      },
+      {
+        "path": "src/runtime/fixture.rs",
+        "sha256": "f5e4ab230172266fe1919a658085781df9e5acf3d564a9e607ffa84d3ed17326",
+        "size_bytes": 60128
+      },
+      {
+        "path": "src/runtime/gems.rs",
+        "sha256": "ccbb394a89114dba7f1d1419d64b0e10bdc373ba7ee6e9a58123733ac020b53b",
+        "size_bytes": 9390
+      },
+      {
+        "path": "src/runtime/glyphs.rs",
+        "sha256": "c676838ecc1a902af7c5302aa1b2e29721591c00c96a2e2214b308cd20722b96",
+        "size_bytes": 40858
+      },
+      {
+        "path": "src/runtime/io.rs",
+        "sha256": "da386c081dc49a6b1389cbd3f6529f50a9c5dea32cf81c812750a42a494ea46f",
+        "size_bytes": 11932
+      },
+      {
+        "path": "src/runtime/lifecycle.rs",
+        "sha256": "d0d40b648cb548bcd91a47e2414e65bf3af74a36e8701d8fd6868fced9b3f2ca",
+        "size_bytes": 1154
+      },
+      {
+        "path": "src/runtime/lifecycle/services.rs",
+        "sha256": "729f6364718f99445368e0fe6a3226616ee413aa092a5ffa5f01112aa48187e8",
+        "size_bytes": 788
+      },
+      {
+        "path": "src/runtime/lifecycle/tests.rs",
+        "sha256": "a780dbbded2976d130e91f65023f9e874fbdda28eda6482fa96f788c34dcda60",
+        "size_bytes": 1591
+      },
+      {
+        "path": "src/runtime/menu_pause.rs",
+        "sha256": "1f1731deb52b6d2e79689ef246085e5a3d9d3fb956207c6f4cc40d95ad7dcf7d",
+        "size_bytes": 10682
+      },
+      {
+        "path": "src/runtime/menu_pause/coordination_tests.rs",
+        "sha256": "a262f89b085eedae9214594d9fc66614cd60c05688f04e40f5a0a80297f723bf",
+        "size_bytes": 4822
+      },
+      {
+        "path": "src/runtime/menu_pause/services.rs",
+        "sha256": "06142ad0090c2b0e6907259e2ccf2462a2b361a9bd1bea57dec0289f13372752",
+        "size_bytes": 2534
+      },
+      {
+        "path": "src/runtime/menu_ui.rs",
+        "sha256": "134d0e0535c28be64adbe4e68419f3ce0bfc17c33817fa1d754cd1a9a237cbc7",
+        "size_bytes": 8741
+      },
+      {
+        "path": "src/runtime/party_ui.rs",
+        "sha256": "aa13a479c5c34239d6e8de4d18360a0240096aa4f515e6f7cf6474e8ac45129b",
+        "size_bytes": 17030
+      },
+      {
+        "path": "src/runtime/pause.rs",
+        "sha256": "d25342e5bd061e2e94e4e9689e0eb50787cc558c65ae446a3cca54adec865a8a",
+        "size_bytes": 9655
+      },
+      {
+        "path": "src/runtime/pause/services.rs",
+        "sha256": "160da09544f83229a0fcec81647a83696128a00df3542723ae34356e02093e6e",
+        "size_bytes": 2325
+      },
+      {
+        "path": "src/runtime/pause/tests.rs",
+        "sha256": "deb3f40d4a5fbb13dfe343bb89bfeaa5644c7b4cc2b7d5cebb65ef713a604b0f",
+        "size_bytes": 5331
+      },
+      {
+        "path": "src/runtime/performance.rs",
+        "sha256": "f2efcb8fb2b3083237ef83a8754180ad036d7577693fafbf59acdcbf9ea3728e",
+        "size_bytes": 1486
+      },
+      {
+        "path": "src/runtime/presentation.rs",
+        "sha256": "cddf19f9daa46c1d0b755df160a6859fe297da5d9d459ac7ecc20cc8ff299217",
+        "size_bytes": 3235
+      },
+      {
+        "path": "src/runtime/reward_cards.rs",
+        "sha256": "ad09cfb375df92edfb7cb1e705b143d311e95a280ed196f5822e177b8be061b5",
+        "size_bytes": 2485
+      },
+      {
+        "path": "src/runtime/reward_services.rs",
+        "sha256": "0c18b8bc7a63e4da9cbb2664b540916c8504be919f12de256e43867a289977f3",
+        "size_bytes": 4070
+      },
+      {
+        "path": "src/runtime/reward_services/tests.rs",
+        "sha256": "5c7a94af5bde4487457368206b47b00e4c63f9a7e30eebbe59c029bbbe17019d",
+        "size_bytes": 7114
+      },
+      {
+        "path": "src/runtime/run_stats.rs",
+        "sha256": "b1a72c169d52d5fe5f2673aac18ccbd15405123d4d7f0e6b58926696ad6bfd2f",
+        "size_bytes": 822
+      },
+      {
+        "path": "src/runtime/session.rs",
+        "sha256": "61ad26fc7ab2134ff5b26b59cd8bcd6d515b8fe5bc86b0a03a37a3c2abfc17c8",
+        "size_bytes": 7898
+      },
+      {
+        "path": "src/runtime/session/services.rs",
+        "sha256": "2459437f852e4f9afe30da8616db46523616365ed72fa7aadb29508a8e90037a",
+        "size_bytes": 11043
+      },
+      {
+        "path": "src/runtime/session/tests.rs",
+        "sha256": "5cbb08eec2e445a0160e80b9fe6292b2f57cbf5eb37cbbf51d85fcfa0bae963d",
+        "size_bytes": 14958
+      },
+      {
+        "path": "src/runtime/support.rs",
+        "sha256": "c2dac3b100ba3f2865f9cefd9783960b438605f540a161f2c58c9d7c559220f5",
+        "size_bytes": 42296
+      },
+      {
+        "path": "src/runtime/wallet.rs",
+        "sha256": "777ffa214de65cc06dc10539c2bf0578ef61ce4b25153efc967d4df75ad44915",
+        "size_bytes": 21130
+      },
+      {
+        "path": "src/runtime/xp_hooks.rs",
+        "sha256": "03d3963260e3ce8f1523f2a2ca65cacc5676534ff31841d98843132649b042e3",
+        "size_bytes": 3759
+      },
+      {
+        "path": "src/runtime/xp_hooks/services.rs",
+        "sha256": "b9124d92c2894abad8100c7169ec1875e6d6abc32bea05483e1ca58d12fd3db6",
+        "size_bytes": 2349
+      },
+      {
+        "path": "src/runtime/xp_hooks/tests.rs",
+        "sha256": "db41da035d663dbe92f08bef917f36df2f271b1676c036c3cb3644b097a01ab4",
+        "size_bytes": 6417
+      },
+      {
+        "path": "src/stub.rs",
+        "sha256": "89015144eaef17a558e73b9468aaf7e3d1ef455b2c75984dd1a26a2e603318a2",
+        "size_bytes": 14070
+      },
+      {
+        "path": "src/stub_tests.rs",
+        "sha256": "0abcaef8d20485305a4c2a1720ed39894da3bb1b9ca397440d52e3f65a6327c8",
+        "size_bytes": 7392
+      },
+      {
+        "path": "src/test_support.rs",
+        "sha256": "b6e53ed2e773c9e394054a5a77560f11116f481dce4518895fd322a99375cdea",
+        "size_bytes": 143
+      },
+      {
+        "path": "tools/build/asx_package.py",
+        "sha256": "33eaf9309f838bdb9b65fb0f8421e3edbc634a9061ed683b5bf1cb3922579981",
+        "size_bytes": 5663
+      },
+      {
+        "path": "tools/build/asx_release_binary.py",
+        "sha256": "e5e5348ad41bd2cd8b9443848d9a3005e5676fb609da58e0b27d0261ef69a310",
+        "size_bytes": 4080
+      },
+      {
+        "path": "tools/build/asx_reproducibility.py",
+        "sha256": "e7f122ce86af736481018f1d969207ad7936fc0e65fc49e0edf4d093fbcb15e9",
+        "size_bytes": 12854
+      },
+      {
+        "path": "tools/build/asx_verify_publication.py",
+        "sha256": "c30bfae1427bfb6a3656fe64230be996d54e898411f8fbdc03a532f5f50328c5",
+        "size_bytes": 3176
+      },
+      {
+        "path": "tools/build/release.ps1",
+        "sha256": "ed193cf2d400113cf22d3690f81d2da3a657aa00824d24233d6d195a61df5e39",
+        "size_bytes": 3889
+      }
+    ],
+    "sha256": "5672da934a2a1a0a77a2984b714a7e3cb761ce96a26ee1ab466085f4c76882c5"
+  },
+  "status": "technically-reviewed-local-reference",
+  "technical_review": {
+    "not_established": [
+      "Cross-host reproduction",
+      "Windows-native reproduction",
+      "Live gameplay validation",
+      "Publication or deployment authorization"
+    ],
+    "result": "Independent artifact/source/recipe review passed",
+    "scope": "Same reviewed local WSL toolchain environment"
+  },
+  "tool_versions": {
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+    "cargo_xwin": "cargo-xwin-xwin 0.23.1",
+    "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "pefile": "2023.2.7",
+    "python": "3.12.3",
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+  },
+  "verification": {
+    "artifacts_byte_identical": true,
+    "independent_fresh_builds": 2,
+    "source_unchanged_before_between_after": true,
+    "target_directories_distinct": true
+  }
+}

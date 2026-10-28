@@ -1,0 +1,2 @@
+# Optional isolated Lua 5.1 UI contract tests
+lupa==2.6

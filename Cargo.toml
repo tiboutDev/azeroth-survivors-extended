@@ -1,0 +1,72 @@
+[package]
+name = "azeroth-coop-native"
+version.workspace = true
+edition.workspace = true
+description = "ASX extensions for the official Azeroth Survivors engine"
+license.workspace = true
+publish.workspace = true
+build = "build.rs"
+
+[lib]
+# The game imports avrt.dll; Windows loads this file from the game folder first.
+name = "avrt"
+crate-type = ["cdylib", "rlib"]
+path = "src/lib.rs"
+
+[features]
+# Live-test switches (AZCOOP_TEST_CRASH, AZCOOP_TEST_GUEST_LETHAL_AT). OFF in every shipped build: tools/build/asx_release_binary.py refuses a
+# DLL that contains them. Test builds: cargo build --release --features test-hooks --target-dir target/test-hooks
+test-hooks = []
+
+[dependencies]
+asx-gameplay.workspace = true
+minhook = "0.9"
+sha2 = "0.10"
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+base64 = "0.22"
+# Static facts about the game builds (PE reader, profile, readers) and the generated machine code per build.
+asx-game.workspace = true
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Threading",
+    "Win32_System_SystemServices",
+    "Win32_System_Performance",
+    "Win32_System_Memory",
+    "Win32_System_Environment",
+    "Win32_System_DataExchange",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_Diagnostics_Debug",
+    "Win32_System_Kernel",
+    "Win32_System_Console",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+    "Win32_System_Pipes",
+    "Win32_System_ProcessStatus",
+    "Win32_System_SystemInformation",
+] }
+
+[workspace]
+resolver = "2"
+default-members = [".", "crates/asx-game", "crates/asx-gameplay"]
+members = [".", "crates/asx-game", "crates/asx-gameplay", "crates/avrt-probe"]
+
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-only"
+publish = false
+
+[workspace.dependencies]
+asx-game = { path = "crates/asx-game" }
+asx-gameplay = { path = "crates/asx-gameplay" }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+debug = 1
+strip = "none"

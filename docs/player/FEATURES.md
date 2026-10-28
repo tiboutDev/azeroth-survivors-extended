@@ -171,4 +171,4 @@ The debuff display shows stacks and recovery time. The penalty affects outgoing 
 
 ## Share feedback
 
-[Report an issue or share a balance observation](https://github.com/tiboutDev/azeroth-survivors-coop/issues). Include your game and ASX versions, map, difficulty, classes and player count, plus what you expected and what happened.
+[Report an issue or share a balance observation](https://github.com/tiboutDev/azeroth-survivors-extended/issues). Include your game and ASX versions, map, difficulty, classes and player count, plus what you expected and what happened.

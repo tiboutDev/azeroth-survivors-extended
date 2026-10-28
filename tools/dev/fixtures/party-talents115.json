@@ -1,0 +1,61 @@
+{
+  "sha256": "0258b8a43d9ba3170b15e5fc07a646a606eb2972a5dd6aa0e6349a07ec390e2c",
+  "notes": "Requested tank-tree ranks in disposable profiles. Native 0.115 save parsing retains its own rank, prerequisite and talent-point validation. Not every talent in every tree; mutually exclusive choices remain native.",
+  "classes": {
+    "1": {
+      "shield_spec": 5,
+      "anticipation": 5,
+      "imp_thunder_clap": 3,
+      "toughness": 5,
+      "heavy_shield": 3,
+      "shockwave": 1,
+      "imp_demo_shout": 3,
+      "defiance": 3,
+      "imp_shield_slam": 3,
+      "shield_mastery": 3,
+      "fortified": 1,
+      "last_stand": 1,
+      "unbreakable": 3,
+      "titan": 1
+    },
+    "2": {
+      "imp_devotion": 5,
+      "redoubt": 5,
+      "imp_consecration": 3,
+      "spiritual_attunement": 3,
+      "weighted_hammer": 3,
+      "hallowed_ground": 1,
+      "judgement_crusader": 3,
+      "righteous_fury": 3,
+      "imp_hoj": 3,
+      "blessed_life": 3,
+      "ardent_defender": 1,
+      "divine_intervention": 1,
+      "sacred_duty": 3,
+      "hammer_righteous": 1
+    },
+    "11": {
+      "ferocity_druid": 5,
+      "feral_aggression": 5,
+      "feral_instinct": 3,
+      "brutal_impact": 5,
+      "rake": 1,
+      "sharpened_claws": 3,
+      "predatory_strikes": 3,
+      "thick_hide": 3,
+      "blood_frenzy": 1,
+      "savage_fury": 3,
+      "heart_of_wild": 5,
+      "primal_fury": 2,
+      "leader_of_pack": 1
+    }
+  },
+  "compatible_sha256": [
+    "d57dbb9f6b325e502204940ac7e3b82bab2ea7db6022c68a9b2bebb91c556bc9",
+    "507a791fad3aec59afb2f90d2737cdab4dbbe79b98c5e74d7699fe44bed16293",
+    "291c281bd0a4255fdb3d04b2e442121e2df144f388f16de086b430e875aaad08",
+    "d3ff38943ce81df46c4c2562632d3bf868ed871540d732b235a4c68323c3ab7d",
+    "22f7938eb4f99f2857dc091b1c57c147bd848eaabfeaa81e444c0a3393ca8150",
+    "ec3a5b15fa39fed63ce4516c4fc159bdac92691ca44f88befc849010338d14f7"
+  ]
+}

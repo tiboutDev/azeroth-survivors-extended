@@ -18,9 +18,9 @@ The goal is to create different ways to use a spell while preserving its identit
 
 ### Why revisit them?
 
-Azeroth Survivors 0.121.0 introduces equipment set bonuses that transform spells.
+The native game includes equipment set bonuses that transform spells.
 
-Glyphs are disabled in this version while we examine how these transformations interact and how the combined choices can remain understandable, useful and balanced.
+Glyphs are disabled on the supported 0.122.0 client while we examine how these transformations interact and how the combined choices can remain understandable, useful and balanced.
 
 ### What we want to preserve
 
@@ -49,4 +49,4 @@ Only features explicitly included in a release’s notes should be considered av
 
 Have a suggestion or a build interaction worth exploring?
 
-[Open an issue](https://github.com/tiboutDev/azeroth-survivors-coop/issues) and describe the decision or playstyle you would like the feature to create.
+[Open an issue](https://github.com/tiboutDev/azeroth-survivors-extended/issues) and describe the decision or playstyle you would like the feature to create.

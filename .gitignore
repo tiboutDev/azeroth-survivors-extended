@@ -1,0 +1,22 @@
+# Python bytecode caches at any depth
+__pycache__/
+*.py[cod]
+
+# Cargo output at any workspace/package depth
+target/
+
+# Generated reports and private workspace state at the repository root
+/test-results/
+/original-files.json
+/community-signing/
+/.dev-tools/
+/.dev-local.json
+/.wsl-source.json
+/.wsl-deployed-files.json
+
+# Local game directories/links only; keep src/runtime/ visible to Git
+/runtime
+/runtime-*
+
+# Local workspace notes and verified evidence archives
+/.local/

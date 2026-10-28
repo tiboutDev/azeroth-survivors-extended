@@ -1,0 +1,27 @@
+[package]
+name = "asx-game"
+version.workspace = true
+edition.workspace = true
+description = "ASX selected native integration and typed memory readers"
+license.workspace = true
+publish.workspace = true
+
+[[test]]
+name = "client_binding"
+path = "tests/current/client_binding.rs"
+
+[[test]]
+name = "jewelry"
+path = "tests/current/jewelry.rs"
+
+[[test]]
+name = "enemies"
+path = "tests/current/enemies.rs"
+
+# Pure: no Windows API, no process access. Memory is abstracted behind a trait.
+[dependencies]
+asx-gameplay.workspace = true
+serde_json = { version = "1", features = ["float_roundtrip"] }
+
+[dev-dependencies]
+sha2 = "0.10"

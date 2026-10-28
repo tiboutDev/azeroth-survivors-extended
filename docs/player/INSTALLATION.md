@@ -7,14 +7,14 @@
 ## Requirements
 
 - Windows 64-bit.
-- Your own copy of **Azeroth Survivors 0.121.0**.
+- Your own copy of **Azeroth Survivors**, in the exact version supported by your ASX release.
 - An ASX release explicitly compatible with that game version.
 
 ASX does not include the original game. Check the release notes for compatibility information before installing.
 
 ## Install and launch
 
-1. Download the compatible archive from the [ASX releases page](https://github.com/tiboutDev/azeroth-survivors-coop/releases).
+1. Download the compatible archive from the [ASX releases page](https://github.com/tiboutDev/azeroth-survivors-extended/releases).
 2. Close Azeroth Survivors.
 3. Extract the archive into your game folder, beside `AzerothSurvivors.exe`.
 4. Run **`start-asx.cmd`**.
@@ -79,7 +79,7 @@ Reports are never uploaded automatically. Review the archive before sharing it: 
 
 ## Need help?
 
-Open an [issue](https://github.com/tiboutDev/azeroth-survivors-coop/issues) and include:
+Open an [issue](https://github.com/tiboutDev/azeroth-survivors-extended/issues) and include:
 
 - Your game and ASX versions.
 - The step that failed and any displayed error.

@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "games": {
+    "0.122.0": {
+      "sha256": "ec3a5b15fa39fed63ce4516c4fc159bdac92691ca44f88befc849010338d14f7",
+      "archives": [
+        "Data/patch.MPQ",
+        "Data/patch-2.MPQ",
+        "Data/patch-3.MPQ",
+        "Data/patch-4.MPQ",
+        "Data/patch-5.MPQ",
+        "Data/patch-6.MPQ",
+        "Data/patch-7.MPQ",
+        "Data/patch-8.MPQ",
+        "Data/patch-9.MPQ",
+        "Data/patch-A.MPQ",
+        "Data/patch-B.MPQ"
+      ]
+    }
+  }
+}
