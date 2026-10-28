@@ -47,3 +47,9 @@ Run `official-party-ui` for required Lua 5.1 behavior and selected-memory checks
 A script load, retained-child allocation or sent packet does not prove a visible
 frame. Rendered owner-tooltip claims require an explicit bounded visual trial
 against the actual artifact; portable checks alone do not establish that result.
+
+## World and reward extensions
+
+[Native world presentation](NATIVE-WORLD-UI.md) documents enemy plate styling,
+world damage/healing text, shared card separators and one-time random cooperative
+markers. These use native owners and the same owned presentation activation gate.

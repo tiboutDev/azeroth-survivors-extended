@@ -34,7 +34,7 @@ reader/tool implementations and their exclusive tests are not part of the gate.
 | Profile | Current risk covered |
 | --- | --- |
 | official | Native 0.125 selection, normalized snapshots, menu ownership, native policy transactions, current source boundaries and evidence assessors |
-| official-party-ui | Retained native children, native owner origins, menu projection and required Lua 5.1 behavior through uv/lupa |
+| official-party-ui | Retained native children, owner origins, menu projection, world-number packet decoding, marker policy, shared card boundaries and required Lua 5.1 behavior through uv/lupa |
 | asx-install | Owned native-folder installation, signatures, transactions, interrupted-client recovery, rollback and publication inventory verification |
 | gems | Fixed gem identity, selected jewelry transactions and evidence rejection |
 | enchantments | Ring identity/ranks, selected jewelry transactions and evidence rejection |

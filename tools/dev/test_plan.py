@@ -8,14 +8,14 @@ def cargo(*args):return ['cargo',*args,'--locked']
 def py(pattern):return ['python3','-m','unittest','discover','-s','tests','-p',pattern,'-v']
 ARCH=py('test_gameplay_boundary.py')
 SOURCE=py('test_asx_source_boundary.py')
-NATIVE=cargo('test','-p','asx-game','--test','client_binding','--test','jewelry','--test','enemies')
+NATIVE=cargo('test','-p','asx-game','--test','client_binding','--test','jewelry','--test','enemies','--test','presentation')
 PROFILES={
  'gems':[cargo('test','-p','asx-gameplay','--lib','gems::'),NATIVE,py('test_gem_evidence.py'),ARCH],
  'enchantments':[cargo('test','-p','asx-gameplay','--lib','enchantments::'),NATIVE,py('test_enchantment_evidence.py'),ARCH],
  'glyphs':[cargo('test','-p','asx-gameplay','--lib','glyphs::'),cargo('test','-p','asx-gameplay','--lib','kept_bonus::'),NATIVE,py('test_glyphs_evidence.py'),ARCH],
  'fatigue':[cargo('test','-p','asx-gameplay','--lib','resurrection_fatigue::'),NATIVE,ARCH],
  'asx-install':[py('test_asx.py'),py('test_asx_publication.py')],
- 'official-party-ui':[cargo('test','-p','asx-gameplay','--lib','menu_projection::'),cargo('test','-p','asx-gameplay','--lib','party_text::'),['uv','run','--with','lupa==2.6','python3','tests/test_official_party_lua.py'],NATIVE],
+ 'official-party-ui':[cargo('test','-p','asx-gameplay','--lib','raid_markers::'),cargo('test','-p','asx-game','--lib','combat_text::'),cargo('test','-p','asx-gameplay','--lib','menu_projection::'),cargo('test','-p','asx-gameplay','--lib','party_text::'),['uv','run','--with','lupa==2.6','python3','tests/test_official_party_lua.py'],NATIVE],
  'official':[cargo('test','-p','asx-gameplay','--test','official','--test','support','--test','immunity_aggro'),cargo('test','-p','asx-gameplay','--lib','official::menu_owner_tests'),cargo('test','-p','asx-game','--lib','official_native::'),NATIVE,py('test_extension_completion_evidence.py'),py('test_client_binding.py'),py('test_pause_evidence.py'),py('test_pause_motion.py'),py('test_reward_wallet_evidence.py'),py('test_immunity_aggro_evidence.py'),ARCH,SOURCE],
  'rules':[cargo('test','-p','asx-gameplay'),ARCH],
  'combat':[cargo('test','-p','asx-gameplay','--test','combat','--test','immunity_aggro'),NATIVE,ARCH],
@@ -32,7 +32,7 @@ def choose(files):
   if name in tooling:selected.add('tooling')
   elif name in ('Cargo.toml','Cargo.lock','asx/supported-games.json')or name.startswith('crates/asx-game/src/bindings/'):return ['full']
   elif name.startswith('asx/')or name in ('tests/test_asx.py','tests/test_asx_publication.py','tools/build/asx_package.py','tools/build/asx_verify_publication.py'):selected.add('asx-install')
-  elif name in ('native-ui/official-party.lua','src/runtime/party_ui.rs','src/runtime/menu_ui.rs','crates/asx-gameplay/src/party_text.rs','crates/asx-gameplay/src/menu_projection.rs','tests/test_official_party_lua.py','tools/dev/requirements-ui.txt'):selected.add('official-party-ui')
+  elif name in ('native-ui/official-party.lua','src/runtime/party_ui.rs','src/runtime/menu_ui.rs','crates/asx-gameplay/src/party_text.rs','crates/asx-gameplay/src/menu_projection.rs','tests/test_official_party_lua.py','tools/dev/requirements-ui.txt','src/runtime/bonus_ui.rs','src/runtime/bonus_catalog.rs','src/runtime/bonus_tooltip.rs','src/runtime/combat_text.rs','src/runtime/nameplates.rs','crates/asx-game/src/official_native/nameplates.rs','src/runtime/raid_markers.rs','crates/asx-gameplay/src/raid_markers.rs','crates/asx-game/src/official_native/combat_text.rs','crates/asx-game/src/official_native/raid_markers.rs','crates/asx-game/src/official_native/bonus_ui.rs','crates/asx-game/src/official_native/bonus_tooltip.rs','crates/asx-game/tests/current/presentation.rs'):selected.add('official-party-ui')
   elif name in ('crates/asx-gameplay/src/gems.rs','crates/asx-game/src/official_native/gems.rs','src/runtime/gems.rs','tools/dev/gem_evidence.py','tests/test_gem_evidence.py'):selected.add('gems')
   elif name in ('crates/asx-gameplay/src/enchantments.rs','crates/asx-game/src/official_native/enchantments.rs','crates/asx-game/tests/current/jewelry.rs','src/runtime/enchantments.rs','tools/dev/enchantment_evidence.py','tests/test_enchantment_evidence.py'):selected.add('enchantments')
   elif name.startswith(('crates/asx-game/src/official_native','src/runtime/','src/presentation/'))or name in ('crates/asx-game/src/official.rs','src/runtime.rs','tests/test_client_binding.py'):selected.add('official')

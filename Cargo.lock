@@ -3,13 +3,6 @@
 version = 4
 
 [[package]]
-name = "avrt-probe"
-version = "0.1.0"
-dependencies = [
- "windows-sys",
-]
-
-[[package]]
 name = "asx-game"
 version = "0.1.0"
 dependencies = [
@@ -21,6 +14,13 @@ dependencies = [
 [[package]]
 name = "asx-gameplay"
 version = "0.1.0"
+
+[[package]]
+name = "avrt-probe"
+version = "0.1.0"
+dependencies = [
+ "windows-sys",
+]
 
 [[package]]
 name = "azeroth-coop-native"

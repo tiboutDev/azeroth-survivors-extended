@@ -957,3 +957,38 @@ impl SelectedAdapter{pub fn reward_entries(self)->[Entry;2]{self.native.reward_e
 pub fn native_hit_effect_entry(self)->Entry{self.native.native_hit_effect_entry()}}
 
 impl SelectedAdapter{pub unsafe fn fixture_spawn_encounter(self,b:usize,g:u64,d:u64){self.native.fixture_spawn_encounter(b,g,d)}}
+
+pub use crate::official_native::{BonusSeparator,BonusHeaderColumn};
+impl SelectedAdapter {
+ pub fn bonus_separator_entries(self)->[Entry;2]{self.native.bonus_separator_entries()}
+ pub fn bonus_separator_capture(self,m:&dyn Mem,caller:u64,node:u64,color:u64)->Result<Option<BonusSeparator>>{self.native.bonus_separator_capture(m,caller,node,color)}
+ pub unsafe fn bonus_separator_draw(self,m:&dyn Mem,base:usize,parent:u64,style:BonusSeparator)->Result<()>{self.native.bonus_separator_draw(m,base,parent,style)}
+}
+
+impl SelectedAdapter {
+ pub fn raid_markers(self,m:&dyn Mem,server:u64)->Result<[Option<u64>;8]>{self.native.raid_markers(m,server)}
+ pub unsafe fn set_raid_marker(self,m:&dyn Mem,base:u64,server:u64,slot:u32,guid:u64,icon:u8)->Result<bool>{self.native.set_raid_marker(m,base,server,slot,guid,icon)}
+}
+
+impl SelectedAdapter{
+ pub fn combat_text_entries(self)->[Entry;5]{self.native.combat_text_entries()}
+ pub fn native_heal_texts(self,m:&dyn Mem,bp:u64,periodic:bool,players:&[u64])->crate::Result<Vec<crate::official_native::HealText>>{self.native.native_heal_texts(m,bp,periodic,players)}
+ pub unsafe fn draw_native_heal_text(self,m:&dyn MutableMemory,base:usize,bp:u64,periodic:bool,heal:crate::official_native::HealText)->crate::Result<bool>{self.native.draw_native_heal_text(m,base,bp,periodic,heal)}
+}
+
+impl SelectedAdapter{
+ pub fn nameplate_entries(self)->[Entry;2]{self.native.nameplate_entries()}
+ pub unsafe fn native_unit_rank(self,m:&dyn Mem,base:usize,script:u64,guid:u64)->Result<Option<u32>>{self.native.native_unit_rank(m,base,script,guid)}
+ pub fn native_ui_participants(self,m:&dyn Mem,script:u64)->Result<Vec<u64>>{self.native.native_ui_participants(m,script)}
+ pub unsafe fn nameplate_rows(self,m:&dyn Mem,base:usize,script:u64,ptr:u64,len:u64)->Result<Option<Vec<u8>>>{self.native.nameplate_rows(m,base,script,ptr,len)}
+ pub fn ui_unit_hash_entry(self)->Entry{let(rva,bytes)=crate::official125::UI_UNIT_HASH;Entry{rva,bytes}}
+ pub fn nameplate_style(self,m:&dyn Mem,caller:u64,bp:u64,script:u64,index:u64,style:u64)->Result<Option<([f32;13],u64,[u8;52])>>{self.native.nameplate_style(m,caller,bp,script,index,style)}
+ pub fn restore_nameplate_style_cache(self,m:&dyn MutableMemory,cache:u64,original:&[u8;52])->Result<()>{self.native.restore_nameplate_style_cache(m,cache,original)}
+}
+
+impl SelectedAdapter{
+ pub fn bonus_column_entries(self)->[Entry;2]{self.native.bonus_column_entries()}
+ pub fn bonus_column_capture(self,m:&dyn Mem,caller:u64,bundle:u64,meta:u64)->Result<Option<BonusHeaderColumn>>{self.native.bonus_column_capture(m,caller,bundle,meta)}
+ pub unsafe fn bonus_column_draw(self,m:&dyn MutableMemory,base:usize,commands:u64,title:u64,style:BonusHeaderColumn)->Result<[u64;6]>{self.native.bonus_column_draw(m,base,commands,title,style)}
+}
+impl SelectedAdapter{pub fn bonus_column_spawner(self,m:&dyn Mem,parent:u64,column:u64)->Result<[u64;6]>{self.native.bonus_column_spawner(m,parent,column)}}

@@ -127,6 +127,7 @@ impl WorldServices for Runtime {
         }
         let opened = snapshot.as_ref().is_some_and(|party| wallet::present(self, game, party));
         let snapshot = if opened { self.adapter.party(&self.local, server).ok().flatten() } else { snapshot };
+        super::super::raid_markers::observe(self,server,snapshot.as_ref());
         let reason = snapshot.as_ref().and_then(|party| menu_pause::reason(self, game, party));
         let active = reason.is_some();
         if pause::set_active(active) != active {

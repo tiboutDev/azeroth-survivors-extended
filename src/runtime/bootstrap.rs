@@ -1,6 +1,6 @@
 //! Exact-build verification and ordered installation of official-engine hooks.
 use super::{
-    addon_activation, blessings, bonus_tooltip, bonus_ui, combat, duplicate_loot,
+    addon_activation, nameplates, combat_text, blessings, bonus_tooltip, bonus_ui, combat, duplicate_loot,
     elites, experience, fatigue, glyphs, local_base, menu_pause, menu_ui, party_ui,
     pause, reward_cards, run_stats, session, support, wallet, xp_hooks, Adapter, Runtime, RUNTIME,
 };
@@ -34,6 +34,10 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
             solo: std::sync::Mutex::new(None),
         })
         .map_err(|_| "Official runtime already installed")?;
+    // The column builder is also the menu group's constructor. Verify its native
+    // bytes before menu_ui installs that shared hook, not against our detour.
+    let runtime=RUNTIME.get().ok_or("Official runtime unavailable")?;
+    for entry in adapter.bonus_column_entries(){if runtime.local.read(local_base()+entry.rva as usize,entry.bytes.len())?!=entry.bytes{return Err(format!("Native bonus column boundary changed at {:#x}",entry.rva))}}
     if rules {
         crate::presentation::pause::install_selected(
             local_base(),
@@ -73,8 +77,13 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
     for e in adapter.bonus_tooltip_entries(){if r.local.read(local_base()+e.rva as usize,e.bytes.len())?!=e.bytes{return Err(format!("Native glyph hover boundary changed at {:#x}",e.rva));}}
     #[cfg(feature="test-hooks")]if bonus_tooltip::fixture_enabled(){if let Some(e)=adapter.kept_tooltip_fixture_focus(){if r.local.read(local_base()+e.rva as usize,e.bytes.len())?!=e.bytes{return Err("Native tooltip fixture focus contract changed".into())}}}
     crate::install::install(&bonus_tooltip::hooks(adapter))?;
-    for e in adapter.bonus_ui_entries(){if r.local.read(local_base()+e.rva as usize,e.bytes.len())?!=e.bytes{return Err("Native glyph UI boundary changed".into());}}
+    for e in adapter.bonus_ui_entries().into_iter().chain(adapter.bonus_separator_entries()){if r.local.read(local_base()+e.rva as usize,e.bytes.len())?!=e.bytes{return Err("Native glyph UI boundary changed".into());}}
     crate::install::install(&bonus_ui::ui_hooks(adapter))?;
+    if rules {
+        for entry in adapter.combat_text_entries().into_iter().chain(adapter.nameplate_entries()).chain([adapter.ui_unit_hash_entry()]){if r.local.read(local_base()+entry.rva as usize,entry.bytes.len())?!=entry.bytes{return Err(format!("Native combat-text boundary changed at {:#x}",entry.rva))}}
+        crate::install::install(&combat_text::hooks(adapter))?;
+        crate::install::install(&nameplates::hooks(adapter))?;
+    }
     crate::install::install(&support::hooks(adapter))?;
     crate::install::install(&combat::hooks(adapter))?;
     #[cfg(feature="test-hooks")]

@@ -65,3 +65,9 @@ fn local_base() -> usize {
 }
 
 pub(crate) fn restore_addon_activation(){addon_activation::restore();}
+
+mod raid_markers;
+
+mod combat_text;
+
+mod nameplates;

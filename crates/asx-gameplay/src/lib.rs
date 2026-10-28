@@ -189,3 +189,5 @@ pub mod duplicate_loot;
 pub mod gems;
 
 pub mod kept_bonus;
+
+pub mod raid_markers;

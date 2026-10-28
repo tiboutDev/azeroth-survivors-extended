@@ -1,15 +1,63 @@
 //! Shared reward-bonus rendering and native widget callbacks.
 use super::*;
+static SEPARATOR:AtomicUsize=AtomicUsize::new(0);
+thread_local!{static SEPARATOR_STYLE:std::cell::Cell<Option<asx_game::official::BonusSeparator>>=const{std::cell::Cell::new(None)};}
+crate::context_stub_rw!(separator_entry,0,capture_separator,SEPARATOR);
+unsafe extern "system" fn capture_separator(c:&mut crate::stub::Context){
+ if UI_CONTEXT.with(|v|v.get()).is_none(){return}
+ if let Some(r)=RUNTIME.get().filter(|r|r.rules){
+  if let Some(caller)=c.return_address().checked_sub(r.local.base as u64){
+   match r.adapter.bonus_separator_capture(&r.local,caller,c.rdx,c.r8){
+    Ok(Some(style))=>{SEPARATOR_STYLE.with(|v|v.set(Some(style)));#[cfg(feature="test-hooks")]if std::env::var("ASX_TEST_UI").as_deref()==Ok("1"){static N:AtomicUsize=AtomicUsize::new(0);if N.fetch_add(1,Ordering::Relaxed)<8{r.log.info("Native bonus separator style captured");}}},
+    Err(error)=>{static WARN:AtomicBool=AtomicBool::new(false);if !WARN.swap(true,Ordering::Relaxed){r.log.warn(&format!("Native bonus separator rejected: {error}"));}},
+    _=>{},
+   }
+  }
+ }
+}
 static UI:AtomicUsize=AtomicUsize::new(0);
 static LINE:AtomicUsize=AtomicUsize::new(0);
 thread_local!{static DRAWBACK:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};static STATUS_STYLE:std::cell::Cell<Option<bool>>=const{std::cell::Cell::new(None)};static UI_CONTEXT:std::cell::Cell<Option<asx_game::official::BonusUi>>=const{std::cell::Cell::new(None)};static HEADER:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};static TOOLTIP_TITLE:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};static COMPACT:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};static SUPPRESS:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};}
+#[derive(Clone,Copy)]enum Caption{Pending{entity:u64,kept:bool},Drawn}
+thread_local!{static CAPTION:std::cell::Cell<Option<Caption>>=const{std::cell::Cell::new(None)};}
+#[derive(Clone,Copy)]struct ColumnRequest{font:u64,status:u64,len:usize,kept:bool,layout:Option<asx_game::official::BonusHeaderColumn>}
+thread_local!{static COLUMN:std::cell::Cell<Option<ColumnRequest>>=const{std::cell::Cell::new(None)};static COLUMN_DONE:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};}
+struct ColumnScope(Option<ColumnRequest>,bool);
+impl Drop for ColumnScope{fn drop(&mut self){COLUMN.with(|v|v.set(self.0));COLUMN_DONE.with(|v|v.set(self.1));}}
+fn with_column<T>(font:u64,status:&str,kept:bool,draw:impl FnOnce()->T)->(T,bool){
+ let request=ColumnRequest{font,status:status.as_ptr()as u64,len:status.len(),kept,layout:None};
+ let _scope=ColumnScope(COLUMN.with(|v|v.replace(Some(request))),COLUMN_DONE.with(|v|v.replace(false)));
+ let result=draw();(result,COLUMN_DONE.with(|v|v.get()))
+}
+static TITLE:AtomicUsize=AtomicUsize::new(0);
+unsafe extern "system" fn title(out:u64,commands:u64,bundle:u64)->u64{
+ let original:unsafe extern "system" fn(u64,u64,u64)->u64=std::mem::transmute(TITLE.load(Ordering::Acquire));
+ let request=COLUMN.with(|v|{let request=v.get()?;request.layout?;v.set(None);Some(request)});
+ if let Some(request)=request{if let Some(r)=RUNTIME.get().filter(|r|r.rules){
+  let io=io::Access{local:&r.local,adapter:r.adapter};
+  match r.adapter.bonus_column_draw(&io,r.local.base,commands,bundle,request.layout.unwrap()){
+   Ok(mut column)=>{
+    let result=original(out,commands,bundle);
+    if request.len>0{
+     CAPTION.with(|v|v.set(Some(Caption::Drawn)));
+     let line:unsafe extern "system" fn(u64,u64,u64,u64)=std::mem::transmute(LINE.load(Ordering::Acquire));
+     let _style=StatusScope(STATUS_STYLE.with(|v|v.replace(Some(request.kept))));
+     line(column.as_mut_ptr()as u64,request.font,request.status,request.len as u64);
+    }else{CAPTION.with(|v|v.set(Some(Caption::Pending{entity:column[0],kept:request.kept})));}
+    COLUMN_DONE.with(|v|v.set(true));return result
+   },
+   Err(error)=>r.log.warn(&format!("Native bonus column rejected: {error}")),
+  }
+ }}
+ original(out,commands,bundle)
+}
 pub(super) fn status_line(text:&str)->bool{text=="Sets your gem for this run"||text=="Gem retained"||text=="Applies enchantment"||text=="Improves enchantment"||text=="Applies glyph"||text=="Keeps glyph"||text.starts_with("Replaces ")||text.starts_with("Removes ")&&!text.starts_with("Removes glyph bonuses")&&!text.starts_with("Removes bonuses")}
 struct DrawbackScope(bool);
 impl Drop for DrawbackScope{fn drop(&mut self){DRAWBACK.with(|v|v.set(self.0));}}
 struct StatusScope(Option<bool>);
 impl Drop for StatusScope{fn drop(&mut self){STATUS_STYLE.with(|v|v.set(self.0));}}
-struct UiScope(Option<asx_game::official::BonusUi>,bool);
-impl Drop for UiScope{fn drop(&mut self){UI_CONTEXT.with(|v|v.set(self.0));SUPPRESS.with(|v|v.set(self.1));}}
+struct UiScope(Option<asx_game::official::BonusUi>,bool,Option<asx_game::official::BonusSeparator>,Option<Caption>);
+impl Drop for UiScope{fn drop(&mut self){UI_CONTEXT.with(|v|v.set(self.0));SUPPRESS.with(|v|v.set(self.1));SEPARATOR_STYLE.with(|v|v.set(self.2));CAPTION.with(|v|v.set(self.3));}}
 struct CompactScope(bool);
 impl Drop for CompactScope{fn drop(&mut self){COMPACT.with(|v|v.set(self.0));}}
 struct HeaderScope(bool);
@@ -18,16 +66,16 @@ unsafe extern "system" fn ui(parent:u64,closure:u64)->u64{
  let context=RUNTIME.get().filter(|r|r.rules).and_then(|r|r.adapter.bonus_ui_context(&r.local,closure).ok());
  #[cfg(feature="test-hooks")]
  if bonus_catalog::diagnostics(){static ONCE:AtomicBool=AtomicBool::new(false);if !ONCE.swap(true,Ordering::Relaxed){if let Some(r)=RUNTIME.get(){r.log.info(&format!("glyph fixture native UI context: {}",context.is_some()));}}}
- let _scope=UiScope(UI_CONTEXT.with(|v|v.replace(context)),SUPPRESS.with(|v|v.replace(false)));
+ let _scope=UiScope(UI_CONTEXT.with(|v|v.replace(context)),SUPPRESS.with(|v|v.replace(false)),SEPARATOR_STYLE.with(|v|v.replace(None)),CAPTION.with(|v|v.replace(None)));
  let original:unsafe extern "system" fn(u64,u64)->u64=std::mem::transmute(UI.load(Ordering::Acquire));original(parent,closure)
 }
 unsafe fn kept_row(r:&Runtime,parent:u64,font:u64,u:asx_game::official::BonusUi,bonus:asx_gameplay::kept_bonus::KeptBonus)->bool{
  let _compact=CompactScope(COMPACT.with(|v|v.replace(true)));
- let(result,attached)=bonus_tooltip::with_row(font,u,bonus,||r.adapter.kept_bonus_ui_draw(r.local.base,parent,font,u,bonus));
+ let((result,attached),stacked)=with_column(font,"Active",true,||bonus_tooltip::with_row(font,u,bonus,||r.adapter.kept_bonus_ui_draw(r.local.base,parent,font,u,bonus)));
  if result.is_err(){return false}
  if !attached{let _normal=CompactScope(COMPACT.with(|v|v.replace(false)));draw_kept_values(parent,font,bonus);}
  let original:unsafe extern "system" fn(u64,u64,u64,u64)=std::mem::transmute(LINE.load(Ordering::Acquire));
- {let _style=StatusScope(STATUS_STYLE.with(|v|v.replace(Some(true))));original(parent,font,b"Active".as_ptr()as u64,6);}
+ if !stacked{let _style=StatusScope(STATUS_STYLE.with(|v|v.replace(Some(true))));original(parent,font,b"Active".as_ptr()as u64,6);}
  SUPPRESS.with(|v|v.set(true));
  #[cfg(feature="test-hooks")]if bonus_catalog::diagnostics(){r.log.info(&format!("kept bonus row: category={} name={}",bonus.category(),bonus.name()));}
  true
@@ -59,19 +107,30 @@ unsafe extern "system" fn line(parent:u64,font:u64,text:u64,len:u64){
  if let Some((r,u,content))=data{
   if SUPPRESS.with(|v|v.get()){
    if status_line(&content){
-    let _style=StatusScope(STATUS_STYLE.with(|v|v.replace(Some(content.starts_with("Keeps ")||content=="Gem retained"))));
-    original(parent,font,text,len);
+    let caption=CAPTION.with(|v|v.replace(Some(Caption::Drawn)));
+    match caption{
+     Some(Caption::Pending{entity,kept})=>{
+      if let Ok(mut column)=r.adapter.bonus_column_spawner(&r.local,parent,entity){let _style=StatusScope(STATUS_STYLE.with(|v|v.replace(Some(kept))));original(column.as_mut_ptr()as u64,font,text,len);}
+     },
+     Some(Caption::Drawn)=>{},
+     None=>{let _style=StatusScope(STATUS_STYLE.with(|v|v.replace(Some(content.starts_with("Keeps ")||content=="Gem retained"))));original(parent,font,text,len);},
+    }
    }
    return
   }
   if let Some(block)=bonus_catalog::annotation(&content){
    if block.prefix>0{original(parent,font,text,block.prefix as u64);}
+   let separator=SEPARATOR_STYLE.with(|v|v.take());
+   #[cfg(feature="test-hooks")]if std::env::var("ASX_TEST_UI").as_deref()==Ok("1"){static N:AtomicUsize=AtomicUsize::new(0);if N.fetch_add(1,Ordering::Relaxed)<16{r.log.info(&format!("Native bonus separator annotation: available={}",separator.is_some()));}}
+   if let Some(style)=separator{let result=r.adapter.bonus_separator_draw(&r.local,r.local.base,parent,style);if let Err(error)=result{r.log.warn(&format!("Native bonus separator draw rejected: {error}"));}}
    let _header=HeaderScope(HEADER.with(|v|v.replace(true)));
    if block.retained&&r.adapter.supports_bonus_tooltips()&&kept_row(r,parent,font,u,block.bonus){return}
    let title=if block.removed{"Unglyphed".into()}else{block.bonus.name()};
-   if r.adapter.bonus_header_draw(r.local.base,parent,font,u,&title,block.bonus.icon()).is_ok(){
+   let status=block.status.as_deref().unwrap_or("");
+   let(result,stacked)=with_column(font,status,block.retained,||r.adapter.bonus_header_draw(r.local.base,parent,font,u,&title,block.bonus.icon()));
+   if result.is_ok(){
     for(value,drawback)in &block.values{let _style=DrawbackScope(DRAWBACK.with(|v|v.replace(*drawback)));original(parent,font,value.as_ptr()as u64,value.len()as u64);}
-    if let Some(status)=block.status{let _style=StatusScope(STATUS_STYLE.with(|v|v.replace(Some(block.retained))));original(parent,font,status.as_ptr()as u64,status.len()as u64);}
+    if !stacked&&!status.is_empty(){let _style=StatusScope(STATUS_STYLE.with(|v|v.replace(Some(block.retained))));original(parent,font,status.as_ptr()as u64,status.len()as u64);}
     SUPPRESS.with(|v|v.set(true));return
    }
   }
@@ -91,11 +150,12 @@ unsafe extern "system" fn text_node(out:u64,parent:u64,bundle:u64,meta:u64)->u64
  let original:unsafe extern "system" fn(u64,u64,u64,u64)->u64=std::mem::transmute(TEXT_NODE.load(Ordering::Acquire));original(out,parent,bundle,meta)
 }
 pub fn size_header(r:&Runtime,c:&crate::stub::Context){
- if HEADER.with(|v|v.get()) {if let Some(caller)=(c.return_address() as u64).checked_sub(r.local.base as u64){let io=io::Access{local:&r.local,adapter:r.adapter};let _=r.adapter.bonus_ui_size(&io,caller,c.r8);if COMPACT.with(|v|v.get()){let _=r.adapter.bonus_compact_size(&io,caller,c.r8);}}}
+ if HEADER.with(|v|v.get()) {if let Some(caller)=(c.return_address() as u64).checked_sub(r.local.base as u64){let io=io::Access{local:&r.local,adapter:r.adapter};let _=r.adapter.bonus_ui_size(&io,caller,c.r8);if COMPACT.with(|v|v.get()){let _=r.adapter.bonus_compact_size(&io,caller,c.r8);}
+ if let Ok(Some(layout))=r.adapter.bonus_column_capture(&r.local,caller,c.r8,c.r9){COLUMN.with(|v|{if let Some(mut request)=v.get(){request.layout=Some(layout);v.set(Some(request));}});}}}
 }
 pub fn ui_hooks(adapter:Adapter)->Vec<crate::install::HookSpec>{
  let entries=adapter.bonus_ui_entries();if entries.len()!=5{return vec![]}
- vec![crate::install::HookSpec{name:"official-bonus-ui",target:local_base()+entries[0].rva as usize,detour:ui as *const () as usize,trampoline:&UI},crate::install::HookSpec{name:"official-bonus-line",target:local_base()+entries[1].rva as usize,detour:line as *const () as usize,trampoline:&LINE},crate::install::HookSpec{name:"official-bonus-decoration-input",target:local_base()+entries[3].rva as usize,detour:no_action_entry as *const () as usize,trampoline:&NO_ACTION},crate::install::HookSpec{name:"official-bonus-status-text",target:local_base()+entries[4].rva as usize,detour:text_node as *const () as usize,trampoline:&TEXT_NODE}]
+ vec![crate::install::HookSpec{name:"official-bonus-title-column",target:local_base()+adapter.bonus_column_entries()[0].rva as usize,detour:title as *const ()as usize,trampoline:&TITLE},crate::install::HookSpec{name:"official-bonus-separator",target:local_base()+adapter.bonus_separator_entries()[0].rva as usize,detour:separator_entry as *const () as usize,trampoline:&SEPARATOR},crate::install::HookSpec{name:"official-bonus-ui",target:local_base()+entries[0].rva as usize,detour:ui as *const () as usize,trampoline:&UI},crate::install::HookSpec{name:"official-bonus-line",target:local_base()+entries[1].rva as usize,detour:line as *const () as usize,trampoline:&LINE},crate::install::HookSpec{name:"official-bonus-decoration-input",target:local_base()+entries[3].rva as usize,detour:no_action_entry as *const () as usize,trampoline:&NO_ACTION},crate::install::HookSpec{name:"official-bonus-status-text",target:local_base()+entries[4].rva as usize,detour:text_node as *const () as usize,trampoline:&TEXT_NODE}]
 }
 
 #[cfg(test)]mod ui_tests {
@@ -130,4 +190,11 @@ unsafe extern "system" fn no_action(c:&mut crate::stub::Context){
  {let _s=StatusScope(STATUS_STYLE.with(|v|v.replace(Some(true))));assert_eq!(unsafe{text_node(a,b,77,91)},a^b^77^91);}
  assert!(STATUS_STYLE.with(|v|v.get()).is_none());
  }
+}
+
+#[cfg(test)]mod column_tests{
+ use super::*;
+ unsafe extern "system" fn native(out:u64,commands:u64,bundle:u64)->u64{assert_eq!((out,commands,bundle),(11,22,33));0x1234}
+ #[test]fn title_wrapper_preserves_native_arguments_and_return_without_a_request(){TITLE.store(native as *const()as usize,Ordering::Release);assert_eq!(unsafe{title(11,22,33)},0x1234);}
+ #[test]fn nested_header_requests_restore_the_outer_status_and_completion(){let(_,done)=with_column(11,"Active",true,||{let outer=COLUMN.with(|v|v.get().unwrap());assert_eq!(outer.font,11);let(_,inner)=with_column(22,"Applies gem",false,||{COLUMN_DONE.with(|v|v.set(true));});assert!(inner);assert_eq!(COLUMN.with(|v|v.get().unwrap().font),11);assert!(!COLUMN_DONE.with(|v|v.get()));COLUMN_DONE.with(|v|v.set(true));});assert!(done);assert!(COLUMN.with(|v|v.get()).is_none());assert!(!COLUMN_DONE.with(|v|v.get()));}
 }

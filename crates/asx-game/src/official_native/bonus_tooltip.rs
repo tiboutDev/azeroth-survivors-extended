@@ -57,8 +57,8 @@ impl Adapter{
  pub fn bonus_compact_size(self,m:&dyn crate::official::MutableMemory,caller:u64,bundle:u64)->Result<()>{
   if !self.supports_bonus_tooltips()||caller!=self.contact117(crate::official117::GLYPH_UI_HEADER_CALLER){return Ok(())}
   let v=crate::official117::GLYPH_UI_HEADER_NODE;
-  m.write(bundle+v+crate::official117::GLYPH_UI_HEADER_HEIGHT,&[1u32.to_le_bytes(),20f32.to_le_bytes()].concat())?;
-  m.write(bundle+v+crate::official117::GLYPH_UI_HEADER_MARGIN_TOP,&[1u32.to_le_bytes(),8f32.to_le_bytes()].concat())
+  m.write(bundle+v+crate::official117::GLYPH_UI_HEADER_HEIGHT,&[1u32.to_le_bytes(),40f32.to_le_bytes()].concat())?;
+  m.write(bundle+v+crate::official117::GLYPH_UI_HEADER_MARGIN_TOP,&[1u32.to_le_bytes(),0f32.to_le_bytes()].concat())
  }
  pub fn bonus_compact_style(self,m:&dyn crate::official::MutableMemory,bundle:u64)->Result<()>{
   if !self.supports_bonus_tooltips(){return Ok(())}

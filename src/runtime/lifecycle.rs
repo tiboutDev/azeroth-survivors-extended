@@ -8,6 +8,8 @@ mod services;
 mod tests;
 
 pub(super) fn end(runtime: &dyn Services) {
+    super::raid_markers::reset();
+    super::nameplates::reset();
     menu_pause::reset();
     duplicate_loot::reset();
     wallet::reset();
@@ -27,7 +29,7 @@ pub(super) fn refresh_solo(r:&dyn Services,game:u64){
     let snapshot=r.solo_run(game).ok().flatten();
     if snapshot.is_some(){
         let left_coop=r.detach_coop();
-        if left_coop{wallet::reset();support::reset();combat::reset();experience::reset();fatigue::reset();}
+        if left_coop{super::raid_markers::reset();wallet::reset();support::reset();combat::reset();experience::reset();fatigue::reset();}
         blessings::observe(game,snapshot.as_ref());glyphs::observe(game,snapshot.as_ref());enchantments::observe(game,snapshot.as_ref());gems::observe(game,snapshot.as_ref());
     }
     r.store_solo(snapshot);

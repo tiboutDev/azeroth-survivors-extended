@@ -19,6 +19,10 @@ name = "enemies"
 path = "tests/current/enemies.rs"
 
 # Pure: no Windows API, no process access. Memory is abstracted behind a trait.
+[[test]]
+name = "presentation"
+path = "tests/current/presentation.rs"
+
 [dependencies]
 asx-gameplay.workspace = true
 serde_json = { version = "1", features = ["float_roundtrip"] }

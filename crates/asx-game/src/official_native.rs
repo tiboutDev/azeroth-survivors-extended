@@ -768,7 +768,7 @@ mod blessings;
 mod glyphs;
 pub use glyphs::{GlyphChoice,GlyphOwner};
 mod bonus_ui;
-pub use bonus_ui::BonusUi;
+pub use bonus_ui::{BonusUi,BonusSeparator,BonusHeaderColumn};
 
 impl Adapter {
  fn field117(self,native:u64)->u64{crate::official125::field117(native)}
@@ -801,3 +801,10 @@ impl Adapter{
 
 /// Selected retained pause presentation contacts.
 pub mod pause;
+
+mod raid_markers;
+
+pub mod combat_text;
+pub use combat_text::HealText;
+
+mod nameplates;
