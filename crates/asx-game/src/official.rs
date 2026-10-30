@@ -2144,3 +2144,8 @@ impl SelectedAdapter {
 impl SelectedAdapter {
  pub fn fixture_world_ui_hold(self,m:&dyn MutableMemory,game:u64,ids:&[(String,u64)])->Result<()>{self.native.fixture_world_ui_hold(m,game,ids)}
 }
+
+impl SelectedAdapter{
+ pub fn crystal_stats(self,m:&dyn MutableMemory,g:u64,totals:asx_gameplay::crystals::Totals)->Result<Option<StatInputLoan>>{self.native.crystal_stats(m,g,totals)}
+ pub fn project_crystal_aura(self,m:&dyn MutableMemory,f:&FatigueAura,count:u32)->Result<Option<u32>>{self.native.project_crystal_aura(m,f,count)}
+}

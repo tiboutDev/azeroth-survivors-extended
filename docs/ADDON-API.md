@@ -1,4 +1,4 @@
-# ASX addon contract 1.2
+# ASX addon contract 1.3
 
 ASX follows Azeroth Survivors' addon conventions: global tables, matching
 `*_UPDATED` timestamps, `ASX_Get...` functions and registered Lua handlers.
@@ -13,7 +13,7 @@ functions may be absent when ASX is disabled or before its Lua has loaded; an
 addon must tolerate that and retry after world entry or with bounded polling.
 ASXUI is a consumer, not the provider: other addons do not need ASXUI installed.
 
-`ASX_GetAPIVersion()` returns `major, minor` (currently `1, 2`). Major 1 is a
+`ASX_GetAPIVersion()` returns `major, minor` (currently `1, 3`). Major 1 is a
 stable contract: incompatible field meanings/types/removals require a new major;
 minor versions may add optional fields. Ignore unknown fields. Tests cover the
 contract; this source change does not update an older installed DLL.
@@ -171,3 +171,13 @@ ASX note explains waiting while another participant is outside. Older private
 five-field ritual packets leave this property absent (unknown), rather than
 pretending local presence proves collective readiness. Existing v1 consumers
 remain compatible and must ignore the added field.
+
+## Crystal Resonance (API minor 3)
+
+`state.data.crystals` is absent before the first pickup. It contains integer
+`red`, `blue`, `green`, `yellow`, `total`, and the native presentation `index`
+(0–31; 32 means no free native slot). `bonuses` contains accumulated percentage
+values named `damage`, `cooldownRecovery`, `maximumHealth`, `areaOfEffect`.
+`state.texts.crystals` contains the ASX-authored title, icon and collection note.
+Every getter/handler snapshot remains detached. No crystal position is exposed
+to the minimap bridge. Aura indices are presentation metadata, not identities.

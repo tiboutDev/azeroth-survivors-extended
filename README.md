@@ -5,7 +5,7 @@
 
 ---
 
-**ASX builds on Azeroth Survivors with new build choices and deeper cooperative play.** Discover ring enchantments, amulet gems and Sayge’s Dark Fortunes, alongside new ways to support your party.
+**ASX builds on Azeroth Survivors with new build choices and deeper cooperative play.** Discover ring enchantments, world crystals and Sayge’s Dark Fortunes, alongside new ways to support your party.
 
 > **Unofficial mod — original game required.**\
 > ASX does not include Azeroth Survivors and is independent of its original author.
@@ -19,8 +19,8 @@ Available in **solo and co-op**:
 💍 **Ring Enchantments** — *Balance in progress*\
 Choose an enchantment when upgrading a ring, then strengthen it as that ring gains ranks.
 
-💎 **Amulet Gems** — *Balance in progress*\
-Your first amulet comes with a gem. Its fixed bonus stays with you through later amulet upgrades and replacements.
+💎 **Crystal Resonance** — *Balance in progress*\
+Find colored crystals while exploring. Collect personal bonuses to damage, cooldown recovery, maximum health and area of effect, tracked in one run-long buff.
 
 🎪 **Sayge’s Dark Fortunes** — *Balance in progress*\
 Receive a random fortune after each completed boss encounter. Keep one active at a time, with stronger bonuses as you progress.

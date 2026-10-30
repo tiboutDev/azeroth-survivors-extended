@@ -27,6 +27,7 @@ mod reward_services;
 mod run_stats;
 mod enchantments;
 mod gems;
+mod crystals;
 mod menu_ui;
 #[cfg(feature="test-hooks")]
 mod presentation;

@@ -62,6 +62,27 @@ f:SetScript("OnUpdate",function()
         end
         out.widgets[key]=item
     end
+    if nextState.data.crystals then
+        local c=nextState.data.crystals;local index=c.index
+        local v={visible=false,permanent=false,tooltip=false}
+        if index and index<32 and GetPlayerBuffTexture then
+            local texture=GetPlayerBuffTexture(index)
+            v.visible=type(texture)=="string"and string.find(texture,"INV_Misc_Gem_Variety_01",1,true)~=nil
+            local _,permanent=GetPlayerBuff(index,"HELPFUL");v.permanent=permanent==1 and GetPlayerBuffTimeLeft(index)==0
+            if v.visible and GameTooltip then
+                local button
+                for n=0,31 do local candidate=getglobal("BuffButton"..n);if candidate and candidate.buffIndex==index and candidate:IsShown()then button=candidate;break end end
+                GameTooltip:SetOwner(button or UIParent,button and "ANCHOR_BOTTOMLEFT"or "ANCHOR_CURSOR");GameTooltip:SetPlayerBuff(index)
+                local title=getglobal("GameTooltipTextLeft1");v.tooltip=title and title:GetText()=="Crystal Resonance"or false
+                if button then
+                    local duration=getglobal(button:GetName().."Duration");v.durationShown=duration and duration:IsShown()or false;v.durationText=duration and duration:GetText();v.untilCancelled=button.untilCancelled
+                end
+                if not f.crystalTooltipAt and c.total>=5 then f.crystalTooltipAt=now end
+                if f.crystalTooltipAt and now-f.crystalTooltipAt<15 then GameTooltip:Show()else GameTooltip:Hide()end
+            end
+        end
+        out.crystalBuff=v
+    end
     if ASX_WOW_VISUAL_AUDIT then
         local v={};local right,top=-1e9,-1e9;local fortune,slot
         for n=0,31 do local button=getglobal("BuffButton"..n)

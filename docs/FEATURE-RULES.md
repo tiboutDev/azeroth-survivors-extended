@@ -22,20 +22,36 @@ installed by the selected 0.125 path.
 
 ## Jewelry
 
-The first accepted amulet locks one of eight equally likely gems per actor/run.
-Subsequent upgrades and replacements retain it. Gems have fixed values, no
-rarity/Luck draw modifier and no permanent save writes.
+Amulets now retain their native rewards without an ASX gem assignment or card
+annotation. Crystal Resonance replaces the old immutable amulet gem.
 
-| Gem | Bonus |
-| --- | --- |
-| Bold Ruby | +12% damage |
-| Quick Sapphire | +6% cooldown recovery |
-| Solid Bloodstone | +20% maximum health |
-| Deadly Topaz | +5% critical strike chance |
-| Potent Amethyst | +35% critical strike damage |
-| Enduring Diamond | +3% damage reduction |
-| Renewing Emerald | +1 health per second |
-| Expansive Opal | +20% area of effect |
+Four native UnGoro crystal colors provide personal additive gains per pickup:
+Red +10% damage, Blue +5% cooldown recovery, Green +15% maximum health,
+Yellow +10% area of effect. Color draws are independent and equally likely;
+repeated colors are allowed. No rarity, pity rotation or ordering against other
+events is applied. All collected bonuses reset at the next run, not on death.
+
+The prototype samples 4–6 independent opportunity times uniformly in simulation
+seconds 30–870 of a normal run (15-minute reference window). It is a target budget,
+not a guaranteed discovery count: no accessible site, a full two-object budget,
+or an early run end can leave fewer crystals. Endless uses independent 90–240
+second intervals. Pauses do not advance native simulation time. Locations use
+map-wide native terrain sampling and ordinary object separation, never enemy
+kill drops. No minimap coordinates or pins are published for crystals.
+
+Each scene snapshots currently eligible slot/GUID identities. Passing within
+1.5 horizontal units and 3 vertical units while alive/playing grants once. The
+first claim starts one shared 60-second simulation deadline; later claims do not
+extend it. The model stays visible even for previous collectors, allowing them
+to signal it. It disappears for everyone as soon as all remaining eligible
+participants have collected, or the deadline expires. Departures retire their
+old identity; a reused slot and late join cannot inherit its claim. Unclaimed
+scenes have no countdown. Solo scenes disappear on their first claim.
+
+One native positive presentation slot shows Crystal Resonance and its collected
+count. Its native GameTooltip lists actual personal accumulated percentages.
+No simulation aura, save mutation, amulet ownership or secondary transport is
+created. ASX addon API 1.3 exposes counts/bonus values independently of text.
 
 Ring enchantment kind locks on the first accepted upgrade. Five total-value
 tiers begin at native ring ranks **2/4/7/10/14**: Minor, Lesser, unprefixed,
@@ -47,7 +63,9 @@ when that actor accepts a validated native reward choice, before reentrant
 creation of the next reward. Accepted kinds stay locked; independent draws may
 still randomly repeat an enchantment.
 
-Rules: `gems.rs`, `enchantments.rs`; coordination uses bounded reward services.
+Rules: `crystals.rs`, `enchantments.rs`; scene/stat coordination uses bounded
+event/reward services. Retained old gem formats are compatibility/test helpers,
+not active amulet bonuses.
 Shared retained-tooltip/card representations do not enable disabled glyphs.
 
 ## Fortunes
@@ -105,7 +123,7 @@ It takes spell damage but rejects ASX taunts.
 A killing blow reserves personal rewards for the participants still present:
 one native selection of three distinct amulets, where the eligible pool permits,
 and marks equivalent to an ordinary native boss of the map. The native amulet
-rarity, exclusion and card builders remain responsible; existing gems apply.
+rarity, exclusion and card builders remain responsible; Crystal Resonance bonuses apply independently of amulet rewards.
 Marks are credited even while the recipient is down or choosing. Amulet requests
 wait until that actor can choose and has finished any current selection rather
 than overwrite it. Native selection and group-pause behavior remain in charge.

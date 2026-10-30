@@ -8,6 +8,7 @@ mod services;
 mod tests;
 
 pub(super) fn end(runtime: &dyn Services) {
+    super::crystals::reset();
     super::world_events::coop::reset();
     super::rituals::reset();
     super::supplies::reset();

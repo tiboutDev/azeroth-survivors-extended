@@ -38,8 +38,8 @@ resource source; `version.res` is its committed compiled form consumed by
 `build.rs` so builds do not depend on a local resource compiler. The export list
 is also an intentional build input, not a generated cache to ignore.
 
-Gem and enchantment production coordinators consume the bounded operations in
-`src/runtime/reward_services.rs`, rather than the shared Runtime or native
+Crystal event/stat and enchantment production coordinators consume the bounded operations in
+`src/runtime/event_services.rs` and `reward_services.rs`, rather than the shared Runtime or native
 memory accessors. The production binding retains selected-adapter translation;
 diagnostic fixtures remain separate native integration clients. This internal
 boundary is not a public plugin API or a complete progression-domain migration.

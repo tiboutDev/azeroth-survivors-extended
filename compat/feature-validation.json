@@ -177,7 +177,7 @@
     },
     "ASX-22": {
       "profiles": [
-        "gems",
+        "crystals",
         "official-party-ui"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."

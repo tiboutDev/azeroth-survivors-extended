@@ -48,20 +48,26 @@ Some rings have low maximum ranks and may receive only a low-tier enchantment—
 
 **Feedback wanted:** enchantment strength, the appeal of different bonuses, and ring ranks reached in normal and endless runs. Include the map and difficulty when sharing your results.
 
-### 💎 Amulet Gems
+### 💎 Crystal Resonance
 
-**Status: Balance in progress**
+**Status: Prototype — balance in progress**
 
-Your first accepted amulet locks one of **eight gems**, each granting a single fixed stat bonus.
+Find native colored crystals scattered independently around the map. Red grants
++10% damage, blue +5% cooldown recovery, green +15% maximum health and yellow
++10% area of effect. Colors are freely drawn; repeated colors are possible.
 
-- Your gem stays with you until the run ends.
-- Later amulet upgrades and replacements preserve it.
-- Gem bonuses do not scale with amulet rank.
-- All eight gems have equal chances, unaffected by Luck.
+Each player can collect each crystal once by passing close to it. The first
+pickup starts a shared 60-second window. The crystal remains visible to everyone
+until all eligible players collect it or that window expires. Pauses suspend the
+countdown. There are no minimap markers. One Crystal Resonance buff shows your
+personal accumulated gains until the run ends, including through death.
 
-New gems display their bonus directly on reward cards. Retained gems use a compact **Active** presentation, with their value available on hover.
+Amulets no longer assign an ASX gem. The prototype targets 4–6 normal-run
+opportunities, with at most two crystals present; missed discoveries or invalid
+terrain can yield fewer. Endless continues spawning crystals independently.
 
-**Feedback wanted:** whether the bonuses make an early amulet worth taking, and whether some gems feel consistently weaker or stronger across classes.
+**Feedback wanted:** discovery visibility, whether a detour feels worthwhile,
+and combined power when several crystals of the same color appear.
 
 ### 🎪 Sayge’s Dark Fortunes
 

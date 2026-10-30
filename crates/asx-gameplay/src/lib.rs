@@ -203,3 +203,5 @@ pub mod rituals;
 pub mod world_events;
 
 pub mod healing_text;
+
+pub mod crystals;

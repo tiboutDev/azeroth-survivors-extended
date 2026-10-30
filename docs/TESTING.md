@@ -37,7 +37,8 @@ reader/tool implementations and their exclusive tests are not part of the gate.
 | official-party-ui | Retained native children, owner origins, menu projection, world-number packet decoding, marker policy, shared card boundaries and required Lua 5.1 behavior through uv/lupa |
 | asxui | Independent Lua 5.1 plate styling, native-widget restoration and standalone number-font selection |
 | asx-install | Owned native-folder installation, signatures, transactions, interrupted-client recovery, rollback and publication inventory verification |
-| gems | Fixed gem identity, selected jewelry transactions and evidence rejection |
+| gems | Retained historical gem formats and selected jewelry helpers |
+| crystals | Personal claims, shared expiry, free draws, native aura preservation, Lua/API totals and tooltip |
 | enchantments | Ring identity/ranks, selected jewelry transactions and evidence rejection |
 | glyphs | Retained rule catalogs and shared bonus representation; glyph gameplay remains disabled on 0.130 |
 | fatigue | Resurrection penalties, recovery policy and selected native integration |
@@ -275,3 +276,19 @@ trial: measure all visible native buff buttons, require Fortune in the top-right
 first slot, and briefly display its actual GameTooltip. The payload provider is
 unchanged. Preserve native IDs/handlers in Lua order tests, including row wraps,
 restoration, anchor cycles and intervening native layout changes.
+
+## Crystal prototype trial
+
+`ASX_API_TRIAL_CRYSTALS=1` selects the real API harness crystal-only diagnostic
+mode. Source staging must include the exact diagnostic artifact/receipt, retained
+Lua and ASXUI. The fixture creates all four native displays with actual scene
+packets. With two clients, it first aligns the owned host to the group center
+so both actors can actually reach the five nearby crystals at the production
+pickup radius. It then moves only the owned host to claim an outlying witness.
+The guest remains out of range of that witness to exercise personal claims and
+shared expiry. Native simulation and grants remain authoritative throughout.
+Production color draws, spawn frequency and participant positions are untouched
+when this `test-hooks` flag is absent. Inspect actual native stat values, API
+counts, aura index/texture/permanence and tooltip, plus creation/removal logs.
+No marker may be emitted for a crystal. Normal DLL/release qualification remains
+a separate scope; this trial uses disposable profiles and at most two clients.

@@ -1,5 +1,5 @@
 """Opt-in real ASX API/widget trial, one solo or two coop clients in a private desktop."""
-import hashlib,json,os,re,shutil,socket,subprocess,sys,time
+import ast,hashlib,json,math,os,re,shutil,socket,subprocess,sys,time
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'tools/dev'))
@@ -36,8 +36,26 @@ def assess_wow_visual(samples):
  shown=[s['buffOrder']for s in samples if s.get('structured',{}).get('fortune')and s.get('buffOrder',{}).get('fortuneShown')]
  return {'fortune_in_first_native_position':bool(shown)and all(v.get('first')for v in shown),'native_fortune_tooltip_observed':any("Sayge's Dark Fortune"in v.get('tooltip','')for v in shown)}
 
+def crystal_stat_checks(text,slot):
+ rows=[]
+ for found,owner,counts,base,actual,stable,restored in re.findall(r"crystal native stats: slot=(\d+) owner=(\d+) counts=(\[[^\n]+?\]) base=(\[[^\n]+?\]) actual=Ok\((\[[^\n]+?\])\) stable=(true|false) restored=(true|false)",text):
+  if int(found)==slot:rows.append((ast.literal_eval(counts),ast.literal_eval(base),ast.literal_eval(actual),stable,restored))
+ close=lambda a,b:math.isclose(a,b,rel_tol=1e-5,abs_tol=.0003)
+ valid=bool(rows)
+ for c,b,a,stable,restored in rows:
+  valid=valid and len(a)==8 and len(b)==8 and stable==restored=='true'
+  valid=valid and close(a[0]-b[0],c[0]*.10)and a[1]>0 and b[1]>0 and close(1/a[1]-1/b[1],c[1]*.05)and close(a[7]-b[7],c[3]*.10)
+  valid=valid and(a[2]>b[2]if c[2]>0 else close(a[2],b[2]))
+ return {'native_personal_stats':bool(valid)}
+
+def assess_crystals(samples):
+ available=[s for s in samples if s.get('available')]
+ rows=[s['structured']['crystals']for s in available if s.get('structured',{}).get('crystals')]
+ return {'api_active':bool(available),'crystal_counts':bool(rows)and max(r.get('total',0)for r in rows)>=5,'all_four_colors':any(all(r.get(k,0)>0 for k in ('red','blue','green','yellow'))for r in rows),'native_buff_slot':any(r.get('index',32)<32 for r in rows),'native_crystal_buff_visible':any(s.get('crystalBuff',{}).get('visible')for s in available),'native_crystal_tooltip':any(s.get('crystalBuff',{}).get('tooltip')for s in available),'permanent_native_buff':any(s.get('crystalBuff',{}).get('permanent')for s in available),'no_custom_minimap_pin':all(not s.get('structured',{}).get('markers')for s in available),'copy_isolation':bool(available)and all(s.get('copyIsolated')for s in available)}
+
 def run_trial(args,gate):
  players=args.api_trial
+ crystals=os.environ.get('ASX_API_TRIAL_CRYSTALS')=='1'
  if players not in (1,2):raise ValueError('One or two clients only')
  reported_fixes=os.environ.get('ASX_API_TRIAL_REPORTED_FIXES')=='1'
  catalog_review=os.environ.get('ASX_API_TRIAL_CATALOG_REVIEW')=='1'
@@ -74,6 +92,9 @@ def run_trial(args,gate):
    else:
     env.update(ASX_TEST_COOP_EVENTS='1',WOW_ROGUE_COOP_PASSWORD=password)
     env['WOW_ROGUE_COOP_HOST'if slot==0 else'WOW_ROGUE_COOP_JOIN']=str(port)if slot==0 else f'127.0.0.1:{port}'
+   if crystals:
+    env.update(ASX_TEST_CRYSTALS='1',ASX_TEST_CRYSTAL_PLAYERS=str(players),ASX_LOST_SUPPLIES='0',ASX_DARKMOON_TRIALS='0',ASX_TREASURE_GOBLINS='0')
+    env.pop('ASX_TEST_COOP_EVENTS',None)
    stream=(profile/'native.log').open('wb');handles.append(stream)
    children.append(subprocess.Popen([str(native/'AzerothSurvivors.exe')],cwd=native,env=env,stdout=stream,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW))
    time.sleep(4 if players==2 and slot==0 else 1)
@@ -93,7 +114,7 @@ def run_trial(args,gate):
   profile=out/f'player-{slot+1}';text=(profile/'native.log').read_text(errors='replace')
   samples=[json.loads(line.split('ASX_API_LIVE ',1)[1])for line in text.splitlines()if 'runtime error: ASX_API_LIVE 'in line]
   errors=[line for line in text.splitlines()if 'ui_script: runtime error:'in line and 'ASX_API_LIVE 'not in line]
-  checks=assess(samples);checks['clean_lua']=not errors;checks['asx_started']=(profile/'ready.json').exists()
+  checks=assess_crystals(samples)if crystals else assess(samples);checks['clean_lua']=not errors;checks['asx_started']=(profile/'ready.json').exists()
   if reported_fixes:
    asx=(profile/'azeroth-coop-native.log').read_text(errors='replace')
    if slot==0:
@@ -112,14 +133,26 @@ def run_trial(args,gate):
     checks['continuous_active_api']=not gaps
     checks['real_position_discovery']=any(s.get('structured',{}).get('discovery')and isinstance(s.get('native',{}).get('x'),(int,float))for s in samples)
    checks['no_adapter_rejection']=not adapter_rejections(asx)
+  if crystals:
+   host=(out/'player-1/azeroth-coop-native.log').read_text(errors='replace');checks.update(crystal_stat_checks(host,slot));checks['no_amulet_assignment']='gem locked:'not in host;checks['no_adapter_rejection']=not adapter_rejections(host)
   if wow_visual:
    checks.update(assess_wow_visual(samples))
   (profile/'samples.json').write_text(json.dumps(samples,indent=2)+'\n')
   results.append({'slot':slot,'samples':len(samples),'checks':checks,'errors':errors,'recipients':sorted({s['recipient']for s in samples if s.get('recipient')}),'supply_pin_max_seconds':duration_checks(samples)[1]})
  checks={'each_client_passed':all(all(row['checks'].values())for row in results)}
+ if crystals:
+  host=(out/'player-1/azeroth-coop-native.log').read_text(errors='replace')
+  claims=re.findall(r"crystal collected: event=1 slot=(\d+).*clock=([\d.]+)",host)
+  removed=re.findall(r"crystal removed: event=1 .*clock=([\d.]+)",host)
+  checks['first_crystal_collected_by_host']=bool(claims)and claims[0][0]=='0'
+  checks['shared_removal_observed']=bool(removed)
+  if players==2:
+   checks['guest_out_of_range_not_granted']=not any(slot=='1'for slot,_ in claims)
+   checks['shared_sixty_second_deadline']=bool(claims and removed)and 60<=float(removed[0])-float(claims[0][1])<61
+
  if reported_fixes and not catalog_review:checks['ninety_second_supply_observed']=any(row['supply_pin_max_seconds']>=85 for row in results)
  if players==2:checks['distinct_recipients']=len(set(g for row in results for g in row['recipients']))==2
- result={'passed':all(checks.values()),'checks':checks,'clients':results,'players':players,'seconds':args.seconds,'native_sha256':SHA256,'dll_sha256':digest(dll),'artifact_receipt':receipt,'synthetic_api':False,'wow_visual':wow_visual,'catalog_review':catalog_review,'official_installation_touched':False}
+ result={'passed':all(checks.values()),'checks':checks,'clients':results,'players':players,'seconds':args.seconds,'native_sha256':SHA256,'dll_sha256':digest(dll),'artifact_receipt':receipt,'synthetic_api':False,'wow_visual':wow_visual,'catalog_review':catalog_review,'crystals':crystals,'official_installation_touched':False}
  (out/'result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps({k:v for k,v in result.items()if k!='artifact_receipt'}),flush=True)
  if not result['passed']:raise SystemExit(1)
 def parse_args(argv=None):

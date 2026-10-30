@@ -246,6 +246,7 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
     if rules {
         super::treasure_goblins::install(runtime);
         super::supplies::install(runtime);
+        super::crystals::install(runtime);
         super::rituals::install(runtime);
     }
     if asx {

@@ -221,7 +221,7 @@ pub fn with_scaled_heal<T>(game: u64, scaled: bool, f: impl FnOnce() -> T) -> T 
 static AURA_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 crate::context_stub_rw!(aura_entry, 0, aura, AURA_ORIGINAL);
 unsafe extern "system" fn aura(c: &mut crate::stub::Context) {
-    if !ACTIVE.load(Ordering::Acquire) && !blessings::ACTIVE.load(Ordering::Acquire)&&!super::supplies::active(){return;}
+    if !ACTIVE.load(Ordering::Acquire) && !blessings::ACTIVE.load(Ordering::Acquire)&&!super::supplies::active()&&!super::crystals::active(){return;}
     let Some(r) = RUNTIME.get().filter(|r| r.rules) else {
         return;
     };
@@ -240,6 +240,14 @@ unsafe extern "system" fn aura(c: &mut crate::stub::Context) {
                 static SEEN:std::sync::Mutex<std::collections::BTreeSet<(u32,u32)>>=std::sync::Mutex::new(std::collections::BTreeSet::new());
                 if let Some(b)=blessings::view(frame.slot,frame.guid){if SEEN.lock().ok().is_some_and(|mut s|s.insert((frame.slot,b.boss))){r.log.info(&format!("extensions native fortune aura: slot={} boss={}",frame.slot,b.boss));}}
             }},Ok(false)=>{}
+        }
+    }
+    let total=super::crystals::totals(frame.game,(frame.slot,frame.guid));
+    if super::crystals::active(){
+        let io=io::Access{local:&r.local,adapter:r.adapter};
+        match r.adapter.project_crystal_aura(&io,&frame,total.count()){
+            Ok(index)=>super::crystals::aura(frame.game,(frame.slot,frame.guid),index),
+            Err(e)=>r.log.warn(&format!("Crystal aura rejected: {e}")),
         }
     }
     let consumables=super::supplies::buffs(frame.game,frame.guid).into_iter().filter(|(_,left,_)|*left>0.).map(|(c,left,_)|(c.family,left)).collect::<Vec<_>>();

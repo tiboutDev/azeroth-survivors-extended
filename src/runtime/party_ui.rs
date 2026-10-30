@@ -41,6 +41,7 @@ fn wire_extra(state: &mut State, own: u64, heartbeat: u64, extra:&str) -> Option
             let best=blessings::strongest(b.category);
             text.push_str(&format!("B|{id}|{}|{}|{}|{}|{}\n",b.boss,b.category,b.rarity,b.amount,(best*10000.0).round() as u32));
         }
+        if let Some(row)=super::crystals::member_wire((*slot,*id)){text.push_str(&row);}
         let fatigue = fatigue::view(*slot, *id);
         text.push_str(&format!("F|{id}|{}|{}\n", fatigue.stacks, fatigue.remaining.ceil() as u32));
         // Keep local metadata, but send builds only to other viewers.
@@ -183,7 +184,7 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
     // server/HUD serializer. This restored presentation boundary owns its cache.
     if let Some(r)=RUNTIME.get().filter(|r|r.rules){
         lifecycle::refresh_solo(r,game as u64);
-        if r.solo.lock().ok().is_some_and(|p|p.is_some()){blessings::finish(r,game as u64);super::supplies::finish(r,game as u64);super::rituals::finish(r,game as u64);}
+        if r.solo.lock().ok().is_some_and(|p|p.is_some()){blessings::finish(r,game as u64);super::supplies::finish(r,game as u64);super::rituals::finish(r,game as u64);super::crystals::finish(r,game as u64);}
     }
     let result = original(output, game, native_context);
     #[cfg(feature="test-hooks")]
@@ -207,6 +208,7 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
                         s.clock=p.clock;s.epoch
                     }).unwrap_or(0);
                     let mut text=format!("1|{epoch}|{}|{heartbeat}\nM|{}|0|{}\n",actor.guid,actor.guid,hex(b"Player"));
+                    if let Some(row)=super::crystals::wire(game as u64,(0,actor.guid)){text.push_str(&row);}
                     if let Some(b)=blessings::view(0,actor.guid){text.push_str(&format!("B|{}|{}|{}|{}|{}|{}\n",actor.guid,b.boss,b.category,b.rarity,b.amount,b.amount));}
                     if let Some((event,held,inside))=super::rituals::view(game as u64,actor.guid){text.push_str(&format!("R|{}|{event}|{held}|{}|{}\n",actor.guid,u8::from(inside),u8::from(inside)));}
                     for(c,remaining,index)in super::supplies::buffs(game as u64,actor.guid){if index<32&&remaining>0.{text.push_str(&format!("C|{}|{}|{}|{}|{index}|{}|{}|{}\n",actor.guid,c.family as u8,c.tier,remaining.ceil()as u32,hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}

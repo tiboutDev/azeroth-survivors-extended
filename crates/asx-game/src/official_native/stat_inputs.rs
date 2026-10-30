@@ -36,3 +36,10 @@ impl Adapter {
  }
 
 }
+
+impl Adapter{
+ pub fn crystal_stats(self,m:&dyn MutableMemory,game:u64,totals:asx_gameplay::crystals::Totals)->Result<Option<StatInputLoan>>{
+  if totals.0.iter().any(|n|*n>1_000_000){return Err("Invalid crystal total".into())}
+  self.temporary_stat_input(m,game,&totals.inputs())
+ }
+}

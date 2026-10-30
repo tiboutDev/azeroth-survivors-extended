@@ -126,6 +126,10 @@ impl Adapter {
             1 => (0xa50002, 465, 3.2940652, "Sayge's Trial"),
             2 => (0xa50003, 259, 1.1, "Sealed Reliquary"),
             3 => (0xa50004, 4152, 1.6, "Ritual Candle"),
+            4 => (0xa50005, 2973, 0.75, "Red Crystal"),
+            5 => (0xa50006, 2971, 0.75, "Blue Crystal"),
+            6 => (0xa50007, 2972, 0.75, "Green Crystal"),
+            7 => (0xa50008, 2974, 0.75, "Yellow Crystal"),
             _ => return Err("Invalid owned event visual".into()),
         };
         type Info = unsafe extern "system" fn(*mut u64, u32, u32, u32, *const u8, usize);
@@ -517,6 +521,23 @@ mod consumable_aura_tests {
         fn free_native(&self, _: u64, _: usize) -> Result<()> {
             Err("Unexpected aura free".into())
         }
+    }
+    #[test]
+    fn crystal_projection_is_permanent_and_never_displaces_native_or_supply_rows(){
+        let m=Memory(RefCell::new(vec![0;512]));let a=Adapter::select(crate::current::SHA256).unwrap();
+        let f=super::super::FatigueAura{game:1,slot:0,guid:2,rows:0x10000,clock:5.};
+        m.write(0x10000,&[1,0,0,0,44,0,0,0]).unwrap();
+        a.project_consumable_auras(&m,&f,&[(asx_gameplay::supplies::Family::Recovery,60.)]).unwrap();
+        let before=m.read(0x10000,32).unwrap();
+        assert_eq!(a.project_crystal_aura(&m,&f,3).unwrap(),Some(2));
+        assert_eq!(m.read(0x10020+8,4).unwrap(),0f32.to_le_bytes());
+        assert_eq!(m.read(0x10020+12,4).unwrap(),3u32.to_le_bytes());
+        assert_eq!(a.project_crystal_aura(&m,&f,7).unwrap(),Some(2));
+        assert_eq!(m.read(0x10000,32).unwrap(),before);
+        assert_eq!(a.project_crystal_aura(&m,&f,0).unwrap(),None);
+        assert_eq!(m.read(0x10020,16).unwrap(),vec![0;16]);
+        for index in 0..32{m.write(0x10000+index*16,&[1,0,0,0,44,0,0,0]).unwrap();}
+        let full=m.read(0x10000,512).unwrap();assert_eq!(a.project_crystal_aura(&m,&f,1).unwrap(),None);assert_eq!(m.read(0x10000,512).unwrap(),full);
     }
     #[test]
     fn distinct_families_reuse_own_slots_without_overwriting_native_buffs() {

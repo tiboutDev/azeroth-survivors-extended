@@ -100,6 +100,11 @@ local function decode(wire)
                 lastSlot=slot
                 local member={id=id,slot=slot,name=name,spells={},items={},consumables={},markers={}}
                 result.members[id]=member;table.insert(result.ordered,member)
+            elseif a[1]=="G" and table.getn(a)==7 and result.members[id] then
+                local red,blue,green,yellow=integer(a[3],0,1000000),integer(a[4],0,1000000),integer(a[5],0,1000000),integer(a[6],0,1000000)
+                local index=integer(a[7],0,32)
+                if red==nil or blue==nil or green==nil or yellow==nil or index==nil or result.members[id].crystals or red+blue+green+yellow==0 then return nil end
+                result.members[id].crystals={red=red,blue=blue,green=green,yellow=yellow,index=index,total=red+blue+green+yellow}
             elseif a[1]=="B" and table.getn(a)==7 and result.members[id] then
                 local boss,category,rarity=integer(a[3],1,4294967295),integer(a[4],0,4),integer(a[5],0,4)
                 local amount,best=integer(a[6],1,14000),integer(a[7],0,14000)
@@ -398,6 +403,64 @@ if GameTooltip and GameTooltip.SetUnitBuff and UnitBuff then
         if b and isBlessingTexture(UnitBuff(unit,index,filter))then blessingDescription(tooltip,b)end
     end
 end
+-- One reserved recipe-only native presentation row, never a gameplay aura.
+local crystalIcon="Interface\\Icons\\INV_Misc_Gem_Variety_01"
+local nativeCrystalTexture=GetPlayerBuffTexture
+local function crystalOwner(unit)
+    if not model or GetTime()-modelTime>4 then return nil end
+    local member
+    if unit=="player"then member=model.members[model.own]
+    else local _,_,index=string.find(unit or "","^party([1-4])$");if index then member=memberFor(tonumber(index),UnitName(unit))end end
+    return member and member.crystals
+end
+local function isCrystalPlaceholder(texture)
+    if type(texture)~="string"then return false end
+    local path=string.gsub(string.lower(texture),string.char(92),"/");path=string.gsub(path,"%.blp$","")
+    return path=="interface/icons/temp"
+end
+local function crystalBuff(index)
+    local data=crystalOwner("player")
+    if data and data.index==index and index<32 and nativeCrystalTexture and isCrystalPlaceholder(nativeCrystalTexture(index))then return data end
+end
+local function crystalDescription(tooltip,c)
+    tooltip:ClearLines();tooltip:AddLine("Crystal Resonance",1,1,1)
+    tooltip:AddLine("Crystals collected: "..c.total,0.75,0.75,0.75)
+    for _,line in ipairs({{c.red,10,"damage"},{c.blue,5,"cooldown recovery"},{c.green,15,"maximum health"},{c.yellow,10,"area of effect"}})do
+        if line[1]>0 then tooltip:AddLine("+"..(line[1]*line[2]).."% "..line[3],0.12,1,0,true)end
+    end
+    tooltip:AddLine("Persists through death. Ends with this run.",0.75,0.75,0.75,true);tooltip:Show()
+end
+if GetPlayerBuff then
+    local native=GetPlayerBuff
+    GetPlayerBuff=function(index,filter)local slot,permanent=native(index,filter);if slot and crystalBuff(slot)then return slot,1 end;return slot,permanent end
+end
+if GetPlayerBuffTimeLeft then
+    local native=GetPlayerBuffTimeLeft
+    GetPlayerBuffTimeLeft=function(index)if crystalBuff(index)then return 0 end;return native(index)end
+end
+if GetPlayerBuffTexture then
+    local native=GetPlayerBuffTexture
+    GetPlayerBuffTexture=function(index)if crystalBuff(index)then return crystalIcon end;return native(index)end
+end
+if UnitBuff then
+    local native=UnitBuff
+    UnitBuff=function(unit,index,filter)
+        local texture,count=native(unit,index,filter);local data=crystalOwner(unit)
+        if data and index==data.index+1 and isCrystalPlaceholder(texture)then return crystalIcon,count end
+        return native(unit,index,filter)
+    end
+end
+if GameTooltip and GameTooltip.SetPlayerBuff then
+    local native=GameTooltip.SetPlayerBuff
+    GameTooltip.SetPlayerBuff=function(tooltip,index)native(tooltip,index);local c=crystalBuff(index);if c then crystalDescription(tooltip,c)end end
+end
+if GameTooltip and GameTooltip.SetUnitBuff then
+    local native=GameTooltip.SetUnitBuff
+    GameTooltip.SetUnitBuff=function(tooltip,unit,index,filter)
+        native(tooltip,unit,index,filter);local c=crystalOwner(unit)
+        if c and index==c.index+1 and UnitBuff(unit,index,filter)==crystalIcon then crystalDescription(tooltip,c)end
+    end
+end
 local nativeSupplyTexture=GetPlayerBuffTexture
 local function supplyOwner()
     return model and GetTime()-modelTime<=4 and model.members[model.own] or nil
@@ -454,13 +517,14 @@ local supplyBuffSignature=nil
 local function refreshSupplyBuffButtons()
     local own=supplyOwner();local parts={}
     if own then for family=0,6 do local b=own.consumables[family];if b then table.insert(parts,family..":"..b.index..":"..b.icon)end end end
+    if own and own.crystals then local c=own.crystals;table.insert(parts,"G:"..c.index..":"..c.total)end
     local signature=table.concat(parts,"|")
     if signature==supplyBuffSignature then return end
     local previous=supplyBuffSignature;supplyBuffSignature=signature
     if signature=="" and (not previous or previous=="")then return end
     if not BuffButton_Update then return end
     local saved=this
-    for n=0,23 do
+    for n=0,31 do
         local button=getglobal("BuffButton"..n)
         if button then this=button;local ok=pcall(BuffButton_Update);if not ok then supplyBuffSignature=nil end end
     end
@@ -560,12 +624,18 @@ local function apiState()
     local own=allowed and supplyOwner()or nil
     local input=phase..":"..tostring(own~=nil)..":"..tostring(AZS_RUN_UPDATED)..":"..tostring(modelWire)
     if apiCache and input==apiInput then return apiCache end
-    local state={api={major=1,minor=2},available=own~=nil,phase=phase,data={},texts={}}
+    local state={api={major=1,minor=3},available=own~=nil,phase=phase,data={},texts={}}
     if own then
         state.session={epoch=model.epoch,recipientGUID=model.own}
-        state.data={fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
+        state.data={crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
         if state.data.sayge then state.data.sayge.maximum=2000 end
         if state.data.discovery then local d=state.data.discovery;state.data.discovery={event=d.event,rarity=d.rarity,quality=d.quality,gold=d.gold}end
+        local crystalText
+        if state.data.crystals then
+            local c=state.data.crystals
+            c.bonuses={damage=c.red*10,cooldownRecovery=c.blue*5,maximumHealth=c.green*15,areaOfEffect=c.yellow*10}
+            crystalText={title="Crystal Resonance",icon=crystalIcon,note="Crystals collected: "..c.total}
+        end
         local consumableTexts={}
         for family,c in pairs(state.data.consumables or{})do
             consumableTexts[family]={name=c.name,description=c.text,icon="Interface\\Icons\\"..c.icon}
@@ -577,7 +647,7 @@ local function apiState()
             if not value then return nil end
             return {title=value.title,icon=value.icon,reward=value.reward,note=value.note,color=apiCopy(value.color)}
         end
-        state.texts={supplies=textOnly(formatted.owner.discovery),fortune=textOnly(formatted.blessing),sayge=textOnly(formatted.owner.ritual),consumables=consumableTexts}
+        state.texts={crystals=crystalText,supplies=textOnly(formatted.owner.discovery),fortune=textOnly(formatted.blessing),sayge=textOnly(formatted.owner.ritual),consumables=consumableTexts}
         if state.texts.supplies then state.texts.supplies.name=own.discovery.name;state.texts.supplies.description=own.discovery.text end
     else
         state.reason=not allowed and "outside_run"or(type(AZS_RUN_UPDATED)=="number"and GetTime()-AZS_RUN_UPDATED>4 and "stale"or"missing_or_invalid_payload")
@@ -588,7 +658,7 @@ local function apiState()
     state.updatedAt=own and modelTime or nil
     apiCache=state;apiInput=input;return state
 end
-function ASX_GetAPIVersion()return 1,2 end
+function ASX_GetAPIVersion()return 1,3 end
 function ASX_GetState(major)
     if major~=nil and major~=1 then return nil,"unsupported_version"end
     return apiCopy(apiState())

@@ -37,6 +37,7 @@ pub(super) trait Services {
     fn events_verify_ritual(&self) -> Result<()>;
     fn events_verify_fixture_boss(&self) -> Result<()>;
     fn events_refresh_stats(&self, game: u64) -> Result<()>;
+    fn events_crystal_stats(&self,_game:u64,_totals:asx_gameplay::crystals::Totals)->Result<Option<StatInputLoan>>{Err("Crystal stat inputs unavailable".into())}
     fn events_damage_fixture_target(&self, game: u64, target: u64, damage: f32) -> Result<()>;
     fn events_credit_supply(&self, game: u64, owner: u64, amount: u32) -> Result<u32>;
 
@@ -121,6 +122,7 @@ pub(super) trait Services {
     fn events_world_party(&self, game: u64) -> Result<Option<PartyObservation>>;
 }
 impl Services for Runtime {
+    fn events_crystal_stats(&self,game:u64,totals:asx_gameplay::crystals::Totals)->Result<Option<StatInputLoan>>{self.adapter.crystal_stats(&io::Access{local:&self.local,adapter:self.adapter},game,totals)}
     fn events_goblin_notice(&self, game: u64, text: &str) -> Result<()> {
         unsafe {
             self.adapter.goblin_notice(

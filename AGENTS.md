@@ -73,7 +73,7 @@ delivery; validate producers/consumers and reject invalid sixth-slot targets.
 
 Current glyph gameplay is disabled and native marks replace duplicate-loot gold
 compensation. Retained shared bonus representations/helpers are not proof of
-installed glyph gameplay. Preserve ring/gem identity, reward-card ordering and
+installed glyph gameplay. Preserve ring/crystal identity, reward-card ordering and
 native stat reconstruction. The known post-death XP desynchronization remains
 open; this cleanup does not authorize resuming its paused investigation.
 
