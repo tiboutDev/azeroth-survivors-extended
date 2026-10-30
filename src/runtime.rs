@@ -71,3 +71,21 @@ mod raid_markers;
 mod combat_text;
 
 mod nameplates;
+
+mod treasure_goblins;
+
+mod supplies;
+
+mod encounters;
+mod rituals;
+
+mod ui_context;
+mod world_events;
+
+#[cfg(feature="test-hooks")]
+mod diagnostic_observer;
+
+mod event_services;
+
+#[cfg(feature="test-hooks")]
+mod scenario_steps;

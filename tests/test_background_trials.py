@@ -38,6 +38,9 @@ class BackgroundTrials(unittest.TestCase):
         cases = {
             ('--extensions-trial', '2'): ['--extensions-trial', '2'],
             ('--extensions-trial', '1', '--extensions-normal'): ['--extensions-normal', '--extensions-trial', '1'],
+            ('--goblins-trial', '1'): ['--goblins-trial', '1'],
+            ('--ritual-trial',): ['--ritual-trial'],
+            ('--supplies-trial',): ['--supplies-trial'],
             ('--gems-trial', '2'): ['--gems-trial', '2'],
             ('--enchantments-trial', '1'): ['--enchantments-trial', '1'],
             ('--reward-wallet-trial',): ['--reward-wallet-trial'],
@@ -60,7 +63,9 @@ class BackgroundTrials(unittest.TestCase):
         checks = {'started': True}
         extensions.merge_assessor_checks(checks, {'wallet_native_readback': False})
         self.assertFalse(all(checks.values()))
-        for focused in ('gems', 'enchantments', 'glyph_retention'):
+        extensions.merge_assessor_checks(checks, {'wallet_native_readback': True})
+        self.assertFalse(checks['wallet_native_readback'])
+        for focused in ('gems', 'enchantments', 'glyph_retention', 'goblins', 'supplies', 'ritual'):
             with self.subTest(mode=focused):
                 self.assertFalse(extensions.compatibility_scope(**{focused: True}))
     def test_child_dispatch_is_mocked_and_preserves_current_selection(self):
@@ -69,7 +74,7 @@ class BackgroundTrials(unittest.TestCase):
         mocked = mock.Mock(run=lambda *a, **kw: called.append((a, kw)))
         with mock.patch.dict('sys.modules', {'asx_install_trial': mocked}):
             background.run_child(args, Path('/tmp/test-results/trial/start'))
-        self.assertEqual(called, [((45,), {'game_version': '0.125.0', 'package_path': Path('prepared.zip')})])
+        self.assertEqual(called, [((45,), {'game_version': '0.130.0', 'package_path': Path('prepared.zip')})])
 
     def test_shared_wallet_dispatch_requires_two_clients_without_starting_them(self):
         args = background.parse_args(['--reward-wallet-trial'])

@@ -13,7 +13,7 @@ or control the interactive desktop without current authorization.
 
 ## Current architecture
 
-The only supported source target is the reviewed official **0.125.0** engine.
+The only supported source target is the reviewed official **0.130.0** engine.
 Exact executable hashes and native entry bytes gate activation; version labels
 and approximate signatures do not enable an unknown client. The DLL activates
 only through the explicit official ASX launcher path. Direct native launch stays

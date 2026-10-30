@@ -1,15 +1,15 @@
 //! Shared verified native decoder, selected by an exact build descriptor. Never a legacy
 //! custom-engine profile: doing so would enable a second simulation coordinator.
 use crate::{memory::Mem, Result};
-mod menu_pause;
 mod combat;
-mod layout;
 mod difficulty;
-mod presentation;
 mod fatigue;
+mod layout;
+mod menu_pause;
+mod presentation;
 pub use fatigue::FatigueAura;
 mod menu_icons;
-pub use menu_icons::{MenuBindings,MenuAssets};
+pub use menu_icons::{MenuAssets, MenuBindings};
 mod experience;
 pub(crate) mod support;
 mod wallet;
@@ -63,9 +63,9 @@ pub struct Adapter {
 }
 impl Adapter {
     pub fn select(hash: &str) -> Result<Self> {
-        let revision=match hash {
-            crate::official125::SHA256=>Revision::V125,
-            _=>return Err("No reviewed official-engine adapter for this executable".into())
+        let revision = match hash {
+            crate::official130::SHA256 => Revision::V130,
+            _ => return Err("No reviewed official-engine adapter for this executable".into()),
         };
         Ok(Self { revision })
     }
@@ -83,7 +83,10 @@ impl Adapter {
     pub fn shared_xp(self) -> super::official::Entry {
         super::official::Entry {
             rva: self.rva(0x58daa10),
-                bytes: self.expected(0x58daa10, &[0x41, 0x56, 0x56, 0x57, 0x55, 0x53, 0x48, 0x83, 0xec, 0x30]),
+            bytes: self.expected(
+                0x58daa10,
+                &[0x41, 0x56, 0x56, 0x57, 0x55, 0x53, 0x48, 0x83, 0xec, 0x30],
+            ),
         }
     }
     pub fn shared_xp_input(self, mem: &dyn Mem, request: u64, game: u64) -> Result<u32> {
@@ -108,7 +111,10 @@ impl Adapter {
         if count > capacity || capacity > 65536 || (count > 0 && pointer < 0x10000) {
             return Err("Invalid native shared XP extent".into());
         }
-        let slot = word(game.checked_add(self.game_field(0xb40)).ok_or("Shared XP actor overflow")?)?;
+        let slot = word(
+            game.checked_add(self.game_field(0xb40))
+                .ok_or("Shared XP actor overflow")?,
+        )?;
         if slot as usize >= NATIVE_PLAYERS {
             return Err("Shared XP actor exceeds mod capacity".into());
         }
@@ -139,10 +145,13 @@ impl Adapter {
     pub fn award_xp(self) -> super::official::Entry {
         super::official::Entry {
             rva: self.rva(0x591db30),
-                bytes: self.expected(0x591db30, &[
-                0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48, 0x81,
-                0xec, 0xd8, 0x01, 0, 0,
-            ]),
+            bytes: self.expected(
+                0x591db30,
+                &[
+                    0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48,
+                    0x81, 0xec, 0xd8, 0x01, 0, 0,
+                ],
+            ),
         }
     }
     pub fn racial_xp_bonus(self, race_id: u8) -> f32 {
@@ -177,7 +186,11 @@ impl Adapter {
             _ => return Ok(None),
         };
         let field = |offset: u64, n| {
-            let data = mem.read(game.checked_add(self.game_field(offset)).ok_or("XP field overflow")?, n)?;
+            let data = mem.read(
+                game.checked_add(self.game_field(offset))
+                    .ok_or("XP field overflow")?,
+                n,
+            )?;
             if data.len() != n {
                 return Err("Truncated XP field".to_string());
             }
@@ -233,43 +246,58 @@ impl Adapter {
     pub fn hud(self) -> super::official::Entry {
         super::official::Entry {
             rva: self.rva(0x590f0f0),
-                bytes: self.expected(0x590f0f0, &[
-                0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48, 0x81,
-                0xec, 0x48, 0x03, 0, 0,
-            ]),
+            bytes: self.expected(
+                0x590f0f0,
+                &[
+                    0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48,
+                    0x81, 0xec, 0x48, 0x03, 0, 0,
+                ],
+            ),
         }
     }
     pub fn world_update(self) -> super::official::Entry {
         super::official::Entry {
             rva: self.rva(0x5919240),
-                bytes: self.expected(0x5919240, &[
-                0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48, 0x81, 0xec, 0x70,
-                0x01, 0, 0,
-            ]),
+            bytes: self.expected(
+                0x5919240,
+                &[
+                    0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48, 0x81, 0xec,
+                    0x70, 0x01, 0, 0,
+                ],
+            ),
         }
     }
     pub fn command(self) -> super::official::Entry {
         super::official::Entry {
             rva: self.rva(0x5873b00),
-                bytes: self.expected(0x5873b00, &[
-                0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48, 0x81,
-                0xec, 0x88, 0x03, 0, 0,
-            ]),
+            bytes: self.expected(
+                0x5873b00,
+                &[
+                    0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48,
+                    0x81, 0xec, 0x88, 0x03, 0, 0,
+                ],
+            ),
         }
     }
     pub fn ui_hud(self) -> super::official::Entry {
         super::official::Entry {
             rva: self.rva(0x586d120),
-                bytes: self.expected(0x586d120, &[0x55, 0x41, 0x56, 0x56, 0x57, 0x53, 0x48, 0x83, 0xec, 0x40]),
+            bytes: self.expected(
+                0x586d120,
+                &[0x55, 0x41, 0x56, 0x56, 0x57, 0x53, 0x48, 0x83, 0xec, 0x40],
+            ),
         }
     }
     pub fn ui_event(self) -> super::official::Entry {
         super::official::Entry {
             rva: self.rva(0x586d550),
-                bytes: self.expected(0x586d550, &[
-                0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48, 0x83,
-                0xec, 0x68,
-            ]),
+            bytes: self.expected(
+                0x586d550,
+                &[
+                    0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48,
+                    0x83, 0xec, 0x68,
+                ],
+            ),
         }
     }
     pub fn heap(self) -> [super::official::Entry; 2] {
@@ -288,7 +316,8 @@ impl Adapter {
         [
             0x19d63c, 0x19d66d, 0x2e23d0, 0x2e299c, 0x2e2b79, 0x2e2b19, 0x19d26e, 0x2bc790,
             0x2b72f0, 0x19d661, 0x19cd74, 0x2e2913, 0x2e3253,
-        ].map(|v| self.rva(v) as usize)
+        ]
+        .map(|v| self.rva(v) as usize)
     }
     pub fn hud_phase(self, value: &serde_json::Value) -> Result<asx_gameplay::Phase> {
         use asx_gameplay::Phase;
@@ -405,7 +434,7 @@ impl Adapter {
     pub fn ui_receiver(self, mem: &dyn Mem, server: u64, base: u64) -> Result<u64> {
         let pair = mem.read(
             server
-                .checked_add(crate::official125::SERVER_UI_SINK)
+                .checked_add(crate::current::SERVER_UI_SINK)
                 .ok_or("Official UI owner overflow")?,
             16,
         )?;
@@ -440,12 +469,17 @@ impl Adapter {
         mem.write(address, &[u8::from(enabled)])?;
         Ok(old == [1])
     }
-    pub fn fixture_pause_position(self,mem:&dyn Mem,server:u64)->Result<[f32;3]>{
-        let game=self.game_address(server)?;
-        let raw=mem.read(game+self.game_field(0x4e0),12)?;
-        if raw.len()!=12{return Err("Truncated native player position".into())}
-        let pose=std::array::from_fn(|n|f32::from_le_bytes(raw[n*4..n*4+4].try_into().unwrap()));
-        if pose.iter().any(|v|!v.is_finite()){return Err("Invalid native player position".into())}
+    pub fn fixture_pause_position(self, mem: &dyn Mem, server: u64) -> Result<[f32; 3]> {
+        let game = self.game_address(server)?;
+        let raw = mem.read(game + self.game_field(0x4e0), 12)?;
+        if raw.len() != 12 {
+            return Err("Truncated native player position".into());
+        }
+        let pose =
+            std::array::from_fn(|n| f32::from_le_bytes(raw[n * 4..n * 4 + 4].try_into().unwrap()));
+        if pose.iter().any(|v| !v.is_finite()) {
+            return Err("Invalid native player position".into());
+        }
         Ok(pose)
     }
     pub fn command_is_movement(self, opcode: u16) -> bool {
@@ -478,36 +512,67 @@ impl Adapter {
     }
     /// Extension owner in a native solo run or the current cooperative context.
     /// Cooperative-only callers must keep using effect_source.
-    pub(super) fn run_actor(self,mem:&dyn Mem,game:u64)->Result<Option<u32>> {
-        let flag=mem.read(game+self.game_field(0xc41),1)?;
-        if flag==[1]{return self.hud_actor(mem,game)}
-        if flag!=[0]{return Err("Invalid native run mode".into())}
-        if mem.read(game,4)?==2u32.to_le_bytes(){return Ok(None)}
+    pub(super) fn run_actor(self, mem: &dyn Mem, game: u64) -> Result<Option<u32>> {
+        let flag = mem.read(game + self.game_field(0xc41), 1)?;
+        if flag == [1] {
+            return self.hud_actor(mem, game);
+        }
+        if flag != [0] {
+            return Err("Invalid native run mode".into());
+        }
+        if mem.read(game, 4)? == 2u32.to_le_bytes() {
+            return Ok(None);
+        }
         Ok(Some(0))
     }
-    pub fn run_source(self, mem:&dyn Mem, game:u64)->Result<Option<(u32,u64)>> {
-        let Some(slot)=self.run_actor(mem,game)?else{return Ok(None)};
-        let guid=u64::from_le_bytes(mem.read(game+self.game_field(0x478),8)?.try_into().map_err(|_|"Truncated solo identity")?);
-        Ok((guid!=0).then_some((slot,guid)))
+    pub fn run_source(self, mem: &dyn Mem, game: u64) -> Result<Option<(u32, u64)>> {
+        let Some(slot) = self.run_actor(mem, game)? else {
+            return Ok(None);
+        };
+        let guid = u64::from_le_bytes(
+            mem.read(game + self.game_field(0x478), 8)?
+                .try_into()
+                .map_err(|_| "Truncated solo identity")?,
+        );
+        Ok((guid != 0).then_some((slot, guid)))
     }
     /// Solo has no private actor vector. Never inspect its inactive coop payload.
-    pub fn solo_run(self,mem:&dyn Mem,game:u64)->Result<Option<PartyObservation>> {
-        if mem.read(game,4)?==2u32.to_le_bytes(){return Ok(None)}
-        if mem.read(game+self.game_field(0xc41),1)?!=[0]{return Ok(None)}
-        let root=self.read_game(mem,game)?;
-        let actor=Self::actor(0,&root,root[0xc46])?;
-        if actor.guid==0{return Ok(None)}
-        let clock=f32::from_le_bytes(root[0xb9c..0xba0].try_into().unwrap());
-        if !clock.is_finite()||!(0.0..=1e7).contains(&clock){return Err("Invalid solo clock".into())}
-        Ok(Some(PartyObservation{clock,actors:vec![actor]}))
+    pub fn solo_run(self, mem: &dyn Mem, game: u64) -> Result<Option<PartyObservation>> {
+        if mem.read(game, 4)? == 2u32.to_le_bytes() {
+            return Ok(None);
+        }
+        if mem.read(game + self.game_field(0xc41), 1)? != [0] {
+            return Ok(None);
+        }
+        let root = self.read_game(mem, game)?;
+        let actor = Self::actor(0, &root, root[0xc46])?;
+        if actor.guid == 0 {
+            return Ok(None);
+        }
+        let clock = f32::from_le_bytes(root[0xb9c..0xba0].try_into().unwrap());
+        if !clock.is_finite() || !(0.0..=1e7).contains(&clock) {
+            return Err("Invalid solo clock".into());
+        }
+        Ok(Some(PartyObservation {
+            clock,
+            actors: vec![actor],
+        }))
     }
     /// Current swapped actor identity only; no perk vectors or full context copy.
-    pub fn effect_source(self, mem: &dyn Mem, game: u64) -> Result<Option<(u32,u64)>> {
-        let Some(slot) = self.hud_actor(mem,game)? else { return Ok(None); };
-        let guid = u64::from_le_bytes(mem.read(
-            game.checked_add(self.game_field(0x478)).ok_or("Effect identity overflow")?, 8
-        )?.try_into().map_err(|_| "Truncated effect identity")?);
-        Ok((guid != 0).then_some((slot,guid)))
+    pub fn effect_source(self, mem: &dyn Mem, game: u64) -> Result<Option<(u32, u64)>> {
+        let Some(slot) = self.hud_actor(mem, game)? else {
+            return Ok(None);
+        };
+        let guid = u64::from_le_bytes(
+            mem.read(
+                game.checked_add(self.game_field(0x478))
+                    .ok_or("Effect identity overflow")?,
+                8,
+            )?
+            .try_into()
+            .map_err(|_| "Truncated effect identity")?,
+        );
+        Ok((guid != 0).then_some((slot, guid)))
     }
     pub fn hud_actor(self, mem: &dyn Mem, game: u64) -> Result<Option<u32>> {
         let field = |offset: u64, n| {
@@ -630,7 +695,12 @@ impl Adapter {
         let field = |offset: u64, len: usize| {
             mem.read(
                 server
-                    .checked_add(match offset { 0xc58 => crate::official125::SERVER_ROLE, 0xc98 => crate::official125::SERVER_PEERS, 0xf49 => crate::official125::SERVER_GAME_STREAM, _ => offset })
+                    .checked_add(match offset {
+                        0xc58 => crate::current::SERVER_ROLE,
+                        0xc98 => crate::current::SERVER_PEERS,
+                        0xf49 => crate::current::SERVER_GAME_STREAM,
+                        _ => offset,
+                    })
                     .ok_or("Official server address overflow")?,
                 len,
             )
@@ -681,9 +751,9 @@ mod tests {
                 0xc58 => self.role.to_le_bytes().to_vec(),
                 0xc98 => self.count.to_le_bytes().to_vec(),
                 0xf49 => vec![self.connected],
-                0xd98 => self.role.to_le_bytes().to_vec(),
-                0xdd8 => self.count.to_le_bytes().to_vec(),
-                0x11bd => vec![self.connected],
+                0xdb8 => self.role.to_le_bytes().to_vec(),
+                0xdf8 => self.count.to_le_bytes().to_vec(),
+                0x11f5 => vec![self.connected],
                 _ => return Err("Unexpected union read".into()),
             };
             if bytes.len() != n {
@@ -701,7 +771,7 @@ mod tests {
     #[test]
     fn rejects_other_builds_and_does_not_read_host_union_for_guests() {
         assert!(Adapter::select("0.115.0").is_err());
-        let a = Adapter::select(crate::official125::SHA256).unwrap();
+        let a = Adapter::select(crate::current::SHA256).unwrap();
         let guest = View(Memory {
             role: 1,
             count: u64::MAX,
@@ -753,35 +823,59 @@ mod tests {
     }
 }
 
-#[derive(Clone,Copy,Debug,PartialEq,Eq)]
-enum Revision { V125 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Revision {
+    V130,
+}
 impl Adapter {
- pub fn name(self)->&'static str {match self.revision{Revision::V125=>"official-coop-0.125.0"}}
- pub fn version(self)->&'static str {match self.revision{Revision::V125=>"0.125.0"}}
- fn rva(self,baseline:u64)->u64 {crate::official125::rva(baseline)}
- fn baseline_rva(self,native:u64)->u64 {crate::official125::baseline(native)}
- fn expected(self,baseline:u64,_old:&'static[u8])->&'static[u8] {crate::official125::expected(baseline)}
+    pub fn name(self) -> &'static str {
+        match self.revision {
+            Revision::V130 => "official-coop-0.130.0",
+        }
+    }
+    pub fn version(self) -> &'static str {
+        match self.revision {
+            Revision::V130 => "0.130.0",
+        }
+    }
+    fn rva(self, baseline: u64) -> u64 {
+        crate::current::rva(baseline)
+    }
+    fn baseline_rva(self, native: u64) -> u64 {
+        crate::current::baseline(native)
+    }
+    fn expected(self, baseline: u64, _old: &'static [u8]) -> &'static [u8] {
+        crate::current::expected(baseline)
+    }
 }
 
 mod blessings;
 
 mod glyphs;
-pub use glyphs::{GlyphChoice,GlyphOwner};
+pub use glyphs::{GlyphChoice, GlyphOwner};
 mod bonus_ui;
-pub use bonus_ui::{BonusUi,BonusSeparator,BonusHeaderColumn};
+pub use bonus_ui::{BonusHeaderColumn, BonusSeparator, BonusUi};
 
 impl Adapter {
- fn field117(self,native:u64)->u64{crate::official125::field117(native)}
- fn supports_extensions(self)->bool{true}
- fn contact117(self,old:u64)->u64{crate::official125::extension(old)}
- fn extension_bytes117(self,old:u64,_bytes:&'static[u8])->&'static[u8]{crate::official125::extension_bytes(old)}
+    fn field117(self, native: u64) -> u64 {
+        crate::current::field117(native)
+    }
+    fn supports_extensions(self) -> bool {
+        true
+    }
+    fn contact117(self, old: u64) -> u64 {
+        crate::current::extension(old)
+    }
+    fn extension_bytes117(self, old: u64, _bytes: &'static [u8]) -> &'static [u8] {
+        crate::current::extension_bytes(old)
+    }
 }
 
 mod enchantments;
-pub use enchantments::{RingChoice,RingStatLoan};
+pub use enchantments::{RingChoice, RingStatLoan};
 
 mod immunity_aggro;
-pub use immunity_aggro::{AggroEnemy,AggroLoan};
+pub use immunity_aggro::{AggroEnemy, AggroLoan};
 
 mod duplicate_loot;
 
@@ -790,13 +884,28 @@ pub use gems::AmuletChoice;
 
 mod bonus_tooltip;
 
-impl Adapter{pub fn glyphs_enabled(self)->bool{false}
-pub fn duplicate_loot_enabled(self)->bool{false}}
+impl Adapter {
+    pub fn glyphs_enabled(self) -> bool {
+        false
+    }
+    pub fn duplicate_loot_enabled(self) -> bool {
+        false
+    }
+    pub fn native_marks_enabled(self) -> bool {
+        true
+    }
+}
 
-impl Adapter{
- fn field1201(self,n:u64)->u64{crate::official125::field1201(n)}
- fn ring_table(self)->u64{crate::official125::RING_TABLE}
- fn amulet_table(self)->u64{crate::official125::AMULET_TABLE}
+impl Adapter {
+    fn field1201(self, n: u64) -> u64 {
+        crate::current::field1201(n)
+    }
+    fn ring_table(self) -> u64 {
+        crate::current::RING_TABLE
+    }
+    fn amulet_table(self) -> u64 {
+        crate::current::AMULET_TABLE
+    }
 }
 
 /// Selected retained pause presentation contacts.
@@ -808,3 +917,25 @@ pub mod combat_text;
 pub use combat_text::HealText;
 
 mod nameplates;
+
+mod treasure_goblins;
+pub use treasure_goblins::{GoblinDefinition, GoblinHandle, GoblinSnapshot};
+
+mod goblin_rewards;
+
+mod world_events;
+pub use world_events::{EventObject, RitualScene};
+
+mod stat_inputs;
+pub use stat_inputs::StatInputLoan;
+
+mod scene_units;
+
+mod event_placement;
+pub use event_placement::EventMinimap;
+
+#[cfg(feature="test-hooks")]
+mod world_ui_fixture;
+
+#[cfg(feature="test-hooks")]
+pub use nameplates::take_plate_witnesses;

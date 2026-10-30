@@ -1,0 +1,315 @@
+{
+  "schema": 1,
+  "features": [
+    {
+      "id": "ASX-01",
+      "contract": "Exact-build activation, required native entry/byte checks and process-local activation of the owned presentation addon. Unsupported builds fail closed.",
+      "mode": "Both",
+      "reference": "[Contract](CLIENT-ADAPTER.md)",
+      "native_domains": [
+        "activation"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-02",
+      "contract": "Shared in-run XP receipt normalization, strongest racial/fortune contribution, native choices and deferred native award bookkeeping. Preserve caller classification and rounding.",
+      "mode": "Coop",
+      "reference": "[Contract](CLIENT-ADAPTER.md)",
+      "native_domains": [
+        "experience",
+        "party"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-03",
+      "contract": "One host-owned gold wallet; native actor balances/coinage/earned counters are projections. Use the strongest racial, current Gold fortune and total permanent armory-Gold contribution instead of summing equipment across participants.",
+      "mode": "Coop",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "wallet",
+        "party"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-04",
+      "contract": "Purchased caches debit once, share price/opened count and deliver a personal native item choice to every eligible participant. Deferred banks and repeated presentation must not create extra rewards.",
+      "mode": "Coop",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "wallet",
+        "rewards",
+        "pause"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-05",
+      "contract": "Native guardian rewards; no supplemental item grant is installed for 0.130. Preserve each native skill/item reward once.",
+      "mode": "Coop",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "rewards"
+      ],
+      "disposition": "upstream"
+    },
+    {
+      "id": "ASX-06",
+      "contract": "Complete group pause while any relevant spell/item/cache choice or manual pause remains open. Host simulation and guest prediction stop; movement is blocked after the local player has chosen too. Picking remains possible; one `picked` event cannot resume everyone.",
+      "mode": "Coop",
+      "reference": "[Contract](COOP-PAUSE.md)",
+      "native_domains": [
+        "pause",
+        "party"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-07",
+      "contract": "Allied direct heals, periodic heals and shields use player eligibility, range, missing-health/pressure rules and original-caster native coefficients/counters. Foreign periodic effects retain their producer and aura lifetime.",
+      "mode": "Coop",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "support",
+        "party"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-08",
+      "contract": "Foreign Thorns/Lightning Shield retaliation, Holy Nova/Holy Shock allied heals and shield/healing talent interactions preserve caster attribution, native proc cooldowns and current modifiers. Ice Barrier remains caster-only.",
+      "mode": "Coop",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "support",
+        "combat"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-09",
+      "contract": "Hunter's Mark shares the strongest valid vulnerability and maintains native mark visuals without duplicate damage application. Owner death/leave and replacement must reconcile.",
+      "mode": "Coop",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "combat"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-10",
+      "contract": "Eligible Shield Slam, Hammer of Justice and Shred hits establish persistent pursuit/basic-melee ownership. Required talents, hit success, enemy life and player GUID are checked. Special abilities retain native targeting policy.",
+      "mode": "Coop",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "combat"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-11",
+      "contract": "Entering temporary immunity discards old taunts and ordinary aggro. Immune actors leave the ordinary NPC candidate pool; a fresh taunt remains possible during immunity. Candidate flags are restored after the native pass.",
+      "mode": "Coop",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "combat"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-12",
+      "contract": "Resurrection Sickness: +1 stack on resurrection, -5% outgoing damage/healing per stack, cap 3; one stack recovers per 60 alive simulation seconds. Native harmful-aura name/icon, stacks and remaining time; pauses/death suspend recovery.",
+      "mode": "Coop",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "support",
+        "auras"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-13",
+      "contract": "Sayge's Dark Fortunes: one persistent replacement buff per player, Sayge-trial replacement when ASX-28 is enabled, otherwise one roll per completed native boss encounter (not per entity), fixed category/rarity weights, bonuses rounded to whole percentage points before application and display, five-encounter scaling cap and continued endless replacements. XP/Gold use the strongest current fortune per category in coop; Luck/Pickup/Speed remain personal. Native buff tooltip and reward notification.",
+      "mode": "Both",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "events",
+        "auras",
+        "stats"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-14",
+      "contract": "Exclude the four native utility trinkets (`remote`, `insignia`, `eldre_thalas`, `chosen`) from ASX reward candidates. Do not delete inventory or broadly remove other equipment/items that grant secondary stats.",
+      "mode": "Both",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "rewards"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-15",
+      "contract": "Glyph gameplay intentionally disabled. Retain all nine class catalogs and shared bonus/card representations without installing glyph choices or spell mutations.",
+      "mode": "Both",
+      "reference": "[Contract](GLYPHS.md)",
+      "native_domains": [
+        "spells"
+      ],
+      "disposition": "disabled"
+    },
+    {
+      "id": "ASX-16",
+      "contract": "Ring enchantment kind locks on the first accepted upgrade. Five total-value tiers at native ring ranks **2/4/7/10/14**, with Minor/Lesser/unprefixed/Greater/Superior names and the five native icons. Per-ring progression, additive stats, preview/apply/improve status and no rebuild accumulation. Capped native rings may remain unenchantable or low-tier (accepted V1 limitation).",
+      "mode": "Both",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "rewards",
+        "stats",
+        "ui"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-17",
+      "contract": "Enrich existing native party frames with missing positive buffs, compact spell/item builds and owner-correct tooltips. Keep native health/name/death/resurrection widgets; preserve native five-player capacity. Glyph/fortune/fatigue presentation must keep source identities and expire stale cosmetic data.",
+      "mode": "Coop",
+      "reference": "[Contract](OFFICIAL-PARTY-UI.md)",
+      "native_domains": [
+        "ui",
+        "party"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-18",
+      "contract": "Native menu/Co-op decorations: participant class icons and class/character labels. Group waiting presentation names the relevant characters and separates local choice/menu from remote waiting. Shared enchantment/gem card blocks keep native gains, one native separator, a centered two-column header (32px icon beside stacked title/status), values below and compact retained-bonus hover. Glyph gameplay remains disabled.",
+      "mode": "Menu / Coop / reward cards",
+      "reference": "[Contract](OFFICIAL-PARTY-UI.md)",
+      "native_domains": [
+        "ui",
+        "pause"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-19",
+      "contract": "ASX run-state isolation: reset on native run/session/clock rollback, rebind slot plus GUID, preserve authoritative native context swaps and owned pending deliveries. Solo extensions use solo identity without reading inactive coop contexts.",
+      "mode": "Both",
+      "reference": "[Contract](CLIENT-ADAPTER.md)",
+      "native_domains": [
+        "party",
+        "lifecycle"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-20",
+      "contract": "Native-folder installer/launcher, exact supported-client registry, normal-DLL checks, owned addon deployment, shared native-save preservation/backups, signed update/rollback, report export and uninstall/restore. No game assets or legacy custom launcher are shipped as ASX gameplay dependencies.",
+      "mode": "Distribution",
+      "reference": "[Contract](ASX-INSTALLATION.md)",
+      "native_domains": [
+        "activation",
+        "distribution"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-21",
+      "contract": "Upstream-native personal marks. ASX duplicate-loot gold compensation is disabled; preserve native collection and reward ownership.",
+      "mode": "Both",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "rewards"
+      ],
+      "disposition": "upstream"
+    },
+    {
+      "id": "ASX-22",
+      "contract": "One fixed personal amulet gem per actor/run. First accepted amulet locks one of eight equally likely native-icon gems; all later amulet replacements/upgrades retain it. Stable card previews, no tiers or rarity/Luck influence, native stat input restoration and no permanent save writes.",
+      "mode": "Both",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "rewards",
+        "stats",
+        "ui"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-23",
+      "contract": "Native enemy nameplates: 70% baseline size, confirmed normal-enemy names and level labels hidden; native special-rank names preserved. Missing classification retains the original native name rather than treating an unknown NPC as ordinary. Original health updates, friendly frames and visibility preferences retained.",
+      "mode": "Both",
+      "reference": "[Contract](NATIVE-WORLD-UI.md)",
+      "native_domains": [
+        "ui"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-24",
+      "contract": "Outgoing enemy damage text uses one third of the fresh native size. Native direct/periodic healing amounts are attached above allies through the existing world-text queue. Unreported actual periodic HP gains are accumulated into integer cosmetic messages at most once per second per source/recipient/spell, through the native healing-log UI queue, without replaying healing or meter/proc contributions. Preserve identities and native critical animation.",
+      "mode": "Both",
+      "reference": "[Contract](NATIVE-WORLD-UI.md)",
+      "native_domains": [
+        "ui",
+        "support"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-25",
+      "contract": "One-time host initialization of distinct random native participant markers from all eight icons. Every existing mark stays reserved, already marked players are skipped, and live rechecks preserve manual changes; late joins initialize once and new runs reset observation; no solo assignment.",
+      "mode": "Coop",
+      "reference": "[Contract](NATIVE-WORLD-UI.md)",
+      "native_domains": [
+        "party",
+        "ui"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-26",
+      "contract": "Optional host-owned Treasure Goblins in solo/coop: native creature creation and object transport, fleeing movement, 25 simulation-second expiry, no attacks/ordinary loot, taunt immunity, rare encounter-based appearances and personal native amulet/mark rewards. A separate launcher setting and optional contact checks preserve core ASX when disabled/unavailable.",
+      "mode": "Both",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "events",
+        "combat",
+        "rewards"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-27",
+      "contract": "Optional Lost Supplies: native cargo pile, map-wide placement/native-masked circular minimap icons, AS-styled fully opaque discovery notifications with instant removal, multiple 60-second reserves, six simultaneous consumable families with three encounter-based tiers, same-family renewal without stacking, twelve material variants and normalized whole-gold sales. Native temporary buff slots and stat-input restoration; host-owned cooperative scenes, identity-bound personal rolls/claims, individual hiding and shared material sales.",
+      "mode": "Solo / Coop",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "events",
+        "stats",
+        "auras",
+        "ui",
+        "wallet"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "ASX-28",
+      "contract": "Optional Sayge\u2019s Trial: native encounter trigger only between bosses, native ground rune, decorative Classic Sayge and candles, map-wide placement with flatness preference and walkable fallback/minimap pin, persistent unfinished scene with stable identity and encounter-upgraded reward, cumulative presence, bounded randomized power, automatic Fortune replacement and AS-styled progress UI visible only during native circle presence. Host-owned cooperative scene and shared progress require every active participant inside; personal Fortunes replace cooperative boss grants, with strongest XP/gold contributions preserved.",
+      "mode": "Solo / Coop",
+      "reference": "[Contract](FEATURE-RULES.md)",
+      "native_domains": [
+        "events",
+        "auras",
+        "stats",
+        "ui",
+        "party"
+      ],
+      "disposition": "active"
+    }
+  ]
+}

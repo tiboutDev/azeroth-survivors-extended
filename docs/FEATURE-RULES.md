@@ -63,6 +63,151 @@ Speed adds to the native speed multiplier. Rebuild native inputs before replacin
 bonuses. Four utility trinkets are excluded from the selected reward pool without
 removing existing inventory. Rules and coefficients: gameplay `blessings.rs`.
 
+## Optional Treasure Goblins
+
+One host-owned Treasure Goblin (**Venture Co. Treasurer**) may be active at a time,
+in solo or coop. It uses 200% model scale, native placement 6–9 yards away
+(at least 4 yards from each living participant), and a 1.5-second arrival
+pause before fleeing. This pause is included in the 25-second escape window. The
+native completed-encounter transition supplies one optional opportunity, including
+endless encounters; individual boss entities do not roll separately. Chances are
+12% before the first appearance, 6% after one, then 3% thereafter. Misses never
+increase the chance. A successful roll schedules one native placement attempt
+20–40 simulation seconds later. Failed placement consumes that opportunity;
+only an actual appearance lowers future chances. There are no time-based repeat
+attempts or pity guarantees. A goblin escapes after 25 simulation seconds; group
+pauses suspend its deadline. A missing native instance is abandoned without a
+reward. The native horde constructor retains time/Heroic/party health scaling
+over the first native guardian’s base health for that map. The event
+clears guardian drop classification, attacks and rewards, while setting the
+native instance’s elite target-priority flag. The event cannot attack or issue
+ordinary XP, gold or elite/guardian rewards. Its native movement uses a fleeing
+destination and terrain clipping. The final native navigation destination is
+checked again against living pursuers and the map’s native circular arena
+(center and radius), with two yards of clearance for the enlarged creature.
+Spawn points outside that boundary are rejected, and flee segments are clipped
+inside it. Reachable rays include lateral directions and are ranked for clearance,
+distance from pursuers and heading continuity. After 0.8 simulation seconds with
+no meaningful displacement, the blocked heading is discouraged for 2.5 seconds
+to seek a side route. Unsafe directions hold position instead of approaching a living
+pursuer. The active goblin is excluded from native distant-horde recycling, which
+would otherwise teleport it back near the party. Other enemies retain recycling.
+It takes spell damage but rejects ASX taunts.
+
+A killing blow reserves personal rewards for the participants still present:
+one native selection of three distinct amulets, where the eligible pool permits,
+and marks equivalent to an ordinary native boss of the map. The native amulet
+rarity, exclusion and card builders remain responsible; existing gems apply.
+Marks are credited even while the recipient is down or choosing. Amulet requests
+wait until that actor can choose and has finished any current selection rather
+than overwrite it. Native selection and group-pause behavior remain in charge.
+
+Marks use the reviewed native map, Heroic and endless coefficients, snapshotted
+at the kill, then rounded down to whole marks with no minimum. A result of zero
+grants no marks and does not prevent the amulet selection. Each recipient receives
+a positive amount once through native pending
+personal progression, with no party division or gold multiplier. No boss clear,
+kill counter, equipment drop or pity reward is fabricated. Escape grants nothing;
+there is no goblin gold reward. Event identity is scoped to GUID and run.
+Native boss encounters and Fortunes are unaffected.
+
+The host launcher reads optional `ASX/options.json`: `{"treasure_goblins":false}`
+disables local event generation at the next launch. The host controls generation
+for the party; guests retain the optional skin association for host-owned events. Missing settings enable them;
+invalid optional settings disable them while keeping ASX active. Optional native
+contacts are verified separately; their failure does not disable required coop
+features or weaken exact-build checks. No event state is saved permanently.
+
+Announcements use the same native event-chat builder as “A pack hunts you!”,
+not the red notification channel.
+
+The selected legacy Goblin display uses native armor composition for a leather
+chest, trousers and boots, with existing shipped textures. The absent baked NPC
+atlas is replaced only for this exact appearance; native cache and texture
+ownership remain in charge. A narrowly matched base-atlas fallback remains for
+other rendering paths. Official archives stay unchanged; there is no treasure sack.
+
+Rules: `treasure_goblins.rs`; native creation/transport/terrain schema remains in
+the selected adapter. Source implementation and live validation are distinct.
+
+## World-event placement and minimap
+
+Supplies and Sayge's Trial sample uniformly by surface area across the native
+map circle. The player position is not a sampling input and there is no nearby
+fallback. Check the full footprint against map limits, native navigation cells,
+height availability, terrain slope and existing ASX event footprints. Sampling
+is bounded to 32 candidates per attempt. This verifies local walkability, not a
+new whole-map pathfinder. Treasure Goblin appearance rules remain separate.
+
+Flatness is a preference, never a reason to discard all otherwise safe sites.
+Within each bounded sample, prefer height variation at most 0.60 yards for the
+trial or 0.70 for supplies. If none qualify, use the least uneven walkable site.
+On that fallback, anchor at the center's native ground height rather than lifting
+the entire rune above the highest edge. This avoids a floating ritual; the flat
+native model may intersect a slope. Sayge and candles sample their own ground
+heights without a flatness veto. Invalid/out-of-bounds/blocked sites remain
+excluded. If no walkable ritual footprint is found, retry another bounded sample
+after 10 simulation seconds, until placed, rescheduled by a boss, or run end.
+
+Retained minimap children use selected native UI center/radius and the native
+north-up coordinate transform, including native zoom and interior mode. Pins
+outside the visible minimap clamp to its edge at reduced opacity and say
+"Beyond minimap range" on hover. Pins retire with the corresponding event.
+Circular crate/orb icons use native portrait masking and the tracking ring,
+following the minimap parent. The full native
+map scale applies to interior points; icon margins only clamp the circular edge.
+Event/buff metadata remains at 4 Hz. Active pin geometry follows the native
+minimap projection per frame; its one MINIMAP_PING UI listener only rebases the
+reference. No gameplay event listeners, velocity prediction or map/entity scans.
+
+## Lost Supplies
+
+The reserve uses the native DeadMine Cargo Boxes pile (display 36), scale 1.
+It is independently optional through `lost_supplies` in either mode. First attempt at 30 simulation seconds, then every 30–50
+seconds, with fixed 50% success and no pity. Reserves may coexist and each lasts
+60 simulation seconds. The native pause/choice state freezes deadlines. A living
+player collects within two yards. Content and power are fixed at appearance;
+claims reserve slot/GUID/event identity before native IO and never reroll.
+
+90% of rewards are consumables, with six equally likely families. Each lasts
+20 simulation seconds. Different families coexist. The same family renews to
+20 seconds without adding durations or power; a lower tier cannot downgrade a
+still-active stronger effect. Tiers follow completed native encounters:
+0–1 = I, 2–3 = II, 4+ = III, with no further endless growth.
+
+| Family | Tier I | Tier II | Tier III |
+| --- | --- | --- | --- |
+| Cooldown recovery | +6% | +10% | +14% |
+| Critical strike chance | +4 points | +7 points | +10 points |
+| Damage reduction | +3 points | +5 points | +7 points |
+| Maximum health | +10% | +20% | +30% |
+| Critical strike damage | +20% | +35% | +50% |
+| Area of effect | +15% | +25% | +35% |
+
+Classic elixirs, flasks and wizard oils provide the names/icons. Their effects
+are ASX adaptations. Giant Growth retains its real name across tiers rather
+than inventing nonexistent Classic variants. Native damage/speed/restoration
+runes remain unchanged. Maximum-health rebuilds never grant a free heal; current
+health is limited to its prior budget and the new maximum. Temporary input
+loans restore after every rebuild; reset also removes derived consumable bonuses.
+
+10% of rewards are automatically sold materials. Conditional material rarity
+is 60/30/9/1% Common/Uncommon/Rare/Epic with relative values 1/2/4/8. These are ASX
+discovery rarities, not claims about the original items' WoW quality. Three
+variants per rarity cover herbs, cloth, ores and rare reagents.
+Nominal gold is rounded from `10*(1+min(encounters,5))*200*rarityMultiplier/492`.
+This normalizes the 1.64 rarity mean and compensates for faster appearance:
+expected nominal gold/minute stays approximately at the previous prototype's
+budget. Native personal gold modifiers still apply once; the discovery shows
+actual credited gold. There are no fractional gold, crafting inventories or
+permanent collection/save entries. Balance values are prototype tuning.
+
+Discoveries queue as brief retained notifications, with no selection or pause.
+Each active family gets its own cosmetic native positive-aura slot, icon,
+frozen simulation countdown and tooltip showing actual values and tier. Only
+owned placeholder slots are decorated; native buffs continue through their
+original APIs. Cooperative personal claims/visibility remain a later pass.
+
 ## Support and targeting
 
 Allied direct/periodic healing, shields, retaliation and hybrid effects retain
@@ -95,3 +240,83 @@ Keep native party/menu widgets and owner-correct tooltips. See
 [party UI](OFFICIAL-PARTY-UI.md) and [pause](COOP-PAUSE.md). Feature rule tests,
 selected-memory fixtures and native stand-ins cover different risks. Consult
 [testing](TESTING.md) rather than copying a historical live-trial recipe.
+
+## Sayge's Trial
+
+Enabled independently through `darkmoon_trials` in the optional event settings
+(`ASX_DARKMOON_TRIALS=0` disables only this event). Boss Fortunes are replaced by this trial while enabled in solo and coop. The shared completed-encounter hook
+is independent of either feature.
+
+No trial before the first boss. A native completed encounter schedules one trial
+20–40 simulation seconds later, except after the final normal encounter. Endless
+continues scheduling. An unfinished trial stays at its original location until
+completion or run end, with no availability deadline. Later encounters upgrade
+its reward stage without resetting accumulated presence, replacing the scene or
+banking extra rewards. Its event identity stays fixed. Once completed, only a
+later eligible encounter schedules another trial. If an appearance is still
+pending, a later encounter updates its schedule and stage. There is at most one
+active trial. Placement is map-wide as defined above, with bounded scheduled
+retries if no walkable location is found.
+
+The scene contains the native purple ground rune, Classic Sayge display 491,
+and three pairs of black candles placed through native terrain clipping. A
+blocked candle position is omitted rather than stacked at the center. Sayge is
+a presentation-only native Unit: friendly faction, non-attackable/non-selectable,
+no gossip or target owner, and no row in the gameplay enemy array. He has no
+simulation attack, aggro, collision actor, loot, XP or boss contribution. Native
+unit serialization is shared scene presentation behind exact optional contacts;
+it does not borrow the Treasure Goblin enemy/AI implementation. Partial creation
+failures remove already-owned objects. Success and run teardown retire the complete scene, including its visual unit.
+New encounters preserve an unfinished scene.
+
+The circle uses the native purple ground rune at an eight-yard model radius.
+Twenty cumulative seconds inside an eight-yard radius complete it; absence
+suspends progress. There is no availability timer. Native choices/pauses freeze
+presence accumulation. Uncompleted trials grant nothing. A retained progress bar, visible only inside the circle, and native
+announcements explain the objective. Success uses the existing native
+Fortune buff, modifiers and retained discovery notification, and replaces the
+previous Fortune automatically. Reward reservation precedes native IO.
+
+Prototype power ranges after encounters 1–5 are 10–18, 14–24, 18–30, 22–36 and
+26–40 normalized units. Each unit is one tenth of the category base: Luck 15%,
+Experience 12%, Gold 25%, Pickup Range 35%, Movement Speed 5%. Final displayed
+percentages are whole numbers. The next successful trial raises normalized power
+above the previous success until the cap of 40; a repeat category also advances
+past rounding ties where possible. Missing trials does not hold back map stage.
+Category is uniformly random; Luck does not affect the roll. Visual rarity follows
+power instead of a separate random roll. These ranges are provisional solo tuning,
+not approved final balance. At the endless cap further replacements can equal
+power; growth is bounded.
+
+## Cooperative event ownership
+
+The host alone generates supplies and trials and fixes world positions. Native
+GameObject metadata and create/destroy packets deliver scenes to participants;
+Sayge uses a decorative native unit with no combat row. Native object creation
+queues one packet: the adapter takes only that exact appended packet and sends
+it once per participant, leaving unrelated native queue entries intact.
+
+A supply fixes its eligible slot/GUID roster and an independent personal reward
+for each member at appearance. Claiming commits before native delivery, hides the
+object and pin only for that member, and preserves it for unclaimed members until
+expiry or all claims. Departed identities are retired; a replacement or late
+arrival cannot claim an existing reserve. Buff families are personal, use the
+native rebuild scope and temporary aura rows, and expire on simulation time.
+Material receipts credit the existing shared wallet once per personal claim,
+using its existing strongest-contribution gold normalization without a party
+size division. No selection screen or group pause is introduced.
+
+Trials retain one shared progress counter. Every active participant, including a
+downed member awaiting revival, must be alive, playing and within the circle for
+progress to advance. Leaving pauses progress without resetting it; membership
+changes are observed by identity. Each player's progress panel is visible only
+while that player is inside. Completion commits one personal Fortune per current
+participant before stat refresh; strongest XP/gold contribution rules remain.
+The random power range, stage cap and guaranteed replacement apply independently
+to each player's previous Fortune. Optional event failures stop further event
+work for that run, without disabling core cooperative ASX features.
+
+The host's addon payload carries personal event metadata through the existing
+native channel. Cosmetic minimap projection uses the viewer's live native
+GetPingPosition/GetZoom; local ping events rebase the viewer's reference. No
+custom transport, client-side reward decision or simulation authority is added.

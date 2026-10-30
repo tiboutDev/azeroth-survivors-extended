@@ -1,4 +1,5 @@
 use super::*;
+use super::super::encounters::{EVENT,test_entry as event_entry};
 use super::super::run_stats;
 use crate::test_support::TEST_LOCK;
 use std::sync::atomic::{AtomicU64, Ordering};

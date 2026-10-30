@@ -3,7 +3,7 @@ use super::*;
 impl Adapter {
  pub fn raid_markers(self,m:&dyn Mem,server:u64)->Result<[Option<u64>;8]>{
   if self.observe(m,server)?.role!=Role::Host{return Err("Marker initialization requires host authority".into())}
-  let raw=m.read(server+crate::official125::SERVER_RAID_MARKS,64)?;
+  let raw=m.read(server+crate::current::SERVER_RAID_MARKS,64)?;
   if raw.len()!=64{return Err("Truncated native markers".into())}
   Ok(std::array::from_fn(|i|{let id=u64::from_le_bytes(raw[i*8..i*8+8].try_into().unwrap());(id!=0).then_some(id)}))
  }
@@ -20,7 +20,7 @@ impl Adapter {
   // This guarded selected entry is already installed by bootstrap. Its normal
   // ASX forwarding stub admits marker commands even during reward/menu pauses.
   let call:Command=std::mem::transmute((base+self.command().rva)as usize);
-  call(server,0,0,crate::official125::RAID_MARKER_COMMAND,body.as_ptr(),body.len());
+  call(server,0,0,crate::current::RAID_MARKER_COMMAND,body.as_ptr(),body.len());
   Ok(true)
  }
 }

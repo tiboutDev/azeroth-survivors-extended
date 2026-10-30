@@ -1,7 +1,7 @@
 """Select current ASX checks. Never builds a DLL, deploys or launches a game.
 Unknown executable changes select the full portable gate.
 """
-import argparse,json,os,subprocess,time
+import argparse,json,os,subprocess,time,uuid
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 def cargo(*args):return ['cargo',*args,'--locked']
@@ -15,14 +15,15 @@ PROFILES={
  'glyphs':[cargo('test','-p','asx-gameplay','--lib','glyphs::'),cargo('test','-p','asx-gameplay','--lib','kept_bonus::'),NATIVE,py('test_glyphs_evidence.py'),ARCH],
  'fatigue':[cargo('test','-p','asx-gameplay','--lib','resurrection_fatigue::'),NATIVE,ARCH],
  'asx-install':[py('test_asx.py'),py('test_asx_publication.py')],
- 'official-party-ui':[cargo('test','-p','asx-gameplay','--lib','raid_markers::'),cargo('test','-p','asx-game','--lib','combat_text::'),cargo('test','-p','asx-gameplay','--lib','menu_projection::'),cargo('test','-p','asx-gameplay','--lib','party_text::'),['uv','run','--with','lupa==2.6','python3','tests/test_official_party_lua.py'],NATIVE],
+ 'official-party-ui':[cargo('test','-p','asx-gameplay','--lib','healing_text::'),cargo('test','-p','asx-gameplay','--lib','raid_markers::'),cargo('test','-p','asx-game','--lib','combat_text::'),cargo('test','-p','asx-gameplay','--lib','menu_projection::'),cargo('test','-p','asx-gameplay','--lib','party_text::'),['uv','run','--with','lupa==2.6','python3','tests/test_official_party_lua.py'],NATIVE],
  'official':[cargo('test','-p','asx-gameplay','--test','official','--test','support','--test','immunity_aggro'),cargo('test','-p','asx-gameplay','--lib','official::menu_owner_tests'),cargo('test','-p','asx-game','--lib','official_native::'),NATIVE,py('test_extension_completion_evidence.py'),py('test_client_binding.py'),py('test_pause_evidence.py'),py('test_pause_motion.py'),py('test_reward_wallet_evidence.py'),py('test_immunity_aggro_evidence.py'),ARCH,SOURCE],
  'rules':[cargo('test','-p','asx-gameplay'),ARCH],
  'combat':[cargo('test','-p','asx-gameplay','--test','combat','--test','immunity_aggro'),NATIVE,ARCH],
  'support':[cargo('test','-p','asx-gameplay','--test','support','--test','periodic'),NATIVE,ARCH],
  'periodic':[cargo('test','-p','asx-gameplay','--test','periodic','--test','support'),ARCH],
- 'tooling':[py('test_test_plan.py'),py('test_offline_comparison.py'),SOURCE,py('test_trial_limits.py'),py('test_startup_profile.py'),py('test_native_exit_evidence.py'),py('test_background_trials.py'),py('test_native_runtime_import.py'),py('test_build_only.py')],
- 'full':[cargo('test','-p','asx-gameplay','-p','asx-game'),py('test_*.py'),cargo('clippy','-p','asx-gameplay','-p','asx-game','--all-features')]
+ 'tooling':[['cargo','test','--locked','--manifest-path','tools/dev/native-inventory/Cargo.toml'],py('test_compat_workflow.py'),py('test_contract_attribution.py'),py('test_client_registry.py'),py('test_test_plan.py'),py('test_offline_comparison.py'),SOURCE,py('test_trial_limits.py'),py('test_startup_profile.py'),py('test_native_exit_evidence.py'),py('test_background_trials.py'),py('test_native_runtime_import.py'),py('test_build_only.py'),py('test_fingerprint_domains.py'),py('test_staging_bundle.py'),py('test_coverage_evidence.py'),py('test_remaining_ui_evidence.py')],
+ 'diagnostics':[py('test_compat_workflow.py'),py('test_contract_attribution.py'),py('test_client_registry.py'),py('test_build_only.py'),py('test_fingerprint_domains.py'),py('test_staging_bundle.py'),py('test_coverage_evidence.py'),py('test_remaining_ui_evidence.py'),['uv','run','--with','lupa==2.6','python3','tests/test_diagnostic_observer.py']],
+ 'full':[['cargo','test','--locked','--manifest-path','tools/dev/native-inventory/Cargo.toml'],cargo('test','-p','asx-gameplay','-p','asx-game'),py('test_*.py'),cargo('clippy','-p','asx-gameplay','-p','asx-game','--all-features')]
 }
 def choose(files):
  selected=set()
@@ -60,7 +61,7 @@ def main():
  if a.list:print('\n'.join(PROFILES));return
  value=plan(a.profile,changed(a.base));value['reason']=a.reason or ('Explicit profiles reviewed against the changed behavior' if a.profile else 'Conservative changed-file selection; unmapped code falls back to full');print(json.dumps(value,indent=2),flush=True)
  if a.dry_run:return
- run=ROOT/'test-results/targeted'/time.strftime('%Y%m%d-%H%M%S');run.mkdir(parents=True,exist_ok=False);value['steps']=[]
+ run=ROOT/'test-results/targeted'/(time.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:8]);run.mkdir(parents=True,exist_ok=False);value['steps']=[]
  from trial_limits import portable_limits
  if value['commands']:value['resource_limits']=portable_limits(a.cpu_budget)
  env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1',CARGO_BUILD_JOBS='2');start=time.monotonic()

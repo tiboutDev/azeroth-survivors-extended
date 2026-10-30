@@ -23,7 +23,7 @@ class Sampler:
 def instrument_lua(source):
     # Applied only to a disposable profile. Prefix remains compatible with activation.
     source=source.replace('local rows, built, hovered = {}, 0, nil', r'''local rows, built, hovered = {}, 0, nil
-local perf={updates=0,events=0,refreshes=0,ms=0,max=0,first=0,decode_ms=0,decodes=0}
+local perf={updates=0,events=0,refreshes=0,ms=0,max=0,first=0,decode_ms=0,decodes=0,pin_ms=0,pin_frames=0,animation_ms=0}
 function ASXStartupPerformance()return perf end
 local perfClock=debugprofilestop
 assert(type(perfClock)=="function", "Native profiling clock unavailable")''',1)
@@ -31,6 +31,8 @@ assert(type(perfClock)=="function", "Native profiling clock unavailable")''',1)
     source=source.replace('function() dirty = true end','function() perf.events=perf.events+1;dirty = true end',1)
     source=source.replace('observer:SetScript("OnUpdate", function()', 'observer:SetScript("OnUpdate", function()\n    perf.updates=perf.updates+1',1)
     source=source.replace('    refresh()','    local stamp=perfClock();refresh();local ms=perfClock()-stamp;perf.refreshes=perf.refreshes+1;perf.ms=perf.ms+ms;perf.max=math.max(perf.max,ms);if perf.refreshes==1 then perf.first=ms end',1)
+    source=source.replace('    layoutEventPins()', '    local pinStamp=perfClock();layoutEventPins();perf.pin_ms=perf.pin_ms+perfClock()-pinStamp;perf.pin_frames=perf.pin_frames+1',1)
+    source=source.replace('    updateRitualBar(now)', '    local animationStamp=perfClock();updateRitualBar(now);perf.animation_ms=perf.animation_ms+perfClock()-animationStamp',1)
     return source
 
 OVERLAY = r'''local f=CreateFrame("Frame","ASXStartupPerformancePanel",UIParent)

@@ -298,7 +298,7 @@ impl Adapter {
 
 impl Adapter {
     pub fn item_choice_entry(self)->Option<Entry>{
-        Some(Entry{rva:crate::official125::ITEM_CHOICE_RVA,bytes:crate::official125::ITEM_CHOICE_BYTES})
+        Some(Entry{rva:crate::current::ITEM_CHOICE_RVA,bytes:crate::current::ITEM_CHOICE_BYTES})
     }
     /// Present an already earned item, without incrementing its bank or charging gold.
     /// Invoke only at a restored-host boundary; callbacks may replace private rows.
@@ -326,7 +326,7 @@ impl Adapter {
     pub fn armory_gold_bonus(self,mem:&dyn crate::memory::Mem,game:u64,slot:u32,guid:u64)->Result<Option<f32>>{
         let row=self.support_row(mem,game,slot)?;
         if guid==0 || mem.read(row+self.row_field(row==game,0x478),8)?!=guid.to_le_bytes(){return Err("Armory gold owner changed".into())}
-        let header=mem.read(row+self.row_field(row==game,crate::official120::ARMORY_STATS_HEADER),24)?;
+        let header=mem.read(row+self.row_field(row==game,crate::current::ARMORY_STATS_HEADER),24)?;
         if header.len()!=24{return Err("Truncated armory stat header".into())}
         let q=|at|u64::from_le_bytes(header[at..at+8].try_into().unwrap());
         let(cap,ptr,count)=(q(0),q(8),q(16));
@@ -336,7 +336,7 @@ impl Adapter {
         if bytes.len()!=count as usize*8{return Err("Truncated armory stats".into())}
         let mut bonus=0.0f32;
         for stat in bytes.chunks_exact(8){
-            if u32::from_le_bytes(stat[..4].try_into().unwrap())==crate::official120::ARMORY_GOLD_STAT{
+            if u32::from_le_bytes(stat[..4].try_into().unwrap())==crate::current::ARMORY_GOLD_STAT{
                 let value=f32::from_le_bytes(stat[4..].try_into().unwrap());
                 if !value.is_finite(){return Err("Invalid armory gold bonus".into())}
                 bonus+=value;
@@ -354,11 +354,11 @@ impl Adapter {
     pub fn fixture_armory_gold(self,io:&dyn crate::official::SupportCalls,game:u64,slot:u32,guid:u64,bonus:f32)->Result<()>{
         self.armory_gold_bonus(io,game,slot,guid)?.ok_or("Unreviewed armory gold fixture")?;
         if !bonus.is_finite()||!(0.0..=1.0).contains(&bonus){return Err("Invalid armory gold fixture amount".into())}
-        let row=self.support_row(io,game,slot)?;let at=row+self.row_field(row==game,crate::official120::ARMORY_STATS_HEADER);
+        let row=self.support_row(io,game,slot)?;let at=row+self.row_field(row==game,crate::current::ARMORY_STATS_HEADER);
         let h=io.read(at,24)?;let ptr=u64::from_le_bytes(h[8..16].try_into().unwrap());let count=u64::from_le_bytes(h[16..24].try_into().unwrap());
         if count>=64{return Err("Armory gold fixture extent".into())}
         let mut data=if count==0{vec![]}else{io.read(ptr,count as usize*8)?};
-        data.extend_from_slice(&crate::official120::ARMORY_GOLD_STAT.to_le_bytes());data.extend_from_slice(&bonus.to_le_bytes());
+        data.extend_from_slice(&crate::current::ARMORY_GOLD_STAT.to_le_bytes());data.extend_from_slice(&bonus.to_le_bytes());
         let owned=io.allocate_native(&data)?;let n=count+1;
         io.write(at,&[n.to_le_bytes(),owned.to_le_bytes(),n.to_le_bytes()].concat())
     }
@@ -374,9 +374,9 @@ impl Adapter {
     }
     pub unsafe fn fixture_reward_action(self,m:&dyn MutableMemory,base:usize,game:u64,action:u8)->Result<()>{
         self.reward_choice_kind(m,game)?.ok_or("Reward fixture requires native choices")?;
-        let (rva,bytes)=if action==2{let e=self.convert_entry();(e.rva,e.bytes)}else{(self.contact117(crate::official117::GLYPH_REROLL_RVA),self.extension_bytes117(0x5c09350,crate::official117::GLYPH_REROLL_BYTES))};
+        let (rva,bytes)=if action==2{let e=self.convert_entry();(e.rva,e.bytes)}else{(self.contact117(crate::current::GLYPH_REROLL_RVA),self.extension_bytes117(0x5c09350,crate::current::GLYPH_REROLL_BYTES))};
         if m.read(base as u64+rva,bytes.len())?!=bytes{return Err("Reward fixture action binding".into())}
-        if action==2{self.fixture_conversion_flag(m,game,true)?;}else if action<=1{m.write(game+self.field117(crate::official117::GLYPH_REROLLS),&u32::from(action==0).to_le_bytes())?;}else{return Err("Invalid reward fixture action".into())}
+        if action==2{self.fixture_conversion_flag(m,game,true)?;}else if action<=1{m.write(game+self.field117(crate::current::GLYPH_REROLLS),&u32::from(action==0).to_le_bytes())?;}else{return Err("Invalid reward fixture action".into())}
         let call:unsafe extern "system" fn(u64)=std::mem::transmute(base+rva as usize);call(game);Ok(())
     }
 }

@@ -1,6 +1,6 @@
 # Native world and reward presentation
 
-ASX enriches the reviewed 0.125 client without replacing world rendering,
+ASX enriches the reviewed 0.130 client without replacing world rendering,
 combat logs, nameplate health updates or the native marker transport.
 
 ## Enemy nameplates
@@ -12,9 +12,10 @@ root retains the original native top-midpoint anchor and projected coordinates. 
 remain unchanged. Native cached settings retain their original comparison baseline
 to avoid repeated resizing of unchanged frames.
 
-Normal enemies lose their name; native elite, rare, rare-elite and world-boss ranks
+Enemies confirmed as normal lose their name; native elite, rare, rare-elite and world-boss ranks
 retain it at the original font size. Classification uses the native GUID-keyed
 UnitInfo table, as native `UnitClassification` does, rather than display names.
+An unavailable classification preserves the native name; it is not classified as normal. This conservative fallback may retain ordinary names while the native unit cache lacks their ranks.
 Level and skull labels are suppressed before the first native draw. The original
 border texture still includes a level ornament; removing that ornament requires
 separate visual validation. No Lua pool discovery, periodic restyling or replacement
@@ -39,10 +40,32 @@ Both caster and recipient must match current native player/party aliases.
 Periodic packets are observed before the native recipient-only log filter.
 Missing or ambiguous identities drop only the cosmetic message. The writer is
 borrowed solely inside the existing native log callback; owned native strings
-transfer once to its native message queue. No healing, talents, meters, stat
-reconstruction or extra network messages are triggered by presentation.
+transfer once to its native message queue. No healing, talents, meters or stat reconstruction are triggered by presentation.
+The original native-log bridge emits no extra packets.
 
-Exact callback/register/layout contacts belong to `official125.rs` and
+### Fractional periodic healing
+
+Native periodic healing applies HP continuously and accounts for it in the native
+meter without issuing a world-text packet. The shared heal helper also omits
+packets for spell zero and effective gains below one HP. Merely observing the
+native periodic combat-log callback cannot prove this gameplay path's display.
+
+ASX observes the final clamped HP gain at the native meter boundary. Native
+periodic calls carry a scoped context; replayed foreign ticks carry their copied
+caster identity and spell. Gains already reported by the native helper are
+excluded. A bounded portable accumulator keeps source/recipient/spell identities
+separate, retains fractional remainders and publishes whole amounts at most once
+per simulation second. Native frame clocks and lifecycle teardown retire replay
+state; invalid/nonpositive gains and overhealing produce no credit.
+
+Publication uses the native cosmetic SPELLHEALLOG constructor and UI outbox.
+It never calls a heal, changes HP, triggers a proc or adds a meter receipt. Native
+UI delivery, including its existing cooperative transport, then feeds the retained
+world-text renderer. Every helper/callback has exact-build entry-byte guards;
+packet buffers transfer once, and uncertain commits are never retried.
+
+
+Exact callback/register/layout contacts belong to the selected version descriptor and
 `official_native/combat_text.rs`, not the portable rules crate. Guards cover
 all new callback/helper entry bytes. Windows execution checks the size stub's
 category exclusions, fresh-baseline behavior and flag preservation.
@@ -91,3 +114,8 @@ Windows ABI tests when wrappers/register contracts change. Visual trials must
 inspect actual solo and two-player output; script creation, send acknowledgements
 and native log entries alone are not visual evidence. Record artifact identities
 and uncovered situations separately in ignored local evidence.
+
+The fractional-heal observation seams require the full saved-register context: RSI
+owns Game and RDI carries the shared helper spell. A volatile-only snapshot cannot
+read those fields. The handlers observe the captured values without changing native
+registers, flags or healing; Windows ABI probes exercise both installed stubs.

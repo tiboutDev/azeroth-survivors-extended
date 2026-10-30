@@ -7,7 +7,7 @@ from script_diagnostics import assess
 
 class ScriptDiagnosticsTests(unittest.TestCase):
     def test_probe_errors_and_blocked_actions_fail(self):
-        for text in ["ui_script: runtime error: AZCOOP1125 class=Druid members=0", "AzCoopNativeProbe has been blocked from an action only available to the Blizzard UI", "ui_script: runtime error: unexpected nil"]:
+        for text in ["ui_script: runtime error: AZCOOP1125 class=Druid members=0", "AzCoopNativeProbe has been blocked from an action only available to the Blizzard UI", "ui_script: runtime error: unexpected nil", "ERROR benilla_app::ui_script::addons: ui_script: ASX/RitualAudit.lua: syntax error: expected near token"]:
             self.assertFalse(assess(text)["passed"])
 
     def test_only_specific_base_warning_is_classified_separately(self):

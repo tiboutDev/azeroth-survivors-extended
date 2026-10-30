@@ -1,6 +1,6 @@
 # Targeted ASX validation
 
-The supported source target is official 0.125.0. Review the
+The supported source target is official 0.130.0. Review the
 [feature inventory](ASX-FEATURES.md) and [adapter boundary](CLIENT-ADAPTER.md)
 when changing native integration. Validation must cover the changed risk and
 state its limits; test counts alone are not a completion criterion.
@@ -28,17 +28,17 @@ are written under ignored `test-results/targeted/` directories.
 `official-party-ui` separately so its explicit Lua 5.1 check is not replaced by
 generic Python discovery, where that optional dependency can be skipped.
 
-`full` tests the current 0.125 Rust graph, Python suite and Clippy. Retired
+`full` tests the current 0.130 Rust graph, Python suite and Clippy. Retired
 reader/tool implementations and their exclusive tests are not part of the gate.
 
 | Profile | Current risk covered |
 | --- | --- |
-| official | Native 0.125 selection, normalized snapshots, menu ownership, native policy transactions, current source boundaries and evidence assessors |
+| official | Native 0.130 selection, normalized snapshots, menu ownership, native policy transactions, current source boundaries and evidence assessors |
 | official-party-ui | Retained native children, owner origins, menu projection, world-number packet decoding, marker policy, shared card boundaries and required Lua 5.1 behavior through uv/lupa |
 | asx-install | Owned native-folder installation, signatures, transactions, interrupted-client recovery, rollback and publication inventory verification |
 | gems | Fixed gem identity, selected jewelry transactions and evidence rejection |
 | enchantments | Ring identity/ranks, selected jewelry transactions and evidence rejection |
-| glyphs | Retained rule catalogs and shared bonus representation; glyph gameplay remains disabled on 0.125 |
+| glyphs | Retained rule catalogs and shared bonus representation; glyph gameplay remains disabled on 0.130 |
 | fatigue | Resurrection penalties, recovery policy and selected native integration |
 | rules | All independent gameplay policy and contract tests |
 | combat | Marks, taunts and immunity policy plus selected native fixtures |
@@ -114,7 +114,7 @@ their dependency review establishes that they no longer protect retained code.
 
 Current Rust integrations are under `crates/asx-game/tests/current/`, with
 Cargo targets `client_binding`, `jewelry` and `enemies`. Enemy fixtures exercise
-the selected 0.125 support path, retaining bounds/life/health/motion regressions
+the selected 0.130 support path, retaining bounds/life/health/motion regressions
 without a historical reader dependency. Python evidence assessors used by current
 trials live with the current test suite; their event formats can retain native
 version tags without requiring an obsolete implementation.
@@ -148,3 +148,56 @@ builder contracts. Controlled references belong under
 belong to ignored local evidence. Exact hashes/bytes, reentry, participant
 identities and transactional ownership are independent boundaries: passing one
 does not establish the others.
+
+### Combined event compatibility trial
+
+For event compatibility, prefer one diagnostic run with `ASX_TEST_ALL_EVENTS=1`
+and the default extension trial (`--extensions-trial 1` for solo, `2` for coop).
+The solo suite combines the native goblin lifecycle, personal supplies/stat
+expiry and a complete Sayge ritual. The coop suite combines goblin replication with
+the group ritual and personal supply claims. Preserve each feature's assessor
+verdict; a passing event must not erase another event's failed checks.
+
+The suite stops when all event cycles have completed instead of waiting out its
+maximum duration. Separate repeat/persistence fixtures remain available for
+changes to those rules. Keep the solo acceptance gate before the cooperative run. This fixture flag is
+not a gameplay option and does not change production spawn frequency. Sparse
+visual captures remain opt-in. Actual goblin movement uses per-update diagnostic
+aggregates: two-second position chords alone cannot establish flee direction on
+a curved route.
+
+For a support-only adapter check, `ASX_TEST_COMPLETION121=support` with
+`ASX_TEST_SUPPORT_ONLY=1` stops after the twelve native casts and observed
+results. The default support profile still includes resurrection recovery and
+immunity scenarios. `ASX_TEST_SUPPORT_SHIELD_ONLY=1` narrows a failed support
+check to the actual foreign shield cast and break; it retains the native
+assertions and waits for real target immunity to expire. It never removes a
+native protection to force a passing result. A focused shield retry can share the pause trial by combining
+`ASX_TEST_COMPLETION121=pause` and `ASX_TEST_SUPPORT_SHIELD_ONLY=1`; both
+assessors must pass. Pause trials stop six seconds after
+both controlled native menus have closed, retaining movement-resumption evidence.
+
+See the [compatibility workflow](COMPATIBILITY-WORKFLOW.md) for resolved manifests,
+artifact receipts, declarative suites and bounded Lua evidence.
+
+### Observed event fixture progression
+
+The combined event suites opt into `ASX_TEST_OBSERVED_STEPS=1`, forwarded only to
+owned test-hook clients. Supply steps wait for native scene creation and personal
+claim acknowledgements; encounter damage waits for an actual native target;
+cooperative material sales follow completed Fortune delivery. The first goblin waits for observed encounter completion, cleared native encounter
+targets and resumed player phases, so encounter damage cannot kill it. The second goblin
+starts after the first resolves; its controlled kill waits for sufficient actual
+movement observations. The first goblin still expires after 25 simulation seconds,
+consumables keep their native test duration, and Sayge still requires 20 seconds
+of accumulated presence. No Fast mode, simulation clock rewrite or immunity removal
+is used. Production event schedules and independent persistence fixtures retain
+their previous rules. Step logs identify initiated actions; existing gameplay/UI
+assessors separately require actual results before early completion.
+
+The observed-step fixture moves owned participants to a walkable witness position
+after cooperative event rewards are acknowledged, before measuring the second
+goblin. This isolates motion sampling from ordinary attacks without changing
+health or immunity. Its first taunt control is not repeated on the kill subject.
+Workflow receipts record actual harness elapsed seconds. Compare those separately
+from host-log timestamps; neither is a general performance guarantee.

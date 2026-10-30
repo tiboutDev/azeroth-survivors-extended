@@ -11,8 +11,9 @@ class StartupProfile(unittest.TestCase):
   self.assertTrue(profiled.startswith("local asxNativeActive = 0 -- ASX_LOCAL_UI_GATE"))
   self.assertNotIn("ASXStartupPerformance",source)
   self.assertIn("perf.refreshes=perf.refreshes+1",profiled)
-  self.assertNotIn("RegisterEvent",source)
-  self.assertIn("if now-last < interval then return end",profiled)
+  self.assertEqual(__import__("re").findall(r'observer:RegisterEvent\("([^"\n]+)"\)',source),["MINIMAP_PING"])
+  self.assertIn("perf.pin_ms=perf.pin_ms+",profiled)
+  self.assertIn("if now-last >= interval then",profiled)
  def test_summary_uses_elapsed_windows_and_rejects_missing_hook_samples(self):
   with tempfile.TemporaryDirectory()as tmp:
    root=Path(tmp);player=root/"player-1";player.mkdir()

@@ -2,6 +2,11 @@
 import re
 def assess(host,mode):
  checks={}
+ if mode=="shield":
+  checks["shield_cast"]=bool(re.search(r"support121 cast: index=5 spell=17 caster=0 target=1 before=[^ ]+ result=Ok\(true\)",host))
+  checks["shield_on_recipient"]=bool(re.search(r"support121 observed: index=5 spell=17 caster=0 target=1 before=[^ ]+ after=[^ ]+ slots=Ok\(\[1\]\)",host))
+  checks["shield_consumed"]="support121 shield break: Ok(true)"in host
+  return dict(checks=checks)
  if mode=="support":
   casts=re.findall(r"support121 cast: index=(\d+) spell=(\d+) caster=(\d+) target=(\d+) before=([^ ]+) result=Ok\(true\)",host)
   observed=re.findall(r"support121 observed: index=(\d+) spell=(\d+) caster=(\d+) target=(\d+) before=([^ ]+) after=([^ ]+) slots=Ok\((\[[^\n]*?\])\)",host)

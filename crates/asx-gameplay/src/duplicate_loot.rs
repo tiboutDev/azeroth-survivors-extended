@@ -13,16 +13,7 @@ pub fn base_gold(encounter: u32) -> Result<u32> {
     }
     Ok(value as u32)
 }
-pub fn award(base: u32, multiplier: f32) -> Result<u32> {
-    if !multiplier.is_finite() || multiplier < 0.0 {
-        return Err("Invalid duplicate-loot gold multiplier".into());
-    }
-    let value = (f64::from(base) * f64::from(multiplier)).round();
-    if value > f64::from(u32::MAX) {
-        return Err("Duplicate-loot gold overflow".into());
-    }
-    Ok(value as u32)
-}
+pub fn award(base:u32,multiplier:f32)->Result<u32>{ crate::gold::multiply(base,multiplier) }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Entitlement {

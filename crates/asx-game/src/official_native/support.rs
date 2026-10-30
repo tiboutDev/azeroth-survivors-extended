@@ -474,7 +474,7 @@ impl Adapter {
         let result=(||{
             let mut owned=io.read(ability,0x68)?;if owned.len()!=0x68{return Err("Truncated diagnostic ability".into())}
             let definition=u64::from_le_bytes(owned[..8].try_into().unwrap());
-            io.resolve_glyph_modifiers(owned.as_mut_ptr()as u64+0x38,game+self.field117(crate::official117::GLYPH_PERKS),definition)?;
+            io.resolve_glyph_modifiers(owned.as_mut_ptr()as u64+0x38,game+self.field117(crate::current::GLYPH_PERKS),definition)?;
             let result=io.cast_actor(game,owned.as_ptr()as u64)?;io.flush_actor(game)?;Ok(result)
         })();
         if slot!=0{let row=self.support_row(io,game,0)?;io.write(game+self.game_field(0xb40),&0u64.to_le_bytes())?;io.swap_actor(game,row)?;}

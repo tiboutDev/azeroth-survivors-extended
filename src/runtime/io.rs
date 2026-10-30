@@ -100,7 +100,8 @@ impl asx_game::official::SupportCalls for Access<'_> {
 
     fn open_item_choice(&self,game:u64)->Result<(),String>{
         let entry=self.adapter.item_choice_entry().ok_or("Native item presentation unavailable")?;
-        if self.local.read(self.local.base+entry.rva as usize,entry.bytes.len())?!=entry.bytes{return Err("Native item presentation bytes changed".into())}
+        let actual=self.local.read(self.local.base+entry.rva as usize,entry.bytes.len())?;
+        if actual!=entry.bytes && !crate::install::owns_entry_guard(self.local.base+entry.rva as usize,&actual,entry.bytes){return Err(format!("Native item presentation bytes changed: rva={:x} actual={actual:02x?} expected={:02x?}",entry.rva,entry.bytes))}
         type Open=unsafe extern "system" fn(u64,u8,u8);
         let call:Open=unsafe{std::mem::transmute(self.local.base+entry.rva as usize)};
         unsafe{call(game,1,1)};Ok(())

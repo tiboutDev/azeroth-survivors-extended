@@ -5,8 +5,10 @@ from pathlib import Path
 import re
 import shutil
 
-SHA256 = "08f8c58d6967b94598c56b822a1e6b323a52924a299a6df70ef6055ca839b8cd"
-NAMES = ("AzerothSurvivors.exe", "Data/patch.MPQ", *(f"Data/patch-{n}.MPQ" for n in range(2, 10)), "Data/patch-A.MPQ", "Data/patch-B.MPQ")
+if __package__:
+    from .client_registry import VERSION, SHA256, NAMES
+else:
+    from client_registry import VERSION, SHA256, NAMES
 
 
 def digest(path):
@@ -21,7 +23,7 @@ def inspect(source, sha, names):
     source = Path(source).resolve(strict=True)
     names = tuple(names)
     if names != NAMES or sha != SHA256:
-        raise ValueError("Only the reviewed 0.125.0 asset set is supported")
+        raise ValueError(f"Only the reviewed {VERSION} asset set is supported")
     data = source / "Data"
     if data.is_symlink() or {p.name for p in data.iterdir()} != {Path(n).name for n in names[1:]}:
         raise ValueError("Unexpected official archive inventory")
@@ -32,11 +34,11 @@ def inspect(source, sha, names):
     return {name: digest(source / name) for name in names}
 
 
-def import_runtime(source, receiver, hashes, version="0.125.0"):
-    if version != "0.125.0":
-        raise ValueError("Only the reviewed 0.125.0 private import is supported")
+def import_runtime(source, receiver, hashes, version=VERSION):
+    if version != VERSION:
+        raise ValueError(f"Only the reviewed {VERSION} private import is supported")
     if tuple(hashes) != NAMES or hashes.get(NAMES[0]) != SHA256 or any(not re.fullmatch(r"[0-9a-f]{64}", value) for value in hashes.values()):
-        raise ValueError("Asset hash manifest does not match the reviewed 0.125.0 inventory")
+        raise ValueError(f"Asset hash manifest does not match the reviewed {VERSION} inventory")
     source = Path(source).resolve(strict=True)
     if inspect(source, SHA256, NAMES) != hashes:
         raise ValueError("Official source changed after inspection")

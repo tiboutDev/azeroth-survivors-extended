@@ -1,6 +1,6 @@
 # Rust architecture and cleanup decisions
 
-The supported target is official 0.125.0. This document describes source ownership,
+The supported target is official 0.130.0. This document describes source ownership,
 not a promise that every feature is independent of native layouts or that the
 repository is ready to publish.
 
@@ -56,18 +56,16 @@ native-free contract.
 
 ## Current native data
 
-The selected 0.125 image still uses reviewed field/RVA translation data under
-`crates/asx-game/src/bindings/inherited/`. These tables are production dependencies,
-not selectable old clients. `bindings/official125.rs` owns current-image entries
-and host/private field translations; the adapter selects one exact reviewed revision.
-Replace inherited maps only after comparing complete current mappings and native
-bytes, not by changing version labels.
+`compat/clients/0.130.0.json` and `compat/binding-template.rs` now own the
+resolved current descriptor. Historical modules are test-only references, not
+production dependencies or selectable clients. Canonical keys remain explicit;
+changing a generated literal still requires native review.
 
 Historical readers, profiles and their exclusive tools/tests are retired. They
 have no production or current-tool consumer. Their history remains in Git and
 private evidence backups; there is no inspection feature to maintain solely for
 its own tests. Current support still uses `memory.rs` and `enemies.rs`, covered
-through selected 0.125 memory fixtures.
+through selected current-client memory fixtures.
 
 ## Verification and publication
 
@@ -92,3 +90,10 @@ extensions. Both `runtime.rs` with its `runtime/` children and the separate
 version identity where that identity is part of their native-data contract;
 inspection tests are grouped separately instead of pretending those formats are
 current clients.
+
+## Resolved selected descriptor
+
+Production native consumers use `asx_game::current`. The current manifest and
+binding template generate a self-contained descriptor; historical descriptors
+are test-only references. Native field gaps remain explicit failures. Manifest
+changes require exact-image and ABI review, not merely successful generation.

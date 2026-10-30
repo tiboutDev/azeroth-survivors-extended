@@ -1,6 +1,6 @@
 # ASX development
 
-ASX extends the official native 0.125.0 engine. Player documentation starts at the
+ASX extends the official native 0.130.0 engine. Player documentation starts at the
 [project home](../README.md). For engineering work, read the [testing policy](TESTING.md),
 [feature inventory](ASX-FEATURES.md) and [adapter boundary](CLIENT-ADAPTER.md).
 
@@ -72,7 +72,7 @@ a complete domain migration.
 ## Active build boundary
 
 The root DLL activates only for `AZCOOP_ENGINE=official` and the exact reviewed
-0.125.0 executable. Retired measurement/custom-engine launcher modes remain inert.
+0.130.0 executable. Retired measurement/custom-engine launcher modes remain inert.
 The workspace contains the root DLL, portable game/gameplay crates and the
 independent Windows `avrt-probe`. Historical bridge, simulation, transport and
 patch-generator crates are removed.
@@ -83,8 +83,9 @@ small historical name catalog without linking the old engine. Root tests use a
 shared test lock independently of the retired breakpoint implementation.
 
 Shared types are re-exported directly from `official_native`. The exact current
-descriptor is `crates/asx-game/src/bindings/official125.rs`; inherited constants
-and translators live under `bindings/inherited/` because production uses them.
+descriptor is `crates/asx-game/src/bindings/official130.rs`; inherited constants
+and translators are resolved in its generated manifest. Historical descriptor
+modules remain test-only references; production does not chain their translations.
 Historical readers and their exclusive tools/tests are retired. The current
 memory interface and enemy parser remain active and have current-client tests.
 
@@ -109,10 +110,10 @@ Document configuration names and portable setup steps instead.
 
 `native_profile_codec.py` and `flight_recorder.py` retain the original standalone
 profile codec and crash decoder without depending on the retired product. The
-0.125 importer uses `native_runtime_import.py` directly. Build entry points compile
+0.130 importer uses `native_runtime_import.py` directly. Build entry points compile
 only; deployment is a separate explicitly selected action.
 
-The isolated trial dispatcher supports only current 0.125 extension/package modes
+The isolated trial dispatcher supports only current 0.130 extension/package modes
 and at most two clients. It rejects retired/no-mode inputs before Windows setup.
 Tests of parser/dispatch logic do not prove gameplay fixtures succeeded live.
 
@@ -159,3 +160,30 @@ Compare existing public player documentation before applying updates. Run the
 source publication checks from [testing](TESTING.md#publication-checks); a clean
 current snapshot does not sanitize unrelated private history or satisfy a missing
 artifact reference. Commit and push require explicit authorization.
+
+### Client registry consumers
+
+`asx/supported-games.json` is the executable identity and native archive inventory
+source for private imports. `tools/dev/client_registry.py` validates that inventory
+and requires an unambiguous selected build. Developer tools must consume these
+values rather than copy version strings, hashes or archive lists. This registry
+does not authorize a new Rust adapter or establish save-fixture/ABI compatibility;
+those remain separately reviewed gates.
+
+See the [compatibility workflow](COMPATIBILITY-WORKFLOW.md) for resolved manifests,
+artifact receipts, declarative suites and bounded Lua evidence.
+
+### Event service boundary
+
+`runtime/event_services.rs` owns native binding for supply, ritual and goblin
+lifecycle operations. Solo/cooperative supplies, Sayge coordination and shared
+placement consume the object-safe service interface, not Runtime or memory
+accessors. Native gold invocation is selected-adapter-owned; the service preserves
+identity checks and observes the actual post-callback receipt. Goblin machine
+context hooks, appearance, movement interception and reward-entry hooks remain
+explicit native integration modules. This extraction does not claim that every
+ASX coordinator has migrated away from Runtime.
+
+State reservations, per-recipient acknowledgements and stat-input restoration
+keep their original order. Services do not expose backing containers or arbitrary
+callbacks, and callers must release gameplay-state guards before native calls.

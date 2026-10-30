@@ -11,8 +11,11 @@ pub struct FatigueAura {
 impl Adapter {
     pub fn fatigue_aura_entry(self) -> Option<Entry> {
         self.supports_extensions().then_some(Entry {
-            rva: self.contact117(crate::official117::FATIGUE_AURA_RVA),
-            bytes: self.extension_bytes117(crate::official117::FATIGUE_AURA_RVA,crate::official117::FATIGUE_AURA_BYTES),
+            rva: self.contact117(crate::current::FATIGUE_AURA_RVA),
+            bytes: self.extension_bytes117(
+                crate::current::FATIGUE_AURA_RVA,
+                crate::current::FATIGUE_AURA_BYTES,
+            ),
         })
     }
     pub fn fatigue_aura_frame(
@@ -28,7 +31,7 @@ impl Adapter {
             return Ok(None);
         };
         let at = registers[8]
-            .checked_add(0x38)
+            .checked_add_signed(crate::current::AURA_ROWS_FRAME_SLOT)
             .ok_or("Aura frame overflow")?;
         let rows = u64::from_le_bytes(
             mem.read(at, 8)?
@@ -94,5 +97,38 @@ impl Adapter {
         row[12..16].copy_from_slice(&u32::from(stacks).to_le_bytes());
         mem.write(frame.rows + (32 + index as u64) * 16, &row)?;
         Ok(true)
+    }
+}
+
+#[cfg(test)]
+mod current_frame_tests {
+    use super::*;
+    struct Bytes(Vec<u8>);
+    impl Mem for Bytes {
+        fn read(&self, a: u64, n: usize) -> Result<Vec<u8>> {
+            self.0
+                .get(a as usize..a as usize + n)
+                .map(|v| v.to_vec())
+                .ok_or("outside fixture".into())
+        }
+    }
+    #[test]
+    fn aura_pointer_uses_the_current_negative_stack_slot() {
+        let a = Adapter::select(crate::current::SHA256).unwrap();
+        let mut m = Bytes(vec![0; 0x50000]);
+        let game = 0x10000;
+        m.0[game + 0xd9e] = 1;
+        m.0[game + 0xda3] = 1;
+        m.0[game + 0x4b0..game + 0x4b8].copy_from_slice(&123u64.to_le_bytes());
+        m.0[game + 0xce0..game + 0xce4].copy_from_slice(&42f32.to_le_bytes());
+        m.0[0x30000..0x30008].copy_from_slice(&0x40000u64.to_le_bytes());
+        let mut r = [0u64; 15];
+        r[0] = game as u64;
+        r[8] = 0x30008;
+        let f = a.fatigue_aura_frame(&m, r).unwrap().unwrap();
+        assert_eq!(
+            (f.game, f.guid, f.rows, f.clock),
+            (0x10000, 123, 0x40000, 42.)
+        );
     }
 }

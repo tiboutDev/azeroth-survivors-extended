@@ -220,3 +220,9 @@ impl Adapter {
         Ok(strings)
     }
 }
+
+impl Adapter {
+ pub fn diagnostic_writer_entry(self)->Entry{
+  let(rva,bytes)=crate::current::DIAGNOSTIC_WRITER;Entry{rva,bytes}
+ }
+}

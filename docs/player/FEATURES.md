@@ -67,17 +67,19 @@ New gems display their bonus directly on reward cards. Retained gems use a compa
 
 **Status: Balance in progress**
 
-Completing a boss encounter grants each player an independent random fortune.
+In co-op, completing a boss encounter grants each player an independent random fortune.
+
+ASX instead offers **Sayge’s Trial** between bosses, never before the first. It appears throughout the playable zone with a minimap marker. Sayge appears within the rune, surrounded by candles; he is decorative and cannot be attacked. Hold its circle for 20 cumulative seconds to replace your Fortune. The trial stays at the same location until completed or the run ends. Leaving the circle suspends progress and hides the progress bar; returning resumes from the same progress. Later bosses improve its reward stage without adding more trials or resetting progress. Native pauses freeze presence accumulation. Power is rolled within a rising stage range, with a guaranteed normalized increase until its cap. Luck does not affect it. In co-op, everyone still in the run must be alive and inside for progress to advance; each player receives a personal Fortune. Disabling the optional trial restores boss Fortunes.
 
 **Five categories:** Luck, Experience, Gold, Pickup Radius and Movement Speed.
 
 - Only **one fortune** is active per player.
 - A new fortune replaces the previous one.
 - Fortunes survive death and remain until replaced or the run ends.
-- Category chances are equal, and rarity chances are fixed.
+- Category chances are equal. Trial presentation follows its rolled power.
 - Luck does not influence either roll.
 - Fortune strength increases with completed boss encounters, capped at **five encounters**.
-- Endless bosses continue granting replacements after the strength cap.
+- Endless continues providing opportunities after the strength cap.
 - Encounters involving several bosses grant one fortune when the encounter is completed.
 
 Fortunes appear as buffs, with a reward notification when received. Their bonuses use whole percentage values.
@@ -172,3 +174,43 @@ The debuff display shows stacks and recovery time. The penalty affects outgoing 
 ## Share feedback
 
 [Report an issue or share a balance observation](https://github.com/tiboutDev/azeroth-survivors-extended/issues). Include your game and ASX versions, map, difficulty, classes and player count, plus what you expected and what happened.
+
+## Treasure Goblins
+
+An occasional **Venture Co. Treasurer** flees across the battlefield.
+Boss encounters can trigger an appearance; most do not. Further goblins become
+rarer within the same run, including endless, with no guaranteed spawn.
+This larger Goblin appears nearby, with a native event announcement, and has
+the base health of the map’s first guardian. Defeat it within
+25 seconds for a personal choice of three amulets and class marks based on an
+ordinary boss of the current map and difficulty, including native endless scaling.
+Marks are rounded down to whole units with no minimum: a result of zero awards
+only the amulet choice.
+Each participant receives their own reward in coop. It ignores taunts. Group
+pauses stop its escape timer. No reward is lost from normal boss or guardian pools.
+
+To disable only goblins, create `ASX/options.json` in the game folder containing
+`{"treasure_goblins":false}`, then restart through the ASX launcher. Other ASX
+features remain enabled. The host controls event generation for the party.
+
+## Lost Supplies
+
+Piles of cargo can appear throughout the playable zone and remain for 60 seconds.
+Their minimap markers help locate them. Reach one to discover a personal reward
+without a selection screen or pause; several reserves can be present at once.
+
+Six consumable families cover cooldown recovery, critical chance, damage
+reduction, maximum health, critical damage and area of effect. Different families
+can coexist for 20 seconds. Another consumable of the same family refreshes its
+duration without stacking, retaining a stronger active tier. Tiers improve after
+two and four completed boss encounters, then stop increasing in endless.
+Classic consumable names/icons accompany effects adapted to ASX.
+
+Materials instead sell immediately for whole gold. Discoveries have several
+rarities and reagent variants; rare finds sell for more. Their average gold
+budget compensates for the higher appearance frequency. The notification shows
+actual credited gold, including native bonuses. Native battleground runes retain
+their own effects.
+
+Set `"lost_supplies":false` in `ASX/options.json` to disable this event at the next
+launch. In co-op, each participant has a separate reward fixed when the reserve appears. Your pickup hides only your own reserve and marker; other players can still collect theirs. Materials are sold into the shared gold pool.

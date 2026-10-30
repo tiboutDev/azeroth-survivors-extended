@@ -1,0 +1,461 @@
+{
+  "schema": 1,
+  "suites": {
+    "solo-core": {
+      "phase": "solo",
+      "kind": "diagnostic",
+      "players": 1,
+      "args": [
+        "--extensions-trial",
+        "1"
+      ],
+      "environment": {},
+      "features": [
+        "ASX-01",
+        "ASX-13",
+        "ASX-14",
+        "ASX-15",
+        "ASX-16",
+        "ASX-19",
+        "ASX-21",
+        "ASX-22"
+      ],
+      "seconds": 150,
+      "settle_seconds": 2,
+      "readiness": [
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "extensions native fortune aura: slot=0 boss=3",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": null
+    },
+    "solo-events": {
+      "phase": "solo",
+      "kind": "diagnostic",
+      "players": 1,
+      "args": [
+        "--extensions-trial",
+        "1"
+      ],
+      "environment": {
+        "ASX_TEST_ALL_EVENTS": "1",
+        "ASX_TEST_LUA_DIAGNOSTICS": "1",
+        "ASX_TEST_OBSERVED_STEPS": "1"
+      },
+      "features": [
+        "ASX-13",
+        "ASX-26",
+        "ASX-27",
+        "ASX-28"
+      ],
+      "seconds": 160,
+      "settle_seconds": 2,
+      "readiness": [
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "treasure goblin rewarded:",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "treasure goblin escaped:",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "treasure goblin fine motion:",
+          "minimum": 2
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "ritual completed:",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "supplies stats rebuilt: active=false",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": null
+    },
+    "coop-events": {
+      "phase": "coop",
+      "kind": "diagnostic",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2"
+      ],
+      "environment": {
+        "ASX_TEST_ALL_EVENTS": "1",
+        "ASX_TEST_LUA_DIAGNOSTICS": "1",
+        "ASX_TEST_OBSERVED_STEPS": "1"
+      },
+      "features": [
+        "ASX-13",
+        "ASX-26",
+        "ASX-27",
+        "ASX-28"
+      ],
+      "seconds": 160,
+      "settle_seconds": 2,
+      "readiness": [
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "treasure goblin rewarded:",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "treasure goblin escaped:",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "treasure goblin fine motion:",
+          "minimum": 2
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "coop ritual completed: stage=1 recipients=2",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "regex": "coop supplies discovered: slot=\\d+ owner=\\d+ event=\\d+ reward=[^\\r\\n]* gold=[1-9]\\d*",
+          "minimum": 2
+        },
+        {
+          "source": "player-2/azeroth-coop-native.log",
+          "contains": "treasure goblin received: opcode=aa",
+          "minimum": 3
+        }
+      ],
+      "solo_prerequisite": "solo-events"
+    },
+    "coop-core": {
+      "phase": "coop",
+      "kind": "diagnostic",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2"
+      ],
+      "environment": {},
+      "features": [
+        "ASX-02",
+        "ASX-03",
+        "ASX-09",
+        "ASX-10",
+        "ASX-14",
+        "ASX-16",
+        "ASX-17",
+        "ASX-18",
+        "ASX-19",
+        "ASX-22",
+        "ASX-25"
+      ],
+      "seconds": 150,
+      "settle_seconds": 2,
+      "readiness": [],
+      "solo_prerequisite": "solo-core"
+    },
+    "coop-support": {
+      "phase": "coop",
+      "kind": "diagnostic",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2"
+      ],
+      "environment": {
+        "ASX_TEST_COMPLETION121": "support",
+        "ASX_TEST_SUPPORT_ONLY": "1"
+      },
+      "features": [
+        "ASX-07",
+        "ASX-08"
+      ],
+      "seconds": 160,
+      "settle_seconds": 2,
+      "readiness": [
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "support121 observed: index=11 ",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": "solo-core"
+    },
+    "coop-pause": {
+      "phase": "coop",
+      "kind": "diagnostic",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2"
+      ],
+      "environment": {
+        "ASX_TEST_COMPLETION121": "pause",
+        "ASX_TEST_SUPPORT_SHIELD_ONLY": "1"
+      },
+      "features": [
+        "ASX-04",
+        "ASX-06",
+        "ASX-07",
+        "ASX-08"
+      ],
+      "seconds": 150,
+      "settle_seconds": 6,
+      "readiness": [
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "native menu fixture: host=true open=false",
+          "minimum": 1
+        },
+        {
+          "source": "player-2/azeroth-coop-native.log",
+          "contains": "native menu fixture: host=false open=false",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "support121 shield break: Ok(true)",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": "solo-core"
+    },
+    "coop-shield": {
+      "phase": "coop",
+      "kind": "diagnostic",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2"
+      ],
+      "environment": {
+        "ASX_TEST_COMPLETION121": "support",
+        "ASX_TEST_SUPPORT_ONLY": "1",
+        "ASX_TEST_SUPPORT_SHIELD_ONLY": "1"
+      },
+      "features": [
+        "ASX-07",
+        "ASX-08"
+      ],
+      "seconds": 100,
+      "settle_seconds": 2,
+      "readiness": [
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "support121 shield break: Ok(true)",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": "solo-core"
+    },
+    "solo-normal": {
+      "phase": "solo",
+      "kind": "normal",
+      "players": 1,
+      "args": [
+        "--extensions-trial",
+        "1",
+        "--extensions-normal"
+      ],
+      "environment": {},
+      "features": [
+        "ASX-01",
+        "ASX-19"
+      ],
+      "seconds": 80,
+      "settle_seconds": 6,
+      "readiness": [
+        {
+          "source": "player-1/native-output.log",
+          "regex": "\"type\":\"choices\"[^\\r\\n]*?\"level\":(?:[2-9]|[1-9][0-9]+)(?:,|})",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": null
+    },
+    "coop-normal": {
+      "phase": "coop",
+      "kind": "normal",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2",
+        "--extensions-normal"
+      ],
+      "environment": {},
+      "features": [
+        "ASX-01",
+        "ASX-19"
+      ],
+      "seconds": 120,
+      "settle_seconds": 6,
+      "readiness": [
+        {
+          "source": "player-1/native-output.log",
+          "regex": "\"type\":\"choices\"[^\\r\\n]*?\"level\":(?:[2-9]|[1-9][0-9]+)(?:,|})",
+          "minimum": 1
+        },
+        {
+          "source": "player-2/native-output.log",
+          "regex": "\"type\":\"choices\"[^\\r\\n]*?\"level\":(?:[2-9]|[1-9][0-9]+)(?:,|})",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "official gold:",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "official group pause: Some",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "official group pause: None",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": "solo-normal"
+    },
+    "coop-coverage": {
+      "phase": "coop",
+      "kind": "diagnostic",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2"
+      ],
+      "environment": {
+        "ASX_TEST_COMPLETION121": "support",
+        "ASX_TEST_COVERAGE": "1",
+        "ASX_TEST_LUA_DIAGNOSTICS": "1"
+      },
+      "features": [
+        "ASX-05",
+        "ASX-07",
+        "ASX-08",
+        "ASX-11",
+        "ASX-12",
+        "ASX-23",
+        "ASX-24"
+      ],
+      "seconds": 280,
+      "settle_seconds": 2,
+      "readiness": [
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "support121 observed: index=11 ",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "fatigue fixture recovery:",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "immunity fixture expired: case=3 active=false",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "coverage native guardian killed: Ok(Some(",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "coverage native choices:",
+          "minimum": 1
+        },
+        {
+          "source": "player-2/azeroth-coop-native.log",
+          "contains": "coverage native choices:",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": "solo-core"
+    },
+    "coop-world-ui": {
+      "phase": "coop",
+      "kind": "diagnostic",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2"
+      ],
+      "environment": {
+        "ASX_TEST_COMPLETION121": "support",
+        "ASX_TEST_SUPPORT_ONLY": "1",
+        "ASX_TEST_WORLD_UI": "1",
+        "ASX_TEST_VISUAL": "1"
+      },
+      "features": [
+        "ASX-23",
+        "ASX-24"
+      ],
+      "seconds": 100,
+      "settle_seconds": 2,
+      "readiness": [],
+      "solo_prerequisite": "solo-core"
+    },
+    "coop-ui-remaining": {
+      "phase": "coop",
+      "kind": "diagnostic",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2"
+      ],
+      "environment": {
+        "ASX_TEST_COMPLETION121": "support",
+        "ASX_TEST_SUPPORT_ONLY": "1",
+        "ASX_TEST_WORLD_UI": "1",
+        "ASX_TEST_UI_REMAINING": "1",
+        "ASX_TEST_VISUAL": "1"
+      },
+      "features": [
+        "ASX-23",
+        "ASX-24"
+      ],
+      "seconds": 90,
+      "settle_seconds": 2,
+      "readiness": [],
+      "solo_prerequisite": "solo-core"
+    }
+  },
+  "plans": {
+    "compatibility": [
+      "solo-core",
+      "solo-events",
+      "solo-normal",
+      "coop-core",
+      "coop-events",
+      "coop-support",
+      "coop-pause",
+      "coop-normal"
+    ],
+    "events": [
+      "solo-events",
+      "coop-events"
+    ],
+    "tooling-ui": [
+      "solo-events",
+      "solo-normal",
+      "coop-events",
+      "coop-normal"
+    ]
+  },
+  "focused_retries": {
+    "shield_consumed": "coop-shield"
+  }
+}

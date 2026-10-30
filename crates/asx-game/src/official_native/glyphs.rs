@@ -1,7 +1,7 @@
 //! Exact-build glyph IO; gameplay policy never sees native row layouts.
 use super::*;
 use crate::official::{Entry,MutableMemory,SupportCalls};
-use crate::official117 as v;
+use crate::current as v;
 use asx_gameplay::glyphs::{Glyph,Modifiers};
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct GlyphOwner {pub game:u64,pub slot:u32,pub guid:u64,pub spell:u32}

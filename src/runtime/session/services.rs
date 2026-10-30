@@ -101,6 +101,8 @@ impl WorldControl for Runtime {
         support::finish(self, game);
         elites::finish(self, game);
         blessings::finish(self, game);
+        super::super::treasure_goblins::finish(self, game);
+        super::super::world_events::coop::finish(self,game);
     }
     fn log_group_pause(&self, reason: &Option<PauseReason>) {
         self.log.info(&format!("official group pause: {reason:?}"));

@@ -1,9 +1,9 @@
-//! Official 0.125 combat translation. Opaque identities, not native pointers,
+//! Official 0.130 combat translation. Opaque identities, not native pointers,
 //! escape this boundary; pursuit edits are confined to the basic-action block.
 use super::Adapter;
 use crate::{
-    official::{Entry, MutableMemory, SupportCalls},
     memory::Mem,
+    official::{Entry, MutableMemory, SupportCalls},
     Result,
 };
 use asx_gameplay::{Enemy, Mark, Talents};
@@ -21,6 +21,11 @@ pub struct BasicFrame {
     pub enemy: u64,
     pub(super) frame: u64,
     pub(super) position: [f32; 3],
+}
+impl BasicFrame {
+    pub fn position(&self) -> [f32; 3] {
+        self.position
+    }
 }
 fn q(b: &[u8], i: usize) -> u64 {
     u64::from_le_bytes(b[i..i + 8].try_into().unwrap())
@@ -61,7 +66,11 @@ impl Adapter {
             }
             let old = String::from_utf8(mem.read(desc, len as usize)?)
                 .map_err(|_| "Invalid native talent text")?;
-            let end=if self.supports_immunity_aggro(){"die, leave, gain immunity, or another player taunts them. You can taunt again while immune"}else{"die, leave, or another player taunts them"};
+            let end = if self.supports_immunity_aggro() {
+                "die, leave, gain immunity, or another player taunts them. You can taunt again while immune"
+            } else {
+                "die, leave, or another player taunts them"
+            };
             out.push((base+self.rva(slot)+64,format!("{old}\n\nCoop: {spell} hits taunt enemies, making them pursue you and direct basic melee attacks at you until you {end}. Special abilities keep their normal targeting.")));
         }
         Ok(out)
@@ -70,17 +79,23 @@ impl Adapter {
         [
             Entry {
                 rva: self.rva(0x5965190),
-                bytes: self.expected(0x5965190, &[
-                    0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48,
-                    0x81, 0xec, 0x38, 3, 0, 0,
-                ]),
+                bytes: self.expected(
+                    0x5965190,
+                    &[
+                        0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53,
+                        0x48, 0x81, 0xec, 0x38, 3, 0, 0,
+                    ],
+                ),
             },
             Entry {
                 rva: self.rva(0x5954e80),
-                bytes: self.expected(0x5954e80, &[
-                    0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48,
-                    0x81, 0xec, 0xe8, 4, 0, 0,
-                ]),
+                bytes: self.expected(
+                    0x5954e80,
+                    &[
+                        0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53,
+                        0x48, 0x81, 0xec, 0xe8, 4, 0, 0,
+                    ],
+                ),
             },
             Entry {
                 rva: self.rva(0x5955650),
@@ -88,16 +103,22 @@ impl Adapter {
             },
             Entry {
                 rva: self.rva(0x5958134),
-                bytes: self.expected(0x5958134, &[
-                    0x48, 0x8b, 0x9d, 0xa0, 3, 0, 0, 0x48, 0x8b, 0x8b, 0, 1, 0, 0,
-                ]),
+                bytes: self.expected(
+                    0x5958134,
+                    &[
+                        0x48, 0x8b, 0x9d, 0xa0, 3, 0, 0, 0x48, 0x8b, 0x8b, 0, 1, 0, 0,
+                    ],
+                ),
             },
             Entry {
                 rva: self.rva(0x5962610),
-                bytes: self.expected(0x5962610, &[
-                    0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48, 0x81, 0xec,
-                    0xb0, 0, 0, 0,
-                ]),
+                bytes: self.expected(
+                    0x5962610,
+                    &[
+                        0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48, 0x81,
+                        0xec, 0xb0, 0, 0, 0,
+                    ],
+                ),
             },
         ]
     }
@@ -196,13 +217,16 @@ impl Adapter {
             return Err("Truncated combat enemy header".into());
         }
         let (cap, p, n) = (q(&h, 0), q(&h, 8), q(&h, 16));
-        let stride = crate::official125::ENEMY_STRIDE;
+        let stride = crate::current::ENEMY_STRIDE;
         let extent = n.checked_mul(stride as u64);
-        if n > cap || cap > 65536 || (n > 0 && (p < 0x10000 || extent.is_none_or(|size| p.checked_add(size).is_none())))
+        if n > cap
+            || cap > 65536
+            || (n > 0 && (p < 0x10000 || extent.is_none_or(|size| p.checked_add(size).is_none())))
         {
             return Err("Invalid combat enemy extent".into());
         }
-        let byte_len = usize::try_from(extent.unwrap_or(0)).map_err(|_| "Combat enemy extent overflow")?;
+        let byte_len =
+            usize::try_from(extent.unwrap_or(0)).map_err(|_| "Combat enemy extent overflow")?;
         let rows = if n > 0 {
             mem.read(p, byte_len)?
         } else {
@@ -216,7 +240,7 @@ impl Adapter {
     pub fn combat_enemies(self, mem: &dyn Mem, game: u64) -> Result<Vec<Enemy>> {
         let (_, rows) = self.combat_rows(mem, game)?;
         let mut out = vec![];
-        use crate::official125 as layout;
+        use crate::current as layout;
         for r in rows.chunks_exact(layout::ENEMY_STRIDE) {
             let id = q(r, layout::ENEMY_GUID);
             let hp = f(r, layout::ENEMY_HP);
@@ -239,7 +263,7 @@ impl Adapter {
     }
     pub fn combat_hp(self, mem: &dyn Mem, game: u64, enemy: u64) -> Result<Option<f32>> {
         let (_, r) = self.combat_rows(mem, game)?;
-        use crate::official125 as layout;
+        use crate::current as layout;
         Ok(r.chunks_exact(layout::ENEMY_STRIDE)
             .find(|r| q(r, layout::ENEMY_GUID) == enemy)
             .map(|r| f(r, layout::ENEMY_HP))
@@ -254,26 +278,37 @@ impl Adapter {
     ) -> Result<()> {
         Mark::new((strength > 0.0).then_some(enemy), strength)?;
         let (p, rows) = self.combat_rows(mem, game)?;
-        use crate::official125 as layout;
+        use crate::current as layout;
         if let Some((i, r)) = rows
             .chunks_exact(layout::ENEMY_STRIDE)
             .enumerate()
             .find(|(_, r)| q(r, layout::ENEMY_GUID) == enemy && r[layout::ENEMY_DEAD] == 0)
         {
             if f(r, layout::ENEMY_VULNERABILITY) != strength {
-                mem.write(p + i as u64 * layout::ENEMY_STRIDE as u64 + layout::ENEMY_VULNERABILITY as u64, &strength.to_le_bytes())?;
+                mem.write(
+                    p + i as u64 * layout::ENEMY_STRIDE as u64 + layout::ENEMY_VULNERABILITY as u64,
+                    &strength.to_le_bytes(),
+                )?;
             }
         }
         Ok(())
     }
-    fn basic_fields(self)->[u64;5]{[crate::official125::BASIC_GAME,crate::official125::BASIC_ENEMY,crate::official125::BASIC_POSITION,crate::official125::BASIC_ORIGIN_XY,crate::official125::BASIC_ORIGIN_Z]}
+    fn basic_fields(self) -> [u64; 5] {
+        [
+            crate::current::BASIC_GAME,
+            crate::current::BASIC_ENEMY,
+            crate::current::BASIC_POSITION,
+            crate::current::BASIC_ORIGIN_XY,
+            crate::current::BASIC_ORIGIN_Z,
+        ]
+    }
     pub fn basic_frame(self, mem: &dyn Mem, frame: u64) -> Result<BasicFrame> {
-        if frame < 0x10000 || frame.checked_add(self.basic_fields()[1]+8).is_none() {
+        if frame < 0x10000 || frame.checked_add(self.basic_fields()[1] + 8).is_none() {
             return Err("Invalid basic action frame".into());
         }
         let game = q(&mem.read(frame + self.basic_fields()[0], 8)?, 0);
         let row = q(&mem.read(frame + self.basic_fields()[1], 8)?, 0);
-        let enemy = q(&mem.read(row + crate::official125::ENEMY_GUID as u64, 8)?, 0);
+        let enemy = q(&mem.read(row + crate::current::ENEMY_GUID as u64, 8)?, 0);
         let b = mem.read(frame + self.basic_fields()[2], 12)?;
         let position = std::array::from_fn(|i| f(&b, i * 4));
         if position.iter().any(|v| !v.is_finite()) {
@@ -337,18 +372,26 @@ impl Adapter {
         }
         let row = self.support_row(io, game, slot)?;
         if io.read(row + self.row_field(row == game, 0x478), 8)? != guid.to_le_bytes()
-            || io.read(row + self.row_field(slot == 0, if slot == 0 { 0xc46 } else { 0x97c }), 1)? != [1]
+            || io.read(
+                row + self.row_field(slot == 0, if slot == 0 { 0xc46 } else { 0x97c }),
+                1,
+            )? != [1]
         {
             return Ok(None);
         }
         if slot != 0 {
             io.swap_actor(game, row)?;
-            io.write(game + self.game_field(0xb40), &u64::from(slot).to_le_bytes())?;
+            io.write(
+                game + self.game_field(0xb40),
+                &u64::from(slot).to_le_bytes(),
+            )?;
         }
         let result = (|| {
-            let before = f(&io.read(game + self.game_field(0x4f8), 8)?, 0) + f(&io.read(game + self.game_field(0x4fc), 4)?, 0);
+            let before = f(&io.read(game + self.game_field(0x4f8), 8)?, 0)
+                + f(&io.read(game + self.game_field(0x4fc), 4)?, 0);
             io.support_hurt(game, amount, enemy, melee)?;
-            let after = f(&io.read(game + self.game_field(0x4f8), 8)?, 0) + f(&io.read(game + self.game_field(0x4fc), 4)?, 0);
+            let after = f(&io.read(game + self.game_field(0x4f8), 8)?, 0)
+                + f(&io.read(game + self.game_field(0x4fc), 4)?, 0);
             io.flush_actor(game)?;
             Ok(Some((before - after).max(0.0)))
         })();
@@ -366,21 +409,30 @@ impl Adapter {
         avoid_slot: u32,
     ) -> Result<Option<u64>> {
         let (p, rows) = self.combat_rows(mem, game)?;
-        use crate::official125 as layout;
-        let selected = rows.chunks_exact(layout::ENEMY_STRIDE).enumerate().find(|(_, r)| {
-            r[layout::ENEMY_DEAD] == 0
-                && f(r, layout::ENEMY_HP) > 0.0
-                && q(r, 0x18) == u64::MAX
-                && q(r, 0x58) == u64::MAX
-                && q(r, layout::ENEMY_TARGET) != u64::from(avoid_slot)
-                && (q(r, 0x100) == 0 || mem.read(q(r, 0x100), 1).is_ok_and(|v| v[0] & 1 == 0))
-        });
+        use crate::current as layout;
+        let selected = rows
+            .chunks_exact(layout::ENEMY_STRIDE)
+            .enumerate()
+            .find(|(_, r)| {
+                r[layout::ENEMY_DEAD] == 0
+                    && f(r, layout::ENEMY_HP) > 0.0
+                    && q(r, 0x18) == u64::MAX
+                    && q(r, 0x58) == u64::MAX
+                    && q(r, layout::ENEMY_TARGET) != u64::from(avoid_slot)
+                    && (q(r, 0x100) == 0 || mem.read(q(r, 0x100), 1).is_ok_and(|v| v[0] & 1 == 0))
+            });
         let Some((i, r)) = selected else {
             return Err(format!(
                 "No melee candidate: {:?}",
                 rows.chunks_exact(layout::ENEMY_STRIDE)
                     .take(8)
-                    .map(|r| (r[layout::ENEMY_DEAD], q(r, 0x18), q(r, 0x58), q(r, layout::ENEMY_TARGET), q(r, 0x100)))
+                    .map(|r| (
+                        r[layout::ENEMY_DEAD],
+                        q(r, 0x18),
+                        q(r, 0x58),
+                        q(r, layout::ENEMY_TARGET),
+                        q(r, 0x100)
+                    ))
                     .collect::<Vec<_>>()
             ));
         };
@@ -405,7 +457,10 @@ impl Adapter {
         let row = self.support_row(io, game, slot)?;
         if slot != 0 {
             io.swap_actor(game, row)?;
-            io.write(game + self.game_field(0xb40), &u64::from(slot).to_le_bytes())?;
+            io.write(
+                game + self.game_field(0xb40),
+                &u64::from(slot).to_le_bytes(),
+            )?;
         }
         let result = io
             .support_hit(game, enemy, amount, spell)
@@ -421,13 +476,41 @@ impl Adapter {
 
 // Native continuation owns the selected build's nonvolatile distance register.
 use std::sync::atomic::AtomicUsize;
-static BASIC_CONTINUATION:AtomicUsize=AtomicUsize::new(0);
-#[unsafe(naked)]unsafe extern "C" fn basic_resume(){core::arch::naked_asm!("test rax,rax","jz 2f","movss xmm15,xmm5","2:","jmp qword ptr [rip+{original}]",original=sym BASIC_CONTINUATION);}
-impl Adapter{pub fn basic_resume_entry(self)->(usize,&'static AtomicUsize){(basic_resume as *const ()as usize,&BASIC_CONTINUATION)}}
-#[cfg(test)]mod resume_tests{
- use super::*;use std::sync::atomic::Ordering;
- #[unsafe(naked)]unsafe extern "C" fn done(){core::arch::naked_asm!("ret");}
- static DISTANCE_BITS:std::sync::atomic::AtomicU32=std::sync::atomic::AtomicU32::new(0);
- #[unsafe(naked)]unsafe extern "win64" fn probe(_flag:u64,_old:f32,_new:f32)->u64{core::arch::naked_asm!("sub rsp,104","movaps [rsp+32],xmm12","movaps [rsp+48],xmm14","movaps [rsp+64],xmm15","movaps [rsp+80],xmm1","movaps xmm12,xmm1","movaps xmm14,xmm1","movaps xmm15,xmm1","movaps xmm5,xmm2","mov rax,rcx","call {gate}","movd eax,xmm15","mov dword ptr [rip+{distance}],eax","movdqa xmm0,xmm12","pcmpeqb xmm0,[rsp+80]","pmovmskb eax,xmm0","cmp eax,0xffff","jne 2f","movdqa xmm0,xmm14","pcmpeqb xmm0,[rsp+80]","pmovmskb eax,xmm0","cmp eax,0xffff","sete al","movzx eax,al","jmp 3f","2:","xor eax,eax","3:","movaps xmm12,[rsp+32]","movaps xmm14,[rsp+48]","movaps xmm15,[rsp+64]","add rsp,104","ret",gate=sym basic_resume,distance=sym DISTANCE_BITS);}
- #[test]fn current_native_distance_register_is_selected_and_other_nonvolatiles_survive(){let old=BASIC_CONTINUATION.swap(done as *const ()as usize,Ordering::SeqCst);let native=unsafe{probe(0,3.,7.)};let native_bits=DISTANCE_BITS.load(Ordering::SeqCst);let tank=unsafe{probe(1,3.,7.)};let tank_bits=DISTANCE_BITS.load(Ordering::SeqCst);BASIC_CONTINUATION.store(old,Ordering::SeqCst);assert_eq!((native,tank),(1,1));assert_eq!((f32::from_bits(native_bits),f32::from_bits(tank_bits)),(3.,7.));}
+static BASIC_CONTINUATION: AtomicUsize = AtomicUsize::new(0);
+#[unsafe(naked)]
+unsafe extern "C" fn basic_resume() {
+    core::arch::naked_asm!("test rax,rax","jz 2f","movss xmm15,xmm5","2:","jmp qword ptr [rip+{original}]",original=sym BASIC_CONTINUATION);
+}
+impl Adapter {
+    pub fn basic_resume_entry(self) -> (usize, &'static AtomicUsize) {
+        (basic_resume as *const () as usize, &BASIC_CONTINUATION)
+    }
+}
+#[cfg(test)]
+mod resume_tests {
+    use super::*;
+    use std::sync::atomic::Ordering;
+    #[unsafe(naked)]
+    unsafe extern "C" fn done() {
+        core::arch::naked_asm!("ret");
+    }
+    static DISTANCE_BITS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+    #[unsafe(naked)]
+    unsafe extern "win64" fn probe(_flag: u64, _old: f32, _new: f32) -> u64 {
+        core::arch::naked_asm!("sub rsp,104","movaps [rsp+32],xmm12","movaps [rsp+48],xmm14","movaps [rsp+64],xmm15","movaps [rsp+80],xmm1","movaps xmm12,xmm1","movaps xmm14,xmm1","movaps xmm15,xmm1","movaps xmm5,xmm2","mov rax,rcx","call {gate}","movd eax,xmm15","mov dword ptr [rip+{distance}],eax","movdqa xmm0,xmm12","pcmpeqb xmm0,[rsp+80]","pmovmskb eax,xmm0","cmp eax,0xffff","jne 2f","movdqa xmm0,xmm14","pcmpeqb xmm0,[rsp+80]","pmovmskb eax,xmm0","cmp eax,0xffff","sete al","movzx eax,al","jmp 3f","2:","xor eax,eax","3:","movaps xmm12,[rsp+32]","movaps xmm14,[rsp+48]","movaps xmm15,[rsp+64]","add rsp,104","ret",gate=sym basic_resume,distance=sym DISTANCE_BITS);
+    }
+    #[test]
+    fn current_native_distance_register_is_selected_and_other_nonvolatiles_survive() {
+        let old = BASIC_CONTINUATION.swap(done as *const () as usize, Ordering::SeqCst);
+        let native = unsafe { probe(0, 3., 7.) };
+        let native_bits = DISTANCE_BITS.load(Ordering::SeqCst);
+        let tank = unsafe { probe(1, 3., 7.) };
+        let tank_bits = DISTANCE_BITS.load(Ordering::SeqCst);
+        BASIC_CONTINUATION.store(old, Ordering::SeqCst);
+        assert_eq!((native, tank), (1, 1));
+        assert_eq!(
+            (f32::from_bits(native_bits), f32::from_bits(tank_bits)),
+            (3., 7.)
+        );
+    }
 }

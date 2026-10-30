@@ -9,17 +9,40 @@ fn q(m: &dyn Mem, a: u64) -> Result<u64> {
     ))
 }
 impl Adapter {
-    pub fn loot_victory(self,m:&dyn Mem,game:u64)->Result<bool>{self.blessing_fixture_victory(m,game)}
-    pub fn loot_actor_gold(self,m:&dyn Mem,game:u64,slot:u32,guid:u64)->Result<(f32,u8)>{
-      let row=self.support_row(m,game,slot)?;
-      if guid==0||m.read(row+self.row_field(row==game,0x478),8)?!=guid.to_le_bytes(){return Err("Loot gold recipient changed".into())}
-      let multiplier=f32::from_le_bytes(m.read(row+self.row_field(row==game,0x4c0),4)?.try_into().map_err(|_|"Truncated loot gold multiplier")?);
-      if !multiplier.is_finite()||multiplier<0.0{return Err("Invalid loot gold multiplier".into())}
-      Ok((multiplier,m.read(row+self.row_field(row==game,0x32d),1)?[0]))
+    pub fn loot_victory(self, m: &dyn Mem, game: u64) -> Result<bool> {
+        self.blessing_fixture_victory(m, game)
+    }
+    pub fn loot_actor_gold(
+        self,
+        m: &dyn Mem,
+        game: u64,
+        slot: u32,
+        guid: u64,
+    ) -> Result<(f32, u8)> {
+        let row = self.support_row(m, game, slot)?;
+        if guid == 0 || m.read(row + self.row_field(row == game, 0x478), 8)? != guid.to_le_bytes() {
+            return Err("Loot gold recipient changed".into());
+        }
+        let multiplier = f32::from_le_bytes(
+            m.read(row + self.row_field(row == game, 0x4c0), 4)?
+                .try_into()
+                .map_err(|_| "Truncated loot gold multiplier")?,
+        );
+        if !multiplier.is_finite() || multiplier < 0.0 {
+            return Err("Invalid loot gold multiplier".into());
+        }
+        Ok((
+            multiplier,
+            m.read(row + self.row_field(row == game, 0x32d), 1)?[0],
+        ))
     }
 
-    pub fn loot_entries(self) -> Vec<Entry> { vec![] }
-    pub fn loot_send_entry(self, _peer: bool) -> Option<Entry> { None }
+    pub fn loot_entries(self) -> Vec<Entry> {
+        vec![]
+    }
+    pub fn loot_send_entry(self, _peer: bool) -> Option<Entry> {
+        None
+    }
     /// Copy only the native-issued item IDs, after actor restoration. Source peer
     /// and recipient actor are distinct native identities; validate their binding.
     pub fn loot_offer(self, m: &dyn Mem, frame: u64, peer: u64) -> Result<(u64, u32, Vec<u32>)> {
@@ -114,16 +137,36 @@ impl Adapter {
 }
 
 impl Adapter {
- /// Diagnostic-only caller. Grow and retain a real native Vec<u32>; never fake a
- /// collection result or an ASX credit. No gameplay lock may span native reserve.
- pub unsafe fn loot_fixture_append(self,_m:&dyn MutableMemory,_game:u64,_base:u64,_slot:u32,_item:u32)->Result<bool>{Err("Duplicate-loot fixture is retired for 0.125.0".into())}
+    /// Diagnostic-only caller. Grow and retain a real native Vec<u32>; never fake a
+    /// collection result or an ASX credit. No gameplay lock may span native reserve.
+    pub unsafe fn loot_fixture_append(
+        self,
+        _m: &dyn MutableMemory,
+        _game: u64,
+        _base: u64,
+        _slot: u32,
+        _item: u32,
+    ) -> Result<bool> {
+        Err("Duplicate-loot fixture is retired for 0.129.0".into())
+    }
 }
 
 impl Adapter {
- pub fn loot_fixture_entry(self)->Option<Entry>{None}
- /// This owned Vec has already been captured from the native guest context.
- /// Reserve before the native length branch, then refresh its cached cap/ptr.
- pub unsafe fn loot_fixture_dispatch(self,_m:&dyn MutableMemory,_frame:u64,_base:u64,_peer:u64,_item:u32)->Result<u64>{Err("Duplicate-loot fixture is retired for 0.125.0".into())}
+    pub fn loot_fixture_entry(self) -> Option<Entry> {
+        None
+    }
+    /// This owned Vec has already been captured from the native guest context.
+    /// Reserve before the native length branch, then refresh its cached cap/ptr.
+    pub unsafe fn loot_fixture_dispatch(
+        self,
+        _m: &dyn MutableMemory,
+        _frame: u64,
+        _base: u64,
+        _peer: u64,
+        _item: u32,
+    ) -> Result<u64> {
+        Err("Duplicate-loot fixture is retired for 0.129.0".into())
+    }
 }
 
 #[cfg(test)]
@@ -161,7 +204,7 @@ mod tests {
     }
     #[test]
     fn only_reviewed_build_and_bounded_packets() {
-        let a = Adapter::select(crate::official125::SHA256).unwrap();
+        let a = Adapter::select(crate::current::SHA256).unwrap();
         let m = Memory::default();
         assert!(a.loot_entries().is_empty());
         m.write(0x10000, &0x8000000000000006u64.to_le_bytes())
@@ -181,7 +224,7 @@ mod tests {
     }
     #[test]
     fn inactive_duplicate_ui_codec_keeps_its_ownership_guards() {
-        let a = Adapter::select(crate::official125::SHA256).unwrap();
+        let a = Adapter::select(crate::current::SHA256).unwrap();
         assert!(a.loot_entries().is_empty());
         let m = Memory::default();
         let original = br#"{"type":"drop","name":"Sword","new":false,"icon":"Sword_01"}"#;

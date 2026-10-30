@@ -1,6 +1,7 @@
 """One bounded packaged normal-ASX trial, private Windows profiles, no desktop input."""
 import ctypes,hashlib,json,os,re,shutil,socket,subprocess,time,uuid,zipfile
 from pathlib import Path
+from client_registry import VERSION
 ROOT=Path(__file__).resolve().parents[2]
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def stop_game(folder):
@@ -14,15 +15,16 @@ def stop_game(folder):
     if h:
         try:k.TerminateProcess(h,0)
         finally:k.CloseHandle(h)
-def run(seconds,game_version="0.125.0",package_path=None):
-    if game_version != "0.125.0":raise ValueError("Only the reviewed packaged 0.125.0 trial is supported")
+def run(seconds,game_version=VERSION,package_path=None):
+    if game_version != VERSION:raise ValueError("Only the selected reviewed packaged trial is supported")
     tag=game_version.replace(".","")
     if os.name!="nt":raise RuntimeError("Windows only")
     runtime=(ROOT/("runtime-official-"+tag)).resolve();exe=runtime/"AzerothSurvivors.exe"
     from disposable115_party import writer
     expected=json.loads((ROOT/"asx/supported-games.json").read_text())["games"][game_version]["sha256"]
     if sha(exe)!=expected:raise ValueError("Wrong private native build")
-    package=Path(package_path)if package_path else ROOT/"test-results/asx-native-01250-candidate/asx-0.125.0-asx.2.zip"
+    if package_path is None:raise ValueError("An explicit prepared package is required")
+    package=Path(package_path)
     proof=json.loads(package.with_name("PREPARATION.json").read_text())
     if not proof["version"].startswith(game_version+"-asx."):raise ValueError("Packaged trial version differs")
     if sha(package)!=proof["archive_sha256"]:raise ValueError("Package differs")

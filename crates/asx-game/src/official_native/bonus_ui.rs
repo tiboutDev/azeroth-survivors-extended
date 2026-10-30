@@ -1,10 +1,10 @@
 //! Shared native reward annotation widgets; versioned pointers stay here.
 use super::*;
 use crate::official::{Entry,MutableMemory};
-use crate::official117 as v;
+use crate::current as v;
 fn q(m:&dyn Mem,a:u64)->Result<u64>{Ok(u64::from_le_bytes(m.read(a,8)?.try_into().map_err(|_|"Truncated UI word")?))}
-#[derive(Clone,Copy)]pub struct BonusSeparator {node:[u8;crate::official125::NODE_SIZE],color:[u8;20]}
-#[derive(Clone,Copy)]pub struct BonusHeaderColumn {node:[u8;crate::official125::NODE_SIZE],meta:u64}
+#[derive(Clone,Copy)]pub struct BonusSeparator {node:[u8;crate::current::NODE_SIZE],color:[u8;20]}
+#[derive(Clone,Copy)]pub struct BonusHeaderColumn {node:[u8;crate::current::NODE_SIZE],meta:u64}
 #[derive(Clone,Copy)]pub struct BonusUi {pub(super) assets:u64,color:[u8;20]}
 impl Adapter {
  pub fn bonus_ui_entries(self)->Vec<Entry>{if !self.supports_extensions(){return vec![]}vec![Entry{rva:self.contact117(v::GLYPH_UI_RVA),bytes:self.extension_bytes117(0x2f6f70,v::GLYPH_UI_BYTES)},Entry{rva:self.contact117(v::GLYPH_LINE_RVA),bytes:self.extension_bytes117(0x1070a0,v::GLYPH_LINE_BYTES)},Entry{rva:self.contact117(v::GLYPH_ICON_RVA),bytes:self.extension_bytes117(0x2365e0,v::GLYPH_ICON_BYTES)},Entry{rva:self.contact117(v::GLYPH_UI_ACTION_RVA),bytes:self.extension_bytes117(0x329159,v::GLYPH_UI_ACTION_BYTES)},Entry{rva:self.contact117(v::GLYPH_TEXT_NODE_RVA),bytes:self.extension_bytes117(0x2be1d0,v::GLYPH_TEXT_NODE_BYTES)}]}
@@ -19,7 +19,7 @@ impl Adapter {
    m.write(bundle+v::GLYPH_UI_HEADER_NODE+offset,&[1u32.to_le_bytes(),value.to_le_bytes()].concat())?;
   }
   // This header alone is a row; keep the icon/title spacing native and centered.
-  m.write(bundle+v::GLYPH_UI_HEADER_NODE+crate::official125::NODE_COLUMN_GAP,&[1u32.to_le_bytes(),6f32.to_le_bytes()].concat())?;
+  m.write(bundle+v::GLYPH_UI_HEADER_NODE+crate::current::NODE_COLUMN_GAP,&[1u32.to_le_bytes(),6f32.to_le_bytes()].concat())?;
   // The separator supplies the separation; no extra top margin on ASX rows.
   m.write(bundle+v::GLYPH_UI_HEADER_NODE+v::GLYPH_UI_HEADER_MARGIN_TOP,&[1u32.to_le_bytes(),0f32.to_le_bytes()].concat())?;
   // The reviewed card constructor sets Column (1); glyph header uses Row (0).
@@ -97,12 +97,12 @@ impl Adapter{pub fn reward_entries(self)->[Entry;2]{[
 
 impl Adapter {
  pub fn bonus_separator_entries(self)->[Entry;2]{
-  [crate::official125::BONUS_SEPARATOR_BUILD,crate::official125::BONUS_SEPARATOR_SPAWN].map(|(rva,bytes)|Entry{rva,bytes})
+  [crate::current::BONUS_SEPARATOR_BUILD,crate::current::BONUS_SEPARATOR_SPAWN].map(|(rva,bytes)|Entry{rva,bytes})
  }
  pub fn bonus_separator_capture(self,m:&dyn Mem,caller:u64,node:u64,color:u64)->Result<Option<BonusSeparator>>{
-  if caller!=crate::official125::BONUS_SEPARATOR_CALLER{return Ok(None)}
+  if caller!=crate::current::BONUS_SEPARATOR_CALLER{return Ok(None)}
   if node<0x10000||color<0x10000{return Err("Invalid native separator inputs".into())}
-  let node:[u8;crate::official125::NODE_SIZE]=m.read(node,crate::official125::NODE_SIZE)?.try_into().map_err(|_|"Truncated separator Node")?;
+  let node:[u8;crate::current::NODE_SIZE]=m.read(node,crate::current::NODE_SIZE)?.try_into().map_err(|_|"Truncated separator Node")?;
   // The constructor moves four grid Vecs at offsets 0,24,48,72. This card uses
   // empty defaults; reject owned allocations rather than alias their ownership.
   if node[..96].chunks_exact(24).any(|v|v[..8]!=[0;8]||v[16..24]!=[0;8]){return Err("Owned separator grid data cannot be copied".into())}
@@ -111,8 +111,8 @@ impl Adapter {
  pub unsafe fn bonus_separator_draw(self,m:&dyn Mem,base:usize,parent:u64,style:BonusSeparator)->Result<()>{
   type Build=unsafe extern "system" fn(*mut u8,*const u8,*const u8)->u64;
   type Spawn=unsafe extern "system" fn(*mut u8,u64,*mut u8)->u64;
-  let build:Build=std::mem::transmute(base+crate::official125::BONUS_SEPARATOR_BUILD.0 as usize);
-  let spawn:Spawn=std::mem::transmute(base+crate::official125::BONUS_SEPARATOR_SPAWN.0 as usize);
+  let build:Build=std::mem::transmute(base+crate::current::BONUS_SEPARATOR_BUILD.0 as usize);
+  let spawn:Spawn=std::mem::transmute(base+crate::current::BONUS_SEPARATOR_SPAWN.0 as usize);
   // Native constructor owns its fresh gradient handles. Spawn consumes them once;
   // only the plain Node/color inputs are copied from this card's native separator.
   let mut bundle=[0u64;0x1a0/8];let mut output=[0u64;0x30/8];
@@ -128,20 +128,20 @@ impl Adapter {
 }
 
 impl Adapter {
- pub fn bonus_column_entries(self)->[Entry;2]{[crate::official125::BONUS_TITLE_SPAWN,crate::official125::BONUS_COLUMN_SPAWN].map(|(rva,bytes)|Entry{rva,bytes})}
+ pub fn bonus_column_entries(self)->[Entry;2]{[crate::current::BONUS_TITLE_SPAWN,crate::current::BONUS_COLUMN_SPAWN].map(|(rva,bytes)|Entry{rva,bytes})}
  /// Capture only the shared native header's empty-grid Node and bundle metadata.
  pub fn bonus_column_capture(self,m:&dyn Mem,caller:u64,bundle:u64,meta:u64)->Result<Option<BonusHeaderColumn>>{
-  if caller!=crate::official125::BONUS_HEADER_CALLER{return Ok(None)}
+  if caller!=crate::current::BONUS_HEADER_CALLER{return Ok(None)}
   if meta<0x10000{return Err("Invalid bonus column metadata".into())}
-  let mut node:[u8;crate::official125::NODE_SIZE]=m.read(bundle+8,crate::official125::NODE_SIZE)?.try_into().map_err(|_|"Truncated bonus header Node")?;
+  let mut node:[u8;crate::current::NODE_SIZE]=m.read(bundle+8,crate::current::NODE_SIZE)?.try_into().map_err(|_|"Truncated bonus header Node")?;
   if node[..96].chunks_exact(24).any(|v|v[..8]!=[0;8]||v[16..24]!=[0;8]){return Err("Owned bonus header grids cannot be copied".into())}
   // A vertical text column inside the native horizontal icon row. Auto dimensions
   // follow its two text children; the outer native header remains centered.
   for at in [v::GLYPH_UI_HEADER_WIDTH,v::GLYPH_UI_HEADER_HEIGHT]{node[at as usize..at as usize+8].fill(0);}
   for at in [0xb8usize,0xc0,0xc8,0xd0]{node[at..at+4].copy_from_slice(&1u32.to_le_bytes());node[at+4..at+8].fill(0);}
   node[v::GLYPH_UI_HEADER_DIRECTION as usize]=1;
-  node[crate::official125::BONUS_NODE_ALIGN_ITEMS]=crate::official125::BONUS_ALIGN_START;
-  let gap=crate::official125::BONUS_NODE_ROW_GAP;
+  node[crate::current::BONUS_NODE_ALIGN_ITEMS]=crate::current::BONUS_ALIGN_START;
+  let gap=crate::current::BONUS_NODE_ROW_GAP;
   node[gap..gap+4].copy_from_slice(&1u32.to_le_bytes());node[gap+4..gap+8].fill(0);
   Ok(Some(BonusHeaderColumn{node,meta}))
  }
@@ -151,7 +151,7 @@ impl Adapter {
   // Validate all borrowed destinations before queueing native work.
   let parent=q(m,title)?;m.read(title+v::GLYPH_STATUS_FONT_SIZE,4)?;
   type Spawn=unsafe extern "system" fn(*mut u64,u64,*mut u64,u64)->u64;
-  let spawn:Spawn=std::mem::transmute(base+crate::official125::BONUS_COLUMN_SPAWN.0 as usize);
+  let spawn:Spawn=std::mem::transmute(base+crate::current::BONUS_COLUMN_SPAWN.0 as usize);
   let mut bundle=[0u64;0x188/8];bundle[0]=parent;
   std::ptr::copy_nonoverlapping(style.node.as_ptr(),bundle.as_mut_ptr().add(1).cast(),style.node.len());
   let mut output=[0u64;6];spawn(output.as_mut_ptr(),commands,bundle.as_mut_ptr(),style.meta);

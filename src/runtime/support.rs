@@ -669,12 +669,12 @@ type Periodic = unsafe extern "system" fn(u64, f32);
 unsafe extern "system" fn periodic(game: u64, dt: f32) {
     let original: Periodic = std::mem::transmute(PERIODIC_ORIGINAL.load(Ordering::Acquire));
     let Some(runtime) = RUNTIME.get().filter(|r| r.rules) else {
-        return original(game, dt);
+        return combat_text::with_periodic_text_source(game,None,||original(game, dt));
     };
     let owners = OWNERS.lock().map(|o| o.clone()).unwrap_or_default();
     let personal=fatigue::multiplier(runtime,game)<1.0;
     if owners.is_empty() && !personal {
-        return original(game, dt);
+        return combat_text::with_periodic_text_source(game,None,||original(game, dt));
     }
     let io = io::Access {
         local: &runtime.local,
@@ -691,10 +691,10 @@ unsafe extern "system" fn periodic(game: u64, dt: f32) {
             runtime
                 .log
                 .warn(&format!("Official periodic isolation rejected: {e}"));
-            return original(game, dt);
+            return combat_text::with_periodic_text_source(game,None,||original(game, dt));
         }
     };
-    original(game, dt);
+    combat_text::with_periodic_text_source(game,None,||original(game, dt));
     for tick in ticks {
         match runtime.adapter.restore_periodic(&io, game, &tick) {
             Ok(true) => {}
@@ -729,7 +729,7 @@ unsafe extern "system" fn periodic(game: u64, dt: f32) {
         let raw = tick.raw * fatigue::for_source(game, tick.owner.caster, tick.owner.caster_guid);
         #[cfg(feature="test-hooks")]
         fatigue::with_source(game,tick.owner.caster,tick.owner.caster_guid,||fatigue::fixture_trace(runtime,game,if tick.owner.caster_guid==tick.owner.target_guid {3}else{2},tick.raw,raw));
-        heal(game, raw, 0, metadata.as_ptr());
+        combat_text::with_periodic_text_source(game,Some((tick.owner.caster_guid,tick.owner.spell)),||heal(game, raw, 0, metadata.as_ptr()));
         FOREIGN_HEAL.with(|v| v.set(previous));
         let Ok(after) = runtime.adapter.support_caster(&runtime.local, game) else {
             continue;

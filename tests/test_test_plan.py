@@ -65,6 +65,14 @@ class Plans(unittest.TestCase):
                 if command[0] != 'cargo':
                     continue
                 self.assertIn('--locked', command)
+                if '--manifest-path' in command:
+                    selected = command[command.index('--manifest-path') + 1]
+                    self.assertEqual(selected, 'tools/dev/native-inventory/Cargo.toml')
+                    helper = tomllib.loads((ROOT / selected).read_text())
+                    self.assertEqual(helper['package']['name'], 'asx-native-inventory')
+                    self.assertIn('workspace', helper)
+                    self.assertNotIn('--test', command)
+                    continue
                 packages = [command[i + 1] for i, token in enumerate(command[:-1]) if token == '-p']
                 self.assertTrue(packages)
                 self.assertTrue(set(packages) <= portable.keys(), (profile, packages))

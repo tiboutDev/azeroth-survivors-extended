@@ -140,33 +140,21 @@ pub fn finish(r: &dyn Services, game: u64) {
         ));
     }
 }
-static EVENT: AtomicUsize = AtomicUsize::new(0);
 static POOL: AtomicUsize = AtomicUsize::new(0);
 
-crate::context_stub_rw!(event_entry, 0, event, EVENT);
 crate::context_stub_rw!(pool_entry, 0, pool, POOL, write_r14);
-unsafe extern "system" fn event(c: &mut crate::stub::Context) {
-    #[cfg(test)]
-    {
-        tests::FRAME.store(c.rbp, Ordering::SeqCst);
-        tests::DEF.store(c.rbx, Ordering::SeqCst);
-    }
-    let Some(r) = services::active() else {
-        return;
-    };
-    if let Ok(Some((game, _native_encounter_count))) = r.event_context([c.rbp,c.rbx,c.r13]) {
-        if r.duplicate_loot_enabled(){super::duplicate_loot::encounter(game);}
-        #[cfg(feature="test-hooks")]
-        r.fixture_loot(game);
-        if let Ok(mut guard) = STATE.lock() {
-            if let Some(s) = guard.as_mut().filter(|s| s.game == game) {
-                if s.pending.len() < 256 {
-                    s.next_event += 1;
-                    s.pending.insert(s.next_event);
-                }
-            }
-        }
-    }
+pub(super) fn encounter(game:u64){
+    if super::rituals::replaces_boss_fortunes(game){return}
+    if let Ok(mut guard)=STATE.lock(){if let Some(s)=guard.as_mut().filter(|s|s.game==game){if s.pending.len()<256{s.next_event+=1;s.pending.insert(s.next_event);}}}
+}
+pub(super) fn ritual_rewards(r:&dyn Services,game:u64,rewards:&[((u32,u64),Blessing)])->Result<(),String>{
+    {let mut guard=STATE.lock().map_err(|_|"Fortune state unavailable")?;let s=guard.as_mut().filter(|s|s.game==game).ok_or("Fortune run changed")?;for(id,b)in rewards{s.rules.actors.insert(*id,*b);}}
+    ACTIVE.store(true,Ordering::Release);r.refresh_blessings(game,&rewards.iter().map(|(id,_)|*id).collect::<Vec<_>>())?;Ok(())
+}
+pub(super) fn ritual_reward(r:&dyn Services,game:u64,owner:u64,b:Blessing)->Result<(),String>{
+    {let mut guard=STATE.lock().map_err(|_|"Fortune state unavailable")?;let s=guard.as_mut().filter(|s|s.game==game).ok_or("Fortune run changed")?;s.rules.actors.insert((0,owner),b);}
+    ACTIVE.store(true,Ordering::Release);r.refresh_blessings(game,&[(0,owner)])?;
+    r.info(&format!("ritual fortune: owner={owner} stage={} category={} amount={}",b.boss,b.category,b.amount));Ok(())
 }
 unsafe extern "system" fn pool(c: &mut crate::stub::Context) {
     #[cfg(test)]
@@ -222,28 +210,9 @@ pub fn apply_stats(game:u64){
         }
     }
 }
-pub fn hooks(adapter: Adapter) -> Vec<crate::install::HookSpec> {
-    let detours = [
-        event_entry as *const () as usize,
-        pool_entry as *const () as usize,
-    ];
-    let originals = [&EVENT, &POOL];
-    let names = [
-        "official-blessing-encounter",
-        "official-blessing-pool",
-    ];
-    adapter
-        .blessing_entries()
-        .iter().take(2)
-        .enumerate()
-        .map(|(i, e)| crate::install::HookSpec {
-            name: names[i],
-            target: local_base() + e.rva as usize,
-            detour: detours[i],
-            trampoline: originals[i],
-        })
-        .collect()
+pub fn hooks(adapter:Adapter)->Vec<crate::install::HookSpec>{
+ let e=adapter.blessing_entries()[1];vec![crate::install::HookSpec{name:"official-blessing-pool",target:local_base()+e.rva as usize,detour:pool_entry as *const ()as usize,trampoline:&POOL}]
 }
 
 #[cfg(test)]
-mod tests;
+pub(super) mod tests;

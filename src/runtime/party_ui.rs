@@ -25,7 +25,8 @@ fn hex(bytes: &[u8]) -> String {
     }
     out
 }
-fn wire(state: &mut State, own: u64, heartbeat: u64) -> Option<String> {
+fn wire(state: &mut State, own: u64, heartbeat: u64) -> Option<String> {wire_extra(state,own,heartbeat,"")}
+fn wire_extra(state: &mut State, own: u64, heartbeat: u64, extra:&str) -> Option<String> {
     if !state.ids.iter().any(|(_, id)| *id == own) {
         return None;
     }
@@ -65,6 +66,7 @@ fn wire(state: &mut State, own: u64, heartbeat: u64) -> Option<String> {
             }
         }
     }
+    text.push_str(extra);
     if let Some((old, packed)) = state.encoded.get(&own) {
         if *old == text {
             return Some(packed.clone());
@@ -206,7 +208,7 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
     // server/HUD serializer. This restored presentation boundary owns its cache.
     if let Some(r)=RUNTIME.get().filter(|r|r.rules){
         lifecycle::refresh_solo(r,game as u64);
-        if r.solo.lock().ok().is_some_and(|p|p.is_some()){blessings::finish(r,game as u64);}
+        if r.solo.lock().ok().is_some_and(|p|p.is_some()){blessings::finish(r,game as u64);super::supplies::finish(r,game as u64);super::rituals::finish(r,game as u64);}
     }
     let result = original(output, game, native_context);
     #[cfg(feature="test-hooks")]
@@ -231,22 +233,34 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
                     }).unwrap_or(0);
                     let mut text=format!("1|{epoch}|{}|{heartbeat}\nM|{}|0|{}\n",actor.guid,actor.guid,hex(b"Player"));
                     if let Some(b)=blessings::view(0,actor.guid){text.push_str(&format!("B|{}|{}|{}|{}|{}|{}\n",actor.guid,b.boss,b.category,b.rarity,b.amount,b.amount));}
+                    if let Some((event,held,inside))=super::rituals::view(game as u64,actor.guid){text.push_str(&format!("R|{}|{event}|{held}|{}\n",actor.guid,u8::from(inside)));}
+                    for(c,remaining,index)in super::supplies::buffs(game as u64,actor.guid){if index<32&&remaining>0.{text.push_str(&format!("C|{}|{}|{}|{}|{index}|{}|{}|{}\n",actor.guid,c.family as u8,c.tier,remaining.ceil()as u32,hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}
+                    if let Some(d)=super::supplies::discovery(game as u64,actor.guid){text.push_str(&format!("D|{}|{}|{}|{}|{}|{}|{}\n",actor.guid,d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.reward.text().as_bytes())));}
+                    if let Some(map)=super::ui_context::minimap(r,actor.guid){
+                        text.push_str(&format!("A|{}|{}|{}|{}|{}",actor.guid,(map.center[0]*100.).round()as i32,(map.center[1]*100.).round()as i32,(map.radius*100.).round()as u32,map.zoom));
+                        for radius in map.radii{text.push_str(&format!("|{}",(f64::from(radius)*1_000_000.).round()as u64));}
+                        text.push_str(&format!("|{}|{}\n",(map.ping[0]*100.).round()as i32,(map.ping[1]*100.).round()as i32));
+                        for marker in super::world_events::markers(game as u64){text.push_str(&format!("P|{}|{}|{}|{}|{}|{}\n",actor.guid,marker.id,marker.kind,(marker.position[0]*100.).round()as i32,(marker.position[1]*100.).round()as i32,marker.remaining.ceil()as u32));}
+                    }
                     hex(&asx_gameplay::party_text::pack(text.as_bytes()).unwrap_or_default())
                 })
-            }else{STATE.lock().ok().and_then(|mut state| {
+            }else{
+              let event_text=event_text(r,game as u64,slot);
+              STATE.lock().ok().and_then(|mut state| {
                 let s = state.as_mut()?;
                 let own = s
                     .ids
                     .iter()
                     .find(|(index, _)| *index == slot)
                     .map(|(_, id)| *id)?;
-                wire(
+                wire_extra(
                     s,
                     own,
                     HEARTBEAT
                         .get_or_init(std::time::Instant::now)
                         .elapsed()
                         .as_secs(),
+                    &event_text,
                 )
             })};
             if let Some(payload) = payload {
@@ -262,6 +276,19 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
         }));
     }
     result
+}
+fn event_text(r:&Runtime,game:u64,slot:u32)->String{
+ let Some(party)=r.extension_party()else{return String::new()};
+ let Some(actor)=party.actors.iter().find(|a|a.slot==slot)else{return String::new()};let owner=actor.guid;let mut text=String::new();
+ if let Some((event,held,inside))=super::world_events::coop::view(game,owner){text.push_str(&format!("R|{owner}|{event}|{held}|{}\n",u8::from(inside)));}
+ for(c,remaining,index)in super::supplies::buffs(game,owner){if index<32&&remaining>0.{text.push_str(&format!("C|{owner}|{}|{}|{}|{index}|{}|{}|{}\n",c.family as u8,c.tier,remaining.ceil()as u32,hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}
+ if let Some(d)=super::supplies::discovery(game,owner){text.push_str(&format!("D|{owner}|{}|{}|{}|{}|{}|{}\n",d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.reward.text().as_bytes())));}
+ if let Some(mut map)=party.actors.iter().find_map(|a|super::ui_context::minimap(r,a.guid)){
+  if slot!=0{map.center=[actor.position[0],actor.position[1]];map.ping=[0.,0.];}
+  text.push_str(&format!("A|{owner}|{}|{}|{}|{}",(map.center[0]*100.).round()as i32,(map.center[1]*100.).round()as i32,(map.radius*100.).round()as u32,map.zoom));
+  for radius in map.radii{text.push_str(&format!("|{}",(f64::from(radius)*1_000_000.).round()as u64));}text.push_str(&format!("|{}|{}\n",(map.ping[0]*100.).round()as i32,(map.ping[1]*100.).round()as i32));
+  for marker in super::world_events::coop::markers(game,owner){text.push_str(&format!("P|{owner}|{}|{}|{}|{}|{}\n",marker.id,marker.kind,(marker.position[0]*100.).round()as i32,(marker.position[1]*100.).round()as i32,marker.remaining.ceil()as u32));}
+ }text
 }
 pub fn hook(adapter: Adapter) -> crate::install::HookSpec {
     crate::install::HookSpec {

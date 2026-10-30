@@ -8,4 +8,4 @@ while [ "$#" -gt 0 ]; do
 done
 cd "$(dirname "$0")/../.."
 . ./tools/dev/env.sh
-cargo xwin build --release --locked --target x86_64-pc-windows-msvc -p azeroth-coop-native
+python3 tools/dev/artifact_record.py --kind normal --dll target/x86_64-pc-windows-msvc/release/avrt.dll -- cargo xwin build --target-dir target --release --locked --target x86_64-pc-windows-msvc -p azeroth-coop-native

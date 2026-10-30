@@ -1,22 +1,22 @@
-//! Native field translation for the sole supported official client, 0.125.0.
+//! Native field translation for the sole supported official client, 0.130.0.
 use super::Adapter;
-use crate::{Result, memory::Mem};
+use crate::{memory::Mem, Result};
 
 impl Adapter {
     pub(super) fn game_field(self, old: u64) -> u64 {
-        crate::official125::game_field(old)
+        crate::current::game_field(old)
     }
 
     pub(super) fn row_field(self, host: bool, old: u64) -> u64 {
         if host {
             self.game_field(old)
         } else {
-            crate::official125::actor_field(old)
+            crate::current::actor_field(old)
         }
     }
 
     pub(super) fn context_size(self) -> u64 {
-        crate::official125::CONTEXT_SIZE
+        crate::current::CONTEXT_SIZE
     }
 
     pub(super) fn read_game(self, mem: &dyn Mem, game: u64) -> Result<Vec<u8>> {
@@ -28,7 +28,7 @@ impl Adapter {
         let native_size = if host {
             self.game_field((size - 1) as u64) as usize + 1
         } else {
-            crate::official125::CONTEXT_SIZE as usize
+            crate::current::CONTEXT_SIZE as usize
         };
         let raw = mem.read(address, native_size)?;
         if raw.len() != native_size {
@@ -101,7 +101,7 @@ mod tests {
 
     #[test]
     fn snapshots_copy_only_the_fields_consumed_by_party_and_support() {
-        let adapter = Adapter::select(crate::official125::SHA256).unwrap();
+        let adapter = Adapter::select(crate::current::SHA256).unwrap();
         let spans: [(usize, usize); 15] = [
             (0x00, 0x04),
             (0x32c, 0x32e),
@@ -141,12 +141,10 @@ mod tests {
             assert_eq!(snapshot[start..end], native[offset..offset + end - start]);
             copied[start..end].fill(true);
         }
-        assert!(
-            snapshot
-                .iter()
-                .zip(copied)
-                .all(|(byte, selected)| selected || *byte == 0)
-        );
+        assert!(snapshot
+            .iter()
+            .zip(copied)
+            .all(|(byte, selected)| selected || *byte == 0));
 
         let private = adapter.read_context(&memory, memory.base, false).unwrap();
         assert_eq!(private.len(), 0x980);

@@ -191,3 +191,15 @@ pub mod gems;
 pub mod kept_bonus;
 
 pub mod raid_markers;
+
+pub mod treasure_goblins;
+
+pub mod gold;
+
+pub mod supplies;
+
+pub mod rituals;
+
+pub mod world_events;
+
+pub mod healing_text;

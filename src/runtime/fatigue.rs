@@ -221,7 +221,7 @@ pub fn with_scaled_heal<T>(game: u64, scaled: bool, f: impl FnOnce() -> T) -> T 
 static AURA_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 crate::context_stub_rw!(aura_entry, 0, aura, AURA_ORIGINAL);
 unsafe extern "system" fn aura(c: &mut crate::stub::Context) {
-    if !ACTIVE.load(Ordering::Acquire) && !blessings::ACTIVE.load(Ordering::Acquire){return;}
+    if !ACTIVE.load(Ordering::Acquire) && !blessings::ACTIVE.load(Ordering::Acquire)&&!super::supplies::active(){return;}
     let Some(r) = RUNTIME.get().filter(|r| r.rules) else {
         return;
     };
@@ -241,6 +241,16 @@ unsafe extern "system" fn aura(c: &mut crate::stub::Context) {
                 if let Some(b)=blessings::view(frame.slot,frame.guid){if SEEN.lock().ok().is_some_and(|mut s|s.insert((frame.slot,b.boss))){r.log.info(&format!("extensions native fortune aura: slot={} boss={}",frame.slot,b.boss));}}
             }},Ok(false)=>{}
         }
+    }
+    let consumables=super::supplies::buffs(frame.game,frame.guid).into_iter().filter(|(_,left,_)|*left>0.).map(|(c,left,_)|(c.family,left)).collect::<Vec<_>>();
+    if !consumables.is_empty()||super::supplies::has_aura_projection(frame.game,frame.guid){
+        let io=io::Access{local:&r.local,adapter:r.adapter};
+        match r.adapter.project_consumable_auras(&io,&frame,&consumables){Ok(rows)=>super::supplies::aura(frame.game,frame.guid,&rows),Err(e)=>r.log.warn(&format!("Consumable aura rejected: {e}"))}
+    }
+    #[cfg(feature="test-hooks")]if std::env::var("ASX_TEST_LOST_SUPPLIES").as_deref()==Ok("1"){
+        static SEEN:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
+        let count=consumables.len();let bit=1usize<<count;
+        if SEEN.fetch_or(bit,Ordering::Relaxed)&bit==0{r.log.info(&format!("supplies native aura rows: families={count} rows={:?}",r.adapter.event_aura_readback(&r.local,&frame)));}
     }
     let fatigue = view(frame.slot, frame.guid);
     if fatigue.stacks == 0 {

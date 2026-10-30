@@ -167,7 +167,9 @@ impl Adapter {
     ) -> Result<Option<f32>> {
         // The native proc clones POD perks at entry; it never owns this borrowed
         // fixture storage. Restore before Rust drops it.
-        if mem.read(game + self.game_field(0x838), 8)? != (loan.storage.as_ptr() as u64).to_le_bytes() {
+        if mem.read(game + self.game_field(0x838), 8)?
+            != (loan.storage.as_ptr() as u64).to_le_bytes()
+        {
             return Err("Native fixture perk header changed".into());
         }
         let next = loan.rapture_index.map(|i| loan.cooldowns[i]);
@@ -186,10 +188,13 @@ impl Adapter {
     pub fn hurt_entry(self) -> Entry {
         Entry {
             rva: self.rva(0x5908cc0),
-                bytes: self.expected(0x5908cc0, &[
-                0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48, 0x81,
-                0xec, 0xa8, 1, 0, 0,
-            ]),
+            bytes: self.expected(
+                0x5908cc0,
+                &[
+                    0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48,
+                    0x81, 0xec, 0xa8, 1, 0, 0,
+                ],
+            ),
         }
     }
     pub fn fixture_break_shield(self, io: &dyn SupportCalls, game: u64, slot: u32) -> Result<bool> {
@@ -199,13 +204,16 @@ impl Adapter {
         let row = self.support_row(io, game, slot)?;
         if slot != 0 {
             io.swap_actor(game, row)?;
-            io.write(game + self.game_field(0xb40), &u64::from(slot).to_le_bytes())?;
+            io.write(
+                game + self.game_field(0xb40),
+                &u64::from(slot).to_le_bytes(),
+            )?;
         }
         let result = (|| {
             let shield = io.read(game + self.game_field(0x4fc), 4)?;
             let shield = f32at(&shield, 0);
             if !shield.is_finite() || shield <= 0.0 {
-                return Ok(false);
+                return Err(format!("Fixture shield absent before hurt: amount={shield} state={:?}", io.read(game + self.game_field(0x480), 8)?));
             }
             let maximum = io.read(game + self.game_field(0x490), 4)?;
             io.write(game + self.game_field(0x4f8), &maximum)?;
@@ -214,13 +222,23 @@ impl Adapter {
             if !reduction.is_finite() || !(0.0..0.999).contains(&reduction) {
                 return Err("Fixture cannot break an invulnerable shield".into());
             }
-            // Compensate actual native mitigation; the fixture must observe a
-            // break, not merely invoke hurt and mistake the old aura for Rapture.
-            io.support_hurt(game, (shield + 1.0) / (1.0 - reduction), 0, false)?;
-            io.flush_actor(game)?;
-            let id = io.read(game + self.game_field(0x480), 4)?;
-            let left = io.read(game + self.game_field(0x484), 4)?;
-            Ok(u32at(&id, 0) == 0 && f32at(&left, 0) <= 0.0)
+            // Follow actual native absorption rather than assuming one mitigation
+            // coefficient covers armor, talents and racials. Each additional hit
+            // requires confirmed progress; no protection is removed or bypassed.
+            let mut remaining=shield;
+            for _ in 0..8 {
+                io.support_hurt(game,(remaining+1.0)/(1.0-reduction),0,false)?;
+                io.flush_actor(game)?;
+                let id=io.read(game+self.game_field(0x480),4)?;
+                let left=io.read(game+self.game_field(0x484),4)?;
+                if u32at(&id,0)==0 && f32at(&left,0)<=0.0{return Ok(true);}
+                let next=f32at(&io.read(game+self.game_field(0x4fc),4)?,0);
+                if !next.is_finite() || next>=remaining-0.001 {
+                    return Err(format!("Fixture shield made no native progress: before={remaining} after={next}"));
+                }
+                remaining=next;
+            }
+            Err("Fixture shield exceeded bounded native-hit budget".into())
         })();
         if slot != 0 {
             let row = self.support_row(io, game, 0)?;
@@ -232,7 +250,7 @@ impl Adapter {
     pub fn elite_entry(self) -> Entry {
         Entry {
             rva: self.rva(0x595066a),
-                bytes: self.expected(0x595066a, &[0x48,0xf,0x45,0xc1,0xff,0x0]),
+            bytes: self.expected(0x595066a, &[0x48, 0xf, 0x45, 0xc1, 0xff, 0x0]),
         }
     }
     pub fn elite_game(self, mem: &dyn Mem, registers: [u64; 3]) -> Result<Option<u64>> {
@@ -245,7 +263,9 @@ impl Adapter {
         Ok(Some(game))
     }
     /// 0.120 already distributes one native guardian item to every member.
-    pub fn needs_guardian_item_supplement(self)->bool{false}
+    pub fn needs_guardian_item_supplement(self) -> bool {
+        false
+    }
     pub fn deliver_elite_item(
         self,
         mem: &dyn MutableMemory,
@@ -260,7 +280,10 @@ impl Adapter {
         if mem.read(row + self.row_field(row == game, 0x478), 8)? != guid.to_le_bytes() {
             return Ok(false);
         }
-        let phase = mem.read(row + self.row_field(slot == 0, if slot == 0 { 0xc46 } else { 0x97c }), 1)?;
+        let phase = mem.read(
+            row + self.row_field(slot == 0, if slot == 0 { 0xc46 } else { 0x97c }),
+            1,
+        )?;
         if !matches!(phase.as_slice(), [1] | [2] | [3]) {
             return Ok(false);
         }
@@ -273,23 +296,30 @@ impl Adapter {
         Ok(true)
     }
     pub fn fixture_guardian(self, io: &dyn SupportCalls, game: u64) -> Result<Option<u64>> {
-        let Some((guid,hp))=self.fixture_guardian_target(io,game)? else{return Ok(None)};
-        io.support_damage(game,guid,hp*100.0+1e6)?;
+        let Some((guid, hp)) = self.fixture_guardian_target(io, game)? else {
+            return Ok(None);
+        };
+        io.support_damage(game, guid, hp * 100.0 + 1e6)?;
         Ok(Some(guid))
     }
-    pub fn fixture_guardian_target(self, io: &dyn SupportCalls, game:u64)->Result<Option<(u64,f32)>> {
+    pub fn fixture_guardian_target(
+        self,
+        io: &dyn SupportCalls,
+        game: u64,
+    ) -> Result<Option<(u64, f32)>> {
         let h = io.read(game + self.game_field(0x570), 24)?;
         if h.len() != 24 {
             return Err("Truncated guardian vector".into());
         }
         let at = |n| u64::from_le_bytes(h[n..n + 8].try_into().unwrap());
         let (cap, p, count) = (at(0), at(8), at(16));
-        use crate::official125 as layout;
+        use crate::current as layout;
         let stride = layout::ENEMY_STRIDE;
         let extent = count.checked_mul(stride as u64);
         if count > cap
             || cap > 65536
-            || (count > 0 && (p < 0x10000 || extent.is_none_or(|size| p.checked_add(size).is_none())))
+            || (count > 0
+                && (p < 0x10000 || extent.is_none_or(|size| p.checked_add(size).is_none())))
         {
             return Err("Invalid guardian vector".into());
         }
@@ -307,8 +337,12 @@ impl Adapter {
                 if !hp.is_finite() || !(0.0..1e10).contains(&hp) {
                     continue;
                 }
-                let guid = u64::from_le_bytes(r[layout::ENEMY_GUID..layout::ENEMY_GUID + 8].try_into().unwrap());
-                return Ok(Some((guid,hp)));
+                let guid = u64::from_le_bytes(
+                    r[layout::ENEMY_GUID..layout::ENEMY_GUID + 8]
+                        .try_into()
+                        .unwrap(),
+                );
+                return Ok(Some((guid, hp)));
             }
         }
         Ok(None)
@@ -343,21 +377,30 @@ impl Adapter {
         [
             Entry {
                 rva: self.rva(0x594edf0),
-                bytes: self.expected(0x594edf0, &[
-                    0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48,
-                    0x81, 0xec, 0xb8, 2, 0, 0,
-                ]),
+                bytes: self.expected(
+                    0x594edf0,
+                    &[
+                        0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53,
+                        0x48, 0x81, 0xec, 0xb8, 2, 0, 0,
+                    ],
+                ),
             },
             Entry {
                 rva: self.rva(0x59436a0),
-                bytes: self.expected(0x59436a0, &[
-                    0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48,
-                    0x81, 0xec, 0x38, 3, 0, 0,
-                ]),
+                bytes: self.expected(
+                    0x59436a0,
+                    &[
+                        0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53,
+                        0x48, 0x81, 0xec, 0x38, 3, 0, 0,
+                    ],
+                ),
             },
             Entry {
                 rva: self.rva(0x5938db0),
-                bytes: self.expected(0x5938db0, &[0x55, 0x56, 0x57, 0x48, 0x81, 0xec, 0x90, 0, 0, 0]),
+                bytes: self.expected(
+                    0x5938db0,
+                    &[0x55, 0x56, 0x57, 0x48, 0x81, 0xec, 0x90, 0, 0, 0],
+                ),
             },
             Entry {
                 rva: self.rva(0x59090c5),
@@ -370,8 +413,8 @@ impl Adapter {
             return Err("Invalid shield break values".into());
         }
         Ok(BreakFrame {
-            game: registers[13],
-            spell: registers[11] as u32,
+            game: registers[crate::current::SHIELD_BREAK_GAME_REGISTER],
+            spell: registers[crate::current::SHIELD_BREAK_SPELL_REGISTER] as u32,
             amount: values[0].min(values[1]).max(0.0),
         })
     }
@@ -393,7 +436,10 @@ impl Adapter {
         if !old.is_finite() || !cap.is_finite() || cap > 1e12 {
             return Err("Invalid overheal shield bounds".into());
         }
-        mem.write(game + self.game_field(0x4fc), &old.max((old + extra).min(cap)).to_le_bytes())
+        mem.write(
+            game + self.game_field(0x4fc),
+            &old.max((old + extra).min(cap)).to_le_bytes(),
+        )
     }
     pub fn support_receipt(
         self,
@@ -417,7 +463,10 @@ impl Adapter {
         }
         if receipt.caster != 0 {
             io.swap_actor(game, row)?;
-            io.write(game + self.game_field(0xb40), &u64::from(receipt.caster).to_le_bytes())?;
+            io.write(
+                game + self.game_field(0xb40),
+                &u64::from(receipt.caster).to_le_bytes(),
+            )?;
         }
         let result = (|| {
             let clock = io.read(game + self.game_field(0xb9c), 4)?;
@@ -488,12 +537,16 @@ impl Adapter {
             return Err("Shield proc requires restored host".into());
         }
         let row = self.support_row(io, game, owner.caster)?;
-        if io.read(row + self.row_field(row == game, 0x478), 8)? != owner.caster_guid.to_le_bytes() {
+        if io.read(row + self.row_field(row == game, 0x478), 8)? != owner.caster_guid.to_le_bytes()
+        {
             return Err("Shield source changed".into());
         }
         if owner.caster != 0 {
             io.swap_actor(game, row)?;
-            io.write(game + self.game_field(0xb40), &u64::from(owner.caster).to_le_bytes())?;
+            io.write(
+                game + self.game_field(0xb40),
+                &u64::from(owner.caster).to_le_bytes(),
+            )?;
         }
         let mut event = [0u8; 40];
         for (i, v) in origin.iter().enumerate() {
@@ -522,18 +575,21 @@ impl Adapter {
         }
         let at = |n| u64::from_le_bytes(h[n..n + 8].try_into().unwrap());
         let (cap, pointer, count) = (at(0), at(8), at(16));
-        use crate::official125 as layout;
+        use crate::current as layout;
         let stride = layout::ENEMY_STRIDE;
         let extent = count.checked_mul(stride as u64);
         if count > cap
             || cap > 65536
-            || (count > 0 && (pointer < 0x10000 || extent.is_none_or(|size| pointer.checked_add(size).is_none())))
+            || (count > 0
+                && (pointer < 0x10000
+                    || extent.is_none_or(|size| pointer.checked_add(size).is_none())))
         {
             return Err("Invalid support enemy extent".into());
         }
         let clock = mem.read(game + self.game_field(0xb9c), 4)?;
         let clock = f32at(&clock, 0);
-        let byte_len = usize::try_from(extent.unwrap_or(0)).map_err(|_| "Support enemy extent overflow")?;
+        let byte_len =
+            usize::try_from(extent.unwrap_or(0)).map_err(|_| "Support enemy extent overflow")?;
         let bytes = if count > 0 {
             mem.read(pointer, byte_len)?
         } else {
@@ -554,40 +610,91 @@ impl Adapter {
     pub fn periodic_entry(self) -> Entry {
         Entry {
             rva: self.rva(0x5906150),
-                bytes: self.expected(0x5906150, &[
-                0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48, 0x81,
-                0xec, 0xc8, 1, 0, 0,
-            ]),
+            bytes: self.expected(
+                0x5906150,
+                &[
+                    0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48,
+                    0x81, 0xec, 0xc8, 1, 0, 0,
+                ],
+            ),
         }
     }
-    pub(super) fn aura_stride(self)->u64{32}
+    pub(super) fn aura_stride(self) -> u64 {
+        32
+    }
     /// Canonical rows keep the legacy effect/spell/expiry/budget prefix and
     /// retain the new native optional producer GUID (zero means recipient) in the final eight bytes.
-    pub(super) fn aura_field(self,canonical:u64)->u64{canonical+8}
-    pub(in crate::official_native) fn aura_rows(self,mem:&dyn Mem,game:u64)->Result<(u64,Vec<[u8;32]>)>{
-        let h=mem.read(game+self.game_field(0x398),24)?;
-        if h.len()!=24{return Err("Truncated aura vector".into())}
-        let q=|i|u64::from_le_bytes(h[i..i+8].try_into().unwrap());let(cap,pointer,count)=(q(0),q(8),q(16));let stride=self.aura_stride();
-        if count>cap||cap>4096||(count>0&&(pointer<0x10000||pointer.checked_add(count*stride).is_none())){return Err("Invalid aura extent".into())}
-        let bytes=if count>0{mem.read(pointer,(count*stride)as usize)?}else{vec![]};
-        if bytes.len()!=count as usize*stride as usize{return Err("Truncated aura rows".into())}
-        let rows=bytes.chunks_exact(stride as usize).map(|raw|{let mut row=[0;32];if stride==32{row[..24].copy_from_slice(&raw[8..32]);row[24..].copy_from_slice(&raw[..8]);}else{row[..24].copy_from_slice(raw);}row}).collect();Ok((pointer,rows))
+    pub(super) fn aura_field(self, canonical: u64) -> u64 {
+        canonical + 8
     }
-    pub(super) fn write_aura_rows(self,mem:&dyn MutableMemory,pointer:u64,rows:&[[u8;32]])->Result<()>{
-        let mut bytes=Vec::with_capacity(rows.len()*self.aura_stride()as usize);
-        for row in rows{if self.aura_stride()==32{bytes.extend_from_slice(&row[24..]);}bytes.extend_from_slice(&row[..24]);}
-        if bytes.is_empty(){Ok(())}else{mem.write(pointer,&bytes)}
-    }
-    fn aura_has_caster(self,row:&[u8],spell:u32,guid:u64,recipient:u64)->bool{
-        if spell!=774{return true}
-        let producer=u64::from_le_bytes(row[24..32].try_into().unwrap());
-        producer==guid||(producer==0&&guid==recipient)
-    }
-    pub fn support_active(
+    pub(in crate::official_native) fn aura_rows(
         self,
         mem: &dyn Mem,
         game: u64,
-    ) -> Result<asx_gameplay::support::Active> {
+    ) -> Result<(u64, Vec<[u8; 32]>)> {
+        let h = mem.read(game + self.game_field(0x398), 24)?;
+        if h.len() != 24 {
+            return Err("Truncated aura vector".into());
+        }
+        let q = |i| u64::from_le_bytes(h[i..i + 8].try_into().unwrap());
+        let (cap, pointer, count) = (q(0), q(8), q(16));
+        let stride = self.aura_stride();
+        if count > cap
+            || cap > 4096
+            || (count > 0 && (pointer < 0x10000 || pointer.checked_add(count * stride).is_none()))
+        {
+            return Err("Invalid aura extent".into());
+        }
+        let bytes = if count > 0 {
+            mem.read(pointer, (count * stride) as usize)?
+        } else {
+            vec![]
+        };
+        if bytes.len() != count as usize * stride as usize {
+            return Err("Truncated aura rows".into());
+        }
+        let rows = bytes
+            .chunks_exact(stride as usize)
+            .map(|raw| {
+                let mut row = [0; 32];
+                if stride == 32 {
+                    row[..24].copy_from_slice(&raw[8..32]);
+                    row[24..].copy_from_slice(&raw[..8]);
+                } else {
+                    row[..24].copy_from_slice(raw);
+                }
+                row
+            })
+            .collect();
+        Ok((pointer, rows))
+    }
+    pub(super) fn write_aura_rows(
+        self,
+        mem: &dyn MutableMemory,
+        pointer: u64,
+        rows: &[[u8; 32]],
+    ) -> Result<()> {
+        let mut bytes = Vec::with_capacity(rows.len() * self.aura_stride() as usize);
+        for row in rows {
+            if self.aura_stride() == 32 {
+                bytes.extend_from_slice(&row[24..]);
+            }
+            bytes.extend_from_slice(&row[..24]);
+        }
+        if bytes.is_empty() {
+            Ok(())
+        } else {
+            mem.write(pointer, &bytes)
+        }
+    }
+    fn aura_has_caster(self, row: &[u8], spell: u32, guid: u64, recipient: u64) -> bool {
+        if spell != 774 {
+            return true;
+        }
+        let producer = u64::from_le_bytes(row[24..32].try_into().unwrap());
+        producer == guid || (producer == 0 && guid == recipient)
+    }
+    pub fn support_active(self, mem: &dyn Mem, game: u64) -> Result<asx_gameplay::support::Active> {
         let clock = mem.read(game + self.game_field(0xb9c), 4)?;
         let clock = f32at(&clock, 0);
         let (_, rows) = self.aura_rows(mem, game)?;
@@ -605,46 +712,145 @@ impl Adapter {
         })
     }
     /// Native Rejuvenation eligibility is per producer, not per spell.
-    pub fn rejuvenation_source_slots(self,mem:&dyn Mem,game:u64,caster:u64)->Result<Option<Vec<u32>>>{
+    pub fn rejuvenation_source_slots(
+        self,
+        mem: &dyn Mem,
+        game: u64,
+        caster: u64,
+    ) -> Result<Option<Vec<u32>>> {
         // Casts can run while a guest is swapped into Game; do not request the
         // restored-host party snapshot here. support_row translates that scope.
-        let count=u64::from_le_bytes(mem.read(game+self.game_field(0x988),8)?.try_into().map_err(|_|"Truncated source-aware party count")?);
-        if count>4{return Err("Invalid source-aware party count".into())}
-        let clock=f32at(&mem.read(game+self.game_field(0xb9c),4)?,0);if !clock.is_finite(){return Err("Invalid source-aware clock".into())}
-        let mut slots=vec![];
-        for slot in 0..=count as u32 {let row=self.support_row(mem,game,slot)?;let recipient=u64::from_le_bytes(mem.read(row+self.row_field(row==game,0x478),8)?.try_into().map_err(|_|"Truncated source-aware identity")?);let(_,auras)=self.aura_rows(mem,row)?;
-            if auras.iter().any(|r|u32at(r,12)==774&&f32at(r,16)>clock&&self.aura_has_caster(r,774,caster,recipient)){slots.push(slot);}
-        }Ok(Some(slots))
+        let count = u64::from_le_bytes(
+            mem.read(game + self.game_field(0x988), 8)?
+                .try_into()
+                .map_err(|_| "Truncated source-aware party count")?,
+        );
+        if count > 4 {
+            return Err("Invalid source-aware party count".into());
+        }
+        let clock = f32at(&mem.read(game + self.game_field(0xb9c), 4)?, 0);
+        if !clock.is_finite() {
+            return Err("Invalid source-aware clock".into());
+        }
+        let mut slots = vec![];
+        for slot in 0..=count as u32 {
+            let row = self.support_row(mem, game, slot)?;
+            let recipient = u64::from_le_bytes(
+                mem.read(row + self.row_field(row == game, 0x478), 8)?
+                    .try_into()
+                    .map_err(|_| "Truncated source-aware identity")?,
+            );
+            let (_, auras) = self.aura_rows(mem, row)?;
+            if auras.iter().any(|r| {
+                u32at(r, 12) == 774
+                    && f32at(r, 16) > clock
+                    && self.aura_has_caster(r, 774, caster, recipient)
+            }) {
+                slots.push(slot);
+            }
+        }
+        Ok(Some(slots))
     }
     /// Clear only this source's own support aura for a bounded coefficient probe.
-    pub fn glyph_fixture_support_clear(self,mem:&dyn MutableMemory,game:u64,spell:u32)->Result<AuraState>{
-        if !self.supports_extensions()||!matches!(spell,17|139|324|11426|18708|774|467){return Err("Unsupported glyph support probe".into())}
-        let saved=self.capture_aura(mem,game,spell)?;
-        if matches!(spell,17|11426){self.prepare_foreign_shield(mem,game,&saved)?;}else{
-            let(pointer,rows)=self.aura_rows(mem,game)?;let rows=rows.into_iter().filter(|r|u32at(r,12)!=spell).collect::<Vec<_>>();
-            if !rows.is_empty(){self.write_aura_rows(mem,pointer,&rows)?;}
-            mem.write(game+self.game_field(0x3a8),&(rows.len()as u64).to_le_bytes())?;
-        }Ok(saved)
+    pub fn glyph_fixture_support_clear(
+        self,
+        mem: &dyn MutableMemory,
+        game: u64,
+        spell: u32,
+    ) -> Result<AuraState> {
+        if !self.supports_extensions()
+            || !matches!(spell, 17 | 139 | 324 | 11426 | 18708 | 774 | 467)
+        {
+            return Err("Unsupported glyph support probe".into());
+        }
+        let saved = self.capture_aura(mem, game, spell)?;
+        if matches!(spell, 17 | 11426) {
+            self.prepare_foreign_shield(mem, game, &saved)?;
+        } else {
+            let (pointer, rows) = self.aura_rows(mem, game)?;
+            let rows = rows
+                .into_iter()
+                .filter(|r| u32at(r, 12) != spell)
+                .collect::<Vec<_>>();
+            if !rows.is_empty() {
+                self.write_aura_rows(mem, pointer, &rows)?;
+            }
+            mem.write(
+                game + self.game_field(0x3a8),
+                &(rows.len() as u64).to_le_bytes(),
+            )?;
+        }
+        Ok(saved)
     }
-    pub fn glyph_fixture_support_value(self,mem:&dyn Mem,game:u64,spell:u32)->Result<(f32,f32)>{
-        if !self.supports_extensions(){return Err("Unsupported glyph support probe".into())}
-        if matches!(spell,17|11426){let power=f32at(&mem.read(game+self.game_field(0x484),4)?,0);if !power.is_finite()||power<0.{return Err("Invalid glyph shield power".into())}let duration=if spell==11426{let clock=f32at(&mem.read(game+self.game_field(0xb9c),4)?,0);let(_,rows)=self.aura_rows(mem,game)?;let row=rows.iter().find(|r|u32at(*r,12)==spell).ok_or("Missing Ice Barrier aura")?;f32at(row,16)-clock}else{0.};return Ok((power,duration));}
-        if !matches!(spell,139|774){return Err("Unsupported glyph support value".into())}
-        let clock=f32at(&mem.read(game+self.game_field(0xb9c),4)?,0);let(_,rows)=self.aura_rows(mem,game)?;
-        let row=rows.iter().find(|r|u32at(*r,0)==6&&u32at(*r,12)==spell).ok_or("Missing native periodic heal")?;
-        let power=f32at(row,20);let duration=f32at(row,16)-clock;
-        if !power.is_finite()||power<0.||!duration.is_finite()||duration<=0.{return Err("Invalid glyph Renew budget".into())}Ok((power,duration))
+    pub fn glyph_fixture_support_value(
+        self,
+        mem: &dyn Mem,
+        game: u64,
+        spell: u32,
+    ) -> Result<(f32, f32)> {
+        if !self.supports_extensions() {
+            return Err("Unsupported glyph support probe".into());
+        }
+        if matches!(spell, 17 | 11426) {
+            let power = f32at(&mem.read(game + self.game_field(0x484), 4)?, 0);
+            if !power.is_finite() || power < 0. {
+                return Err("Invalid glyph shield power".into());
+            }
+            let duration = if spell == 11426 {
+                let clock = f32at(&mem.read(game + self.game_field(0xb9c), 4)?, 0);
+                let (_, rows) = self.aura_rows(mem, game)?;
+                let row = rows
+                    .iter()
+                    .find(|r| u32at(*r, 12) == spell)
+                    .ok_or("Missing Ice Barrier aura")?;
+                f32at(row, 16) - clock
+            } else {
+                0.
+            };
+            return Ok((power, duration));
+        }
+        if !matches!(spell, 139 | 774) {
+            return Err("Unsupported glyph support value".into());
+        }
+        let clock = f32at(&mem.read(game + self.game_field(0xb9c), 4)?, 0);
+        let (_, rows) = self.aura_rows(mem, game)?;
+        let row = rows
+            .iter()
+            .find(|r| u32at(*r, 0) == 6 && u32at(*r, 12) == spell)
+            .ok_or("Missing native periodic heal")?;
+        let power = f32at(row, 20);
+        let duration = f32at(row, 16) - clock;
+        if !power.is_finite() || power < 0. || !duration.is_finite() || duration <= 0. {
+            return Err("Invalid glyph Renew budget".into());
+        }
+        Ok((power, duration))
     }
     /// Bounded glyph diagnostic readback; do not broaden retaliation decoding.
-    pub fn glyph_fixture_buff(self, mem: &dyn Mem, game:u64, spell:u32)->Result<NativeEffect>{
-        let kind=match spell{13750=>9,5171=>8,18708=>10,_=>return Err("Unsupported glyph buff probe".into())};
-        if !self.supports_extensions(){return Err("Glyph buff probe requires reviewed client".into())}
-        let clock=f32at(&mem.read(game+self.game_field(0xb9c),4)?,0);
-        let (_,rows)=self.aura_rows(mem,game)?;
-        let row=rows.iter().find(|r|u32at(*r,12)==spell&&u32at(*r,0)==kind).ok_or("Missing native glyph buff")?;
-        let duration=f32at(row,16)-clock;
-        if !duration.is_finite()||!(0.0..=600.).contains(&duration)||!f32at(row,4).is_finite(){return Err("Invalid native glyph buff".into())}
-        Ok(NativeEffect{data:row[..12].try_into().unwrap(),duration})
+    pub fn glyph_fixture_buff(self, mem: &dyn Mem, game: u64, spell: u32) -> Result<NativeEffect> {
+        let kind = match spell {
+            13750 => 9,
+            5171 => 8,
+            18708 => 10,
+            _ => return Err("Unsupported glyph buff probe".into()),
+        };
+        if !self.supports_extensions() {
+            return Err("Glyph buff probe requires reviewed client".into());
+        }
+        let clock = f32at(&mem.read(game + self.game_field(0xb9c), 4)?, 0);
+        let (_, rows) = self.aura_rows(mem, game)?;
+        let row = rows
+            .iter()
+            .find(|r| u32at(*r, 12) == spell && u32at(*r, 0) == kind)
+            .ok_or("Missing native glyph buff")?;
+        let duration = f32at(row, 16) - clock;
+        if !duration.is_finite() || !(0.0..=600.).contains(&duration) || !f32at(row, 4).is_finite()
+        {
+            return Err("Invalid native glyph buff".into());
+        }
+        Ok(NativeEffect {
+            data: row[..12].try_into().unwrap(),
+            duration,
+        })
     }
     pub fn capture_aura(self, mem: &dyn Mem, game: u64, spell: u32) -> Result<AuraState> {
         let (_, all) = self.aura_rows(mem, game)?;
@@ -667,7 +873,7 @@ impl Adapter {
         game: u64,
         state: &AuraState,
     ) -> Result<()> {
-        if !matches!(state.spell,17|11426) {
+        if !matches!(state.spell, 17 | 11426) {
             return Err("Only Power Word Shield needs native self eligibility isolation".into());
         }
         let (pointer, rows) = self.aura_rows(mem, game)?;
@@ -681,11 +887,17 @@ impl Adapter {
             return Err("Invalid source shield state".into());
         }
         if !filtered.is_empty() {
-            self.write_aura_rows(mem,pointer,&filtered)?;
+            self.write_aura_rows(mem, pointer, &filtered)?;
         }
-        mem.write(game + self.game_field(0x3a8), &(filtered.len() as u64).to_le_bytes())?;
+        mem.write(
+            game + self.game_field(0x3a8),
+            &(filtered.len() as u64).to_le_bytes(),
+        )?;
         mem.write(game + self.game_field(0x480), &[0u8; 8])?;
-        mem.write(game + self.game_field(0x4fc), &(total - current).max(0.0).to_le_bytes())?;
+        mem.write(
+            game + self.game_field(0x4fc),
+            &(total - current).max(0.0).to_le_bytes(),
+        )?;
         Ok(())
     }
     pub fn restore_aura(self, mem: &dyn MutableMemory, game: u64, state: &AuraState) -> Result<()> {
@@ -701,10 +913,13 @@ impl Adapter {
             return Err("Aura rollback cannot grow native storage".into());
         }
         if !rows.is_empty() {
-            self.write_aura_rows(mem,pointer,&rows)?;
+            self.write_aura_rows(mem, pointer, &rows)?;
         }
-        mem.write(game + self.game_field(0x3a8), &(rows.len() as u64).to_le_bytes())?;
-        if matches!(state.spell,17|11426) {
+        mem.write(
+            game + self.game_field(0x3a8),
+            &(rows.len() as u64).to_le_bytes(),
+        )?;
+        if matches!(state.spell, 17 | 11426) {
             mem.write(game + self.game_field(0x480), &state.shield[..8])?;
             mem.write(game + self.game_field(0x4fc), &state.shield[8..])?;
             mem.write(game + self.game_field(0x190), &state.absorb)?;
@@ -726,7 +941,7 @@ impl Adapter {
             .iter()
             .find(|r| {
                 u32at(*r, 12) == spell
-                    && self.aura_has_caster(*r,spell,caster_guid,actor.guid)
+                    && self.aura_has_caster(*r, spell, caster_guid, actor.guid)
                     && u32at(*r, 0)
                         == if matches!(spell, 324 | 467) {
                             13
@@ -750,15 +965,34 @@ impl Adapter {
             shield,
         })
     }
-    pub fn hide_foreign_periodic(self, mem: &dyn MutableMemory, game: u64, dt: f32, owners: &[OwnedEffect]) -> Result<Vec<PeriodicTick>> {
-        self.hide_periodic(mem,game,dt,owners,false)
+    pub fn hide_foreign_periodic(
+        self,
+        mem: &dyn MutableMemory,
+        game: u64,
+        dt: f32,
+        owners: &[OwnedEffect],
+    ) -> Result<Vec<PeriodicTick>> {
+        self.hide_periodic(mem, game, dt, owners, false)
     }
     /// Also replay unowned personal HoTs while their producer is fatigued.
     /// Explicit foreign ownership always wins over the current recipient.
-    pub fn hide_fatigued_periodic(self, mem: &dyn MutableMemory, game: u64, dt: f32, owners: &[OwnedEffect]) -> Result<Vec<PeriodicTick>> {
-        self.hide_periodic(mem,game,dt,owners,true)
+    pub fn hide_fatigued_periodic(
+        self,
+        mem: &dyn MutableMemory,
+        game: u64,
+        dt: f32,
+        owners: &[OwnedEffect],
+    ) -> Result<Vec<PeriodicTick>> {
+        self.hide_periodic(mem, game, dt, owners, true)
     }
-    fn hide_periodic(self, mem: &dyn MutableMemory, game: u64, dt: f32, owners: &[OwnedEffect], personal: bool) -> Result<Vec<PeriodicTick>> {
+    fn hide_periodic(
+        self,
+        mem: &dyn MutableMemory,
+        game: u64,
+        dt: f32,
+        owners: &[OwnedEffect],
+        personal: bool,
+    ) -> Result<Vec<PeriodicTick>> {
         if !dt.is_finite() || !(0.0..=1.0).contains(&dt) {
             return Err("Invalid periodic delta".into());
         }
@@ -772,15 +1006,33 @@ impl Adapter {
         let mut plan = vec![];
         for (i, row) in rows.iter().enumerate() {
             let known = owners.iter().find(|o| {
-                !o.shield && matches!(o.spell,139|774|8936) && o.target_guid==actor.guid
-                    && o.spell==u32at(row,12) && o.expires.to_bits()==u32at(row,16) && self.aura_has_caster(row,o.spell,o.caster_guid,actor.guid)
+                !o.shield
+                    && matches!(o.spell, 139 | 774 | 8936)
+                    && o.target_guid == actor.guid
+                    && o.spell == u32at(row, 12)
+                    && o.expires.to_bits() == u32at(row, 16)
+                    && self.aura_has_caster(row, o.spell, o.caster_guid, actor.guid)
             });
-            let own = OwnedEffect { caster: actor.slot, caster_guid: actor.guid,
-                target_guid: actor.guid, spell: u32at(row,12), expires: f32at(row,16), shield:false };
+            let own = OwnedEffect {
+                caster: actor.slot,
+                caster_guid: actor.guid,
+                target_guid: actor.guid,
+                spell: u32at(row, 12),
+                expires: f32at(row, 16),
+                shield: false,
+            };
             let owner = match known {
-                Some(o) if o.caster!=actor.slot || personal => o,
+                Some(o) if o.caster != actor.slot || personal => o,
                 Some(_) => continue,
-                None if personal && matches!(own.spell,139|774|8936) && u32at(row,0)==6 && own.expires.is_finite() && own.expires>clock && self.aura_has_caster(row,own.spell,own.caster_guid,actor.guid) => &own,
+                None if personal
+                    && matches!(own.spell, 139 | 774 | 8936)
+                    && u32at(row, 0) == 6
+                    && own.expires.is_finite()
+                    && own.expires > clock
+                    && self.aura_has_caster(row, own.spell, own.caster_guid, actor.guid) =>
+                {
+                    &own
+                }
                 None => continue,
             };
             let remaining = f32at(row, 20);
@@ -822,7 +1074,9 @@ impl Adapter {
         }
         let (pointer, rows) = self.aura_rows(mem, game)?;
         let Some((index, row)) = rows.iter().enumerate().find(|(_, r)| {
-            u32at(*r, 12) == tick.owner.spell && u32at(*r, 16) == tick.owner.expires.to_bits() && self.aura_has_caster(*r,tick.owner.spell,tick.owner.caster_guid,actor.guid)
+            u32at(*r, 12) == tick.owner.spell
+                && u32at(*r, 16) == tick.owner.expires.to_bits()
+                && self.aura_has_caster(*r, tick.owner.spell, tick.owner.caster_guid, actor.guid)
         }) else {
             return Ok(false);
         };
@@ -837,17 +1091,41 @@ impl Adapter {
     }
 }
 
-impl Adapter{
- /// Only Holy Shock's borrowed on-hit healing effect is eligible. Other effect
- /// variants and their payloads remain byte-identical in the native dispatcher.
- pub fn scaled_heal_effect(self,m:&dyn Mem,effect:u64,factor:f32)->Result<Option<([u8;12],f32,f32)>>{
-  if !self.supports_extensions(){return Ok(None)}
-  if !factor.is_finite()||!(0.0..=2.).contains(&factor){return Err("Invalid glyph effect healing factor".into())}
-  let mut bytes:[u8;12]=m.read(effect,12)?.try_into().map_err(|_|"Truncated glyph healing effect")?;
-  if u32::from_le_bytes(bytes[..4].try_into().unwrap())!=6{return Ok(None)}
-  let before=f32::from_le_bytes(bytes[4..8].try_into().unwrap());let fraction=before*factor;
-  if !fraction.is_finite()||!(0.0..=1.).contains(&fraction){return Err("Invalid glyph on-hit healing".into())}
-  bytes[4..8].copy_from_slice(&fraction.to_le_bytes());Ok(Some((bytes,before,fraction)))
- }
-pub fn native_hit_effect_entry(self)->Entry{let v=crate::official117::GLYPH_ON_HIT_RVA;Entry{rva:self.contact117(v),bytes:self.extension_bytes117(0x5bbf7b0,crate::official117::GLYPH_ON_HIT_BYTES)}}
+impl Adapter {
+    /// Only Holy Shock's borrowed on-hit healing effect is eligible. Other effect
+    /// variants and their payloads remain byte-identical in the native dispatcher.
+    pub fn scaled_heal_effect(
+        self,
+        m: &dyn Mem,
+        effect: u64,
+        factor: f32,
+    ) -> Result<Option<([u8; 12], f32, f32)>> {
+        if !self.supports_extensions() {
+            return Ok(None);
+        }
+        if !factor.is_finite() || !(0.0..=2.).contains(&factor) {
+            return Err("Invalid glyph effect healing factor".into());
+        }
+        let mut bytes: [u8; 12] = m
+            .read(effect, 12)?
+            .try_into()
+            .map_err(|_| "Truncated glyph healing effect")?;
+        if u32::from_le_bytes(bytes[..4].try_into().unwrap()) != 6 {
+            return Ok(None);
+        }
+        let before = f32::from_le_bytes(bytes[4..8].try_into().unwrap());
+        let fraction = before * factor;
+        if !fraction.is_finite() || !(0.0..=1.).contains(&fraction) {
+            return Err("Invalid glyph on-hit healing".into());
+        }
+        bytes[4..8].copy_from_slice(&fraction.to_le_bytes());
+        Ok(Some((bytes, before, fraction)))
+    }
+    pub fn native_hit_effect_entry(self) -> Entry {
+        let v = crate::current::GLYPH_ON_HIT_RVA;
+        Entry {
+            rva: self.contact117(v),
+            bytes: self.extension_bytes117(0x5bbf7b0, crate::current::GLYPH_ON_HIT_BYTES),
+        }
+    }
 }

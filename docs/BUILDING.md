@@ -84,3 +84,6 @@ save parser remains responsible for accepting the fixture's talents/progression.
 Ordinary extension trials take no screenshots. ASX_TEST_VISUAL=1 enables sparse
 captures only for an explicitly authorized visual trial; logs alone establish no
 claim about the rendered layout.
+
+See the [compatibility workflow](COMPATIBILITY-WORKFLOW.md) for resolved manifests,
+artifact receipts, declarative suites and bounded Lua evidence.

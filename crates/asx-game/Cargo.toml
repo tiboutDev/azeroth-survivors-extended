@@ -29,3 +29,6 @@ serde_json = { version = "1", features = ["float_roundtrip"] }
 
 [dev-dependencies]
 sha2 = "0.10"
+
+[features]
+test-hooks = []

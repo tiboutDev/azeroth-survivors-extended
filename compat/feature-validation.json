@@ -1,0 +1,250 @@
+{
+  "schema": 1,
+  "features": {
+    "ASX-01": {
+      "profiles": [
+        "official",
+        "tooling"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-02": {
+      "profiles": [
+        "official"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-03": {
+      "profiles": [
+        "official"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-04": {
+      "profiles": [
+        "official"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-05": {
+      "profiles": [
+        "official"
+      ],
+      "scope_note": "Upstream-native guardian reward policy; no dedicated declared live suite. Do not infer live guardian coverage from selector tests.",
+      "targeted_scenario": {
+        "profile": "official",
+        "trigger": "Guardian rewards remain native; kill one guardian with two participants and count native skill/item deliveries once per actor.",
+        "expected": "A native guardian kill and all reward choices completed; no supplemental ASX grant.",
+        "limit": "Native reward cardinality requires a live guardian observation.",
+        "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
+      },
+      "live_suites": [
+        "coop-coverage"
+      ]
+    },
+    "ASX-06": {
+      "profiles": [
+        "official",
+        "official-party-ui"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-07": {
+      "profiles": [
+        "support",
+        "periodic"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-08": {
+      "profiles": [
+        "support",
+        "periodic"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-09": {
+      "profiles": [
+        "combat"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-10": {
+      "profiles": [
+        "combat"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-11": {
+      "profiles": [
+        "combat"
+      ],
+      "scope_note": "Portable immunity/taunt checks exist; the declarative suite catalog has no dedicated immunity scenario.",
+      "targeted_scenario": {
+        "profile": "combat",
+        "trigger": "Enter immunity with an old taunt, observe ordinary exclusion, issue a fresh taunt, then leave immunity.",
+        "expected": "Old taunt cleared, fresh taunt accepted, candidate flags restored.",
+        "limit": "Portable policy and assessor checks do not prove native targeting hooks.",
+        "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
+      },
+      "live_suites": [
+        "coop-coverage"
+      ]
+    },
+    "ASX-12": {
+      "profiles": [
+        "fatigue",
+        "support"
+      ],
+      "scope_note": "Fatigue and support checks exist; no dedicated fatigue scenario is declared in this suite catalog.",
+      "targeted_scenario": {
+        "profile": "fatigue",
+        "trigger": "Resurrect repeatedly, pause recovery, then resume alive simulation through one decay boundary.",
+        "expected": "Stacks cap at three; damage/healing factors applied once; pause/death do not advance decay.",
+        "limit": "Native aura icon, stacks and timer require rendered or observer evidence.",
+        "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
+      },
+      "live_suites": [
+        "coop-coverage"
+      ]
+    },
+    "ASX-13": {
+      "profiles": [
+        "rules",
+        "official-party-ui"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-14": {
+      "profiles": [
+        "rules",
+        "official"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-15": {
+      "profiles": [
+        "glyphs"
+      ],
+      "scope_note": "Retained glyph rule/catalog checks only; gameplay remains disabled on the selected client."
+    },
+    "ASX-16": {
+      "profiles": [
+        "enchantments",
+        "official-party-ui"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-17": {
+      "profiles": [
+        "official-party-ui",
+        "support"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-18": {
+      "profiles": [
+        "official-party-ui",
+        "official"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-19": {
+      "profiles": [
+        "official"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-20": {
+      "profiles": [
+        "asx-install",
+        "tooling"
+      ],
+      "scope_note": "Installer/launcher behavior is outside the native contract inventory. Selector/version links cover identity agreement only; distribution tests remain separate.",
+      "targeted_scenario": {
+        "profile": "asx-install",
+        "trigger": "Exercise installer/update/rollback/uninstall using temporary test fixtures only.",
+        "expected": "Unknown files preserved; unsupported or altered content refused; rollback restores owned files.",
+        "limit": "Portable fixture tests do not validate an actual signed distribution archive.",
+        "live_status": "not-established-by-portable-tests"
+      }
+    },
+    "ASX-21": {
+      "profiles": [
+        "official"
+      ],
+      "scope_note": "Upstream-native marks; retired duplicate-loot gold behavior must remain disabled."
+    },
+    "ASX-22": {
+      "profiles": [
+        "gems",
+        "official-party-ui"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-23": {
+      "profiles": [
+        "official-party-ui"
+      ],
+      "scope_note": "Lua/native presentation checks exist; no dedicated visual nameplate trial is declared.",
+      "targeted_scenario": {
+        "profile": "official-party-ui",
+        "trigger": "Compare ordinary and special-rank native nameplates while health changes.",
+        "expected": "Ordinary labels hidden, special names retained, health updates and visibility preserved.",
+        "limit": "Visual size and world anchoring require a sparse visual trial after native UI changes.",
+        "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
+      },
+      "live_suites": [
+        "coop-world-ui",
+        "coop-ui-remaining"
+      ]
+    },
+    "ASX-24": {
+      "profiles": [
+        "official-party-ui",
+        "support"
+      ],
+      "scope_note": "Native text/presentation checks exist; no dedicated declared live healing-text scenario.",
+      "targeted_scenario": {
+        "profile": "official-party-ui",
+        "trigger": "Produce direct and periodic ally healing and an enemy damage number.",
+        "expected": "Recipient identity preserved; one-third enemy text size; native critical animation retained.",
+        "limit": "Portable presentation checks do not prove rendered world text positioning.",
+        "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
+      },
+      "live_suites": [
+        "coop-world-ui",
+        "coop-ui-remaining"
+      ]
+    },
+    "ASX-25": {
+      "profiles": [
+        "official-party-ui"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-26": {
+      "profiles": [
+        "rules",
+        "official"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-27": {
+      "profiles": [
+        "rules",
+        "diagnostics",
+        "official-party-ui"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-28": {
+      "profiles": [
+        "rules",
+        "diagnostics",
+        "official-party-ui"
+      ],
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    }
+  }
+}

@@ -16,7 +16,7 @@ path = "src/lib.rs"
 [features]
 # Live-test switches (AZCOOP_TEST_CRASH, AZCOOP_TEST_GUEST_LETHAL_AT). OFF in every shipped build: tools/build/asx_release_binary.py refuses a
 # DLL that contains them. Test builds: cargo build --release --features test-hooks --target-dir target/test-hooks
-test-hooks = []
+test-hooks = ["asx-game/test-hooks"]
 
 [dependencies]
 asx-gameplay.workspace = true

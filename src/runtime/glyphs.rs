@@ -395,7 +395,7 @@ pub fn fixture_shaman_hit(r:&Runtime,game:u64,spell:u32,amount:f32){
 static SHEEP_GATE:AtomicUsize=AtomicUsize::new(0);
 crate::context_stub_flags!(sheep_gate_entry,sheep_gate,SHEEP_GATE);
 unsafe extern "system" fn sheep_gate(c:&mut crate::stub::Context){
- #[cfg(test)]if let Some((count,limit))=SHEEP_TEST.with(|v|v.get()){let a=Adapter::select(asx_game::official125::SHA256).unwrap();c.rflags=a.glyph_sheep_flags(count,limit,c.rflags);return}
+ #[cfg(test)]if let Some((count,limit))=SHEEP_TEST.with(|v|v.get()){let a=Adapter::select(asx_game::current::SHA256).unwrap();c.rflags=a.glyph_sheep_flags(count,limit,c.rflags);return}
  let Some(r)=RUNTIME.get().filter(|r|r.rules)else{return};let game=c.rcx;
  let Ok(Some((slot,guid)))=r.adapter.run_source(&r.local,game)else{return};let Some(g)=view(GlyphOwner{game,slot,guid,spell:118})else{return};
  if let Ok(count)=r.adapter.glyph_sheep_count(&r.local,game){let before=c.rflags;c.rflags=r.adapter.glyph_sheep_flags(count,g.sheep_limit(),before);

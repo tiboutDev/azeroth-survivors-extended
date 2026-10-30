@@ -104,7 +104,7 @@ class ASXTests(unittest.TestCase):
   dll=self.root/"normal.dll";dll.write_bytes(b"MZ normal test artifact")
   output=self.root/"release-output"
   with self.assertRaisesRegex(ValueError,"trust keys"):
-   package.build(output,dll,self.root/"unused-runtime",key=keyfile,game_version="0.125.0")
+   package.build(output,dll,self.root/"unused-runtime",key=keyfile,game_version="0.130.0")
   self.assertFalse(output.exists())
  def test_package_refuses_retired_game_before_reading_artifacts_or_creating_output(self):
   spec=importlib.util.spec_from_file_location("asx_package_retired",ROOT/"tools/build/asx_package.py")
@@ -132,6 +132,26 @@ class ASXTests(unittest.TestCase):
   self.assertNotIn("AZCOOP_TEST_CRASH",child);self.assertNotIn("COOP_OLD",child);self.assertEqual(child["ASX_ACTIVE"],"1")
   self.assertEqual(core.native_paths(self.root,{"APPDATA":str(self.root/"appdata")})[0],self.root/"appdata/wenilla-rogue/characters.txt")
   backup=launch.backup(self.root,save);self.assertEqual(backup.read_bytes(),save.read_bytes());self.intact()
+ def test_goblins_can_be_disabled_without_disabling_asx_or_native_profile(self):
+  core.atomic(self.root/"ASX/options.json",b'{"treasure_goblins":false}')
+  env={"APPDATA":"native-profile","ASX_TREASURE_GOBLINS":"1"}
+  child=launch.child_environment(self.root,env,self.root/"ASX/Logs/session")
+  self.assertEqual(child["ASX_TREASURE_GOBLINS"],"0")
+  self.assertEqual(child["ASX_ACTIVE"],"1");self.assertEqual(child["AZCOOP_ENGINE"],"official")
+  self.assertEqual(child["APPDATA"],"native-profile")
+ def test_optional_events_are_independent_of_each_other_and_coop(self):
+  core.atomic(self.root/"ASX/options.json",b'{"treasure_goblins":false,"darkmoon_trials":false,"lost_supplies":true}')
+  env=launch.child_environment(self.root,{},self.root/"session")
+  self.assertEqual(env["ASX_ACTIVE"],"1")
+  self.assertEqual(env["AZCOOP_ENGINE"],"official")
+  self.assertEqual(env["ASX_TREASURE_GOBLINS"],"0")
+  self.assertEqual(env["ASX_DARKMOON_TRIALS"],"0")
+  self.assertEqual(env["ASX_LOST_SUPPLIES"],"1")
+ def test_invalid_optional_goblin_settings_do_not_stop_core_asx(self):
+  for value in (b'bad json',b'{"treasure_goblins":"false"}',b'[]'):
+   core.atomic(self.root/"ASX/options.json",value)
+   child=launch.child_environment(self.root,{},self.root/"ASX/Logs/session")
+   self.assertEqual(child["ASX_TREASURE_GOBLINS"],"0");self.assertEqual(child["ASX_ACTIVE"],"1")
  def test_unsupported_client_never_receives_proxy_or_addon(self):
   core.atomic(self.root/"AzerothSurvivors.exe",b"new official build")
   with self.assertRaises(ValueError):self.install()
@@ -245,12 +265,12 @@ if __name__=="__main__":unittest.main()
 class NativeCompatibilityTests(unittest.TestCase):
  def test_only_current_registry_entry_and_manifest_exact_hash(self):
   games=json.loads((ROOT/"asx/supported-games.json").read_text())["games"]
-  self.assertEqual(list(games),["0.125.0"])
-  m={"schema":1,"product":core.PRODUCT,"version":"0.125.0-asx.1","game":{"version":"0.125.0","sha256":games["0.125.0"]["sha256"],"archives":["Data/patch.MPQ"]},"files":{}}
+  self.assertEqual(list(games),["0.130.0"])
+  m={"schema":1,"product":core.PRODUCT,"version":"0.130.0-asx.1","game":{"version":"0.130.0","sha256":games["0.130.0"]["sha256"],"archives":["Data/patch.MPQ"]},"files":{}}
   required=["start-asx.cmd","README-ASX.txt","ASX/Bin/avrt.dll","ASX/Client/launch.py","ASX/Client/supported-games.json","ASX/Interface/ASX.toc","ASX/Interface/Presentation.lua","ASX/Defaults/channel.json"]
   m["files"]={name:{"size":0,"sha256":"0"*64}for name in required}
   self.assertIs(core.validate(m),m)
-  for version,sha in (("0.121.0","22f7938eb4f99f2857dc091b1c57c147bd848eaabfeaa81e444c0a3393ca8150"),("0.125.0","0"*64)):
+  for version,sha in (("0.121.0","22f7938eb4f99f2857dc091b1c57c147bd848eaabfeaa81e444c0a3393ca8150"),("0.130.0","0"*64)):
    rejected=copy.deepcopy(m);rejected["game"].update(version=version,sha256=sha)
    with self.subTest(version=version):
     with self.assertRaisesRegex(ValueError,"exact reviewed native game build"):core.validate(rejected)

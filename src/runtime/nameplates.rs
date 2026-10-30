@@ -1,16 +1,17 @@
 //! Retain native pill-shaped plates; transform presentation inputs before drawing.
 use super::*;
-static SCRIPT:AtomicU64=AtomicU64::new(0);
-pub(super)fn participants(r:&Runtime)->Vec<u64>{r.adapter.native_ui_participants(&r.local,SCRIPT.load(Ordering::Acquire)).unwrap_or_default()}
-pub(super)fn reset(){SCRIPT.store(0,Ordering::Release);}
+pub(super)fn participants(r:&Runtime)->Vec<u64>{super::ui_context::participants(r)}
+pub(super)fn reset(){super::ui_context::reset();super::combat_text::reset();}
 static UPDATE:AtomicUsize=AtomicUsize::new(0);
 static STYLE:AtomicUsize=AtomicUsize::new(0);
 unsafe extern "system" fn update(out:u64,script:u64,index:u32,generation:u32,style:u64,rows:u64,len:u64,extra:u64)->u64{
  let original:unsafe extern "system" fn(u64,u64,u32,u32,u64,u64,u64,u64)->u64=std::mem::transmute(UPDATE.load(Ordering::Acquire));
  let copy=RUNTIME.get().filter(|r|r.rules).and_then(|r|{
-  SCRIPT.store(script,Ordering::Release);
+  super::ui_context::capture(script);
   let result=r.adapter.nameplate_rows(&r.local,r.local.base,script,rows,len);
   #[cfg(feature="test-hooks")]if std::env::var("ASX_TEST_UI").as_deref()==Ok("1"){static N:AtomicUsize=AtomicUsize::new(0);if N.fetch_add(1,Ordering::Relaxed)<4{r.log.info(&format!("Native plate input: len={len} rows={rows:#x} changed={:?}",result.as_ref().map(|v|v.is_some())));}}
+  #[cfg(feature="test-hooks")]
+  for witness in asx_game::official_native::take_plate_witnesses(){r.log.info(&format!("ASX plate witness: guid={} rank={:?} name={:?} retained={} unit_count={}",witness.guid,witness.rank,witness.name,witness.retained,witness.unit_count));}
   result.ok().flatten()
  });
  original(out,script,index,generation,style,copy.as_ref().map_or(rows,|r|r.as_ptr()as u64),len,extra)

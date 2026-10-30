@@ -1,7 +1,7 @@
 //! Selected native ring choices and scoped stat inputs; no saved item fields.
 use super::*;
 use crate::official::MutableMemory;
-use crate::official1201 as v;
+use crate::current as v;
 use asx_gameplay::enchantments::RankedEnchantment;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct RingChoice {pub game:u64,pub slot:u32,pub guid:u64,pub ring:u8,pub rank:u32,pub rarity:u64,pub value:u32}
@@ -50,29 +50,15 @@ impl Adapter {
  pub fn ring_stats(self,m:&dyn MutableMemory,game:u64,bonuses:&[RankedEnchantment])->Result<Option<RingStatLoan>>{
   if bonuses.len()>2{return Err("Invalid ring stat scope".into())}
   let entries=bonuses.iter().map(|e|(v::RING_STAT_KINDS[e.kind as usize],e.value())).collect::<Vec<_>>();
-  self.jewelry_stat_input(m,game,&entries)
+  self.temporary_stat_input(m,game,&entries)
  }
- pub(super) fn jewelry_stat_input(self,m:&dyn MutableMemory,game:u64,bonuses:&[(u32,f32)])->Result<Option<RingStatLoan>>{
-  if bonuses.is_empty(){return Ok(None)}
-  if !self.supports_enchantments()||bonuses.len()>2||self.run_source(m,game)?.is_none(){return Err("Invalid jewelry stat scope".into())}
-  let at=game+self.field1201(v::RING_STAT_INPUT);let header=m.read(at,24)?;if header.len()!=24{return Err("Truncated ring stat header".into())}
-  let cap=u64::from_le_bytes(header[..8].try_into().map_err(|_|"Truncated ring stat header")?);let ptr=u64::from_le_bytes(header[8..16].try_into().unwrap());let len=u64::from_le_bytes(header[16..].try_into().unwrap());
-  if len>cap||cap>512||(len>0&&(ptr<0x10000||ptr.checked_add(len*8).is_none())){return Err("Invalid native additive stat input".into())}
-  let mut bytes=if len>0{m.read(ptr,len as usize*8)?}else{vec![]};
-  for (kind,value) in bonuses{bytes.extend_from_slice(&kind.to_le_bytes());bytes.extend_from_slice(&value.to_le_bytes());}
-  let owned=m.allocate_native(&bytes)?;let n=bytes.len()as u64/8;let replacement=[n.to_le_bytes(),owned.to_le_bytes(),n.to_le_bytes()].concat();
-  if let Err(e)=m.write(at,&replacement){let _=m.free_native(owned,bytes.len());return Err(e)}
-  Ok(Some(RingStatLoan{at,header,replacement,owned,size:bytes.len()}))
- }
- pub fn restore_ring_stats(self,m:&dyn MutableMemory,loan:RingStatLoan)->Result<()>{
-  if m.read(loan.at,24)?!=loan.replacement{return Err("Native ring stat loan owner changed".into())}
-  m.write(loan.at,&loan.header)?;m.free_native(loan.owned,loan.size)
- }
+
+
 }
-/// The native rebuild copies this POD input synchronously. Never retain a loan
-/// across a callback return or allow a gameplay-state mutex to span its lifetime.
-pub struct RingStatLoan {at:u64,header:Vec<u8>,replacement:Vec<u8>,owned:u64,size:usize}
 
 impl Adapter{
  pub unsafe fn enchantment_ui_draw(self,base:usize,parent:u64,font:u64,ui:BonusUi,e:asx_gameplay::enchantments::RankedEnchantment)->Result<()>{self.bonus_header_draw(base,parent,font,ui,&e.name(),e.icon())}
 }
+
+pub use super::stat_inputs::StatInputLoan as RingStatLoan;
+impl Adapter {pub fn restore_ring_stats(self,m:&dyn MutableMemory,loan:RingStatLoan)->Result<()>{self.restore_stat_input(m,loan)}}

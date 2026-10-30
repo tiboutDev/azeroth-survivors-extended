@@ -7,6 +7,7 @@ import argparse,bisect,collections,difflib,functools,hashlib,json,re,struct
 from pathlib import Path
 import capstone as cs,pefile
 ROOT=Path(__file__).resolve().parents[2]
+MAPPING_POLICY="instruction-alignment-v2"
 MD=cs.Cs(cs.CS_ARCH_X86,cs.CS_MODE_64);MD.detail=True
 class Image:
  def __init__(self,path):
@@ -91,10 +92,12 @@ def descriptor_inventory(path):
   pair=re.search(r"\(0x([0-9a-f]+),\s*0x([0-9a-f]+)\)",line)
   if pair:
    baseline,native=pair.groups();add(native,f"{path.name}:{n} baseline={baseline}")
-  named=re.search(r"pub const ([A-Z0-9_]+(?:_RVA|_TABLE|_NATIVE_PAUSE))\s*:\s*u64\s*=\s*0x([0-9a-f]+)",line)
+  named=re.search(r"pub const ([A-Z0-9_]+(?:_RVA|_TABLE|_NATIVE_PAUSE|_CALLER))\s*:\s*u64\s*=\s*0x([0-9a-f]+)",line)
   if named:add(named[2],f"{path.name}:{n} {named[1]}")
  for match in re.finditer(r"pub const ([A-Z0-9_]+)\s*:\s*\(u64,\s*&\[u8\]\)\s*=\s*\(\s*0x([0-9a-f]+)",source):
   add(match[2],f"{path.name} {match[1]}")
+ for match in re.finditer(r'pub const ([A-Z0-9_]+_CALLERS)\s*:\s*\[u64;\s*\d+\]\s*=\s*\[([^\]]+)\]',source):
+  for value in re.findall(r'0x([0-9a-f]+)',match[2]):add(value,f"{path.name} {match[1]}")
  for name in ('KEPT_TOOLTIP_BINDINGS',):
   match=re.search(r'pub const '+name+r'\s*:.*?=(.*?);',source,re.S)
   if match:
@@ -102,6 +105,8 @@ def descriptor_inventory(path):
  if not out:raise ValueError("No explicit native address pairs in descriptor")
  return out
 def restore_checkpoint(old,new,needed,previous):
+ if previous.get("mapping_policy")!=MAPPING_POLICY:
+  raise ValueError("Checkpoint uses unreviewed reference inference; preserve it and start a fresh instruction-only comparison")
  if previous.get("old_sha256")!=old.sha or previous.get("new_sha256")!=new.sha:
   raise ValueError("Checkpoint executable hashes do not match")
  if previous.get("needed")!={str(k):v for k,v in needed.items()}:
@@ -144,9 +149,9 @@ def compare(old,new,needed,limit,previous=None,retry_failures=False,only_owners=
    pairs[start]=dict(new=dest,score=score,kind=kind,old_bytes=old.ends[start]-start,new_bytes=new.ends[dest]-dest)
    print(f"{start:x}->{dest:x} {score:.4f} {kind}",flush=True)
   except ValueError as e:failures[start]=str(e);print(f"PENDING {start:x}: {e}",flush=True)
-  evidence=dict(old_sha256=old.sha,new_sha256=new.sha,needed={str(k):v for k,v in needed.items()},functions=pairs,mapping=mapping,references={str(k):sorted(v)for k,v in refs.items()},changes=changes,branch_conflicts=branches,failures=failures,approved=False,offline_only=True,owner_count=len(owners),pending_owners=[v for v in owners if v not in pairs and v not in failures])
-  for k,v in refs.items():
-   if len(v)==1 and k not in mapping:mapping[k]=next(iter(v))
+  evidence=dict(mapping_policy=MAPPING_POLICY,old_sha256=old.sha,new_sha256=new.sha,needed={str(k):v for k,v in needed.items()},functions=pairs,mapping=mapping,references={str(k):sorted(v)for k,v in refs.items()},changes=changes,branch_conflicts=branches,failures=failures,approved=False,offline_only=True,owner_count=len(owners),pending_owners=[v for v in owners if v not in pairs and v not in failures])
+  # A matched caller does not prove its new callee ABI or data layout.
+  # Keep references as candidates, never promote them into aligned mappings.
   evidence['unresolved']=[v for v in needed if v not in mapping]
   yield evidence
 def memory_budget(mib):

@@ -12,9 +12,30 @@ def operation(label):
     t=threading.Thread(target=beat,daemon=True);t.start()
     try:yield
     finally:stop.set();t.join()
+def optional_event_enabled(root,key,label):
+    """Optional gameplay settings never prevent the cooperative launcher starting."""
+    try:
+        path=core.path(root,"ASX/options.json")
+        if not path.exists():return True
+        if path.stat().st_size>4096:raise ValueError("options file is too large")
+        value=core.read_json(path.read_bytes())
+        if not isinstance(value,dict):raise ValueError("options must be an object")
+        enabled=value.get(key,True)
+        if not isinstance(enabled,bool):raise ValueError(key+" must be true or false")
+        return enabled
+    except (ValueError,OSError) as error:
+        print("[ ASX ] "+label+" disabled: "+str(error)+". Other ASX features remain enabled.",flush=True)
+        return False
+
+def treasure_goblins_enabled(root):
+    return optional_event_enabled(root,"treasure_goblins","Treasure Goblins")
+
 def child_environment(root,env,session):
     result={k:v for k,v in env.items()if not k.upper().startswith(("AZCOOP_","COOP_","ASX_"))}
     result.update(ASX_ACTIVE="1",AZCOOP_ENGINE="official",AZCOOP_NATIVE_LOG_DIRECTORY=str(session),ASX_READY_FILE=str(session/"ready.json"),WOW_ROGUE_UPDATE="0",WOW_ROGUE_UPDATE_AUTO="0")
+    result["ASX_TREASURE_GOBLINS"]="1" if treasure_goblins_enabled(root) else "0"
+    result["ASX_LOST_SUPPLIES"]="1" if optional_event_enabled(root,"lost_supplies","Lost Supplies") else "0"
+    result["ASX_DARKMOON_TRIALS"]="1" if optional_event_enabled(root,"darkmoon_trials","Sayge's Trial") else "0"
     return result
 def backup(root,save):
     if not save.is_file():return None

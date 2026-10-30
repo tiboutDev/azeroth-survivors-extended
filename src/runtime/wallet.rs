@@ -412,28 +412,30 @@ fn normalized_for_actor(runtime:&Runtime,state:&State,raw:u32,source:asx_gamepla
     let multiplier=multiplier-blessings::personal(collector.0,collector.1,2)+blessings::strongest(2);
     shared_gold_award(raw,multiplier,runtime.adapter.racial_gold_bonus(race),best,state.members,source)
 }
-/// Boss compensation is already a per-participant reward: never divide it.
+/// Credit already-issued rewards once, without dividing by party size.
 /// Apply the same current gold provenance once, then credit one transaction.
-pub fn duplicate_credit(runtime:&Runtime,game:u64,collector:(u32,u64),base:u32,count:usize)->Result<Vec<u32>,String>{
-    if count>64{return Err("Invalid duplicate reward count".into())}
+pub fn reward_credit(runtime:&Runtime,game:u64,collector:(u32,u64),base:u32,count:usize,source:&str)->Result<Vec<u32>,String>{
+    if count>64{return Err("Invalid reward count".into())}
     if count==0{return Ok(vec![])}
     let current=state(game);
     let amount=if let Some(s)=current {
         let (multiplier,race)=runtime.adapter.loot_actor_gold(&runtime.local,game,collector.0,collector.1)?;
         #[cfg(feature="test-hooks")]
-        runtime.log.info(&format!("duplicate loot gold provenance: slot={} base={base} multiplier={multiplier} personal_fortune={} shared_fortune={}",collector.0,blessings::personal(collector.0,collector.1,2),blessings::strongest(2)));
+        runtime.log.info(&format!("{source} gold provenance: slot={} base={base} multiplier={multiplier} personal_fortune={} shared_fortune={}",collector.0,blessings::personal(collector.0,collector.1,2),blessings::strongest(2)));
         normalized_for_actor(runtime,&s,base,asx_gameplay::official::Award::World,(multiplier,race,collector,runtime.adapter.loot_victory(&runtime.local,game)?))?
     }else{
-        if runtime.adapter.solo_run(&runtime.local,game)?.is_none(){return Err("Missing duplicate-loot wallet authority".into())}
+        if runtime.adapter.solo_run(&runtime.local,game)?.is_none(){return Err("Missing reward wallet authority".into())}
         let (_,multiplier,_)=runtime.adapter.current_gold(&runtime.local,game)?;
-        asx_gameplay::duplicate_loot::award(base,multiplier)?
+        asx_gameplay::gold::multiply(base,multiplier)?
     };
-    let total=amount.checked_mul(count as u32).ok_or("Duplicate reward total overflow")?;
+    let total=amount.checked_mul(count as u32).ok_or("Reward total overflow")?;
     let before=if let Some(s)=current{s.wallet}else{runtime.adapter.wallet_seed(&runtime.local,game)?};
     let wallet=before.credit(total)?;
     let io=io::Access{local:&runtime.local,adapter:runtime.adapter};
     if current.is_some(){projected(||runtime.adapter.project_wallet(&io,game,wallet))?;}else{projected(||runtime.adapter.project_current_wallet(&io,game,wallet))?;}
     if let Some(s)=current{commit(s,wallet)?;}
-    runtime.log.info(&format!("duplicate loot gold: base={base} count={count} amount={amount} total={total} balance={} earned={}",wallet.gold,wallet.earned));
+    runtime.log.info(&format!("{source} gold: base={base} count={count} amount={amount} total={total} balance={} earned={}",wallet.gold,wallet.earned));
     Ok(vec![amount;count])
 }
+
+pub fn duplicate_credit(runtime:&Runtime,game:u64,collector:(u32,u64),base:u32,count:usize)->Result<Vec<u32>,String>{reward_credit(runtime,game,collector,base,count,"duplicate loot")}

@@ -65,7 +65,7 @@ For multiplayer, use the official **Co-op** menu. All participants should use th
 
 ## In the workshop
 
-**Spell Glyphs are temporarily disabled for 0.125.0** while we revisit their interaction with the new equipment set bonuses.
+**Spell Glyphs are temporarily disabled for 0.130.0** while we revisit their interaction with the new equipment set bonuses.
 
 [See what we’re exploring →](docs/player/WORKSHOP.md)
 
@@ -84,7 +84,7 @@ Found a bug or an interesting build interaction? Open an [issue](https://github.
 
 ## Development
 
-Source currently targets official **0.125.0**. Normal-artifact and in-game
+Source currently targets official **0.130.0**. Normal-artifact and in-game
 validation of this port remain separate from source checks; published kits
 declare their own supported game version. See
 [client compatibility](docs/CLIENT-COMPATIBILITY.md).
@@ -100,3 +100,5 @@ ASX is free software: you can redistribute it and/or modify it under the terms
 of the [GNU General Public License, version 3](LICENSE).
 ASX is distributed without any warranty; see the license for details.
 The original game, its assets and third-party dependencies retain their own licenses.
+
+Developer workflow: [compatibility and diagnostic tooling](docs/COMPATIBILITY-WORKFLOW.md).

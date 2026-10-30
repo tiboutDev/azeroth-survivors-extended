@@ -6,16 +6,16 @@ fn q(m:&dyn Mem,a:u64)->Result<u64>{Ok(u64::from_le_bytes(m.read(a,8)?.try_into(
 impl Adapter{
  pub fn supports_bonus_tooltips(self)->bool{true}
  pub fn bonus_tooltip_entries(self)->Vec<Entry>{self.tooltip_bindings().iter().map(|(rva,bytes)|Entry{rva:*rva,bytes}).collect()}
- pub fn kept_tooltip_fixture_focus(self)->Option<Entry>{let(rva,bytes)=crate::official125::KEPT_TOOLTIP_FOCUS;Some(Entry{rva,bytes})}
- pub fn kept_tooltip_row(self,frame:u64)->Option<u64>{frame.checked_add_signed(crate::official125::KEPT_TOOLTIP_ROW)}
+ pub fn kept_tooltip_fixture_focus(self)->Option<Entry>{let(rva,bytes)=crate::current::KEPT_TOOLTIP_FOCUS;Some(Entry{rva,bytes})}
+ pub fn kept_tooltip_row(self,frame:u64)->Option<u64>{frame.checked_add_signed(crate::current::KEPT_TOOLTIP_ROW)}
  /// Synthetic borrowed item descriptor is consumed synchronously by our body hook.
  /// The native background helper only reads rarity, then borrows this descriptor.
  pub fn kept_tooltip_descriptor(self,bonus:KeptBonus)->Option<[u64;11]>{
-  Some([0,1,0,0,1,0,0,1,0,crate::official1201::KEPT_TOOLTIP_MARKER,u64::from(bonus.code())])
+  Some([0,1,0,0,1,0,0,1,0,crate::current::KEPT_TOOLTIP_MARKER,u64::from(bonus.code())])
  }
  pub fn kept_tooltip_body(self,m:&dyn Mem,closure:u64)->Result<Option<(u64,KeptBonus)>>{
   if !self.supports_bonus_tooltips()||closure<0x10000{return Ok(None)}
-  let item=q(m,closure+16)?;if item<0x10000||q(m,item+72)?!=crate::official1201::KEPT_TOOLTIP_MARKER{return Ok(None)}
+  let item=q(m,closure+16)?;if item<0x10000||q(m,item+72)?!=crate::current::KEPT_TOOLTIP_MARKER{return Ok(None)}
   let code=q(m,item+80)?;let bonus=u16::try_from(code).ok().and_then(KeptBonus::decode).ok_or("Invalid ASX native tooltip identity")?;
   for at in [0,24,48]{if [q(m,item+at)?,q(m,item+at+8)?,q(m,item+at+16)?]!=[0,1,0]{return Err("Invalid ASX borrowed tooltip descriptor".into())}}
   let font=q(m,closure)?;if font<0x10000{return Err("Invalid ASX native tooltip font".into())}Ok(Some((font,bonus)))
@@ -51,21 +51,21 @@ impl Adapter{
  }
  pub fn kept_tooltip_title(self,m:&dyn MutableMemory,bundle:u64)->Result<()> {
   if !self.supports_bonus_tooltips(){return Ok(())}
-  if m.read(bundle+crate::official117::GLYPH_STATUS_COLOR,4)?!=0u32.to_le_bytes(){return Err("Unexpected native tooltip title color".into())}
-  m.write(bundle+crate::official117::GLYPH_STATUS_COLOR+4,&[1f32,0.82,0.,1.].into_iter().flat_map(f32::to_le_bytes).collect::<Vec<_>>())
+  if m.read(bundle+crate::current::GLYPH_STATUS_COLOR,4)?!=0u32.to_le_bytes(){return Err("Unexpected native tooltip title color".into())}
+  m.write(bundle+crate::current::GLYPH_STATUS_COLOR+4,&[1f32,0.82,0.,1.].into_iter().flat_map(f32::to_le_bytes).collect::<Vec<_>>())
  }
  pub fn bonus_compact_size(self,m:&dyn crate::official::MutableMemory,caller:u64,bundle:u64)->Result<()>{
-  if !self.supports_bonus_tooltips()||caller!=self.contact117(crate::official117::GLYPH_UI_HEADER_CALLER){return Ok(())}
-  let v=crate::official117::GLYPH_UI_HEADER_NODE;
-  m.write(bundle+v+crate::official117::GLYPH_UI_HEADER_HEIGHT,&[1u32.to_le_bytes(),40f32.to_le_bytes()].concat())?;
-  m.write(bundle+v+crate::official117::GLYPH_UI_HEADER_MARGIN_TOP,&[1u32.to_le_bytes(),0f32.to_le_bytes()].concat())
+  if !self.supports_bonus_tooltips()||caller!=self.contact117(crate::current::GLYPH_UI_HEADER_CALLER){return Ok(())}
+  let v=crate::current::GLYPH_UI_HEADER_NODE;
+  m.write(bundle+v+crate::current::GLYPH_UI_HEADER_HEIGHT,&[1u32.to_le_bytes(),40f32.to_le_bytes()].concat())?;
+  m.write(bundle+v+crate::current::GLYPH_UI_HEADER_MARGIN_TOP,&[1u32.to_le_bytes(),0f32.to_le_bytes()].concat())
  }
  pub fn bonus_compact_style(self,m:&dyn crate::official::MutableMemory,bundle:u64)->Result<()>{
   if !self.supports_bonus_tooltips(){return Ok(())}
-  let at=bundle+crate::official117::GLYPH_STATUS_FONT_SIZE;let raw=m.read(at,4)?;if raw!=12f32.to_le_bytes()&&raw!=15f32.to_le_bytes(){return Ok(())}
-  if m.read(bundle+crate::official117::GLYPH_STATUS_COLOR,4)?!=0u32.to_le_bytes(){return Ok(())}
-  m.write(at,&12f32.to_le_bytes())?;m.write(bundle+crate::official117::GLYPH_STATUS_COLOR+4,&[0.65f32,0.65,0.65,1.].into_iter().flat_map(f32::to_le_bytes).collect::<Vec<_>>())
+  let at=bundle+crate::current::GLYPH_STATUS_FONT_SIZE;let raw=m.read(at,4)?;if raw!=12f32.to_le_bytes()&&raw!=15f32.to_le_bytes(){return Ok(())}
+  if m.read(bundle+crate::current::GLYPH_STATUS_COLOR,4)?!=0u32.to_le_bytes(){return Ok(())}
+  m.write(at,&12f32.to_le_bytes())?;m.write(bundle+crate::current::GLYPH_STATUS_COLOR+4,&[0.65f32,0.65,0.65,1.].into_iter().flat_map(f32::to_le_bytes).collect::<Vec<_>>())
  }
 }
 
-impl Adapter{fn tooltip_bindings(self)-> &'static[(u64,&'static[u8]);5]{&crate::official125::KEPT_TOOLTIP_BINDINGS}}
+impl Adapter{fn tooltip_bindings(self)-> &'static[(u64,&'static[u8]);5]{&crate::current::KEPT_TOOLTIP_BINDINGS}}

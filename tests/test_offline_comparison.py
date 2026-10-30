@@ -20,7 +20,7 @@ class OfflineComparison(unittest.TestCase):
     def test_inventory_includes_native_menu_paths_without_member_offsets(self):
         root = Path(__file__).resolve().parents[1]
         rows = comparison.descriptor_inventory(root / "crates/asx-game/src/bindings/official125.rs")
-        for address in (0x5b74c30, 0x5b6c660, 0x8eafa, 0x8eb12, 0x2829765):
+        for address in (0x5b74c30, 0x5b6c660, 0x8eafa, 0x8eb12, 0x2829765, 0x250192, 0x53ac7c2, 0x53ae60f, 0xa7c22f):
             self.assertIn(address, rows)
         for member_or_opcode in (0x10, 0x160, 0x4e8, 0xa18, 0x11bd, 0x1a78, 0x7a60):
             self.assertNotIn(member_or_opcode, rows)
@@ -68,6 +68,22 @@ class OfflineComparison(unittest.TestCase):
         self.assertEqual(result["pending_owners"], [0x1000])
         self.assertEqual(result["unresolved"], [0x1000])
 
+    def test_call_reference_does_not_approve_an_unreviewed_callee(self):
+        old, new = self.images()
+        old.ends = {0x1000: 0x1006, 0x3000: 0x3002}
+        new.ends = {0x1100: 0x1106, 0x5000: 0x5002}
+        old.ins = lambda start: list(comparison.MD.disasm(b"\xe8" + (0x3000 - start - 5).to_bytes(4, "little", signed=True) + b"\xc3", start))
+        new.ins = lambda start: list(comparison.MD.disasm(b"\xe8" + (0x5000 - start - 5).to_bytes(4, "little", signed=True) + b"\xc3", start))
+        needed = {0x1000: ["caller"], 0x3000: ["unreviewed callee"]}
+        with patch.object(comparison, "candidates", return_value=(0x1100, 1.0, "relocations-only")):
+            with contextlib.redirect_stdout(io.StringIO()):
+                result = list(comparison.compare(old, new, needed, 1))[-1]
+        self.assertEqual(result["references"]["12288"], [0x5000])
+        self.assertNotIn(0x3000, result["mapping"])
+        self.assertIn(0x3000, result["unresolved"])
+        self.assertIn(0x3000, result["pending_owners"])
+        self.assertFalse(result["approved"])
+
     @unittest.skipUnless(sys.platform == "linux", "Linux process address-space ceiling")
     def test_memory_budget_stops_oversized_allocation_in_child_process(self):
         import subprocess
@@ -82,8 +98,8 @@ class OfflineComparison(unittest.TestCase):
     def test_checkpoint_rejects_changed_images_descriptor_or_approval(self):
         old, new = self.images()
         needed = {0x1000: ["first"]}
-        checkpoint = dict(old_sha256="old", new_sha256="new", needed={"4096": ["first"]}, approved=False, offline_only=True)
-        for key, value in [("old_sha256", "other"), ("new_sha256", "other"), ("needed", {"4096": ["changed"]}), ("approved", True), ("offline_only", False)]:
+        checkpoint = dict(mapping_policy=comparison.MAPPING_POLICY, old_sha256="old", new_sha256="new", needed={"4096": ["first"]}, approved=False, offline_only=True)
+        for key, value in [("mapping_policy", "legacy"), ("old_sha256", "other"), ("new_sha256", "other"), ("needed", {"4096": ["changed"]}), ("approved", True), ("offline_only", False)]:
             with self.subTest(key=key), self.assertRaises(ValueError):
                 comparison.restore_checkpoint(old, new, needed, dict(checkpoint, **{key: value}))
 

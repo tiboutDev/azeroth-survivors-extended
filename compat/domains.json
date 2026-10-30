@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "domains": {
+    "activation": [
+      "src/runtime/bootstrap.rs",
+      "src/runtime/addon_activation.rs",
+      "src/install.rs",
+      "crates/asx-game/src/official_native/presentation.rs"
+    ],
+    "party": [
+      "crates/asx-game/src/official_native.rs",
+      "crates/asx-game/src/official_native/layout.rs",
+      "src/runtime/session*.rs"
+    ],
+    "experience": [
+      "crates/asx-game/src/official_native/experience.rs",
+      "src/runtime/experience*.rs",
+      "src/runtime/xp_hooks*.rs"
+    ],
+    "wallet": [
+      "crates/asx-game/src/official_native/wallet.rs",
+      "src/runtime/wallet.rs"
+    ],
+    "rewards": [
+      "crates/asx-game/src/official_native/wallet.rs",
+      "crates/asx-game/src/official_native/goblin_rewards.rs",
+      "crates/asx-game/src/official_native/*loot*.rs",
+      "crates/asx-game/src/official_native/gems.rs",
+      "crates/asx-game/src/official_native/enchantments.rs"
+    ],
+    "pause": [
+      "crates/asx-game/src/official_native/*pause*.rs",
+      "src/presentation/pause.rs",
+      "src/runtime/menu_pause.rs",
+      "src/runtime/pause.rs"
+    ],
+    "support": [
+      "crates/asx-game/src/official_native/support*.rs",
+      "crates/asx-game/src/official_native/support/*.rs",
+      "crates/asx-game/src/official_native/combat_text.rs"
+    ],
+    "combat": [
+      "crates/asx-game/src/official_native/combat.rs",
+      "crates/asx-game/src/official_native/immunity_aggro.rs",
+      "crates/asx-game/src/enemies.rs",
+      "crates/asx-game/src/official_native/difficulty.rs"
+    ],
+    "auras": [
+      "crates/asx-game/src/official_native/fatigue.rs",
+      "crates/asx-game/src/official_native/blessings.rs",
+      "crates/asx-game/src/official_native/stat_inputs.rs"
+    ],
+    "stats": [
+      "crates/asx-game/src/official_native/stat_inputs.rs",
+      "crates/asx-game/src/official_native/gems.rs",
+      "crates/asx-game/src/official_native/enchantments.rs",
+      "crates/asx-game/src/official_native/blessings.rs"
+    ],
+    "events": [
+      "crates/asx-game/src/official_native/*goblin*.rs",
+      "crates/asx-game/src/official_native/world_events.rs",
+      "crates/asx-game/src/official_native/event_placement.rs",
+      "crates/asx-game/src/official_native/scene_units.rs"
+    ],
+    "spells": [
+      "crates/asx-game/src/official_native/glyphs.rs"
+    ],
+    "ui": [
+      "crates/asx-game/src/official_native/*ui*.rs",
+      "crates/asx-game/src/official_native/*tooltip*.rs",
+      "crates/asx-game/src/official_native/*icons*.rs",
+      "crates/asx-game/src/official_native/nameplates.rs",
+      "crates/asx-game/src/official_native/combat_text.rs",
+      "crates/asx-game/src/official_native/raid_markers.rs",
+      "native-ui/*.lua",
+      "crates/asx-game/src/official_native/presentation.rs"
+    ],
+    "lifecycle": [
+      "src/runtime/lifecycle*.rs",
+      "src/runtime/encounters.rs"
+    ],
+    "distribution": [
+      "asx/*.py",
+      "tools/build/asx_*.py"
+    ]
+  },
+  "shared_native_schema": "All native domains depend on selected Game/Actor field maps and identity; unknown changes require full review."
+}

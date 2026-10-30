@@ -1,7 +1,7 @@
 //! Selected native amulet identities and scoped gem stat inputs.
 use super::*;
 use crate::official::MutableMemory;
-use crate::official1201 as v;
+use crate::current as v;
 use asx_gameplay::gems::Gem;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]pub struct AmuletChoice{pub game:u64,pub slot:u32,pub guid:u64,pub amulet:u64,pub previous:Option<u64>,pub rank:u32,pub fingerprint:u64}
 fn q(m:&dyn Mem,a:u64)->Result<u64>{Ok(u64::from_le_bytes(m.read(a,8)?.try_into().map_err(|_|"Truncated amulet word")?))}
@@ -38,7 +38,7 @@ impl Adapter{
   if count>16||index>=count{return Ok(None)}if ptr<0x10000{return Err("Invalid amulet choice storage".into())}
   self.amulet_card(m,base,game,ptr+index*0xa0)
  }
- pub fn gem_stats(self,m:&dyn MutableMemory,game:u64,gem:Gem)->Result<Option<enchantments::RingStatLoan>>{self.jewelry_stat_input(m,game,&[(v::RING_STAT_KINDS[gem as usize],gem.value())])}
+ pub fn gem_stats(self,m:&dyn MutableMemory,game:u64,gem:Gem)->Result<Option<enchantments::RingStatLoan>>{self.temporary_stat_input(m,game,&[(v::RING_STAT_KINDS[gem as usize],gem.value())])}
  pub fn amulet_fixture_pick(self,m:&dyn Mem,base:u64,game:u64)->Result<Option<u64>>{
   let count=q(m,game+self.field1201(0x680))?;let ptr=q(m,game+self.field1201(0x678))?;if count>16||count>0&&ptr<0x10000{return Err("Invalid amulet fixture extent".into())}
   let mut upgrade=None;for index in 0..count{if let Some(c)=self.amulet_card(m,base,game,ptr+index*0xa0)?{if c.previous!=Some(c.amulet){return Ok(Some(index))}upgrade=Some(index);}}Ok(upgrade)

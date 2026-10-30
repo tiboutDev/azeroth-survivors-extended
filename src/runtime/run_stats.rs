@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 pub(super) static ORIGINAL:AtomicUsize=AtomicUsize::new(0);
 pub(super) unsafe extern "system" fn stats(game:u64){
  let original:unsafe extern "system" fn(u64)=std::mem::transmute(ORIGINAL.load(Ordering::Acquire));
- if let Some(r)=RUNTIME.get().filter(|r|r.rules){gems::native_stats(r,game,||enchantments::native_stats(r,game,||original(game)));}else{original(game)}
+ if let Some(r)=RUNTIME.get().filter(|r|r.rules){super::supplies::native_stats(r,game,||gems::native_stats(r,game,||enchantments::native_stats(r,game,||original(game))));}else{original(game)}
  blessings::apply_stats(game);
 }
 

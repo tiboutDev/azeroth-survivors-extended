@@ -198,12 +198,13 @@ unsafe extern "system" fn damage(
         }
     }
     observe_immunity(r,game);
-    let kind = match spell {
+    let goblin=super::treasure_goblins::is_goblin(game,enemy);
+    let kind = if goblin {None} else {match spell {
         23922 => Some(TauntSpell::ShieldSlam),
         853 => Some(TauntSpell::HammerOfJustice),
         5221 => Some(TauntSpell::Shred),
         _ => None,
-    };
+    }};
     let actor = kind.and_then(|kind| {
         r.adapter
             .combat_actor(&r.local, game, r.local.base as u64)
@@ -225,6 +226,7 @@ unsafe extern "system" fn damage(
         None
     };
     original(game, enemy, amount, spell, school, flag, extra);
+    if goblin {super::treasure_goblins::hit_complete(r,game,enemy,spell);}
     let after = before.and_then(|_| r.adapter.combat_hp(&r.local, game, enemy).ok().flatten());
     if let (Some(strength), Some(before), Some(after)) = (strength, before, after) {
         if before > after {
@@ -263,7 +265,13 @@ unsafe extern "system" fn npc(game: u64, dt: f32) {
         .get()
         .filter(|r| r.rules)
         .and_then(|r| r.adapter.support_caster(&r.local, game).ok())
-        .map(|a| (game, a.position));
+        .map(|a| (game, a.position))
+        .or_else(|| {
+            if !super::treasure_goblins::active() { return None; }
+            let r=RUNTIME.get()?;
+            let p=r.adapter.solo_run(&r.local,game).ok()??;
+            p.actors.first().map(|a|(game,a.position))
+        });
     let _immunity=RUNTIME.get().filter(|r|r.rules).and_then(|r|prepare_immunity(r,game));
     let old = ORIGIN.with(|o| o.replace(origin));
     let changed = CHANGED.with(|v| v.replace(false));
@@ -299,13 +307,21 @@ unsafe extern "system" fn basic(c: &mut crate::stub::Context) {
     let Some(r) = RUNTIME.get().filter(|r| r.rules) else {
         return;
     };
-    if STATE.lock().is_ok_and(|s| s.taunts.bindings.is_empty()) {
+    if !super::treasure_goblins::active() && STATE.lock().is_ok_and(|s| s.taunts.bindings.is_empty()) {
         return;
     }
     let Ok(frame) = r.adapter.basic_frame(&r.local, c.rbp) else {
         return;
     };
     if !ORIGIN.with(|o| o.get().is_some_and(|(g, _)| g == frame.game)) {
+        return;
+    }
+    if let Some(pose)=super::treasure_goblins::pursuit(frame.game,frame.enemy,frame.position(),ORIGIN.with(|o|o.get().unwrap().1)) {
+        let io=io::Access{local:&r.local,adapter:r.adapter};
+        if let Ok(distance)=r.adapter.prepare_basic_target(&io,&frame,pose){
+            CHANGED.with(|v|v.set(true));
+            c.xmm[5]=(c.xmm[5]&!(u32::MAX as u128))|u128::from(distance.max(10.).to_bits());c.rax=1;
+        }
         return;
     }
     let target = STATE.lock().ok().and_then(|s| {
@@ -587,4 +603,16 @@ pub fn immunity_fixture_tick(r:&Runtime,server:u64){
    r.log.info(&format!("immunity fixture expired: case={case} active={immune} owner={:?} expected={slot}",fixture_owner(enemy)));return Ok(Some((case+1,0,p.clock,0)))
   }Ok(None)
  })();match result{Ok(Some(next))=>*STAGE.lock().unwrap()=next,Ok(None)=>{},Err(e)=>{r.log.warn(&format!("Immunity fixture rejected: {e}"));*STAGE.lock().unwrap()=(4,0,0.,0);}}
+}
+
+#[cfg(feature="test-hooks")]
+pub fn fixture_goblin_taunt(r:&Runtime,game:u64,goblin:u64){
+ use asx_game::official::SupportCalls;
+ if let Ok(mut s)=STATE.lock(){s.fixture_talents.insert(1,Talents{fortified:true,..Default::default()});}
+ let io=io::Access{local:&r.local,adapter:r.adapter};
+ let normal=r.adapter.combat_enemies(&r.local,game).ok().and_then(|a|a.into_iter().find(|a|a.alive&&a.id!=goblin).map(|a|a.id));
+ if let Some(id)=normal{let _=io.support_hit(game,id,1.,23922);}
+ let _=io.support_hit(game,goblin,1.,23922);
+ let check=STATE.lock().ok().map(|s|(normal.is_some_and(|id|s.taunts.bindings.contains_key(&id)),s.taunts.bindings.contains_key(&goblin)));
+ r.log.info(&format!("treasure goblin taunt control: normal={} goblin={}",check.is_some_and(|v|v.0),check.is_some_and(|v|v.1)));
 }

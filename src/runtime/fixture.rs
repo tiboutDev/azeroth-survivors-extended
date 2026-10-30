@@ -25,6 +25,9 @@ pub fn event(runtime: &Runtime, c: &crate::stub::Context, value: &serde_json::Va
     if glyphs::retention_fixture()&&!value["choices"].as_array().is_some_and(|a|a.iter().any(|c|c["lines"].as_str().is_some_and(|s|s.contains("Keeps glyph:")))){return;}
     if !compat121() && gems::fixture_enabled() && !value["choices"].as_array().is_some_and(|a|a.iter().any(|c|c["lines"].as_str().is_some_and(|s|s.contains("Gem:")))){return;}
     if !compat121() && enchantments::fixture_enabled() && !value["choices"].as_array().is_some_and(|a|a.iter().any(|c|c["lines"].as_str().is_some_and(|s|s.contains("Enchantment:")))){return;}
+    if std::env::var("ASX_TEST_COVERAGE").as_deref()==Ok("1") && value["type"]=="choices" {
+        runtime.log.info(&format!("coverage native choices: {value}"));
+    }
     economy_event(runtime, c, value);
     let Some(delay) = delay() else { return };
     if !glyphs::retention_fixture() && std::env::var("AZCOOP_TEST_GLYPHS").as_deref()==Ok("1") && !value["choices"].as_array().is_some_and(|a|a.iter().any(|c|c["lines"].as_str().is_some_and(|s|s.contains("Glyph:")))) {return;}
@@ -48,7 +51,8 @@ pub fn event(runtime: &Runtime, c: &crate::stub::Context, value: &serde_json::Va
     }
 }
 pub fn tick(runtime: &Runtime, server: u64) {
-    if completion121_enabled(){completion121_tick(runtime,server);return;}
+    if std::env::var("ASX_TEST_UI_REMAINING").as_deref()==Ok("1"){remaining_ui_tick(runtime,server);return;}
+    if completion121_enabled(){completion121_tick(runtime,server);if pause_enabled(){pause_tick(runtime,server);}return;}
     if compat121(){marks121_tick(runtime,server);release_pending(runtime,server);if let Ok(game)=runtime.adapter.game_address(server){blessing_tick(runtime,server);gems::fixture_tick(runtime,game);enchantments::fixture_tick(runtime,game);}return;}
     if combat::immunity_fixture_enabled(){combat::immunity_fixture_tick(runtime,server);return;}
     if wallet::fixture_enabled(){wallet::fixture_tick(runtime,server);return;}
@@ -1196,11 +1200,30 @@ fn completion121_enabled()->bool{std::env::var("AZCOOP_TEST_SUPPORT121").as_dere
 fn completion121_tick(r:&Runtime,server:u64){
  static STATE:std::sync::Mutex<(usize,u8,f32,f32)>=std::sync::Mutex::new((0,0,0.,0.));
  const CASES:[(u32,u32,u32);12]=[(635,0,1),(331,1,0),(139,0,1),(774,1,0),(8936,1,0),(17,0,1),(467,1,0),(324,0,1),(15237,0,1),(25912,1,0),(11426,0,1),(774,0,1)];
+ let shield_only=std::env::var("ASX_TEST_SUPPORT_SHIELD_ONLY").as_deref()==Ok("1");
+ static INITIALIZED:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
+ if !INITIALIZED.swap(true,Ordering::AcqRel)&&shield_only{*STATE.lock().unwrap()=(5,0,0.,0.);}
  let Ok(Some(p))=r.adapter.party(&r.local,server)else{return};if p.actors.len()!=2||p.clock<12.||p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return}
- let (index,stage,began,before)=*STATE.lock().unwrap();if index>=CASES.len(){
+ let (index,stage,began,before)=*STATE.lock().unwrap();if index>=if shield_only{6}else{CASES.len()}{
   if std::env::var("AZCOOP_TEST_SUPPORT121_FULL").as_deref()==Ok("1"){
    fatigue_tick(r,server);
-   if FATIGUE_STAGE.load(Ordering::Acquire)>=8 && FATIGUE_STAGE.load(Ordering::Acquire)<20{combat::immunity_fixture_tick(r,server);}
+   if FATIGUE_STAGE.load(Ordering::Acquire)>=8 && FATIGUE_STAGE.load(Ordering::Acquire)<20{
+    if std::env::var("ASX_TEST_COVERAGE").as_deref()==Ok("1") {
+     static GUARDIAN_DONE:AtomicBool=AtomicBool::new(false);
+     if !GUARDIAN_DONE.load(Ordering::Acquire){
+      if let Ok(game)=r.adapter.game_address(server){
+       let io=io::Access{local:&r.local,adapter:r.adapter};
+       let result=r.adapter.fixture_guardian(&io,game);
+       if result.as_ref().is_ok_and(|guid|guid.is_some()){
+        GUARDIAN_DONE.store(true,Ordering::Release);
+        r.log.info(&format!("coverage native guardian killed: {result:?}"));
+       }
+      }
+      return;
+     }
+    }
+    combat::immunity_fixture_tick(r,server);
+   }
   }
   return
  }
@@ -1215,6 +1238,9 @@ fn completion121_tick(r:&Runtime,server:u64){
    *STATE.lock().unwrap()=(index,u8::from(cast==Ok(true)),p.clock,before);cast
   })();if let Err(e)=result{r.log.warn(&format!("Support121 fixture rejected: {e}"));*STATE.lock().unwrap()=(CASES.len(),0,0.,0.);}
  }else if p.clock>began+2.5{
+  // Native Shadowmeld can legitimately reject the diagnostic hit. Observe the
+  // real immunity state and retain this case until it expires; never remove it.
+  if spell==17 && r.adapter.combat_immune(&r.local,game,target,p.actors[target as usize].guid).unwrap_or(true){return;}
   let slots=r.adapter.support_buff_slots(&r.local,game,spell);let after=p.actors[target as usize].hp;
   r.log.info(&format!("support121 observed: index={index} spell={spell} caster={caster} target={target} before={before} after={after} slots={slots:?}"));
   if matches!(spell,467|324){let hit=r.adapter.fixture_retaliation_hit(&io,game,target);r.log.info(&format!("support121 retaliation: spell={spell} hit={hit:?}"));}
@@ -1239,4 +1265,38 @@ fn marks121_tick(r:&Runtime,server:u64){
   if stage==6{r.log.info(&format!("marks121 taunt: spell=5221 owner={:?}",combat::fixture_owner(enemy)));}
   *STATE.lock().unwrap()=(stage+1,p.clock,enemy);Ok(())
  })();if let Err(e)=result{r.log.warn(&format!("Marks121 fixture rejected: {e}"));*STATE.lock().unwrap()=(7,0.,0);}
+}
+
+// One combined native naming/periodic-text trial; self HoTs exercise native ticking.
+fn remaining_ui_tick(r:&Runtime,server:u64){
+ static WITNESSES:std::sync::Mutex<Vec<(String,u64)>>=std::sync::Mutex::new(Vec::new());
+ static STATE:std::sync::Mutex<(u8,f32,u8)>=std::sync::Mutex::new((0,0.,0));
+ let Ok(Some(party))=r.adapter.party(&r.local,server)else{return};
+ if party.actors.len()!=2||party.clock<6.||party.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return}
+ let Ok(game)=r.adapter.game_address(server)else{return};let io=io::Access{local:&r.local,adapter:r.adapter};
+ let ids=WITNESSES.lock().map(|v|v.clone()).unwrap_or_default();
+ if !ids.is_empty()&&party.clock<40.{let _=r.adapter.fixture_world_ui_hold(&io,game,&ids);}
+ let(stage,began,attempt)=*STATE.lock().unwrap();
+ if stage==0{
+  *STATE.lock().unwrap()=(1,party.clock,0);
+  let npcs=unsafe{r.adapter.fixture_world_ui_npcs(&io,r.local.base as u64,game)};
+  r.log.info(&format!("remaining UI native NPCs: {npcs:?}"));
+  if let Ok(ids)=npcs{*WITNESSES.lock().unwrap()=ids;}
+ }else if stage<=2&&attempt<4&&party.clock>=began+3.{
+  let caster=u32::from(stage-1);
+  let prototype=SUPPORT_PROTOTYPE.lock().ok().and_then(|p|p[caster as usize].clone());
+  let Some(mut ability)=prototype else{return};
+  *STATE.lock().unwrap()=(stage,party.clock,attempt+1);
+  let cast=(||->Result<bool,String>{
+   r.adapter.fixture_world_ui_wound(&io,game,caster)?;
+   let spell=if caster==0{139}else{774};
+   let def=r.adapter.fixture_support_definition(spell)?;
+   ability[..8].copy_from_slice(&(r.local.base as u64+def).to_le_bytes());
+   support::fixture_target(Some(caster),||r.adapter.fixture_cast_resolved(&io,game,caster,ability.as_ptr()as u64))
+  })();
+  let spell=if caster==0{139}else{774};
+  r.log.info(&format!("remaining UI self HoT: caster={caster} spell={spell} result={cast:?}"));
+  if cast==Ok(true){*STATE.lock().unwrap()=(stage+1,party.clock,0);}
+
+ }
 }
