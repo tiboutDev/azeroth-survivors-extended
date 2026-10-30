@@ -4,7 +4,7 @@ ASX follows Azeroth Survivors' addon conventions: global tables, matching
 `*_UPDATED` timestamps, `ASX_Get...` functions and registered Lua handlers.
 This is an ASX extension, not a replacement for the game's `AZS_*` API. No new
 network transport, outgoing addon message or gameplay command is introduced.
-The currently supported engine is the reviewed 0.130.0 build.
+The currently supported engine is the reviewed 0.130.1 build.
 
 ## Availability and version
 

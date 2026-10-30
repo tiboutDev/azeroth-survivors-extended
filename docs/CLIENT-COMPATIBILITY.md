@@ -1,12 +1,12 @@
-# Official 0.130.0 client boundary
+# Official 0.130.1 client boundary
 
 The sole source target is the exact Windows x86-64 executable with SHA-256:
 
 ```text
-8829953418a4d996cc5287f0e9fad25407ca30ceb64d105a4f57833caef78016
+e8ff033544095e81d74087ff400d50286b26af02291e649f4c5e4d76cbcf8863
 ```
 
-`bindings/official130.rs` owns current native contacts, complete instruction
+`bindings/official1301.rs` owns current native contacts, complete instruction
 guards, field translations and register/frame choices. Version labels and
 similar instruction sequences cannot select another executable. The launcher
 registry and private importer use this same exact identity. Direct native launch
@@ -112,3 +112,14 @@ before claiming runtime compatibility or release readiness. Source checks do
 not validate an installed DLL, a downloaded kit or an unchanged historical build
 reference. No build, deployment, publication or normal-client trial follows
 implicitly from this document.
+
+## 0.130.1 patch review
+
+The selected patch preserves consumed host/private/enemy field spans and native
+call/register contracts. Code and data contacts move independently. The native
+version literal and Rust hash keys changed in two matched functions; neither
+changes ASX callback origins. Table and pointer-target review includes map/NPC/
+boss definitions, all 102 retained glyph rows, equipment and support/taunt data.
+The boss-marks table has its own reviewed address rather than a global shift.
+Native balance/text changes outside consumed schemas remain upstream-owned.
+Old executable hashes are rejected; historical descriptors are test-only.

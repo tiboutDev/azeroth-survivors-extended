@@ -24,7 +24,7 @@ class GameplayBoundary(unittest.TestCase):
     def test_native_layout_selection_stays_behind_the_official_facade(self):
         native = (ROOT / "crates/asx-game/src/official_native.rs").read_text()
         selection = native[native.index("pub fn select("):native.index("pub fn game_address(")]
-        self.assertIn("crate::official130::SHA256=>Revision::V130", re.sub(r"\s+", "", selection))
+        self.assertIn("crate::current::SHA256=>Revision::V1301", re.sub(r"\s+", "", selection))
         self.assertIn("_=>returnErr", re.sub(r"\s+", "", selection))
         self.assertNotIn("Revision::V115=>", selection)
 

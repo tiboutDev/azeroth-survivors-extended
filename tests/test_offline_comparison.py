@@ -25,6 +25,12 @@ class OfflineComparison(unittest.TestCase):
         for member_or_opcode in (0x10, 0x160, 0x4e8, 0xa18, 0x11bd, 0x1a78, 0x7a60):
             self.assertNotIn(member_or_opcode, rows)
 
+    def test_inventory_reads_every_pair_on_generated_lines(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "generated.rs"
+            path.write_text("const ADDRESSES: &[(u64,u64)] = &[(0x1000, 0x2100,), (0x2000, 0x3100,), (0x3000, 0x4100)];")
+            self.assertEqual(set(comparison.descriptor_inventory(path)), {0x2100, 0x3100, 0x4100})
+
     def images(self):
         class Image:
             def __init__(self, sha, starts):

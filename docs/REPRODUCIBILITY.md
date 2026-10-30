@@ -1,7 +1,7 @@
 # ASX build reproducibility
 
 The [approved local WSL reference](../validation/asx-reproducible-build-xwin.json)
-identifies the 0.130.0 normal DLL (1,943,552 bytes):
+identifies the previous 0.130.0 normal DLL (1,943,552 bytes):
 
 ```text
 33d8916a64f61d6e8ac2f2d1693f0b2b0cbb877a6c62d4f68695e13951f45f63
@@ -34,3 +34,7 @@ on another host or with Windows-native tooling.
 No Windows-native reproducibility claim is made. Source hygiene, signed package
 verification, archive installation and publication are separate gates. This
 release preparation does not test archive installation or authorize publication.
+
+The current source selects 0.130.1. The retained 0.130.0 reference is historical
+and does not establish reproducibility or live acceptance of a 0.130.1 artifact.
+A replacement reproducibility reference requires explicit approval.

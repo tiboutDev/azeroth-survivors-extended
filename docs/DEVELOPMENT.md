@@ -1,6 +1,6 @@
 # ASX development
 
-ASX extends the official native 0.130.0 engine. Player documentation starts at the
+ASX extends the official native 0.130.1 engine. Player documentation starts at the
 [project home](../README.md). For engineering work, read the [testing policy](TESTING.md),
 [feature inventory](ASX-FEATURES.md) and [adapter boundary](CLIENT-ADAPTER.md).
 
@@ -72,7 +72,7 @@ a complete domain migration.
 ## Active build boundary
 
 The root DLL activates only for `AZCOOP_ENGINE=official` and the exact reviewed
-0.130.0 executable. Retired measurement/custom-engine launcher modes remain inert.
+0.130.1 executable. Retired measurement/custom-engine launcher modes remain inert.
 The workspace contains the root DLL, portable game/gameplay crates and the
 independent Windows `avrt-probe`. Historical bridge, simulation, transport and
 patch-generator crates are removed.
@@ -83,7 +83,7 @@ small historical name catalog without linking the old engine. Root tests use a
 shared test lock independently of the retired breakpoint implementation.
 
 Shared types are re-exported directly from `official_native`. The exact current
-descriptor is `crates/asx-game/src/bindings/official130.rs`; inherited constants
+descriptor is `crates/asx-game/src/bindings/official1301.rs`; inherited constants
 and translators are resolved in its generated manifest. Historical descriptor
 modules remain test-only references; production does not chain their translations.
 Historical readers and their exclusive tools/tests are retired. The current

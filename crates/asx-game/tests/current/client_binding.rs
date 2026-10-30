@@ -27,7 +27,7 @@ fn actor(size: usize, class: u8, race: u8, guid: u64) -> Vec<u8> {
 #[test]
 fn revision_capabilities_do_not_disable_shared_jewelry_ui() {
     let a = SelectedAdapter::select(current::SHA256).unwrap();
-    assert_eq!(a.version(), "0.130.0");
+    assert_eq!(a.version(), "0.130.1");
     assert!(!a.glyphs_enabled());
     assert!(!a.duplicate_loot_enabled());
     assert!(a.native_marks_enabled());
@@ -38,8 +38,9 @@ fn revision_capabilities_do_not_disable_shared_jewelry_ui() {
     assert_eq!(a.bonus_ui_entries().len(), 5);
     assert_eq!(a.blessing_entries().len(), 3);
     assert!(a.native_difficulty_entries().is_empty());
-    assert!(SelectedAdapter::select("0.130.0").is_err());
+    assert!(SelectedAdapter::select("0.130.1").is_err());
     for retired in [
+        "8829953418a4d996cc5287f0e9fad25407ca30ceb64d105a4f57833caef78016",
         "b6dbd788835ad80929fc6113f99c0fe4867dda2fe36ac3afb5810127b0a8b709",
         "ec3a5b15fa39fed63ce4516c4fc159bdac92691ca44f88befc849010338d14f7",
         official_native::SHA256,
@@ -98,7 +99,7 @@ fn wallet_reads_independently_shifted_scalars() {
 #[test]
 fn native_tooltip_frame_and_diagnostic_focus_are_version_selected() {
     let a = SelectedAdapter::select(current::SHA256).unwrap();
-    assert_eq!(a.kept_tooltip_fixture_focus().unwrap().rva, 0x28b8ec5);
+    assert_eq!(a.kept_tooltip_fixture_focus().unwrap().rva, 0x28b9235);
     let native = official_native::Adapter::select(current::SHA256).unwrap();
     assert_eq!(native.kept_tooltip_row(0x10000), Some(0xffa0));
 }

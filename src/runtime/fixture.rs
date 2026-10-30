@@ -1230,6 +1230,9 @@ fn completion121_tick(r:&Runtime,server:u64){
  let(spell,caster,target)=CASES[index];let Ok(game)=r.adapter.game_address(server)else{return};let io=io::Access{local:&r.local,adapter:r.adapter};
  if stage==0 {
   if p.clock<began+1. {return}
+  // Wait before casting: a shield can expire while the recipient is immune,
+  // leaving no shield for the later diagnostic hit. Preserve native immunity.
+  if spell==17 && r.adapter.combat_immune(&r.local,game,target,p.actors[target as usize].guid).unwrap_or(true){return;}
   let prototype=SUPPORT_PROTOTYPE.lock().ok().and_then(|p|p[caster as usize].clone());let Some(mut ability)=prototype else{return};
   let result=(||->Result<bool,String>{r.adapter.fixture_support_wounds(&io,game,caster,target)?;let before=r.adapter.party(&r.local,server)?.ok_or("Missing actors")?.actors[target as usize].hp;
    let definition=r.adapter.fixture_support_definition(spell)?;ability[..8].copy_from_slice(&(r.local.base as u64+definition).to_le_bytes());

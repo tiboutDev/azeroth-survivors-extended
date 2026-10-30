@@ -33,7 +33,7 @@ def inputs(root=ROOT,legacy=False):
 
 def ui_inputs(root=ROOT):
  root=Path(root)
- return {p.relative_to(root).as_posix():digest(p)for p in sorted((root/'native-ui').rglob('*'))if p.is_file()}
+ return {p.relative_to(root).as_posix():digest(p)for directory in ('native-ui','addons/ASXUI')for p in sorted((root/directory).rglob('*'))if p.is_file()}
 
 def ui_fingerprint(root=ROOT):return fingerprint(ui_inputs(root))
 

@@ -6,7 +6,7 @@ sys.path.insert(0,str(ROOT/"tools/dev"))
 def descriptor_source():
  # Formatting does not alter the selected native contracts. Keep comments and
  # identifiers intact, but normalize punctuation spacing before extracting tables.
- source=(ROOT/"crates/asx-game/src/bindings/official130.rs").read_text()
+ source=(ROOT/"crates/asx-game/src/bindings/official1301.rs").read_text()
  source=re.sub(r"\s*([,:=&\[\]()])\s*",r"\1",source)
  return re.sub(r",(?=[)\]])","",source)
 
@@ -14,10 +14,10 @@ class Native130(unittest.TestCase):
  def test_registry_pins_distinct_exact_adapter(self):
   source=descriptor_source()
   sha=re.search(r'SHA256\s*:\s*&str\s*=\s*"([0-9a-f]{64})"',source)[1]
-  self.assertEqual(json.loads((ROOT/"asx/supported-games.json").read_text())["games"]["0.130.0"]["sha256"],sha)
+  self.assertEqual(json.loads((ROOT/"asx/supported-games.json").read_text())["games"]["0.130.1"]["sha256"],sha)
   self.assertIn("Revision::V130",(ROOT/"crates/asx-game/src/official_native.rs").read_text())
  def test_native_contacts_guards_and_interior_branches(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_130",ROOT/"runtime-official-01300/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_1301",ROOT/"runtime-official-01301/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private pinned 0.130 image unavailable")
   from compare_official import Image,MD
   from capstone import CS_GRP_JUMP,CS_GRP_CALL
@@ -44,7 +44,7 @@ class Native130(unittest.TestCase):
   self.assertGreater(count,65)
 
  def test_named_hooks_have_safe_complete_detour_spans(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_130",ROOT/"runtime-official-01300/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_1301",ROOT/"runtime-official-01301/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private pinned 0.130 image unavailable")
   from compare_official import Image,MD
   from capstone import CS_GRP_JUMP,CS_GRP_CALL
@@ -64,7 +64,7 @@ class Native130(unittest.TestCase):
      self.assertFalse(addr<target<boundary and not(addr<=i.address<boundary),f"branch enters displaced native instructions at {addr:x}")
 
  def test_retained_tooltip_contacts_and_native_row_contract(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_130",ROOT/"runtime-official-01300/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_1301",ROOT/"runtime-official-01301/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private 0.130 image unavailable")
   from compare_official import Image
   image=Image(path);source=descriptor_source()
@@ -80,7 +80,7 @@ class Native130(unittest.TestCase):
   self.assertIn(at,{i.address for i in image.ins(image.owner(at))})
 
  def test_native_earned_item_presenter_matches_complete_guard(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_130",ROOT/"runtime-official-01300/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_1301",ROOT/"runtime-official-01301/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private pinned 0.120 image unavailable")
   from compare_official import Image
   image=Image(path);source=descriptor_source()
@@ -92,7 +92,7 @@ class Native130(unittest.TestCase):
   self.assertIn(rva+len(expected),{i.address+i.size for i in image.ins(rva)})
 
  def test_native_ui_receiver_vtable_has_complete_layout(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_130",ROOT/"runtime-official-01300/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_1301",ROOT/"runtime-official-01301/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private exact image unavailable")
   import struct
   from compare_official import Image
@@ -106,13 +106,13 @@ class Native130(unittest.TestCase):
    self.assertTrue(image.text<=rva<image.text+len(image.code),hex(pointer))
 
  def test_native_encounter_helper_guard(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_130",ROOT/"runtime-official-01300/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_1301",ROOT/"runtime-official-01301/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private 0.130 image unavailable")
   from compare_official import Image
   image=Image(path);source=descriptor_source();at=int(re.search(r'\(0x5bd2d40,(0x[0-9a-f]+)\)',source)[1],16);data=re.search(r'BLESSING_SPAWN_BYTES:&\[u8\]=&\[(.*?)\]',source)[1];expected=bytes(int(x,0)for x in data.split(',')if x.strip());self.assertEqual(image.pe.get_data(at,len(expected)),expected);self.assertIn(at+len(expected),{i.address+i.size for i in image.ins(at)})
 
  def test_zone_table_identity_and_encounter_extent(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_130",ROOT/"runtime-official-01300/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_1301",ROOT/"runtime-official-01301/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private 0.130 image unavailable")
   import struct
   from compare_official import Image
@@ -124,8 +124,8 @@ class Native130(unittest.TestCase):
   self.assertEqual(names[:3],["elwynn","duskwood","wsg"]);self.assertEqual(len(set(names)),12)
 
  def test_native_glyph_spell_ids_and_keys_are_preserved(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_130",ROOT/"runtime-official-01300/AzerothSurvivors.exe"))
-  if not path.exists():self.skipTest("Private pinned 0.130.0 image unavailable")
+  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_1301",ROOT/"runtime-official-01301/AzerothSurvivors.exe"))
+  if not path.exists():self.skipTest("Private pinned 0.130.1 image unavailable")
   import struct
   from compare_official import Image
   image=Image(path)
@@ -152,7 +152,7 @@ class Official130(unittest.TestCase):
  def test_exact_import_inventory(self):
   from import_official import NAMES,SHA256
   self.assertEqual(len(NAMES),12);self.assertEqual(NAMES[-1],'Data/patch-B.MPQ')
-  self.assertEqual(SHA256,'8829953418a4d996cc5287f0e9fad25407ca30ceb64d105a4f57833caef78016')
+  self.assertEqual(SHA256,'e8ff033544095e81d74087ff400d50286b26af02291e649f4c5e4d76cbcf8863')
  def test_shared_rendering_has_no_glyph_owner_dependency(self):
   root=Path(__file__).resolve().parents[1]
   for name in ['bonus_ui.rs','run_stats.rs']:

@@ -173,7 +173,7 @@ The `source_fingerprint` field remains a compatibility alias of
 `compilation_fingerprint`; both must agree. Exact DLL hash and artifact kind
 checks remain mandatory.
 
-UI files are hashed independently at staging and validation. Validation identity
+Retained native UI and the independent ASXUI addon are hashed independently at staging and validation. Validation identity
 continues to cover scenario-specific executable tooling and fixture data. A UI
 or fixture change requires the relevant new validation, but does not invalidate
 a schema-2 DLL whose compilation inputs are unchanged. Rust-embedded content
@@ -186,7 +186,7 @@ Old proofs without a UI identity cannot satisfy the new coop prerequisite.
 
 `asx_dev.py stage --receiver <isolated-folder> --dll <built-dll>` verifies the
 compiler receipt against the authoritative checkout before deployment. It copies
-only the selected DLL, native UI, client/scenario registries and the union of
+only the selected DLL, native UI, ASXUI, client/scenario registries and the union of
 Python dependencies and fixtures required by the declared live scenarios.
 Rust sources, Cargo inputs, portable tests and compiler helpers stay in WSL.
 Unchanged execution files are compared by SHA-256 and are not copied again.
@@ -284,3 +284,7 @@ HoTs use the shared heal helper. Both paths must be observed without counting a
 native integer packet twice. A successful test executable is not live proof of
 the newly installed callbacks; retain that distinction when a bounded game trial
 has already been consumed before the new integration is built.
+
+Extension trials copy ASXUI into each disposable native addon profile. Its files
+are part of the staging/UI fingerprint, so a solo prerequisite cannot validate
+a different addon build. This is diagnostic staging, not ASX installer ownership.

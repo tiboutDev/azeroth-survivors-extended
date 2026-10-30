@@ -16,6 +16,15 @@ class FingerprintDomains(unittest.TestCase):
    self.assertNotEqual(ui_before,artifact_record.ui_fingerprint(root))
    source.write_text('pub fn changed(){}')
    with self.assertRaises(ValueError):artifact_record.verify(record,dll,root,'normal')
+ def test_independent_addon_changes_invalidate_ui_but_not_compilation(self):
+  with tempfile.TemporaryDirectory()as folder:
+   root=Path(folder);addon=root/'addons/ASXUI';addon.mkdir(parents=True)
+   lua=addon/'Minimap.lua';lua.write_text('old')
+   compiled=artifact_record.inputs(root);before=artifact_record.ui_fingerprint(root)
+   self.assertIn('addons/ASXUI/Minimap.lua',artifact_record.ui_inputs(root))
+   lua.write_text('new')
+   self.assertNotEqual(before,artifact_record.ui_fingerprint(root))
+   self.assertEqual(compiled,artifact_record.inputs(root))
  def test_embedded_lua_stays_a_compilation_dependency(self):
   with tempfile.TemporaryDirectory()as folder:
    root=Path(folder);(root/'src').mkdir();(root/'native-ui').mkdir()

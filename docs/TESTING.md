@@ -1,6 +1,6 @@
 # Targeted ASX validation
 
-The supported source target is official 0.130.0. Review the
+The supported source target is official 0.130.1. Review the
 [feature inventory](ASX-FEATURES.md) and [adapter boundary](CLIENT-ADAPTER.md)
 when changing native integration. Validation must cover the changed risk and
 state its limits; test counts alone are not a completion criterion.

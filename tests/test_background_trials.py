@@ -74,7 +74,7 @@ class BackgroundTrials(unittest.TestCase):
         mocked = mock.Mock(run=lambda *a, **kw: called.append((a, kw)))
         with mock.patch.dict('sys.modules', {'asx_install_trial': mocked}):
             background.run_child(args, Path('/tmp/test-results/trial/start'))
-        self.assertEqual(called, [((45,), {'game_version': '0.130.0', 'package_path': Path('prepared.zip')})])
+        self.assertEqual(called, [((45,), {'game_version': '0.130.1', 'package_path': Path('prepared.zip')})])
 
     def test_shared_wallet_dispatch_requires_two_clients_without_starting_them(self):
         args = background.parse_args(['--reward-wallet-trial'])

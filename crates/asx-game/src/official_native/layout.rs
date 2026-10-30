@@ -1,4 +1,4 @@
-//! Native field translation for the sole supported official client, 0.130.0.
+//! Native field translation for the sole supported official client, 0.130.1.
 use super::Adapter;
 use crate::{memory::Mem, Result};
 

@@ -1,5 +1,5 @@
 """Bounded solo/two-player extension trial on disposable reviewed native profiles."""
-import json,os,re,socket,subprocess,time,uuid
+import json,os,re,shutil,socket,subprocess,time,uuid
 from pathlib import Path
 from native_runtime_import import digest
 from client_registry import VERSION
@@ -98,6 +98,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
    if os.environ.get("ASX_TEST_WORLD_UI")=="1":
     with (folder/"config.toml").open("a")as config:config.write('nameplateShowEnemies = "1"\n')
    addon=folder/"AddOns/ASX";addon.mkdir(parents=True);(addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\nAudit.lua\n");(addon/"Presentation.lua").write_bytes((ROOT/"native-ui/official-party.lua").read_bytes());(addon/"Audit.lua").write_bytes((ROOT/"tools/dev/fixtures/asx-extensions-audit.lua").read_bytes())
+   shutil.copytree(ROOT/'addons/ASXUI',folder/'AddOns/ASXUI')
    env=dict(clean,APPDATA=str(folder/"appdata"),LOCALAPPDATA=str(folder/"localappdata"),BENILLA_HOME=str(folder),ASX_ACTIVE="1",AZCOOP_ENGINE="official",AZCOOP_NATIVE_LOG_DIRECTORY=str(folder),ASX_READY_FILE=str(folder/"ready.json"),WOW_NOSOUND="1",WOW_WIN="1",WOW_ROGUE_UPDATE="0",WOW_ROGUE_UPDATE_AUTO="0",WOW_ROGUE_AUTOPICK="1",WOW_ROGUE_AUTOSTART="1",WOW_ROGUE_AUTOPLAY="18"if slot==1 else"4",RUST_LOG="info",AZCOOP_TEST_GLYPHS="1",AZCOOP_TEST_BLESSINGS="1")
    if not normal:env.update(ASX_LOST_SUPPLIES="0",ASX_DARKMOON_TRIALS="0")
    if supplies:

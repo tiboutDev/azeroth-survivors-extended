@@ -89,8 +89,8 @@ def descriptor_inventory(path):
  path=Path(path);source=path.read_text();out={}
  def add(value,label):out.setdefault(int(value,16),[]).append(label)
  for n,line in enumerate(source.splitlines(),1):
-  pair=re.search(r"\(0x([0-9a-f]+),\s*0x([0-9a-f]+)\)",line)
-  if pair:
+  pairs=re.finditer(r"\(0x([0-9a-f]+),\s*0x([0-9a-f]+),?\)",line)
+  for pair in pairs:
    baseline,native=pair.groups();add(native,f"{path.name}:{n} baseline={baseline}")
   named=re.search(r"pub const ([A-Z0-9_]+(?:_RVA|_TABLE|_NATIVE_PAUSE|_CALLER))\s*:\s*u64\s*=\s*0x([0-9a-f]+)",line)
   if named:add(named[2],f"{path.name}:{n} {named[1]}")

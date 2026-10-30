@@ -64,7 +64,7 @@ pub struct Adapter {
 impl Adapter {
     pub fn select(hash: &str) -> Result<Self> {
         let revision = match hash {
-            crate::official130::SHA256 => Revision::V130,
+            crate::current::SHA256 => Revision::V1301,
             _ => return Err("No reviewed official-engine adapter for this executable".into()),
         };
         Ok(Self { revision })
@@ -825,17 +825,17 @@ mod tests {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Revision {
-    V130,
+    V1301,
 }
 impl Adapter {
     pub fn name(self) -> &'static str {
         match self.revision {
-            Revision::V130 => "official-coop-0.130.0",
+            Revision::V1301 => "official-coop-0.130.1",
         }
     }
     pub fn version(self) -> &'static str {
         match self.revision {
-            Revision::V130 => "0.130.0",
+            Revision::V1301 => "0.130.1",
         }
     }
     fn rva(self, baseline: u64) -> u64 {
