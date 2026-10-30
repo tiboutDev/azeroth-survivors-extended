@@ -181,13 +181,15 @@ positions migrate to offsets from stack slots. Sayge's v1.1 API adds collective
 readiness separately from local presence, so an inside player sees an ASX waiting
 message and frozen cosmetic progress while another required player is outside.
 
-## Fortune buff presentation
+## Priority buff presentation
 
 ASXUI/Buffs.lua promotes the existing native Fortune button into the first
-visual buff position (rightmost in the stock layout). It remaps only frame
+visual buff position (rightmost in the stock layout). Crystal Resonance follows
+immediately, or takes the first position without Fortune. Crystal identification
+requires both the current API aura index and its native gem icon. It remaps only frame
 anchors, including wrapped rows. Native IDs, buffIndex, tooltips, duration
 children and click handlers are unchanged. Missing/stale ASX state, an absent
-Fortune or ambiguous icons leave the native layout in control. Original anchors
+priority buff or ambiguous icons leave the native layout in control. Original anchors
 are restored only while ASXUI still owns them; fresh native layout changes win.
 Restore clears the owned graph before rebuilding anchors to avoid cycles.
 

@@ -172,7 +172,9 @@ opacity and notification lifetime. Cache pins use native INV_Box_02, distinct
 from Supplies INV_Crate_01. No texture is generated or bundled.
 
 The native Sayge Fortune button moves to the first visual buff slot, at the
-right end of the first stock buff row. Buff IDs/clicks/durations remain native.
+right end of the first stock buff row. Crystal Resonance follows Fortune, or
+leads the row when Fortune is absent. It requires its current API aura slot and
+matching native icon. Buff IDs/clicks/durations remain native.
 Native anchor changes are preserved, and ASXUI restores its original anchors
-when Fortune data is missing or unavailable. The native tooltip distinguishes
+when neither priority buff is present or ASX data is unavailable. The native tooltip distinguishes
 owned Fortune strength from a stronger effective party bonus.

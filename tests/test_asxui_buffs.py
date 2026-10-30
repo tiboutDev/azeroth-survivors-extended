@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 class BuffOrderTests(unittest.TestCase):
  def setUp(self):
   self.lua=LuaRuntime();self.lua.execute(STUB)
-  self.lua.execute('''available=true;fortune=true;function ASX_GetAPIVersion()return 1,2 end;function ASX_GetState()return {available=available,data={fortune=fortune and {} or nil}}end
+  self.lua.execute('''available=true;fortune=true;function ASX_GetAPIVersion()return 1,2 end;function ASX_GetState()return {available=available,data={fortune=fortune and {} or nil,crystals=crystals and {index=3} or nil}}end
   BuffFrame=CreateFrame("Frame","BuffFrame",UIParent)
   for n=0,3 do local f=CreateFrame("Button","BuffButton"..n,BuffFrame);f:SetID(n);f.buffIndex=n;f.scripts.OnClick=function()return n end;f.duration={owner=n};function f:GetNumPoints()return self.anchor and 1 or 0 end;function f:GetPoint()if self.anchor then return unpack(self.anchor)end end;function f:SetPoint(...)local p={unpack(arg)};local relative=p[2];local seen={};while type(relative)=="table" and not seen[relative]do assert(relative~=self,"anchor cycle");seen[relative]=true;relative=relative.anchor and relative.anchor[2]end;self.anchor=p end end
   objects.BuffButton0:SetPoint("TOPRIGHT",BuffFrame,"TOPRIGHT",0,0)
@@ -27,4 +27,12 @@ class BuffOrderTests(unittest.TestCase):
   self.lua.execute('tick();objects.BuffButton1:SetPoint("TOPRIGHT",BuffFrame,"TOPRIGHT",-500,0);fortune=false;tick();assert(objects.BuffButton1.anchor[2]==BuffFrame and objects.BuffButton1.anchor[4]==-500)')
  def test_hidden_or_unrelated_buff_is_not_promoted(self):
   self.lua.execute('objects.BuffButton2:Hide();tick();assert(objects.BuffButton0.anchor[2]==BuffFrame);objects.BuffButton2:Show();nativeBuffTextures[2]="native-class-buff";tick();assert(objects.BuffButton2.anchor[2]==objects.BuffButton1)')
+ def test_crystals_follow_fortune_and_lead_without_fortune(self):
+  self.lua.execute('crystals=true;nativeBuffTextures[3]="Interface/Icons/INV_Misc_Gem_Variety_01.blp";tick();assert(objects.BuffButton2.anchor[2]==BuffFrame);assert(objects.BuffButton3.anchor[2]==objects.BuffButton2);assert(objects.BuffButton0.anchor[2]==objects.BuffButton3);assert(objects.BuffButton1.anchor[2]==objects.BuffButton2);fortune=false;tick();assert(objects.BuffButton3.anchor[2]==BuffFrame);assert(objects.BuffButton0.anchor[2]==objects.BuffButton3);assert(objects.BuffButton2.anchor[2]==objects.BuffButton3);for n=0,3 do local f=objects["BuffButton"..n];assert(f:GetID()==n and f.buffIndex==n and f.duration.owner==n and f.scripts.OnClick()==n)end')
+ def test_crystal_removal_and_stale_state_restore_native_order(self):
+  self.lua.execute('crystals=true;nativeBuffTextures[3]="Interface/Icons/INV_Misc_Gem_Variety_01.blp";tick();crystals=false;tick();assert(objects.BuffButton2.anchor[2]==BuffFrame and objects.BuffButton3.anchor[2]==objects.BuffButton2);crystals=true;tick();available=false;tick();assert(objects.BuffButton0.anchor[2]==BuffFrame and objects.BuffButton3.anchor[2]==objects.BuffButton0)')
+ def test_crystal_texture_requires_matching_metadata_slot(self):
+  self.lua.execute('fortune=false;crystals=true;nativeBuffTextures[1]="Interface/Icons/INV_Misc_Gem_Variety_01.blp";tick();assert(objects.BuffButton0.anchor[2]==BuffFrame);nativeBuffTextures[3]="Interface/Icons/INV_Misc_Gem_Variety_01.blp";objects.BuffButton3:Hide();tick();assert(objects.BuffButton0.anchor[2]==BuffFrame)')
+ def test_native_relayout_with_both_priorities_has_no_anchor_cycles(self):
+  self.lua.execute('crystals=true;nativeBuffTextures[3]="Interface/Icons/INV_Misc_Gem_Variety_01.blp";tick();for n=0,3 do objects["BuffButton"..n]:ClearAllPoints()end;objects.BuffButton0:SetPoint("TOPRIGHT",BuffFrame,"TOPRIGHT",0,0);objects.BuffButton1:SetPoint("RIGHT",objects.BuffButton0,"LEFT",-5,0);objects.BuffButton2:SetPoint("RIGHT",objects.BuffButton1,"LEFT",-5,0);objects.BuffButton3:SetPoint("TOPRIGHT",objects.BuffButton0,"BOTTOMRIGHT",0,-40);now=now+.01;objects.ASXUIBuffOrderController.scripts.OnUpdate();assert(objects.BuffButton2.anchor[2]==BuffFrame and objects.BuffButton3.anchor[2]==objects.BuffButton2)')
 if __name__=='__main__':unittest.main()
