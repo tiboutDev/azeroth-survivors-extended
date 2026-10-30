@@ -15,6 +15,8 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools/dev"))
+from client_registry import selected_client
 TARGET = "x86_64-pc-windows-msvc"
 PACKAGE = "azeroth-coop-native"
 ARTIFACT = "avrt.dll"
@@ -43,7 +45,7 @@ SOURCE_SUFFIXES = {
 SOURCE_DIRS = ("crates", "src", "resources/windows", "native-ui", "asx", "tools/build")
 ROOT_INPUTS = (
     "Cargo.toml", "Cargo.lock", "build.rs", ".cargo/config.toml", "rust-toolchain.toml",
-    "rust-toolchain",
+    "rust-toolchain", "tools/dev/client_registry.py", "tools/dev/artifact_record.py",
 )
 
 
@@ -143,12 +145,12 @@ def production_build(target_dir: Path, receipt_path: Path) -> None:
     subprocess.run(command, cwd=ROOT, check=True)
 
 
-def read_verified_build(target_dir: Path, receipt_path: Path) -> dict:
+def read_verified_build(target_dir: Path, receipt_path: Path, game_version: str | None = None) -> dict:
     receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
     if receipt.get("schema_version") != 1:
         raise ValueError("Unexpected production-builder receipt schema")
     if (receipt.get("game_version"), receipt.get("target"), receipt.get("package"), receipt.get("profile")) != (
-        "0.125.0", TARGET, PACKAGE, "release"
+        game_version or selected_client()[0], TARGET, PACKAGE, "release"
     ):
         raise ValueError("Production-builder receipt does not describe the expected ASX build")
     if receipt.get("test_hooks") != "absent":
@@ -203,6 +205,7 @@ def assert_machine_free(candidate: dict, root: Path) -> None:
 def create_candidate(root: Path, requested: Path, builder=None, versions_provider=None) -> dict:
     root = root.resolve()
     report_path = candidate_path(root, requested)
+    game_version = selected_client(root / "asx/supported-games.json")[0]
     builder = builder or production_build
     versions_provider = versions_provider or tool_versions
     versions = versions_provider()
@@ -229,7 +232,7 @@ def create_candidate(root: Path, requested: Path, builder=None, versions_provide
     for index, target_dir in enumerate(build_dirs):
         receipt_path = target_dir / "build-receipt.json"
         builder(target_dir, receipt_path)
-        results.append(read_verified_build(target_dir, receipt_path))
+        results.append(read_verified_build(target_dir, receipt_path, game_version))
         observed = source_snapshot(root)
         if observed != before:
             point = "between builds" if index == 0 else "after builds"
@@ -259,7 +262,7 @@ def create_candidate(root: Path, requested: Path, builder=None, versions_provide
         "builder_script": BUILD_SCRIPT,
         "artifact": {
             "file": ARTIFACT,
-            "game_version": "0.125.0",
+            "game_version": game_version,
             "target": TARGET,
             "sha256": results[0]["sha256"],
             "size_bytes": results[0]["size_bytes"],

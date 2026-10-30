@@ -34,10 +34,10 @@ class CandidateWorkflowTests(unittest.TestCase):
             "crates/app/Cargo.toml": "[package]\nname='app'\n",
             "crates/app/src/lib.rs": "pub fn answer() -> u32 { 42 }\n",
             "crates/app/build.rs": "fn main() {}\n",
-            "crates/app/resources/ids.json": '{"game":"0.125.0"}\n',
+            "crates/app/resources/ids.json": '{"game":"0.130.0"}\n',
             "src/runtime.rs": "pub fn runtime() {}\n",
             "native-ui/interface.lua": "return true\n",
-            "asx/supported-games.json": '{"versions":["0.125.0"]}\n',
+            "asx/supported-games.json": json.dumps({"schema": 1, "games": {"0.130.0": {"sha256": "0" * 64, "archives": ["Data/patch.MPQ"]}}}),
             "tools/build/asx_release_binary.py": "# reviewed builder source\n",
             "tools/build/asx_reproducibility.py": "# reviewed candidate workflow\n",
             "docs/BUILD.md": "Documentation is outside the build fingerprint.\n",
@@ -79,7 +79,7 @@ class CandidateWorkflowTests(unittest.TestCase):
                     "sha256": hashlib.sha256(raw).hexdigest(),
                     "size_bytes": len(raw),
                 },
-                "game_version": "0.125.0",
+                "game_version": next(iter(json.loads((self.root / "asx/supported-games.json").read_text())["games"])),
                 "target": repro.TARGET,
                 "package": repro.PACKAGE,
                 "profile": "release",
@@ -125,6 +125,15 @@ class CandidateWorkflowTests(unittest.TestCase):
             report["cargo_lock_sha256"],
             hashlib.sha256((self.root / "Cargo.lock").read_bytes()).hexdigest(),
         )
+
+    def test_next_client_version_comes_from_registry_instead_of_a_fixed_label(self):
+        registry = self.root / "asx/supported-games.json"
+        data = json.loads(registry.read_text())
+        data["games"]["0.131.0"] = data["games"].pop("0.130.0")
+        registry.write_text(json.dumps(data))
+        _, _, builder = self.fake_builder([b"same normal dll", b"same normal dll"])
+        report = self.create(builder)
+        self.assertEqual(report["artifact"]["game_version"], "0.131.0")
 
     def test_source_inventory_hashes_build_inputs_but_not_docs_results_or_outputs(self):
         snapshot = repro.source_snapshot(self.root)

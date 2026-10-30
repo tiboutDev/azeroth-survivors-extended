@@ -11,7 +11,7 @@ spec.loader.exec_module(module)
 class Reference(unittest.TestCase):
     def setUp(self):
         self.reference = {"status": "technically-reviewed-local-reference", "builder": "xwin-msvc",
-            "artifact": {"file": "avrt.dll", "game_version": "0.125.0", "sha256": "a" * 64, "size_bytes": 10},
+            "artifact": {"file": "avrt.dll", "game_version": module.selected_client()[0], "sha256": "a" * 64, "size_bytes": 10},
             "cargo_lock_sha256": "b" * 64, "source_fingerprint": {"sha256": "c" * 64, "files": []}, "build_recipe_sha256": "d" * 64}
         self.candidate = copy.deepcopy(self.reference)
         self.candidate.update(status="pending-review", verification={"independent_fresh_builds": 2,

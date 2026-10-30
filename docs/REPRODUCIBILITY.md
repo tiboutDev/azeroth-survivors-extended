@@ -1,65 +1,36 @@
 # ASX build reproducibility
 
-The stored local reference identifies a prior 0.122.0 artifact. It remains
-unchanged as evidence of its exact inputs; it is not a current 0.125.0 reference.
-The current reference check must reject it until a new normal artifact is built
-and reviewed at an explicitly selected milestone.
-
-The [reviewed local WSL reference](../validation/asx-reproducible-build-xwin.json)
-records two fresh, isolated normal builds of the same source fingerprint. Both
-produce this 1,466,880-byte DLL:
+The [approved local WSL reference](../validation/asx-reproducible-build-xwin.json)
+identifies the 0.130.0 normal DLL (1,943,552 bytes):
 
 ```text
-45a5a48134536a6050359cbecf6f25dcac7248541625fac69ac7bf9651aa05ba
+33d8916a64f61d6e8ac2f2d1693f0b2b0cbb877a6c62d4f68695e13951f45f63
 ```
 
-This is a technical reference for the reviewed `xwin-msvc` builder and external
-configuration. It is not deployment/publication approval, cross-host proof,
-Windows-native reproduction or a live gameplay result. The isolated artifacts
-were not installed into any game or shared kit.
+Two fresh isolated builds produced identical bytes with unchanged source inputs.
+Receipts verify path remapping, disabled diagnostic hooks, PE timestamp 1 and no
+debug directory. The exact DLL passed solo and two-player normal live trials.
+The user approved this reference on 2026-10-30. The historical 0.122.0 reference
+is preserved alongside it; candidates remain separate evidence.
 
-The recorded reference identifies the reviewed input fingerprint, not future
-working trees automatically. Source changes require a new independent candidate
-and technical review; do not relabel an earlier binary as the latest source.
-Exact prior references, binaries and receipts remain in private evidence archives.
+## Reproduce
 
-## Reproduce the local recipe
-
-Prepare the normal WSL tool environment as described in
-[building](BUILDING.md). For an intentional reproducibility check:
+Prepare the WSL environment in [BUILDING.md](BUILDING.md), then run:
 
 ```sh
 python3 tools/build/asx_reproducibility.py --candidate test-results/repro-check/new-candidate.json
 python3 scripts/check_xwin_reference.py --candidate test-results/repro-check/new-candidate.json
 ```
 
-The first command performs two normal builds in separate new target directories,
-checks their receipts/PE metadata, developer paths and test markers, and rejects
-source changes between builds. It never reuses a prior candidate output or
-approves its own result. The second compares artifact, input and recipe identity
-with the technically reviewed reference; a mismatch requires investigation and
-review, not replacing the old hash automatically.
+The producer never approves its own candidate. Changes to source or recipe
+require a fresh candidate and review, not replacement of an old hash by assumption.
+The reference records source, lockfile, toolchain and external configuration
+fingerprints. This establishes same-environment reproduction, not reproduction
+on another host or with Windows-native tooling.
 
-The reference includes Rust/Cargo/cargo-xwin/Clang versions, lockfile and source
-fingerprints, normalized compiler flags and hashes of effective external build
-configuration/SDK overlays. External values and machine paths are not published.
-Those hashes identify the reviewed configuration; they do not reconstruct a
-Windows SDK installation or prove a different host will produce the same bytes.
+## Separate gates
 
-Source changes legitimately make the old reference mismatch. Preserve it as
-historical evidence and establish a newly reviewed reference at the next intended
-stabilization milestone. Documentation, audit results and ordinary test files are
-outside the artifact input inventory; committed native resources and export lists
-are included.
-
-## Separate Windows and publication gates
-
-`scripts/reproduce.ps1` retains its independent Windows-native manifest contract.
-No Windows-native compiler was available for this maintenance audit, so no such
-reference was invented. The local WSL record cannot be supplied as a substitute
-Windows hash. Native Windows reproduction remains unverified and requires its
-own reference before the manual comparison can pass.
-
-Source hygiene and historical local-information findings are separate release
-gates. A technically reproducible DLL does not establish that Git history is
-suitable to publish or that a release archive was validated in game.
+`scripts/reproduce.ps1` retains its independent Windows-native reference contract.
+No Windows-native reproducibility claim is made. Source hygiene, signed package
+verification, archive installation and publication are separate gates. This
+release preparation does not test archive installation or authorize publication.

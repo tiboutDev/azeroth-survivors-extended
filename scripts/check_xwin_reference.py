@@ -5,8 +5,12 @@ different builder and cannot be substituted here.
 """
 import argparse
 import json
+import sys
 from pathlib import Path
 
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools/dev"))
+from client_registry import selected_client
 
 def verify(reference, candidate):
     if reference.get("status") != "technically-reviewed-local-reference":
@@ -14,7 +18,7 @@ def verify(reference, candidate):
     if reference.get("builder") != "xwin-msvc" or candidate.get("builder") != "xwin-msvc":
         raise ValueError("Builder mismatch; native Windows references are separate")
     expected = reference.get("artifact", {})
-    if expected.get("file") != "avrt.dll" or expected.get("game_version") != "0.125.0":
+    if expected.get("file") != "avrt.dll" or expected.get("game_version") != selected_client()[0]:
         raise ValueError("Reference does not identify the supported ASX artifact")
     if candidate.get("status") != "pending-review":
         raise ValueError("Expected a fresh two-build candidate")

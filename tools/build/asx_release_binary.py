@@ -5,9 +5,12 @@ import json
 import os
 import shlex
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools/dev"))
+from client_registry import selected_client
 TARGET = "x86_64-pc-windows-msvc"
 PACKAGE = "azeroth-coop-native"
 ARTIFACT = "avrt.dll"
@@ -39,17 +42,16 @@ def build(target_dir: Path, receipt_path: Path | None = None) -> Path:
     # shell override must not silently replace the audited production recipe.
     env.pop("CARGO_ENCODED_RUSTFLAGS", None)
     print("Building normal ASX Windows distribution artifact", flush=True)
-    subprocess.run(
-        [
-            "cargo", "xwin", "build", "--release", "--locked", "--target", TARGET,
-            "--target-dir", str(target_dir), "-p", PACKAGE, "--jobs", "2",
-        ],
-        cwd=ROOT,
-        env=env,
-        check=True,
-    )
-
     dll = target_dir / TARGET / "release" / ARTIFACT
+    command = [
+        "cargo", "xwin", "build", "--release", "--locked", "--target", TARGET,
+        "--target-dir", str(target_dir), "-p", PACKAGE, "--jobs", "2",
+    ]
+    subprocess.run(
+        [sys.executable, str(ROOT / "tools/dev/artifact_record.py"),
+         "--kind", "normal", "--dll", str(dll), "--", *command],
+        cwd=ROOT, env=env, check=True,
+    )
     raw = dll.read_bytes()
     needles = [str(ROOT), cargo_home, sysroot, str(Path.home()), str(target_dir), "AZCOOP_TEST_"]
     for needle in filter(None, needles):
@@ -72,7 +74,7 @@ def build(target_dir: Path, receipt_path: Path | None = None) -> Path:
     receipt = {
         "schema_version": 1,
         "artifact": {"file": ARTIFACT, "sha256": digest, "size_bytes": len(raw)},
-        "game_version": "0.125.0",
+        "game_version": selected_client()[0],
         "target": TARGET,
         "package": PACKAGE,
         "profile": "release",
