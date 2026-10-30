@@ -80,12 +80,12 @@ def supported_native_games():
     if not isinstance(games,dict) or not games:
         raise ValueError("Missing reviewed native game registry")
     return games
-def validate(m):
+def validate(m,reviewed=True):
     if not isinstance(m,dict)or m.get("schema")!=1 or m.get("product")!=PRODUCT or not isinstance(m.get("version"),str) or not VERSION.fullmatch(m["version"]):raise ValueError("Not an ASX distribution manifest")
     game=m.get("game",{})
     if not isinstance(game,dict)or not isinstance(game.get("sha256"),str) or not SHA.fullmatch(game["sha256"])or not isinstance(game.get("version"),str):raise ValueError("Missing exact native game compatibility")
-    reviewed=supported_native_games().get(game["version"])
-    if not isinstance(reviewed,dict) or game["sha256"]!=reviewed.get("sha256"):
+    known=supported_native_games().get(game["version"]) if reviewed else None
+    if reviewed and (not isinstance(known,dict) or game["sha256"]!=known.get("sha256")):
         raise ValueError("ASX supports only an exact reviewed native game build")
     archives=game.get("archives")
     validate_native_archives(archives)
@@ -111,11 +111,19 @@ def inspect(root,m=None):
         for name in m["game"]["archives"]:
             if not path(root,name).is_file():raise ValueError("Required native game file missing: "+name)
     return actual
-def sources(root,m):
+def file_role(name):
+    if name in ("README-ASX.txt","ASX/Client/LICENSE"):return "documentation"
+    if name=="ASX/Defaults/channel.json":return "update-metadata"
+    if name=="start-asx.cmd":return "bootstrap"
+    return "critical"
+
+def sources(root,m,tolerant=False):
     out={}
     for name,spec in m["files"].items():
         p=path(root,name)
-        if not p.is_file()or p.stat().st_size!=spec["size"]or sha(p)!=spec["sha256"]:raise ValueError("ASX file is missing or changed: "+name)
+        if not p.is_file()or p.stat().st_size!=spec["size"]or sha(p)!=spec["sha256"]:
+            if tolerant and file_role(name)!="critical":continue
+            raise ValueError("ASX file is missing or changed: "+name+". Run --repair or --check.")
         out[name]=p.read_bytes()
     return out
 def projection(data,m):
@@ -181,22 +189,45 @@ def recover(root):
                 restore(root,d.name)
                 restored=True
     return restored
-def apply(root,m,data,manual=False,fault=lambda n:None):
-    validate(m);inspect(root,m)
-    if set(data)!=set(m["files"]):raise ValueError("ASX package inventory differs")
+def apply(root,m,data,manual=False,fault=lambda n:None,launch=False,trusted=False,approve=None,repair=False):
+    validate(m,reviewed=not trusted);inspect(root,m)
+    expected_files={n for n in m["files"] if not launch or file_role(n)=="critical"}
+    if not expected_files<=set(data) or (not launch and set(data)!=set(m["files"])):raise ValueError("ASX package inventory differs")
     for name,b in data.items():
         if len(b)!=m["files"][name]["size"]or digest(b)!=m["files"][name]["sha256"]:raise ValueError("ASX package file failed verification: "+name)
     new=projection(data,m);previous=get(root,STATE);old=installed(root)["owned"]
+    if launch:
+        new={n:b for n,b in new.items() if file_role(n)=="critical"}
+    preserved={};conflicts=[]
     for name in set(old)|set(new):
         target=path(root,owned_name(name))
         if not target.exists():continue
         current=sha(target)
         expected=digest(new[name])if name in new else None
         if name in old:
-            if current!=old[name]and not(manual and expected==current):raise ValueError("A managed ASX file was changed; preserved: "+name)
-        elif expected!=current:raise ValueError("Existing loader/addon/file belongs to another installation; preserved: "+name)
+            if current!=old[name]and not(manual and expected==current):
+                if file_role(name)!="critical":
+                    preserved[name]=current
+                    if repair and file_role(name)=="documentation":new.pop(name,None)
+                    continue
+                if approve is None:raise ValueError("A managed ASX file was changed; preserved: "+name)
+                conflicts.append(name)
+        elif expected!=current:
+            # Lost receipts can be recovered for internal ASX files with consent,
+            # never by adopting an unknown root loader or projected addon.
+            if repair and name.startswith("ASX/") and approve is not None:conflicts.append(name)
+            elif file_role(name)!="critical":
+                preserved[name]=current
+                if repair and file_role(name)=="documentation":new.pop(name,None)
+            else:raise ValueError("Existing loader/addon/file belongs to another installation; preserved: "+name)
+    if conflicts and not approve(conflicts):raise ValueError("Replacement cancelled; changed files preserved.")
+    if launch:
+        preserved.update({n:h for n,h in old.items() if file_role(n)!="critical"})
+    for name in set(conflicts)|set(preserved):
+        if name in new and path(root,name).exists() and sha(path(root,name))!=digest(new[name]):
+            atomic(path(root,"ASX/Backups/Files/"+uuid.uuid4().hex+"/"+name),path(root,name).read_bytes())
     changes=[n for n,b in new.items()if not path(root,n).exists()or sha(path(root,n))!=digest(b)]
-    removed=sorted(set(old)-set(new))
+    removed=sorted(set(old)-set(new)-set(preserved))
     if os.name=="nt"and any(n.startswith("ASX/Runtime/")for n in changes+removed):raise ValueError("This update changes the launcher runtime. Close ASX and extract the complete archive manually.")
     if not changes and not removed and previous and previous.get("version")==m["version"]:return "current"
     tx=uuid.uuid4().hex;base="ASX/Updates/Transactions/"+tx;before={}
@@ -210,7 +241,7 @@ def apply(root,m,data,manual=False,fault=lambda n:None):
     try:
         for name in changes:atomic(path(root,name),new[name]);fault(name)
         for name in removed:path(root,name).unlink(missing_ok=True);fault(name)
-        put(root,STATE,{"schema":1,"version":m["version"],"owned":{n:digest(b)for n,b in new.items()},"rollback":None if manual and (previous or {}).get("version")!=m["version"] else tx,"game":m["game"]})
+        put(root,STATE,{"schema":1,"version":m["version"],"owned":{**preserved,**{n:digest(b)for n,b in new.items()}},"rollback":((previous or {}).get("rollback") if (previous or {}).get("version")==m["version"] else (None if manual else tx)),"game":m["game"]})
         fault(STATE);journal["phase"]="committed";put(root,base+"/journal.json",journal)
     except BaseException:
         restore(root,tx);raise
@@ -220,10 +251,19 @@ def rollback(root):
     if not tx:raise ValueError("There is no previous ASX version to restore.")
     for name,h in state["owned"].items():
         p=path(root,name)
-        if p.exists()and sha(p)!=h:raise ValueError("Changed file preserved; rollback refused: "+name)
+        if p.exists()and sha(p)!=h:
+            if file_role(name)=="critical":raise ValueError("Changed file preserved; rollback refused: "+name)
+            atomic(path(root,"ASX/Backups/Files/"+uuid.uuid4().hex+"/"+name),p.read_bytes())
     j=get(root,"ASX/Updates/Transactions/"+tx+"/journal.json")
     if not j.get("state")or j["state"].get("version")==state.get("version"):raise ValueError("There is no previous ASX version to restore.")
+    for name,expected in j["before"].items():
+        p=path(root,owned_name(name))
+        if file_role(name)!="critical" and p.is_file() and sha(p)!=expected:
+            atomic(path(root,"ASX/Backups/Files/"+uuid.uuid4().hex+"/"+name),p.read_bytes())
     restore(root,tx)
+    history=get(root,"ASX/State/updates.json",{"sequence":0})
+    history["held_sequence"]=history["sequence"]
+    put(root,"ASX/State/updates.json",history)
     return "restored"
 def native_paths(root,env):
     root=Path(root).resolve()

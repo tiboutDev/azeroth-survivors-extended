@@ -36,8 +36,6 @@ unsafe fn height(entry: usize, terrain: u64, x: f32, y: f32) -> Option<f32> {
 #[derive(Clone, Copy, Debug)]
 pub struct EventMinimap {
     pub center: [f32; 2],
-    pub radius: f32,
-    pub zoom: u32,
     pub radii: [f32; 6],
     pub ping: [f32; 2],
 }
@@ -190,12 +188,6 @@ impl Adapter {
             [1] => true,
             _ => return Err("Invalid native minimap mode".into()),
         };
-        let zoom = u32::from_le_bytes(
-            m.read(script + if indoor { 0x6658 } else { 0x6654 }, 4)?
-                .try_into()
-                .map_err(|_| "Truncated minimap zoom")?,
-        )
-        .min(5) as usize;
         let radii = if indoor {
             [150., 120., 90., 60., 40., 25.]
         } else {
@@ -203,8 +195,6 @@ impl Adapter {
         };
         Ok(Some(EventMinimap {
             center: [f(m, script + 0x664c)?, f(m, script + 0x6650)?],
-            radius: radii[zoom],
-            zoom: zoom as u32,
             radii,
             ping: [f(m, script + 0x6640)?, f(m, script + 0x6644)?],
         }))

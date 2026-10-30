@@ -16,8 +16,8 @@ end
 frame:SetScript("OnUpdate",function()
  local now=GetTime();if now-previous<2 then return end;previous=now
  local clock=tonumber(AZS_RUN and AZS_RUN.t)
- if not clock or clock<35 or not AzCoopOfficialPartyReadout then return end
- local rows,built,own,active=AzCoopOfficialPartyReadout()
+ if not clock or clock<35 or not ASXOfficialPartyReadout then return end
+ local rows,built,own,active=ASXOfficialPartyReadout()
  if active~=1 or not own then return end
  local ownerSlot=nil
  for slot=1,6 do if HasAction(slot)then ownerSlot=slot;break end end

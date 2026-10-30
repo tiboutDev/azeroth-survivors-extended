@@ -916,7 +916,7 @@ mod raid_markers;
 pub mod combat_text;
 pub use combat_text::HealText;
 
-mod nameplates;
+mod ui_identity;
 
 mod treasure_goblins;
 pub use treasure_goblins::{GoblinDefinition, GoblinHandle, GoblinSnapshot};
@@ -936,6 +936,3 @@ pub use event_placement::EventMinimap;
 
 #[cfg(feature="test-hooks")]
 mod world_ui_fixture;
-
-#[cfg(feature="test-hooks")]
-pub use nameplates::take_plate_witnesses;

@@ -241,10 +241,10 @@ impl Adapter {
         f: &super::FatigueAura,
         buffs: &[(asx_gameplay::supplies::Family, f32)],
     ) -> Result<Vec<(asx_gameplay::supplies::Family, u32)>> {
-        if buffs.len() > 6
+        if buffs.len() > asx_gameplay::supplies::Family::ALL.len()
             || buffs
                 .iter()
-                .any(|(_, v)| !v.is_finite() || *v <= 0. || *v > 20.01)
+                .any(|(_, v)| !v.is_finite() || *v <= 0. || *v > asx_gameplay::supplies::BUFF_SECONDS+0.01)
         {
             return Err("Invalid consumable aura budget".into());
         }
@@ -263,7 +263,7 @@ impl Adapter {
                 free.push(index)
             } else {
                 let spell = u32::from_le_bytes(row[4..8].try_into().unwrap());
-                if (2330..2336).contains(&spell) {
+                if (2330..2337).contains(&spell) {
                     existing.insert(spell, index);
                 }
             }
@@ -531,7 +531,8 @@ mod consumable_aura_tests {
             clock: 4.,
         };
         let a = Adapter::select(crate::current::SHA256).unwrap();
-        let buffs = [(Family::Recovery, 20.), (Family::Critical, 19.)];
+        let buffs = [(Family::Recovery, 60.), (Family::Critical, 59.)];
+        assert!(a.project_consumable_auras(&m,&frame,&[(Family::Critical,60.1)]).is_err());
         let first = a.project_consumable_auras(&m, &frame, &buffs).unwrap();
         assert_eq!(first, vec![(Family::Recovery, 1), (Family::Critical, 2)]);
         let second = a.project_consumable_auras(&m, &frame, &buffs).unwrap();

@@ -1,0 +1,10 @@
+## Interface: 11200
+## Title: ASXUI
+## Notes: Native nameplate styling, world numbers, minimap markers and configurable ASX event widgets.
+## Author: ASX contributors
+## Version: 0.1.0
+## SavedVariables: ASXUIDB
+ASXUI.lua
+Minimap.lua
+Events.lua
+Buffs.lua

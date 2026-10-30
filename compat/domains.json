@@ -69,7 +69,6 @@
       "crates/asx-game/src/official_native/*ui*.rs",
       "crates/asx-game/src/official_native/*tooltip*.rs",
       "crates/asx-game/src/official_native/*icons*.rs",
-      "crates/asx-game/src/official_native/nameplates.rs",
       "crates/asx-game/src/official_native/combat_text.rs",
       "crates/asx-game/src/official_native/raid_markers.rs",
       "native-ui/*.lua",
@@ -82,6 +81,9 @@
     "distribution": [
       "asx/*.py",
       "tools/build/asx_*.py"
+    ],
+    "addon-ui": [
+      "addons/ASXUI/*"
     ]
   },
   "shared_native_schema": "All native domains depend on selected Game/Actor field maps and identity; unknown changes require full review."

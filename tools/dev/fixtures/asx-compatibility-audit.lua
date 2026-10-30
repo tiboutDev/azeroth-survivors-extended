@@ -8,8 +8,8 @@ local last=-10
 f:SetScript("OnUpdate",function()
  local now=GetTime();if now-last<2 then return end;last=now
  local rows,count,own,active={},0,nil,0
- if AzCoopOfficialPartyReadout then rows,count,own,active=AzCoopOfficialPartyReadout()end
- local raw=AZS_RUN and AZS_RUN.azcoop
+ if ASXOfficialPartyReadout then rows,count,own,active=ASXOfficialPartyReadout()end
+ local raw=AZS_RUN and AZS_RUN.asx
  local lines={"ASX compatibility audit: active="..tostring(active).." rows="..tostring(count).." own="..tostring(own),"wire="..type(raw).."/"..tostring(type(raw)=="string"and string.len(raw)or 0).." fps="..tostring(GetFramerate and math.floor(GetFramerate())or "unknown")}
  local hovered=false -- no automatic tooltip opening in the lightweight audit
  for i=1,2 do

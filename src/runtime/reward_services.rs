@@ -14,6 +14,7 @@ pub(super) trait Services {
     fn amulet_rank(&self, game: u64) -> Result<u32, String>;
     fn ring_card(&self, game: u64, output: u64) -> Result<Option<RingChoice>, String>;
     fn ring_selected(&self, game: u64, index: u64) -> Result<Option<RingChoice>, String>;
+    fn reward_choice_source(&self,_game:u64,_index:u64)->Result<Option<(u32,u64)>,String>{Ok(None)}
     fn ring_owned(&self, game: u64, ring: u8) -> Result<Option<(u32, u32)>, String>;
     fn run_source(&self, game: u64) -> Result<Option<(u32, u64)>, String>;
     fn reward_card_note(&self, output: u64, note: &str) -> Result<(), String>;
@@ -41,6 +42,7 @@ impl Services for Runtime {
     fn ring_card(&self, game: u64, output: u64) -> Result<Option<RingChoice>, String> {
         self.adapter.ring_card(&self.local, self.local.base as u64, game, output)
     }
+    fn reward_choice_source(&self,game:u64,index:u64)->Result<Option<(u32,u64)>,String>{self.adapter.reward_choice_source(&self.local,game,index)}
     fn ring_selected(&self, game: u64, index: u64) -> Result<Option<RingChoice>, String> {
         self.adapter.ring_selected(&self.local, self.local.base as u64, game, index)
     }

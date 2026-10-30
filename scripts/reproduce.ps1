@@ -15,7 +15,12 @@ try {
 } catch {
     throw 'Invalid reviewed Windows-native ASX reference.'
 }
-if ($expected.schema -ne 1 -or $expected.game_version -ne '0.125.0' -or
+$registry = Get-Content -LiteralPath (Join-Path $root 'asx/supported-games.json') -Raw | ConvertFrom-Json
+$versions = @($registry.games.PSObject.Properties.Name)
+if ($registry.schema -ne 1 -or $versions.Count -ne 1) {
+    throw 'Missing or ambiguous supported native client registry.'
+}
+if ($expected.schema -ne 1 -or $expected.game_version -ne $versions[0] -or
     $expected.artifact -ne 'avrt.dll' -or $expected.builder -ne 'windows-msvc' -or
     $expected.sha256 -cnotmatch '^[0-9a-f]{64}$') {
     throw 'Invalid reviewed Windows-native ASX reference.'

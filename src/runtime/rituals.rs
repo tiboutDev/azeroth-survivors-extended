@@ -55,7 +55,7 @@ fn tick(r:&dyn Services,game:u64)->Result<(),String>{
  let (remove,outcome,reward,spawn)={let mut state=STATE.lock().map_err(|_|"Ritual state unavailable")?;let s=state.as_mut().ok_or("Ritual state missing")?;s.clock=now;
   let ended=a.phase==Phase::Inactive||a.hp<=0.;let outcome=if ended{Outcome::Expired}else{s.ritual.as_mut().map_or(Outcome::Pending,|v|v.advance(now,a.position,a.phase==Phase::Playing))};
   let mut reward=None;
-  if outcome==Outcome::Success {let stage=s.ritual.as_ref().ok_or("Ritual identity missing")?.encounter;let category=s.draw(5);let power=s.draw(100000);let next=asx_gameplay::rituals::roll(stage,s.previous,category,power);s.previous=Some(next);reward=Some(next.1);}
+  if outcome==Outcome::Success {let stage=s.ritual.as_ref().ok_or("Ritual identity missing")?.encounter;let category=s.draw(asx_gameplay::blessings::CATEGORY_COUNT);let power=s.draw(100000);let next=asx_gameplay::rituals::roll(stage,s.previous,category,power);s.previous=Some(next);reward=Some(next.1);}
   let remove=if outcome!=Outcome::Pending{s.ritual=None;s.object.take()}else{None};
   let spawn=!ended&&a.phase==Phase::Playing&&s.ritual.is_none()&&s.next.is_some_and(|due|now>=due);
   if spawn{s.next=None;s.attempts=s.attempts.saturating_add(1);}

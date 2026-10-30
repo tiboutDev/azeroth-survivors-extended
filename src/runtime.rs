@@ -70,7 +70,6 @@ mod raid_markers;
 
 mod combat_text;
 
-mod nameplates;
 
 mod treasure_goblins;
 

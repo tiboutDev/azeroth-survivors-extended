@@ -10,7 +10,7 @@ local function setShown(widget,wanted)
     if wanted then widget:Show()else widget:Hide()end
 end
 local limit = 16
-local observer = CreateFrame("Frame", "AzCoopOfficialPartyPresentation", UIParent)
+local observer = CreateFrame("Frame", "ASXOfficialPartyPresentation", UIParent)
 local function leave(button)
     if hovered == button then GameTooltip:Hide(); hovered = nil end
 end
@@ -105,31 +105,35 @@ local function decode(wire)
                 local amount,best=integer(a[6],1,14000),integer(a[7],0,14000)
                 if result.members[id].blessing or not boss or not category or not rarity or not amount or not best then return nil end
                 result.members[id].blessing={boss=boss,category=category,rarity=rarity,amount=amount,best=best}
-            elseif a[1]=="R" and table.getn(a)==5 and result.members[id] then
+            elseif a[1]=="R" and (table.getn(a)==5 or table.getn(a)==6) and result.members[id] then
                 local event,held,inside=integer(a[3],1,4294967295),integer(a[4],0,2000),integer(a[5],0,1)
-                if result.members[id].ritual or not event or not held or not inside then return nil end
-                result.members[id].ritual={event=event,held=held,inside=inside==1}
+                local allInside;if table.getn(a)==6 then allInside=integer(a[6],0,1)end
+                if result.members[id].ritual or not event or not held or not inside or (table.getn(a)==6 and allInside==nil) then return nil end
+                result.members[id].ritual={event=event,held=held,inside=inside==1,allInside=allInside and allInside==1}
             elseif a[1]=="C" and table.getn(a)==9 and result.members[id] then
-                local family,tier,left,index=integer(a[3],0,5),integer(a[4],1,3),integer(a[5],1,20),integer(a[6],0,31)
+                local family,tier,left,index=integer(a[3],0,6),integer(a[4],1,3),integer(a[5],1,60),integer(a[6],0,31)
                 local name,icon,text=unhex(a[7],128),unhex(a[8],96),unhex(a[9],256)
                 if not family or not tier or not left or not index or not name or name=="" or string.find(name,"[%c]") or not icon or not string.find(icon,"^INV_[%w_]+$") or not text or string.find(text,"[%c]") or result.members[id].consumables[family] then return nil end
                 for _,buff in pairs(result.members[id].consumables)do if buff.index==index then return nil end end
                 result.members[id].consumables[family]={family=family,tier=tier,remaining=left,index=index,name=name,icon=icon,text=text}
-            elseif a[1]=="D" and table.getn(a)==8 and result.members[id] then
+            elseif a[1]=="D" and (table.getn(a)==8 or table.getn(a)==9) and result.members[id] then
                 local event,rarity,gold=integer(a[3],1,1e12),integer(a[4],0,3),integer(a[5],0,1000000)
+                local quality=1
+                if table.getn(a)==9 then quality=integer(a[9],1,2)end
+                if not quality then return nil end
                 local name,icon,text=unhex(a[6],128),unhex(a[7],96),unhex(a[8],256)
                 if result.members[id].discovery or not event or not rarity or not gold or not name or name=="" or string.find(name,"[%c]") or not icon or not string.find(icon,"^INV_[%w_]+$") or not text or string.find(text,"[%c]") then return nil end
-                result.members[id].discovery={event=event,rarity=rarity,gold=gold,name=name,icon=icon,text=text}
-            elseif a[1]=="A" and table.getn(a)==14 and result.members[id] then
-                local x,y,radius=integer(a[3],-1e8,1e8),integer(a[4],-1e8,1e8),integer(a[5],1,1e6)
-                local zoom=integer(a[6],0,5);local radii={}
-                for n=1,6 do local v=integer(a[6+n],1,1e9);if not v then return nil end;radii[n]=v/1000000 end
-                local qx,qy=integer(a[13],-1e8,1e8),integer(a[14],-1e8,1e8)
-                if not x or not y or not radius or not zoom or not qx or not qy or result.members[id].minimap then return nil end
-                result.members[id].minimap={x=x/100,y=y/100,radius=radius/100,zoom=zoom,radii=radii,pingX=qx/100,pingY=qy/100}
+                result.members[id].discovery={event=event,rarity=rarity,quality=quality,gold=gold,name=name,icon=icon,text=text}
+            elseif a[1]=="A" and table.getn(a)==12 and result.members[id] then
+                local x,y=integer(a[3],-1e8,1e8),integer(a[4],-1e8,1e8)
+                local radii={}
+                for n=1,6 do local v=integer(a[4+n],1,1e9);if not v then return nil end;radii[n]=v/1000000 end
+                local qx,qy=integer(a[11],-1e8,1e8),integer(a[12],-1e8,1e8)
+                if not x or not y or not qx or not qy or result.members[id].minimap then return nil end
+                result.members[id].minimap={x=x/100,y=y/100,radii=radii,pingX=qx/100,pingY=qy/100}
             elseif a[1]=="P" and table.getn(a)==7 and result.members[id] then
                 local event,kind=integer(a[3],1,1e12),integer(a[4],0,1)
-                local x,y,left=integer(a[5],-1e8,1e8),integer(a[6],-1e8,1e8),integer(a[7],0,60)
+                local x,y,left=integer(a[5],-1e8,1e8),integer(a[6],-1e8,1e8),integer(a[7],0,90)
                 if not event or not kind or not x or not y or not left or table.getn(result.members[id].markers)>=9 then return nil end
                 for _,pin in ipairs(result.members[id].markers)do if pin.event==event and pin.kind==kind then return nil end end
                 table.insert(result.members[id].markers,{event=event,kind=kind,x=x/100,y=y/100,left=left})
@@ -162,7 +166,7 @@ local function decode(wire)
     return result
 end
 local function refreshModel()
-    local wire=AZS_RUN and AZS_RUN.azcoop
+    local wire=AZS_RUN and AZS_RUN.asx
     local updated=AZS_RUN_UPDATED
     if type(wire)~="string" or type(updated)~="number" or GetTime()-updated>4 then model=nil;modelWire=nil;return end
     if wire~=modelWire then
@@ -210,7 +214,7 @@ end
 local function buildButtons(index,parent,kind,y)
     local buttons={}
     for n=1,16 do
-        local name="AzCoopOfficialParty"..index..kind..n
+        local name="ASXOfficialParty"..index..kind..n
         local button=CreateFrame("Button",name,parent,"PartyBuffButtonTemplate")
         button:SetWidth(15);button:SetHeight(15)
         button:SetPoint("TOPLEFT",parent,"TOPRIGHT",4+(n-1)*17,y)
@@ -248,7 +252,7 @@ local function construct(index, parent)
     row.items=buildButtons(index,parent,"Item",-18)
     -- Native debuffs and parent layout remain untouched.
     for n = 1, limit do
-        local name = "AzCoopOfficialParty" .. index .. "Buff" .. n
+        local name = "ASXOfficialParty" .. index .. "Buff" .. n
         local button = CreateFrame("Button", name, parent, "PartyBuffButtonTemplate")
         button:SetID(n)
         button:SetWidth(15); button:SetHeight(15)
@@ -329,8 +333,6 @@ end
 -- Native positive aura with an ASX description, plus one retained reward toast.
 local blessingLabels={"Luck","Experience","Gold","Pickup Radius","Movement Speed"}
 local blessingNames={"Luck","Wisdom","Wealth","Discovery","Swiftness"}
-local blessingRarities={"Common","Uncommon","Rare","Epic","Legendary"}
-local blessingColors={{1,1,1},{0.12,1,0},{0,0.44,0.87},{0.64,0.21,0.93},{1,0.5,0}}
 local blessingIcon="Interface\\Icons\\INV_Misc_Orb_02"
 local function isBlessingTexture(texture)
     if type(texture)~="string"then return false end
@@ -350,15 +352,17 @@ local function blessingPercent(amount)
     return string.format("%.0f%%",math.floor(amount/100+0.5))
 end
 local function blessingDescription(tooltip,b)
-    local color=blessingColors[b.rarity+1]
     tooltip:ClearLines()
-    tooltip:AddDoubleLine("Sayge's Dark Fortune of "..blessingNames[b.category+1],blessingRarities[b.rarity+1],color[1],color[2],color[3],color[1],color[2],color[3])
-    tooltip:AddLine("+"..blessingPercent(b.amount).." "..blessingLabels[b.category+1],1,1,1,true)
+    tooltip:AddDoubleLine("Sayge's Dark Fortune of "..blessingNames[b.category+1],"",1,1,1,1,1,1)
+    tooltip:AddLine("+"..blessingPercent(b.amount).." "..blessingLabels[b.category+1],0.12,1,0,true)
     if (b.category==1 or b.category==2) and model and model.ordered[2] then
-        if b.amount<b.best then tooltip:AddLine("A stronger party fortune takes precedence: +"..blessingPercent(b.best)..".",1,0.82,0,true)
+        if b.amount<b.best then
+            tooltip:AddDoubleLine("Your fortune","+"..blessingPercent(b.amount),0.75,0.75,0.75,0.75,0.75,0.75)
+            tooltip:AddDoubleLine("Active party bonus","+"..blessingPercent(b.best),1,0.82,0,0.12,1,0)
+            tooltip:AddLine("Only the strongest party fortune applies.",0.75,0.75,0.75,true)
         else tooltip:AddLine("Party bonus. Only the strongest fortune of this type applies.",1,0.82,0,true)end
-    else tooltip:AddLine("Personal bonus.",1,0.82,0,true)end
-    tooltip:AddLine("Lasts until replaced by another fortune.",0.8,0.8,0.8,true)
+    else tooltip:AddLine("Personal bonus.",0.75,0.75,0.75,true)end
+    tooltip:AddLine("Until replaced by another fortune.",1,1,1,true)
     tooltip:AddLine("Persists through death. Does not stack.",0.8,0.8,0.8,true)
     tooltip:Show()
 end
@@ -394,51 +398,6 @@ if GameTooltip and GameTooltip.SetUnitBuff and UnitBuff then
         if b and isBlessingTexture(UnitBuff(unit,index,filter))then blessingDescription(tooltip,b)end
     end
 end
-local blessingToast,blessingSeen,blessingUntil=nil,nil,0
--- Common retained discovery widget. Feature data never owns its construction.
--- Azeroth Survivors' actual native panel recipe: panel gradient, thin
--- border, 10px radius, and its heading/muted palette. Native portrait masks
--- supply rounded retained regions; no stock WoW dialog or quickslot skins.
-local asPanelTop={0.078,0.059,0.035,1}
-local asPanelBottom={0.031,0.024,0.016,1}
-local asBorder={0.427,0.333,0.145,1}
-local asGold={0.973,0.824,0.416}
-local asMuted={0.725,0.663,0.510}
-local eventRegionSerial=0
-local function panelRect(parent,w,h,x,y,top,bottom,layer)
-    local t=parent:CreateTexture(nil,layer or "BACKGROUND");t:SetWidth(w);t:SetHeight(h);t:SetPoint("CENTER",parent,"CENTER",x,y);t:SetTexture(top[1],top[2],top[3],top[4])
-    if bottom then t:SetTexture(1,1,1,1);t:SetGradientAlpha("VERTICAL",bottom[1],bottom[2],bottom[3],bottom[4],top[1],top[2],top[3],top[4])end
-end
-local function roundedPanelShape(parent,w,h,r,x,y,top,bottom,layer)
-    panelRect(parent,w-2*r,h,x,y,top,bottom,layer)
-    panelRect(parent,w,h-2*r,x,y,top,bottom,layer)
-    for _,side in ipairs({-1,1})do for _,vertical in ipairs({-1,1})do
-        eventRegionSerial=eventRegionSerial+1;local name="ASXEventCorner"..eventRegionSerial
-        local t=parent:CreateTexture(name,layer or "BACKGROUND");t:SetWidth(2*r);t:SetHeight(2*r);t:SetPoint("CENTER",parent,"CENTER",x+side*(w/2-r),y+vertical*(h/2-r))
-        SetPortraitToTexture(name,"Interface\\Buttons\\WHITE8X8")
-        local c=vertical>0 and top or (bottom or top);t:SetVertexColor(c[1],c[2],c[3],1)
-    end end
-end
-local function eventPanel(frame,w,h,r)
-    roundedPanelShape(frame,w,h,r,0,0,asBorder)
-    roundedPanelShape(frame,w-2,h-2,r-1,0,0,asPanelBottom,nil,"BORDER")
-end
-local function eventFont(parent,template,font,size)
-    local text=parent:CreateFontString(nil,"OVERLAY",template);text:SetFont("Fonts\\"..font..".TTF",size,"");return text
-end
-local function discoveryToast(name,heading,texture)
-    local toast=CreateFrame("Frame",name,UIParent)
-    toast:SetWidth(388);toast:SetHeight(106);toast:SetPoint("TOP",UIParent,"TOP",0,-140);toast:EnableMouse(false);eventPanel(toast,388,106,10)
-    local iconFrame=CreateFrame("Frame",nil,toast);iconFrame:SetWidth(52);iconFrame:SetHeight(52);iconFrame:SetPoint("LEFT",toast,"LEFT",19,0);eventPanel(iconFrame,52,52,6)
-    toast.icon=iconFrame:CreateTexture(nil,"ARTWORK");toast.icon:SetWidth(46);toast.icon:SetHeight(46);toast.icon:SetPoint("CENTER",iconFrame,"CENTER",0,0);toast.icon:SetTexture(texture)
-    toast.title=eventFont(toast,"GameFontNormal","MORPHEUS",23);toast.title:SetPoint("TOPLEFT",toast,"TOPLEFT",86,-13);toast.title:SetText(heading);toast.title:SetTextColor(asGold[1],asGold[2],asGold[3])
-    toast.reward=eventFont(toast,"GameFontHighlight","FRIZQT__",17);toast.reward:SetPoint("TOPLEFT",toast.title,"BOTTOMLEFT",0,-7);toast.reward:SetWidth(286);toast.reward:SetJustifyH("LEFT")
-    toast.note=eventFont(toast,"GameFontHighlightSmall","FRIZQT__",13);toast.note:SetPoint("TOPLEFT",toast.reward,"BOTTOMLEFT",0,-7);toast.note:SetWidth(286);toast.note:SetJustifyH("LEFT");toast.note:SetTextColor(asMuted[1],asMuted[2],asMuted[3])
-    return toast
-end
-local supplyToast,supplyScope,supplyUntil,supplyCurrent=nil,nil,0,nil
-local supplySeen,supplyQueue={},{}
-local supplyColors={{1,1,1},{0.12,1,0},{0,0.44,0.87},{0.64,0.21,0.93}}
 local nativeSupplyTexture=GetPlayerBuffTexture
 local function supplyOwner()
     return model and GetTime()-modelTime<=4 and model.members[model.own] or nil
@@ -484,7 +443,9 @@ end
 function ASXSupplyReadout()
     local own=supplyOwner();local result={}
     if own then for _,buff in pairs(own.consumables)do table.insert(result,{family=buff.family,tier=buff.tier,remaining=buff.remaining,index=buff.index,raw=nativeSupplyTexture and nativeSupplyTexture(buff.index),visible=supplyBuff(buff.index)~=nil})end end
-    return result,supplyToast and supplyToast:IsShown() or false,supplyCurrent and supplyCurrent.event
+    local shown,event=false,nil
+    if ASXUI_SupplyVisualReadout then shown,event=ASXUI_SupplyVisualReadout()end
+    return result,shown,event
 end
 -- Native buttons cache their texture on PLAYER_AURAS_CHANGED. Cosmetic
 -- metadata arrives separately, so refresh the retained native buttons once per
@@ -492,7 +453,7 @@ end
 local supplyBuffSignature=nil
 local function refreshSupplyBuffButtons()
     local own=supplyOwner();local parts={}
-    if own then for family=0,5 do local b=own.consumables[family];if b then table.insert(parts,family..":"..b.index..":"..b.icon)end end end
+    if own then for family=0,6 do local b=own.consumables[family];if b then table.insert(parts,family..":"..b.index..":"..b.icon)end end end
     local signature=table.concat(parts,"|")
     if signature==supplyBuffSignature then return end
     local previous=supplyBuffSignature;supplyBuffSignature=signature
@@ -505,180 +466,20 @@ local function refreshSupplyBuffButtons()
     end
     this=saved
 end
-local function refreshSupplyToast()
+-- Read-only presentation bridge. ASXUI owns all minimap widgets.
+-- No cache coordinates are copied here: ASXUI reads native AZS_CHESTS directly.
+function ASX_GetMinimapData()
+    refreshModel()
+    local phase=AZS_GetPhase and AZS_GetPhase()
+    if phase~="playing" and phase~="paused" and phase~="choosing" then return nil end
     local own=supplyOwner()
-    if not own then if supplyToast then supplyToast:Hide()end;return end
-    local scope=model.epoch..":"..model.own
-    if scope~=supplyScope then supplyScope=scope;supplySeen={};supplyQueue={};supplyCurrent=nil end
-    local d=own.discovery
-    if d and not supplySeen[d.event]then
-        supplySeen[d.event]=true;table.insert(supplyQueue,d)
-        -- Native discovery IDs increase; bound cosmetic history and unread notifications.
-        for id,_ in pairs(supplySeen)do if id<d.event-32 then supplySeen[id]=nil end end
-        if table.getn(supplyQueue)>16 then table.remove(supplyQueue,1)end
-    end
-    local phase=AZS_GetPhase and AZS_GetPhase()
-    if phase and phase~="playing" and phase~="dead" then if supplyCurrent then supplyUntil=GetTime()+3 end;if supplyToast then supplyToast:Hide()end;return end
-    if not supplyCurrent or GetTime()>=supplyUntil then
-        supplyCurrent=table.remove(supplyQueue,1)
-        if supplyCurrent then
-            d=supplyCurrent;supplyUntil=GetTime()+3
-            if not supplyToast then supplyToast=discoveryToast("ASXSupplyDiscoveryToast","Lost Supplies","Interface\\Icons\\"..d.icon)end
-            supplyToast:SetAlpha(1)
-            local c=supplyColors[d.rarity+1];supplyToast.icon:SetTexture("Interface\\Icons\\"..d.icon);supplyToast.reward:SetText(d.name);supplyToast.reward:SetTextColor(c[1],c[2],c[3])
-            supplyToast.note:SetText(d.gold>0 and ("Sold for "..d.gold.." gold")or(d.text.." - 20 seconds"))
-        end
-    end
-    if not supplyCurrent then if supplyToast then supplyToast:Hide()end;return end
-    supplyToast:Show()
-end
--- Retained minimap children use the exact native minimap center and view radius.
-local eventPins,hoveredEventPin={},nil
-local eventPinCount,mapSample,viewCenterX,viewCenterY,pendingNativePing=0,nil,nil,nil,false
-local localPingX,localPingY,referencePingX,referencePingY
-local function refreshEventPins()
-    local own=supplyOwner();local map=own and own.minimap;local parent=getglobal("Minimap");local used=0
-    if parent and parent:IsVisible() and map then
-        for _,data in ipairs(own.markers)do
-            if data.kind==1 or data.left>0 then
-                used=used+1;local pin=eventPins[used]
-                if not pin then
-                    pin=CreateFrame("Frame","ASXEventPin"..used,parent);pin:SetWidth(20);pin:SetHeight(20);pin:EnableMouse(true)
-                    pin.icon=pin:CreateTexture("ASXEventPin"..used.."Icon","ARTWORK");pin.icon:SetAllPoints(pin)
-                    local rim=pin:CreateTexture(nil,"OVERLAY");rim:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder");rim:SetTexCoord(0,0.625,0,0.625);rim:SetWidth(26);rim:SetHeight(26);rim:SetPoint("CENTER",pin,"CENTER",0,0)
-                    pin:SetScript("OnEnter",function()
-                        local v=this.data;if not v then return end;hoveredEventPin=this;GameTooltip:SetOwner(this,"ANCHOR_LEFT");GameTooltip:ClearLines()
-                        GameTooltip:AddLine(v.kind==0 and "Lost Supplies"or"Sayge's Trial",1,0.82,0)
-                        GameTooltip:AddLine(v.kind==1 and "Available until completed"or(v.left.."s remaining"),1,1,1)
-                        if this.outside then GameTooltip:AddLine("Beyond minimap range",0.8,0.8,0.8)end;GameTooltip:Show()
-                    end)
-                    pin:SetScript("OnLeave",function()if hoveredEventPin==this then hoveredEventPin=nil;GameTooltip:Hide()end end);eventPins[used]=pin
-                end
-                pin.data=data
-                if pin.kind~=data.kind then
-                    SetPortraitToTexture(pin.icon:GetName(),data.kind==0 and "Interface\\Icons\\INV_Crate_01"or blessingIcon);pin.kind=data.kind
-                end
-                setShown(pin,true)
-            end
-        end
-    end
-    eventPinCount=used
-    for n=used+1,table.getn(eventPins)do local pin=eventPins[n];if hoveredEventPin==pin then hoveredEventPin=nil;GameTooltip:Hide()end;pin.data=nil;setShown(pin,false)end
-end
--- Native projection at the current zoom. A supplies the native world ping
--- and all six radii; GetPingPosition supplies its live normalized projection.
--- Their inverse gives the live center without waiting for a metadata refresh.
-local function layoutEventPins()
-    if eventPinCount==0 then return end
-    local own=supplyOwner();local map=own and own.minimap;local parent=getglobal("Minimap")
-    if not map or not parent or not parent:IsVisible()then
-        for n=1,eventPinCount do setShown(eventPins[n],false)end;mapSample=nil;return
-    end
-    if mapSample~=map then
-        if referencePingX~=map.pingX or referencePingY~=map.pingY then localPingX=nil;localPingY=nil end
-        referencePingX,referencePingY=map.pingX,map.pingY;mapSample=map;pendingNativePing=false
-    end
-    local zoom=parent.GetZoom and parent:GetZoom()or map.zoom
-    if type(zoom)~="number"or zoom<0 or zoom>5 or zoom~=math.floor(zoom)then return end
-    local radius=map.radii[zoom+1];local cx,cy=map.x,map.y
-    if pendingNativePing and viewCenterX then cx,cy=viewCenterX,viewCenterY
-    elseif parent.GetPingPosition then
-        local px,py=parent:GetPingPosition()
-        if type(px)=="number"and type(py)=="number"and px==px and py==py and math.abs(px)<1e8 and math.abs(py)<1e8 then cx=(localPingX or map.pingX)-2*radius*py;cy=(localPingY or map.pingY)+2*radius*px end
-    end
-    viewCenterX,viewCenterY=cx,cy
-    local halfW,halfH=parent:GetWidth()/2,parent:GetHeight()/2
-    local edge=math.max(0,1-11/math.max(1,math.min(halfW,halfH)))
-    for n=1,eventPinCount do
-        local pin=eventPins[n];local data=pin.data
-        local x,y=-(data.y-cy)/radius,(data.x-cx)/radius
-        local length=math.sqrt(x*x+y*y);pin.outside=length>1
-        if length>edge and length>0 then x=x*edge/length;y=y*edge/length end
-        x=x*halfW;y=y*halfH
-        if pin.x~=x or pin.y~=y then pin:ClearAllPoints();pin:SetPoint("CENTER",parent,"CENTER",x,y);pin.x=x;pin.y=y end
-        local alpha=pin.outside and 0.65 or 1;if pin.alpha~=alpha then pin:SetAlpha(alpha);pin.alpha=alpha end
-        setShown(pin,true)
-    end
-end
-function ASXEventPinsReadout()
-    local result={};for n,pin in ipairs(eventPins)do if pin.asxShown then table.insert(result,{event=pin.data.event,kind=pin.data.kind,outside=pin.outside,x=pin.x,y=pin.y})end end;return result
-end
--- Retained display only: native simulation owns presence, progress and completion.
-local ritualFrame
-local function refreshRitual()
-    local own=supplyOwner();local r=own and own.ritual
-    if not r or not r.inside then if ritualFrame then ritualFrame:Hide();ritualFrame.rendered=r and r.held or 0 end;return end
-    if not ritualFrame then
-        local f=CreateFrame("Frame","ASXSaygeTrialProgress",UIParent)
-        f:SetWidth(306);f:SetHeight(66);f:SetPoint("TOP",UIParent,"TOP",0,-75);f:EnableMouse(false);eventPanel(f,306,66,10)
-        f.title=eventFont(f,"GameFontNormal","MORPHEUS",22);f.title:SetPoint("TOPLEFT",f,"TOPLEFT",15,-10);f.title:SetText("Sayge's Trial");f.title:SetTextColor(asGold[1],asGold[2],asGold[3])
-        f.note=eventFont(f,"GameFontHighlightSmall","FRIZQT__",13);f.note:SetPoint("TOPRIGHT",f,"TOPRIGHT",-15,-15);f.note:SetTextColor(asMuted[1],asMuted[2],asMuted[3])
-        local track=CreateFrame("Frame",nil,f);track:SetWidth(276);track:SetHeight(14);track:SetPoint("BOTTOM",f,"BOTTOM",0,12);eventPanel(track,276,14,4)
-        f.bar=CreateFrame("StatusBar",nil,track);f.bar:SetWidth(270);f.bar:SetHeight(8);f.bar:SetPoint("CENTER",track,"CENTER",0,0)
-        f.bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8");f.bar:SetStatusBarColor(0.82,0.61,0.23);f.bar:SetMinMaxValues(0,2000);f.rendered=r.held
-        ritualFrame=f
-    end
-    local identity=model.epoch..":"..model.own..":"..r.event
-    if ritualFrame.identity~=identity then ritualFrame.identity=identity;ritualFrame.rendered=r.held end
-    ritualFrame.target=r.held;ritualFrame.note:SetText(math.floor(r.held/100).." / 20 sec")
-    ritualFrame:Show()
-end
-function ASXRitualReadout()
-    local own=supplyOwner();local r=own and own.ritual
-    return r and r.event,r and r.held,r and r.inside,ritualFrame and ritualFrame:IsShown() or false
-end
-local function refreshBlessingToast()
-    local b=blessingFor("player")
-    if not b then
-        if not model then blessingSeen=nil end
-        if blessingToast then blessingToast:Hide()end
-        return
-    end
-    local key=model.epoch..":"..model.own..":"..b.boss
-    -- Boss XP commonly opens the native choice overlay. Announce when readable.
-    local phase=AZS_GetPhase and AZS_GetPhase()
-    if phase and phase~="playing" and phase~="dead" then
-        if blessingToast then
-            if blessingUntil>GetTime()then blessingUntil=GetTime()+6 end
-            blessingToast:Hide()
-        end
-        return
-    end
-    if key~=blessingSeen then
-        blessingSeen=key;blessingUntil=GetTime()+6
-        if not blessingToast then
-            blessingToast=discoveryToast("ASXDarkmoonBlessingToast","Sayge's Dark Fortune",blessingIcon)
-        end
-        blessingToast:SetAlpha(1)
-        local c=blessingColors[b.rarity+1]
-        blessingToast.reward:SetText("+"..blessingPercent(b.amount).." "..blessingLabels[b.category+1])
-        blessingToast.reward:SetTextColor(c[1],c[2],c[3])
-        blessingToast.note:SetText("Fortune of "..blessingNames[b.category+1])
-        blessingToast:SetAlpha(1);blessingToast:Show()
-    end
-    local remaining=blessingUntil-GetTime()
-    if remaining<=0 then blessingToast:Hide()
-    else blessingToast:Show()end
-end
-local eventAnimationTime=GetTime()
-local function updateRitualBar(now)
-    local dt=math.max(0,math.min(0.1,now-eventAnimationTime));eventAnimationTime=now
-    if ritualFrame and ritualFrame:IsShown()then
-        local value=ritualFrame.rendered or 0;local target=ritualFrame.target or value
-        value=value+(target-value)*(1-math.exp(-dt/0.08));ritualFrame.rendered=value;ritualFrame.bar:SetValue(value)
-    end
-end
--- Read-only visual diagnostics; never used for gameplay or reward authority.
-function ASXEventVisualReadout()
-    return blessingToast and blessingToast:IsShown()or false,blessingToast and blessingToast:GetAlpha()or 0,supplyToast and supplyToast:IsShown()or false,supplyToast and supplyToast:GetAlpha()or 0
+    if not own then return nil end
+    if own.minimap and not own.minimap.identity then own.minimap.identity=model.epoch..":"..model.own end
+    return own.minimap,own.markers
 end
 local function refresh()
     refreshModel()
-    refreshBlessingToast()
     refreshSupplyBuffButtons()
-    refreshSupplyToast()
-    refreshRitual()
-    refreshEventPins()
     for index = 1, 4 do
         local parent = getglobal("PartyMemberFrame" .. index)
         local row = rows[index]
@@ -712,7 +513,7 @@ local function refresh()
         end
     end
 end
--- Model/buff work stays at 4 Hz. Only retained pin geometry follows each frame;
+-- Model/buff work stays at 4 Hz. ASXUI owns minimap geometry;
 -- hover handlers still validate live owner/connection/buff identity immediately.
 observer:SetScript("OnUpdate", function()
     local now = GetTime()
@@ -720,22 +521,113 @@ observer:SetScript("OnUpdate", function()
         last=now
     refresh()
     end
-    layoutEventPins()
-    updateRitualBar(now)
 end)
--- A native user/party ping changes the projection's reference world point.
--- Rebase the observer only; never create, move or suppress a native ping.
-observer:RegisterEvent("MINIMAP_PING")
-observer:SetScript("OnEvent",function()
-    local own=supplyOwner();local map=own and own.minimap;local parent=getglobal("Minimap")
-    if map and parent and viewCenterX and type(arg2)=="number"and type(arg3)=="number"then
-        local zoom=parent.GetZoom and parent:GetZoom()or map.zoom;local radius=map.radii[zoom+1]
-        if radius then localPingX=viewCenterX+2*radius*arg3;localPingY=viewCenterY-2*radius*arg2;pendingNativePing=false;return end
+-- ASX owns all semantic strings, reward values, colors and authoritative progress.
+function ASX_GetEventPresentation()
+    refreshModel()
+    local phase=AZS_GetPhase and AZS_GetPhase()
+    if phase~="playing"and phase~="choosing"and phase~="paused"and phase~="dead"then return nil end
+    local own=supplyOwner()
+    if not own then return nil end
+    local view={epoch=model.epoch,own=model.own,owner={}}
+    local d=own.discovery
+    if d then view.owner.discovery={event=d.event,title="Lost Supplies",icon="Interface\\Icons\\"..d.icon,reward=d.name,note=d.gold>0 and ("Sold for "..d.gold.." gold")or(d.text.." - 60 seconds"),color=({{1,1,1},{0.12,1,0}})[d.quality or 1]}end
+    local b=blessingFor("player")
+    if b then view.blessing={boss=b.boss,title="Sayge's Dark Fortune",icon=blessingIcon,reward="+"..blessingPercent(b.amount).." "..blessingLabels[b.category+1],note="Fortune of "..blessingNames[b.category+1],color={0.12,1,0}}end
+    local ritual=own.ritual
+    if ritual then view.owner.ritual={event=ritual.event,held=ritual.held,inside=ritual.inside,allInside=ritual.allInside,maximum=2000,title="Sayge's Trial",note=(ritual.allInside==false and "Waiting for all players - "or "")..math.floor(ritual.held/100).." / 20 sec"}end
+    return view
+end
+-- Public ASX addon API v1. Snapshots are detached; callbacks carry no shared tables.
+local apiRevision,apiSignature,apiCache,apiInput=0,nil,nil,nil
+local apiHandlers,apiNextToken,apiNotified,apiDispatching={},0,0,false
+local eventPresentation=ASX_GetEventPresentation
+local function apiCopy(value)
+    if type(value)~="table"then return value end
+    local result={};for key,item in pairs(value)do result[key]=apiCopy(item)end;return result
+end
+local function apiEncode(value)
+    if type(value)~="table"then local encoded=type(value)=="number"and string.format("%.17g",value)or tostring(value);return type(value)..":"..string.len(encoded)..":"..encoded end
+    local keys={};for key in pairs(value)do table.insert(keys,key)end
+    table.sort(keys,function(a,b)return tostring(a)<tostring(b)end)
+    local parts={"{"};for _,key in ipairs(keys)do table.insert(parts,apiEncode(key));table.insert(parts,apiEncode(value[key]))end
+    table.insert(parts,"}");return table.concat(parts)
+end
+local function apiState()
+    refreshModel()
+    local phase=AZS_GetPhase and AZS_GetPhase()or "unknown"
+    local allowed=phase=="playing"or phase=="choosing"or phase=="paused"or phase=="dead"
+    local own=allowed and supplyOwner()or nil
+    local input=phase..":"..tostring(own~=nil)..":"..tostring(AZS_RUN_UPDATED)..":"..tostring(modelWire)
+    if apiCache and input==apiInput then return apiCache end
+    local state={api={major=1,minor=2},available=own~=nil,phase=phase,data={},texts={}}
+    if own then
+        state.session={epoch=model.epoch,recipientGUID=model.own}
+        state.data={fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
+        if state.data.sayge then state.data.sayge.maximum=2000 end
+        if state.data.discovery then local d=state.data.discovery;state.data.discovery={event=d.event,rarity=d.rarity,quality=d.quality,gold=d.gold}end
+        local consumableTexts={}
+        for family,c in pairs(state.data.consumables or{})do
+            consumableTexts[family]={name=c.name,description=c.text,icon="Interface\\Icons\\"..c.icon}
+            state.data.consumables[family]={family=c.family,tier=c.tier,remaining=c.remaining,index=c.index}
+        end
+        if state.data.minimap then state.data.minimap.identity=model.epoch..":"..model.own end
+        local formatted=eventPresentation()
+        local function textOnly(value)
+            if not value then return nil end
+            return {title=value.title,icon=value.icon,reward=value.reward,note=value.note,color=apiCopy(value.color)}
+        end
+        state.texts={supplies=textOnly(formatted.owner.discovery),fortune=textOnly(formatted.blessing),sayge=textOnly(formatted.owner.ritual),consumables=consumableTexts}
+        if state.texts.supplies then state.texts.supplies.name=own.discovery.name;state.texts.supplies.description=own.discovery.text end
+    else
+        state.reason=not allowed and "outside_run"or(type(AZS_RUN_UPDATED)=="number"and GetTime()-AZS_RUN_UPDATED>4 and "stale"or"missing_or_invalid_payload")
     end
-    pendingNativePing=true
-end)
+    local signature=apiEncode(state)
+    if signature~=apiSignature then apiRevision=apiRevision+1;apiSignature=signature end
+    state.revision=apiRevision
+    state.updatedAt=own and modelTime or nil
+    apiCache=state;apiInput=input;return state
+end
+function ASX_GetAPIVersion()return 1,2 end
+function ASX_GetState(major)
+    if major~=nil and major~=1 then return nil,"unsupported_version"end
+    return apiCopy(apiState())
+end
+function ASX_RegisterStateHandler(callback)
+    if type(callback)~="function"then return nil,"invalid_callback"end
+    local count=0
+    for _,existing in pairs(apiHandlers)do if existing==callback then return true end;count=count+1 end
+    if count>=64 then return nil,"subscriber_limit"end
+    apiNextToken=apiNextToken+1;apiHandlers[apiNextToken]=callback;return true
+end
+function ASX_UnregisterStateHandler(callback)
+    for token,existing in pairs(apiHandlers)do if existing==callback then apiHandlers[token]=nil;return true end end
+    return false
+end
+local apiPublishedRevision,apiPublishedReceived
+local function apiNotify()
+    if apiDispatching then return end
+    local state=apiState()
+    if state.revision~=apiPublishedRevision or state.updatedAt~=apiPublishedReceived then
+        ASX_STATE=apiCopy(state);ASX_STATE_UPDATED=GetTime()
+        apiPublishedRevision=state.revision;apiPublishedReceived=state.updatedAt
+    end
+    if state.revision==apiNotified then return end
+    local revision=state.revision
+    apiNotified=revision;apiDispatching=true
+    local pending={};for token,callback in pairs(apiHandlers)do table.insert(pending,{token,callback})end
+    table.sort(pending,function(a,b)return a[1]<b[1]end)
+    for _,entry in ipairs(pending)do if apiHandlers[entry[1]]==entry[2]then pcall(entry[2],apiCopy(state))end end
+    apiDispatching=false
+end
+local originalUpdate=observer:GetScript("OnUpdate")
+observer:SetScript("OnUpdate",function()originalUpdate();apiNotify()end)
+-- Private pre-v1 adapters remain compatible, but no longer return model aliases.
+function ASX_GetEventPresentation()return apiCopy(eventPresentation())end
+local oldMinimapData=ASX_GetMinimapData
+function ASX_GetMinimapData()local map,pins=oldMinimapData();return apiCopy(map),apiCopy(pins)end
 -- Read-only validation surface; never used as a simulation or membership authority.
-function AzCoopOfficialPartyReadout()
+function ASXOfficialPartyReadout()
     local result = {}
     for index, row in pairs(rows) do
         result[index] = {owner=row.owner, buffs=row.count, parent=row.parent:GetName(), attached=row.buttons[1]:GetParent()==row.parent, member=row.member, spells=row.spells, items=row.items}

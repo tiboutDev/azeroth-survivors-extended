@@ -35,6 +35,7 @@ reader/tool implementations and their exclusive tests are not part of the gate.
 | --- | --- |
 | official | Native 0.130 selection, normalized snapshots, menu ownership, native policy transactions, current source boundaries and evidence assessors |
 | official-party-ui | Retained native children, owner origins, menu projection, world-number packet decoding, marker policy, shared card boundaries and required Lua 5.1 behavior through uv/lupa |
+| asxui | Independent Lua 5.1 plate styling, native-widget restoration and standalone number-font selection |
 | asx-install | Owned native-folder installation, signatures, transactions, interrupted-client recovery, rollback and publication inventory verification |
 | gems | Fixed gem identity, selected jewelry transactions and evidence rejection |
 | enchantments | Ring identity/ranks, selected jewelry transactions and evidence rejection |
@@ -201,3 +202,76 @@ goblin. This isolates motion sampling from ordinary attacks without changing
 health or immunity. Its first taunt control is not repeated on the kill subject.
 Workflow receipts record actual harness elapsed seconds. Compare those separately
 from host-log timestamps; neither is a general performance guarantee.
+
+ASXUI migration checks include Lua 5.1 cache/custom pin coexistence, purchase
+removal, bounded malformed cache inputs, missing/stale bridge cleanup, menus,
+pauses, session-bound ping retirement, zoom/pan/resize and native-name filtering.
+The standalone API probe may inject an explicitly synthetic projection/event
+bridge for widget observations; this is not evidence of real ASX cooperative
+transport or end-to-end native view alignment. It preserves the native damage
+font and reads candidate size CVars without registering guessed controls.
+
+ASXUI event tests execute the extracted renderer against both the retained ASX
+bridge and supplied-text fixtures. They verify verbatim text, independent bounded
+preferences, visibility without replay, corrupt saved settings, stale/missing
+bridge cleanup and recipient/session changes. They do not substitute for visual
+validation or claim a migration of native goblin announcements.
+
+Public addon contract tests also cover structured/text separation, GUID precision,
+copy isolation for independent consumers, native-style globals, idempotent bounded
+handlers, callback errors/reentrancy/removal and heartbeat-only refresh suppression.
+
+## Real addon API/widget trials
+
+`tools/dev/asx_api_trial.py --api-trial 1|2 --seconds 15..300` is an explicit
+Windows private-desktop diagnostic harness. It requires a dedicated staged trial
+workspace with the current retained Lua, ASXUI, registry, dependencies and a
+verified diagnostic DLL/receipt in `diagnostic/`. Set `ASX_API_TRIAL_RUNTIME` to
+an exact reviewed **isolated** native runtime. The harness creates a new native
+copy with separate profiles, localhost-only coop and disabled updates; it never
+uses an installed player profile. At most two clients run, with normal priority,
+all inherited CPUs and kill-on-close cleanup. The normal artifact is retained.
+
+The real ASX DLL produces the API: no synthetic provider, payload substitution
+or fake feature values. Native diagnostic fixtures create actual Supplies and
+Sayge scenes/rewards. The observer checks version/globals, local-recipient IDs,
+structured/text separation, detached getters, callbacks despite a failing
+consumer, rendered text, independent scale/opacity and reversible visibility.
+Expected `ASX_API_LIVE` records deliberately use the engine's Lua error logger;
+any unrelated Lua error fails the trial. Sparse captures require visual review;
+probe counts or shown flags alone do not establish rendered layout.
+
+Solo and two-client observations cover playing/choosing transitions and feature
+progress/completion. They are diagnostic integration evidence, not a normal
+release, reconnect/recovery, long-session or every-map validation. Assessors and
+CLI safety are covered by `tests/test_asxui_trial.py`. Artifact hashes, actual
+staged UI sources, logs, snapshots, screenshots and limits stay in ignored local
+`test-results` evidence, without publishing native files or private profiles.
+
+`ASX_API_TRIAL_REPORTED_FIXES=1` additionally enables the opt-in cooperative
+regression scenario: distinct real consumables for both recipients, native stat
+base/actual probes, a five-second circle exit after accumulated Sayge progress,
+and a first goblin with ordinary scheduling (no forced goblin spawn). Review
+numerical stat deltas and held/resumed API samples as well as harness checks.
+The stat probe suppresses only Supplies during its baseline rebuild and runs
+once per recipient/buff combination; it is compiled only with `test-hooks`.
+
+The reported-fixes scenario also requires a native goblin skull assignment,
+remote visual-stop packets on actual host pause edges, and API observations of
+60-second consumables and 90-second supply pins for both clients. Parser boundary
+tests accept exactly 60/90 and reject 61/91. Expected INFO goblin taunt-immunity
+records are distinguished from actual warnings/errors or other rejections.
+
+`ASX_API_TRIAL_CATALOG_REVIEW=1` with the reported-fixes API trial disables
+participant pose writes and forced circle exits. Scenes use the group's live
+native center. Require actual host and guest personal claims, native movement
+speed deltas, trial completion, native/API position agreement and no active
+API gaps. Goblin bad-luck distribution/guarantee is tested over 10,000 seeds; a
+short single-boss live scene does not require a first goblin. An empty personal
+marker list after a claim is expected, not proof that all map pins disappeared.
+
+`ASX_API_TRIAL_WOW_VISUAL=1` enables a sparse native visual audit in the real API
+trial: measure all visible native buff buttons, require Fortune in the top-right
+first slot, and briefly display its actual GameTooltip. The payload provider is
+unchanged. Preserve native IDs/handlers in Lua order tests, including row wraps,
+restoration, anchor cycles and intervening native layout changes.

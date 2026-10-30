@@ -71,7 +71,7 @@ In co-op, completing a boss encounter grants each player an independent random f
 
 ASX instead offers **Sayge’s Trial** between bosses, never before the first. It appears throughout the playable zone with a minimap marker. Sayge appears within the rune, surrounded by candles; he is decorative and cannot be attacked. Hold its circle for 20 cumulative seconds to replace your Fortune. The trial stays at the same location until completed or the run ends. Leaving the circle suspends progress and hides the progress bar; returning resumes from the same progress. Later bosses improve its reward stage without adding more trials or resetting progress. Native pauses freeze presence accumulation. Power is rolled within a rising stage range, with a guaranteed normalized increase until its cap. Luck does not affect it. In co-op, everyone still in the run must be alive and inside for progress to advance; each player receives a personal Fortune. Disabling the optional trial restores boss Fortunes.
 
-**Five categories:** Luck, Experience, Gold, Pickup Radius and Movement Speed.
+**Three categories:** Luck, Experience and Gold.
 
 - Only **one fortune** is active per player.
 - A new fortune replaces the previous one.
@@ -84,9 +84,9 @@ ASX instead offers **Sayge’s Trial** between bosses, never before the first. I
 
 Fortunes appear as buffs, with a reward notification when received. Their bonuses use whole percentage values.
 
-In co-op, the **strongest active Experience fortune** and **strongest active Gold fortune** contribute to the group independently. They do not stack across players. Luck, Pickup Radius and Movement Speed remain personal.
+In co-op, the **strongest active Experience fortune** and **strongest active Gold fortune** contribute to the group independently. They do not stack across players. Luck remains personal.
 
-The four utility trinkets associated with Luck, Experience, Gold and Pickup Radius are excluded from ASX reward pools.
+The three economy trinkets associated with Luck, Experience and Gold remain excluded. Gnomish Universal Remote, which grants pickup range, is available again.
 
 **Feedback wanted:** the impact of each category and rarity, progression over the first five boss encounters, and the strength of shared Experience and Gold fortunes in co-op.
 
@@ -195,13 +195,13 @@ features remain enabled. The host controls event generation for the party.
 
 ## Lost Supplies
 
-Piles of cargo can appear throughout the playable zone and remain for 60 seconds.
+Piles of cargo can appear throughout the playable zone and remain for 90 seconds.
 Their minimap markers help locate them. Reach one to discover a personal reward
 without a selection screen or pause; several reserves can be present at once.
 
-Six consumable families cover cooldown recovery, critical chance, damage
-reduction, maximum health, critical damage and area of effect. Different families
-can coexist for 20 seconds. Another consumable of the same family refreshes its
+Seven consumable families cover cooldown recovery, critical chance, damage
+reduction, maximum health, critical damage, area of effect and movement speed. Different families
+can coexist for 60 seconds. Another consumable of the same family refreshes its
 duration without stacking, retaining a stronger active tier. Tiers improve after
 two and four completed boss encounters, then stop increasing in endless.
 Classic consumable names/icons accompany effects adapted to ASX.
@@ -214,3 +214,11 @@ their own effects.
 
 Set `"lost_supplies":false` in `ASX/options.json` to disable this event at the next
 launch. In co-op, each participant has a separate reward fixed when the reserve appears. Your pickup hides only your own reserve and marker; other players can still collect theirs. Materials are sold into the shared gold pool.
+
+Swiftness Potion grants +10% / +15% / +20% movement speed for 60 seconds.
+Sayge Fortunes now roll Luck, Experience or Gold; pickup range and movement
+speed are removed. Gnomish Universal Remote is available in native reward
+choices again. Supply name colors follow their Classic reference item quality,
+not the strength of the ASX effect. First-goblin chances increase after missed
+pre-final boss windows, guaranteeing a selected first opportunity before the
+final boss in a complete enabled normal run, subject to valid native placement.

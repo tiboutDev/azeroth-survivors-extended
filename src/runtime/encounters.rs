@@ -10,7 +10,7 @@ unsafe extern "system" fn event(c:&mut crate::stub::Context){
  if let Ok(Some((game,count)))=r.adapter.blessing_event_context(&r.local,[c.rbp,c.rbx,c.r13],r.local.base as u64){complete(r,game,count);}
 }
 pub(super) fn complete(r:&Runtime,game:u64,count:u64){
- super::treasure_goblins::encounter(game);super::supplies::encounter(game);super::world_events::coop::encounter(r,game,count);super::rituals::encounter(r,game,count);
+ super::treasure_goblins::encounter(game,count as u32);super::supplies::encounter(game);super::world_events::coop::encounter(r,game,count);super::rituals::encounter(r,game,count);
  if r.adapter.duplicate_loot_enabled(){super::duplicate_loot::encounter(game);}
  #[cfg(feature="test-hooks")]super::duplicate_loot::fixture_loot(r,game);
  super::blessings::encounter(game);

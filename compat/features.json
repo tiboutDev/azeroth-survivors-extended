@@ -57,7 +57,7 @@
     },
     {
       "id": "ASX-06",
-      "contract": "Complete group pause while any relevant spell/item/cache choice or manual pause remains open. Host simulation and guest prediction stop; movement is blocked after the local player has chosen too. Picking remains possible; one `picked` event cannot resume everyone.",
+      "contract": "Complete group pause while any relevant spell/item/cache choice or manual pause remains open. Host simulation and guest prediction stop; movement is blocked after the local player has chosen too. Picking remains possible; one `picked` event cannot resume everyone. Pause entry also sends native visual stop updates for remote participants, without changing authoritative actor coordinates or stopping network processing.",
       "mode": "Coop",
       "reference": "[Contract](COOP-PAUSE.md)",
       "native_domains": [
@@ -131,7 +131,7 @@
     },
     {
       "id": "ASX-13",
-      "contract": "Sayge's Dark Fortunes: one persistent replacement buff per player, Sayge-trial replacement when ASX-28 is enabled, otherwise one roll per completed native boss encounter (not per entity), fixed category/rarity weights, bonuses rounded to whole percentage points before application and display, five-encounter scaling cap and continued endless replacements. XP/Gold use the strongest current fortune per category in coop; Luck/Pickup/Speed remain personal. Native buff tooltip and reward notification.",
+      "contract": "Sayge's Dark Fortunes: one persistent replacement buff per player, Sayge-trial replacement when ASX-28 is enabled, otherwise one roll per completed native boss encounter (not per entity), fixed category/rarity weights, bonuses rounded to whole percentage points before application and display, five-encounter scaling cap and continued endless replacements. XP/Gold use the strongest current fortune per category in coop; Luck remains personal. Native buff tooltip and reward notification. Active rewards are Luck, Experience and Gold only; movement speed and pickup radius are no longer rolled. Classic-style tooltip uses a white heading and green effect, with separate own/effective party values when a stronger shared fortune applies. ASXUI moves the native Fortune button to the first visual buff slot without changing buff indices or click handlers.",
       "mode": "Both",
       "reference": "[Contract](FEATURE-RULES.md)",
       "native_domains": [
@@ -143,7 +143,7 @@
     },
     {
       "id": "ASX-14",
-      "contract": "Exclude the four native utility trinkets (`remote`, `insignia`, `eldre_thalas`, `chosen`) from ASX reward candidates. Do not delete inventory or broadly remove other equipment/items that grant secondary stats.",
+      "contract": "Exclude the three native economy trinkets (`insignia`, `eldre_thalas`, `chosen`) from ASX reward candidates. Gnomish Universal Remote (`remote`, pickup range) is available again. Do not delete inventory or broadly filter other equipment.",
       "mode": "Both",
       "reference": "[Contract](FEATURE-RULES.md)",
       "native_domains": [
@@ -163,7 +163,7 @@
     },
     {
       "id": "ASX-16",
-      "contract": "Ring enchantment kind locks on the first accepted upgrade. Five total-value tiers at native ring ranks **2/4/7/10/14**, with Minor/Lesser/unprefixed/Greater/Superior names and the five native icons. Per-ring progression, additive stats, preview/apply/improve status and no rebuild accumulation. Capped native rings may remain unenchantable or low-tier (accepted V1 limitation).",
+      "contract": "Ring enchantment kind locks on the first accepted upgrade. Five total-value tiers at native ring ranks **2/4/7/10/14**, with Minor/Lesser/unprefixed/Greater/Superior names and the five native icons. Per-ring progression, additive stats, preview/apply/improve status and no rebuild accumulation. Capped native rings may remain unenchantable or low-tier (accepted V1 limitation). Declined enchantment previews retire at the validated native reward-choice boundary, before reentrant creation of the next reward; accepted enchantment kinds remain locked. Independent random draws may legitimately repeat.",
       "mode": "Both",
       "reference": "[Contract](FEATURE-RULES.md)",
       "native_domains": [
@@ -175,7 +175,7 @@
     },
     {
       "id": "ASX-17",
-      "contract": "Enrich existing native party frames with missing positive buffs, compact spell/item builds and owner-correct tooltips. Keep native health/name/death/resurrection widgets; preserve native five-player capacity. Glyph/fortune/fatigue presentation must keep source identities and expire stale cosmetic data.",
+      "contract": "Enrich existing native party frames with missing positive buffs, compact remote spell/item builds and owner-correct tooltips through private AZS_RUN.asx, without retransmitting the recipient build. A versioned native-style ASX addon contract exposes detached local feature values separately from ASX-authored text. Keep native health/name/death/resurrection widgets; preserve native five-player capacity. Glyph/fortune/fatigue presentation must keep source identities and expire stale cosmetic data.",
       "mode": "Coop",
       "reference": "[Contract](OFFICIAL-PARTY-UI.md)",
       "native_domains": [
@@ -186,8 +186,8 @@
     },
     {
       "id": "ASX-18",
-      "contract": "Native menu/Co-op decorations: participant class icons and class/character labels. Group waiting presentation names the relevant characters and separates local choice/menu from remote waiting. Shared enchantment/gem card blocks keep native gains, one native separator, a centered two-column header (32px icon beside stacked title/status), values below and compact retained-bonus hover. Glyph gameplay remains disabled.",
-      "mode": "Menu / Coop / reward cards",
+      "contract": "Native party and reward presentation. Lobby class-icon decoration, atlas capture and roster cache invalidation are retired; native lobby rendering stays untouched. Group waiting presentation names the relevant characters and separates local choice/menu from remote waiting. Shared enchantment/gem card blocks keep native gains, one native separator, a centered two-column header (32px icon beside stacked title/status), values below and compact retained-bonus hover. Glyph gameplay remains disabled.",
+      "mode": "Coop / reward cards",
       "reference": "[Contract](OFFICIAL-PARTY-UI.md)",
       "native_domains": [
         "ui",
@@ -241,17 +241,17 @@
     },
     {
       "id": "ASX-23",
-      "contract": "Native enemy nameplates: 70% baseline size, confirmed normal-enemy names and level labels hidden; native special-rank names preserved. Missing classification retains the original native name rather than treating an unknown NPC as ordinary. Original health updates, friendly frames and visibility preferences retained.",
+      "contract": "Independent ASXUI addon styles native enemy nameplate widgets at 70% scale by default; friendly plates, native health updates and visibility controls remain native. Levels/skulls are hidden; enemy names are hidden unless a unique highlighted native target is positively identified as elite/guardian/boss/final. Missing, ambiguous and untargeted identities remain hidden. No ASX DLL plate hooks are installed.",
       "mode": "Both",
       "reference": "[Contract](NATIVE-WORLD-UI.md)",
       "native_domains": [
-        "ui"
+        "addon-ui"
       ],
       "disposition": "active"
     },
     {
       "id": "ASX-24",
-      "contract": "Outgoing enemy damage text uses one third of the fresh native size. Native direct/periodic healing amounts are attached above allies through the existing world-text queue. Unreported actual periodic HP gains are accumulated into integer cosmetic messages at most once per second per source/recipient/spell, through the native healing-log UI queue, without replaying healing or meter/proc contributions. Preserve identities and native critical animation.",
+      "contract": "Independent ASXUI preserves the native world-number font by default and optionally selects an OFL font with one-third glyph size for the native world-number renderer at client startup; this shared face also affects native world-healing text. Native ASX direct/periodic healing amounts remain attached above allies through the existing world-text queue, with identity-bound fractional accumulation and native critical animation. No native damage-size interception remains.",
       "mode": "Both",
       "reference": "[Contract](NATIVE-WORLD-UI.md)",
       "native_domains": [
@@ -262,7 +262,7 @@
     },
     {
       "id": "ASX-25",
-      "contract": "One-time host initialization of distinct random native participant markers from all eight icons. Every existing mark stays reserved, already marked players are skipped, and live rechecks preserve manual changes; late joins initialize once and new runs reset observation; no solo assignment.",
+      "contract": "One-time host initialization of distinct random native participant markers from all eight icons. Every existing mark stays reserved, already marked players are skipped, and live rechecks preserve manual changes; late joins initialize once and new runs reset observation; no solo assignment. Automatic participant assignment excludes skull, reserved for Treasure Goblins; existing manual assignments are preserved.",
       "mode": "Coop",
       "reference": "[Contract](NATIVE-WORLD-UI.md)",
       "native_domains": [
@@ -273,7 +273,7 @@
     },
     {
       "id": "ASX-26",
-      "contract": "Optional host-owned Treasure Goblins in solo/coop: native creature creation and object transport, fleeing movement, 25 simulation-second expiry, no attacks/ordinary loot, taunt immunity, rare encounter-based appearances and personal native amulet/mark rewards. A separate launcher setting and optional contact checks preserve core ASX when disabled/unavailable.",
+      "contract": "Optional host-owned Treasure Goblins in solo/coop: native creature creation and object transport, fleeing movement, 25 simulation-second expiry, no attacks/ordinary loot, taunt immunity, rare encounter-based appearances and personal native amulet/mark rewards. A separate launcher setting and optional contact checks preserve core ASX when disabled/unavailable. First-opportunity bad-luck protection uses increasing pre-final encounter odds (25%, 1/3, 50%, 100% on five-boss maps), never before the first boss; selected opportunities use a 20-40 second placement delay. Later appearances remain rare. Goblins receive the native skull marker when free, without displacing manual marks.",
       "mode": "Both",
       "reference": "[Contract](FEATURE-RULES.md)",
       "native_domains": [
@@ -285,7 +285,7 @@
     },
     {
       "id": "ASX-27",
-      "contract": "Optional Lost Supplies: native cargo pile, map-wide placement/native-masked circular minimap icons, AS-styled fully opaque discovery notifications with instant removal, multiple 60-second reserves, six simultaneous consumable families with three encounter-based tiers, same-family renewal without stacking, twelve material variants and normalized whole-gold sales. Native temporary buff slots and stat-input restoration; host-owned cooperative scenes, identity-bound personal rolls/claims, individual hiding and shared material sales.",
+      "contract": "Optional Lost Supplies: cooperative aura projection activates independently of Fortune/fatigue and retires expired slots; native cargo pile, map-wide placement/ASXUI-owned native-masked circular minimap icons and native-cache pins read from AZS_CHESTS, ASXUI discovery notifications with configurable position, scale, opacity and visibility (opaque by default), with instant removal, multiple 90-second reserves, 60-second buffs across seven simultaneous consumable families with three encounter-based tiers, same-family renewal without stacking, twelve material variants and normalized whole-gold sales. Native temporary buff slots and stat-input restoration; host-owned cooperative scenes, identity-bound personal rolls/claims, individual hiding and shared material sales. Swiftness Potion grants 10/15/20% movement speed by tier. Name color uses Classic reference item quality independently of gameplay tier, sale power and drop weights. Event notifications use Classic tooltip/quickslot assets and Friz Quadrata text with existing configurable anchors and lifetimes.",
       "mode": "Solo / Coop",
       "reference": "[Contract](FEATURE-RULES.md)",
       "native_domains": [
@@ -299,7 +299,7 @@
     },
     {
       "id": "ASX-28",
-      "contract": "Optional Sayge\u2019s Trial: native encounter trigger only between bosses, native ground rune, decorative Classic Sayge and candles, map-wide placement with flatness preference and walkable fallback/minimap pin, persistent unfinished scene with stable identity and encounter-upgraded reward, cumulative presence, bounded randomized power, automatic Fortune replacement and AS-styled progress UI visible only during native circle presence. Host-owned cooperative scene and shared progress require every active participant inside; personal Fortunes replace cooperative boss grants, with strongest XP/gold contributions preserved.",
+      "contract": "Optional Sayge’s Trial: native encounter trigger only between bosses, native ground rune, decorative Classic Sayge and candles, map-wide placement with flatness preference and walkable fallback/ASXUI minimap pin, persistent unfinished scene with stable identity and encounter-upgraded reward, cumulative presence that suspends until every active participant returns, explicit collective-wait presentation, bounded randomized power, automatic Fortune replacement and ASXUI progress UI with configurable position, scale, opacity and visibility, shown only during native circle presence. Host-owned cooperative scene and shared progress require every active participant inside; personal Fortunes replace cooperative boss grants, with strongest XP/gold contributions preserved.",
       "mode": "Solo / Coop",
       "reference": "[Contract](FEATURE-RULES.md)",
       "native_domains": [

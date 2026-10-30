@@ -1299,6 +1299,7 @@ impl SelectedAdapter {
     pub fn ring_card(self, m: &dyn Mem, b: u64, g: u64, o: u64) -> Result<Option<RingChoice>> {
         self.native.ring_card(m, b, g, o)
     }
+    pub fn reward_choice_source(self,m:&dyn Mem,game:u64,index:u64)->Result<Option<(u32,u64)>>{self.native.reward_choice_source(m,game,index)}
     pub fn ring_selected(self, m: &dyn Mem, b: u64, g: u64, i: u64) -> Result<Option<RingChoice>> {
         self.native.ring_selected(m, b, g, i)
     }
@@ -1602,6 +1603,7 @@ impl SelectedAdapter {
 }
 
 impl SelectedAdapter {
+    pub unsafe fn pause_remote_motion(self,m:&dyn Mem,base:u64,game:u64)->Result<usize>{unsafe{self.native.pause_remote_motion(m,base,game)}}
     pub fn raid_markers(self, m: &dyn Mem, server: u64) -> Result<[Option<u64>; 8]> {
         self.native.raid_markers(m, server)
     }
@@ -1620,7 +1622,7 @@ impl SelectedAdapter {
 }
 
 impl SelectedAdapter {
-    pub fn combat_text_entries(self) -> [Entry; 9] {
+    pub fn combat_text_entries(self) -> [Entry; 8] {
         self.native.combat_text_entries()
     }
     pub fn native_heal_texts(
@@ -1646,55 +1648,8 @@ impl SelectedAdapter {
 }
 
 impl SelectedAdapter {
-    pub fn nameplate_entries(self) -> [Entry; 2] {
-        self.native.nameplate_entries()
-    }
-    pub unsafe fn native_unit_rank(
-        self,
-        m: &dyn Mem,
-        base: usize,
-        script: u64,
-        guid: u64,
-    ) -> Result<Option<u32>> {
-        self.native.native_unit_rank(m, base, script, guid)
-    }
     pub fn native_ui_participants(self, m: &dyn Mem, script: u64) -> Result<Vec<u64>> {
         self.native.native_ui_participants(m, script)
-    }
-    pub unsafe fn nameplate_rows(
-        self,
-        m: &dyn Mem,
-        base: usize,
-        script: u64,
-        ptr: u64,
-        len: u64,
-    ) -> Result<Option<Vec<u8>>> {
-        self.native.nameplate_rows(m, base, script, ptr, len)
-    }
-    pub fn ui_unit_hash_entry(self) -> Entry {
-        let (rva, bytes) = crate::current::UI_UNIT_HASH;
-        Entry { rva, bytes }
-    }
-    pub fn nameplate_style(
-        self,
-        m: &dyn Mem,
-        caller: u64,
-        bp: u64,
-        script: u64,
-        index: u64,
-        style: u64,
-    ) -> Result<Option<([f32; 13], u64, [u8; 52])>> {
-        self.native
-            .nameplate_style(m, caller, bp, script, index, style)
-    }
-    pub fn restore_nameplate_style_cache(
-        self,
-        m: &dyn MutableMemory,
-        cache: u64,
-        original: &[u8; 52],
-    ) -> Result<()> {
-        self.native
-            .restore_nameplate_style_cache(m, cache, original)
     }
 }
 
@@ -1954,6 +1909,7 @@ impl SelectedAdapter {
 
 pub use crate::official_native::StatInputLoan;
 impl SelectedAdapter {
+    pub fn apply_consumable_speed(self,m:&dyn MutableMemory,game:u64,value:f32)->Result<()>{self.native.apply_consumable_speed(m,game,value)}
     pub fn consumable_stats(
         self,
         m: &dyn MutableMemory,

@@ -43,6 +43,8 @@ pub(super) trait Services {
     fn events_blessing_fixture_definition(&self, g: u64, i: u32) -> Result<u64>;
     fn events_blessing_fixture_targets(&self, g: u64) -> Result<Vec<u64>>;
     fn events_clamp_event_health(&self, game: u64, owner: u64, before: f32) -> Result<()>;
+    fn events_apply_consumable_speed(&self,game:u64,value:f32)->Result<()>;
+    fn events_movement_speed(&self,game:u64)->Result<f32>;
     fn events_consumable_stats(
         &self,
         game: u64,
@@ -248,6 +250,8 @@ impl Services for Runtime {
             before,
         )
     }
+    fn events_movement_speed(&self,game:u64)->Result<f32>{Ok(self.adapter.blessing_stat_values(&self.local,game)?[4])}
+    fn events_apply_consumable_speed(&self,game:u64,value:f32)->Result<()>{self.adapter.apply_consumable_speed(&io::Access{local:&self.local,adapter:self.adapter},game,value)}
     fn events_consumable_stats(
         &self,
         game: u64,
@@ -516,10 +520,11 @@ impl Services for Runtime {
         self.adapter.solo_run(&self.local, game)
     }
     unsafe fn events_spawn_goblin(&self, g: u64) -> Result<Option<GoblinHandle>> {
-        unsafe {
-            self.adapter
-                .spawn_goblin(&self.local, self.local.base as u64, g)
+        let result=unsafe {self.adapter.spawn_goblin(&self.local,self.local.base as u64,g)};
+        #[cfg(feature="test-hooks")]if let Ok(Some(h))=&result{
+            if let Ok(marks)=self.adapter.raid_markers(&self.local,g-16){self.log.info(&format!("goblin native skull: guid={} assigned={}",h.guid(),marks[7]==Some(h.guid())));}
         }
+        result
     }
     fn events_world_party(&self, game: u64) -> Result<Option<PartyObservation>> {
         self.adapter.world_party(&self.local, game)

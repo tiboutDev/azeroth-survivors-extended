@@ -1,6 +1,6 @@
 # Glyph status
 
-Glyph gameplay is **disabled for the supported 0.125.0 client**. Spell glyph
+Glyph gameplay is **disabled for the supported native client**. Spell glyph
 choices and spell mutations are not installed by normal ASX activation. Retained
 bonus/card/tooltip representations also serve active jewelry features and must
 not be removed merely because they were originally shared with glyphs.

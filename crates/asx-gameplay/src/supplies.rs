@@ -1,22 +1,23 @@
 //! Personal run-local supplies: deterministic catalog, claims, tiers and bounded stacking.
 use std::collections::{BTreeMap,BTreeSet};
-pub const BUFF_SECONDS:f32=20.;
-pub const SUPPLY_SECONDS:f32=60.;
+pub const BUFF_SECONDS:f32=60.;
+pub const SUPPLY_SECONDS:f32=90.;
 pub const PICKUP_RADIUS:f32=2.;
 #[derive(Clone,Copy,Debug,PartialEq,Eq,PartialOrd,Ord)]#[repr(u8)]
-pub enum Family{Recovery,Critical,Defense,Vitality,Ferocity,Reach}
-impl Family{pub const ALL:[Self;6]=[Self::Recovery,Self::Critical,Self::Defense,Self::Vitality,Self::Ferocity,Self::Reach];pub fn stat(self)->u32{[1,3,5,2,4,8][self as usize]}}
+pub enum Family{Recovery,Critical,Defense,Vitality,Ferocity,Reach,Swiftness}
+impl Family{pub const ALL:[Self;7]=[Self::Recovery,Self::Critical,Self::Defense,Self::Vitality,Self::Ferocity,Self::Reach,Self::Swiftness];pub fn stat(self)->Option<u32>{[Some(1),Some(3),Some(5),Some(2),Some(4),Some(8),None][self as usize]}}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]pub struct Consumable{pub family:Family,pub tier:u8}
 impl Consumable{
  pub fn new(family:Family,tier:u8)->Option<Self>{(1..=3).contains(&tier).then_some(Self{family,tier})}
- pub fn value(self)->f32{[[0.06,0.10,0.14],[0.04,0.07,0.10],[0.03,0.05,0.07],[0.10,0.20,0.30],[0.20,0.35,0.50],[0.15,0.25,0.35]][self.family as usize][self.tier as usize-1]}
+ pub fn value(self)->f32{[[0.06,0.10,0.14],[0.04,0.07,0.10],[0.03,0.05,0.07],[0.10,0.20,0.30],[0.20,0.35,0.50],[0.15,0.25,0.35],[0.10,0.15,0.20]][self.family as usize][self.tier as usize-1]}
  pub fn name(self)->&'static str{[
   ["Elixir of Wisdom","Elixir of Greater Intellect","Flask of Distilled Wisdom"],
   ["Elixir of Lesser Agility","Elixir of Greater Agility","Elixir of the Mongoose"],
   ["Elixir of Defense","Elixir of Greater Defense","Elixir of Superior Defense"],
   ["Elixir of Fortitude","Elixir of Brute Force","Flask of the Titans"],
   ["Minor Wizard Oil","Wizard Oil","Brilliant Wizard Oil"],
-  ["Elixir of Giant Growth","Elixir of Giant Growth","Elixir of Giant Growth"]
+  ["Elixir of Giant Growth","Elixir of Giant Growth","Elixir of Giant Growth"],
+  ["Swiftness Potion","Swiftness Potion","Swiftness Potion"]
  ][self.family as usize][self.tier as usize-1]}
  pub fn icon(self)->&'static str{[
   ["INV_Potion_06","INV_Potion_10","INV_Potion_97"],
@@ -24,15 +25,16 @@ impl Consumable{
   ["INV_Potion_64","INV_Potion_65","INV_Potion_66"],
   ["INV_Potion_43","INV_Potion_40","INV_Potion_62"],
   ["INV_Potion_15","INV_Potion_23","INV_Potion_105"],
-  ["INV_Potion_10","INV_Potion_10","INV_Potion_10"]
+  ["INV_Potion_10","INV_Potion_10","INV_Potion_10"],
+  ["INV_Potion_95","INV_Potion_95","INV_Potion_95"]
  ][self.family as usize][self.tier as usize-1]}
- pub fn text(self)->String{format!("+{}% {}",(self.value()*100.).round()as u32,["cooldown recovery","critical strike chance","damage reduction","maximum health","critical strike damage","area of effect"][self.family as usize])}
+ pub fn text(self)->String{format!("+{}% {}",(self.value()*100.).round()as u32,["cooldown recovery","critical strike chance","damage reduction","maximum health","critical strike damage","area of effect","movement speed"][self.family as usize])}
 }
 pub fn tier(bosses:u32)->u8{match bosses{0..=1=>1,2..=3=>2,_=>3}}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]pub enum Reward{Buff(Consumable),Material{rarity:u8,variant:u8}}
 impl Reward{
  /// 90% consumables; remaining 10% materials with conditional 60/30/9/1 rarities.
- pub fn roll(bosses:u32,kind:u32,rarity:u32,variant:u32)->Self{if kind%100<90{Self::Buff(Consumable{family:Family::ALL[(variant%6)as usize],tier:tier(bosses)})}else{Self::Material{rarity:match rarity%100{0..=59=>0,60..=89=>1,90..=98=>2,_=>3},variant:(variant%3)as u8}}}
+ pub fn roll(bosses:u32,kind:u32,rarity:u32,variant:u32)->Self{if kind%100<90{Self::Buff(Consumable{family:Family::ALL[(variant%Family::ALL.len()as u32)as usize],tier:tier(bosses)})}else{Self::Material{rarity:match rarity%100{0..=59=>0,60..=89=>1,90..=98=>2,_=>3},variant:(variant%3)as u8}}}
  pub fn name(self)->&'static str{match self{Self::Buff(c)=>c.name(),Self::Material{rarity,variant}=>[
  ["Bundle of Peacebloom","Copper Ore Shipment","Linen Cloth Bundle"],
  ["Bundle of Goldthorn","Mithril Ore Shipment","Mageweave Cloth Bundle"],
@@ -43,6 +45,8 @@ impl Reward{
  ["INV_Misc_Herb_14","INV_Ore_Mithril_02","INV_Fabric_Mageweave_01"],
  ["INV_Misc_Herb_DreamFoil","INV_Ore_Thorium_02","INV_Fabric_PurpleFire_01"],
  ["INV_Misc_Herb_BlackLotus","INV_Misc_Gem_Crystal_02","INV_Ingot_03"]][rarity as usize][variant as usize]}}
+ /// Classic reference item quality, independent of ASX reward tier/power.
+ pub fn quality(self)->u8{match self{Self::Buff(_)=>1,Self::Material{rarity:3,..}=>2,Self::Material{..}=>1}}
  pub fn rarity(self)->u8{match self{Self::Buff(c)=>c.tier-1,Self::Material{rarity,..}=>rarity}}
  pub fn text(self)->String{match self{Self::Buff(c)=>c.text(),_=>"Automatically sold for gold".into()}}
  pub fn nominal_gold(self,bosses:u32)->u32{match self{Self::Buff(_)=>0,Self::Material{rarity,..}=>{
@@ -85,10 +89,16 @@ impl Buffs{
 #[cfg(test)]mod tests{
  use super::*;
  fn buff(f:Family,t:u8)->Reward{Reward::Buff(Consumable::new(f,t).unwrap())}
+ #[test]fn speed_and_cosmetic_quality_are_independent_of_gameplay_tiers(){
+  for tier in 1..=3{let c=Consumable::new(Family::Swiftness,tier).unwrap();assert_eq!(c.name(),"Swiftness Potion");assert_eq!(c.value(),[0.10,0.15,0.20][tier as usize-1]);assert_eq!(Reward::Buff(c).quality(),1);assert_eq!(c.family.stat(),None);}
+  let mut families=BTreeSet::new();for draw in 0..700{if let Reward::Buff(c)=Reward::roll(0,0,0,draw){families.insert(c.family);}}assert_eq!(families.len(),7);
+  for family in Family::ALL{for tier in 1..=3{assert_eq!(Reward::Buff(Consumable::new(family,tier).unwrap()).quality(),1);}}
+  for rarity in 0..4{for variant in 0..3{assert_eq!(Reward::Material{rarity,variant}.quality(),if rarity==3{2}else{1});}}
+ }
  #[test]fn personal_rolls_cannot_be_farmed_by_rejoining_or_reveal_a_shared_reward(){let mut s=Supply::new(1,0.,[0.;3],&[(0,10),(1,20)],buff(Family::Critical,1),0).unwrap();assert!(s.personal_rewards(&[((0,10),buff(Family::Critical,1)),((1,20),buff(Family::Defense,2))],0));assert_eq!(s.claim(1.,(0,10),[0.;3],true).unwrap().reward,buff(Family::Critical,1));assert!(!s.available((0,10)));assert!(s.available((1,20)));s.retain(&[(0,10)]);assert!(s.complete());assert!(s.claim(2.,(1,21),[0.;3],true).is_none());}
  #[test]fn claims_are_fixed_at_spawn_and_bound_to_identity(){let mut s=Supply::new(1,0.,[0.;3],&[(0,10),(1,20)],buff(Family::Critical,1),0).unwrap();assert!(s.claim(1.,(0,10),[0.;3],true).is_some());assert!(s.claim(2.,(0,10),[0.;3],true).is_none());assert!(s.claim(2.,(1,21),[0.;3],true).is_none());assert!(s.claim(2.,(1,20),[0.;3],true).is_some());assert!(s.complete());}
- #[test]fn sixty_second_deadline_death_and_distance_do_not_consume_claim(){let mut s=Supply::new(1,0.,[0.;3],&[(0,10)],buff(Family::Recovery,1),0).unwrap();assert!(s.claim(1.,(0,10),[3.,0.,0.],true).is_none());assert!(s.claim(1.,(0,10),[0.;3],false).is_none());assert!(s.claim(60.,(0,10),[0.;3],true).is_none());assert!(s.claim(59.9,(0,10),[0.;3],true).is_some());}
- #[test]fn families_coexist_without_repeated_stacking_or_downgrades(){let mut b=Buffs::default();b.accept(0.,buff(Family::Critical,3));b.accept(1.,buff(Family::Defense,2));b.accept(2.,buff(Family::Critical,1));assert_eq!(b.values().len(),2);assert_eq!(b.0[&Family::Critical].consumable.tier,3);assert_eq!(b.0[&Family::Critical].expires,22.);assert!(!b.expire(2.));assert!(b.expire(21.));assert_eq!(b.values().len(),1);assert!(b.expire(22.));assert!(b.is_empty());}
+ #[test]fn ninety_second_deadline_death_and_distance_do_not_consume_claim(){let mut s=Supply::new(1,0.,[0.;3],&[(0,10)],buff(Family::Recovery,1),0).unwrap();assert!(s.claim(1.,(0,10),[3.,0.,0.],true).is_none());assert!(s.claim(1.,(0,10),[0.;3],false).is_none());assert!(s.claim(90.,(0,10),[0.;3],true).is_none());assert!(s.claim(89.9,(0,10),[0.;3],true).is_some());}
+ #[test]fn families_coexist_without_repeated_stacking_or_downgrades(){let mut b=Buffs::default();b.accept(0.,buff(Family::Critical,3));b.accept(1.,buff(Family::Defense,2));b.accept(2.,buff(Family::Critical,1));assert_eq!(b.values().len(),2);assert_eq!(b.0[&Family::Critical].consumable.tier,3);assert_eq!(b.0[&Family::Critical].expires,62.);assert!(!b.expire(2.));assert!(b.expire(61.));assert_eq!(b.values().len(),1);assert!(b.expire(62.));assert!(b.is_empty());}
  #[test]fn tier_boundaries_and_endless_cap(){assert_eq!((tier(0),tier(1),tier(2),tier(3),tier(4),tier(999)),(1,1,2,2,3,3));}
  #[test]fn faster_supplies_preserve_expected_material_gold_budget(){for boss in 0..=5{let sum:f64=(0..100).map(|r|Reward::roll(boss,99,r,0).nominal_gold(boss)as f64).sum();let new_per_min=0.75*0.10*sum/100.;let old_per_min=0.2*0.25*(10*(1+boss))as f64;assert!((new_per_min-old_per_min).abs()<0.04);}}
 }

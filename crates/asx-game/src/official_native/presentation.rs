@@ -121,10 +121,10 @@ impl Adapter {
             return Err("Invalid native addon extent".into());
         }
         let mut bytes = mem.read(ptr, len as usize)?;
-        if bytes.len() != len as usize || bytes.windows(8).any(|s| s == b";azcoop=") {
+        if bytes.len() != len as usize || bytes.windows(b";asx=".len()).any(|s| s == b";asx=") {
             return Err("Invalid original addon fields".into());
         }
-        bytes.extend_from_slice(b";azcoop=");
+        bytes.extend_from_slice(b";asx=");
         bytes.extend_from_slice(wire.as_bytes());
         self.replace_owned_text(mem, header, &bytes)
     }

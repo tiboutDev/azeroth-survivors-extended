@@ -7,7 +7,7 @@ crate::context_stub_rw!(periodic_entry,1,heal,PERIODIC);
 unsafe extern "system" fn heal(c:&mut crate::stub::Context){
  let Some(r)=RUNTIME.get().filter(|r|r.rules)else{return};
  // Copy the already retained native run identities; never borrow state over calls.
- let players=nameplates::participants(r);
+ let players=super::ui_context::participants(r);
  #[cfg(feature="test-hooks")]if std::env::var("ASX_TEST_UI").as_deref()==Ok("1"){static N:AtomicUsize=AtomicUsize::new(0);if N.fetch_add(1,Ordering::Relaxed)<8{r.log.info(&format!("Native healing-log callback: periodic={} players={players:?}",c.id==1));}}
  if players.is_empty()||players.len()>asx_game::official::NATIVE_PLAYERS{return}
  let periodic=c.id==1;
@@ -32,11 +32,10 @@ unsafe extern "system" fn heal(c:&mut crate::stub::Context){
 }
 pub(super)fn hooks(adapter:Adapter)->Vec<crate::install::HookSpec>{
  let entries=adapter.combat_text_entries();
- vec![crate::install::HookSpec{name:"native-inline-periodic-text",target:local_base()+entries[8].rva as usize,detour:inline_periodic_entry as *const()as usize,trampoline:&INLINE_PERIODIC},
- crate::install::HookSpec{name:"native-fractional-heal-text",target:local_base()+entries[5].rva as usize,detour:fractional_entry as *const()as usize,trampoline:&FRACTIONAL},
- crate::install::HookSpec{name:"native-damage-text-size",target:local_base()+entries[0].rva as usize,detour:asx_game::official_native::combat_text::damage_entry as *const() as usize,trampoline:&asx_game::official_native::combat_text::DAMAGE_NEXT},
- crate::install::HookSpec{name:"native-direct-heal-text",target:local_base()+entries[1].rva as usize,detour:direct_entry as *const() as usize,trampoline:&DIRECT},
- crate::install::HookSpec{name:"native-periodic-heal-text",target:local_base()+entries[2].rva as usize,detour:periodic_entry as *const() as usize,trampoline:&PERIODIC}]
+ vec![crate::install::HookSpec{name:"native-inline-periodic-text",target:local_base()+entries[7].rva as usize,detour:inline_periodic_entry as *const()as usize,trampoline:&INLINE_PERIODIC},
+ crate::install::HookSpec{name:"native-fractional-heal-text",target:local_base()+entries[4].rva as usize,detour:fractional_entry as *const()as usize,trampoline:&FRACTIONAL},
+ crate::install::HookSpec{name:"native-direct-heal-text",target:local_base()+entries[0].rva as usize,detour:direct_entry as *const() as usize,trampoline:&DIRECT},
+ crate::install::HookSpec{name:"native-periodic-heal-text",target:local_base()+entries[1].rva as usize,detour:periodic_entry as *const() as usize,trampoline:&PERIODIC}]
 }
 
 static INLINE_PERIODIC:AtomicUsize=AtomicUsize::new(0);

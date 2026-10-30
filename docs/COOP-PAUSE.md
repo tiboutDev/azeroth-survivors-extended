@@ -1,4 +1,4 @@
-# Cooperative pause — 0.125.0
+# Cooperative pause
 
 ASX retains the native Paused menu, buttons and waiting panel. It does not add a
 parallel menu, network listener or desktop/CPU control mechanism.
@@ -27,3 +27,12 @@ lives in `asx-gameplay::official::MenuOwners`.
 Portable policy, selected-memory fixtures and Windows stand-ins cover distinct
 risks. Read [testing](TESTING.md) for the current check scope; synthetic callback
 evidence does not establish every visible menu flow in a running game.
+
+At entry to a host-owned group pause, ASX emits the existing native
+`SMSG_MONSTER_MOVE` stop representation to each participant for the other current
+actors. This cancels the client's outstanding remote rendering spline, which
+would otherwise keep moving while authoritative simulation time is stopped.
+The local actor receives no stop for itself. Actor coordinates, simulation,
+network processing and native resume authority remain unchanged; ordinary native
+movement updates resume the display. The sender's selected bytes and current
+slot/GUID identities are checked. No new hook or transport is added.

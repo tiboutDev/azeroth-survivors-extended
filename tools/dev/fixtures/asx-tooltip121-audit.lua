@@ -12,8 +12,8 @@ end
 f:SetScript("OnUpdate",function()
  local now=GetTime();if now-last<2 then return end;last=now
  if now>180 then f:SetScript("OnUpdate",nil);return end
- if not AZS_RUN or (tonumber(AZS_RUN.t)or 0)<12 or not AzCoopOfficialPartyReadout then return end
- local rows,built,own,active=AzCoopOfficialPartyReadout();if active~=1 then return end
+ if not AZS_RUN or (tonumber(AZS_RUN.t)or 0)<12 or not ASXOfficialPartyReadout then return end
+ local rows,built,own,active=ASXOfficialPartyReadout();if active~=1 then return end
  local row,button
  for _,candidate in pairs(rows)do
   if candidate.member then

@@ -9,7 +9,7 @@ pub fn minimap(r:&Runtime,owner:u64)->Option<asx_game::official::EventMinimap>{
  let value=r.adapter.event_minimap(&r.local,SCRIPT.load(Ordering::Acquire),owner);
  #[cfg(feature="test-hooks")]if std::env::var("ASX_TEST_EVENT_POLISH").as_deref()==Ok("1"){
   static SEEN:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
-  if let Ok(Some(map))=&value{if !SEEN.swap(true,Ordering::Relaxed){r.log.info(&format!("events native minimap: center={:?} radius={}",map.center,map.radius));}}
+  if let Ok(Some(map))=&value{if !SEEN.swap(true,Ordering::Relaxed){r.log.info(&format!("events native minimap: center={:?} radii={:?}",map.center,map.radii));}}
   static ERRORS:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
   if let Err(e)=&value{if ERRORS.fetch_add(1,Ordering::Relaxed)<3{r.log.warn(&format!("Event minimap read rejected: {e}"));}}
  }

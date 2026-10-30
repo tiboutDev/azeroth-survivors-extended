@@ -75,3 +75,19 @@ fn amulet_memory()->Memory{
  unsafe{a.kept_tooltip_target(&m,base,0xc0000).unwrap()};
  assert_eq!(ARGS.with(|v|v.borrow().clone()),[0xc1000,8,24,1,1]);assert_eq!(m.read(0xc1010,8).unwrap(),32u64.to_le_bytes());assert_eq!(&m.read(0xc3008,24).unwrap()[8..16],&42u64.to_le_bytes());assert_eq!(m.read(0xc2000,16).unwrap(),vec![0xaa;16]);MEMORY.with(|v|v.set(std::ptr::null()));
 }
+
+#[test]fn valid_reward_selection_retires_declined_ring_proposals_even_when_picking_another_card(){
+ let m=memory();let a=adapter();assert_eq!(a.reward_choice_source(&m,GAME,0).unwrap(),Some((0,111)));
+ m.write(0x40078,&1u64.to_le_bytes()).unwrap();assert!(a.ring_selected(&m,BASE,GAME,0).unwrap().is_none());assert_eq!(a.reward_choice_source(&m,GAME,0).unwrap(),Some((0,111)));
+ assert!(a.reward_choice_source(&m,GAME,1).unwrap().is_none());m.write(GAME+OFFER_LEN,&17u64.to_le_bytes()).unwrap();assert!(a.reward_choice_source(&m,GAME,0).unwrap().is_none());
+}
+
+#[test]fn consumable_speed_uses_selected_native_movement_output_and_scope(){
+ let m=memory();let a=adapter();let before=a.blessing_stat_values(&m,GAME).unwrap();a.apply_consumable_speed(&m,GAME,0.15).unwrap();let after=a.blessing_stat_values(&m,GAME).unwrap();
+ assert_eq!(after[4],before[4]+0.15);assert_eq!(&after[..4],&before[..4]);assert!(a.apply_consumable_speed(&m,GAME,f32::NAN).is_err());assert!(a.apply_consumable_speed(&m,GAME,0.21).is_err());
+}
+#[test]fn native_pickup_trinket_is_restored_but_economy_trinkets_remain_filtered(){
+ let m=memory();let a=adapter();let frame=0x90000;let mut bytes=vec![0;v::BLESSING_POOL_FRAME as usize+8];bytes[v::BLESSING_POOL_FRAME as usize..].copy_from_slice(&GAME.to_le_bytes());m.data.borrow_mut().insert(frame,bytes);
+ assert_eq!(a.blessing_pool_index(&m,frame,15*72).unwrap(),15*72);
+ for index in 16..19{assert_eq!(a.blessing_pool_index(&m,frame,index*72).unwrap(),19*72);}
+}

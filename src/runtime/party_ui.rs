@@ -8,8 +8,6 @@ struct State {
     clock: f32,
     ids: Vec<(u32, u64)>,
     names: BTreeMap<u64, String>,
-    lobby: Vec<(u64, u8)>,
-    joined: bool,
     builds: BTreeMap<u64, PartyBuild>,
     encoded: BTreeMap<u64, (String, String)>,
 }
@@ -45,6 +43,8 @@ fn wire_extra(state: &mut State, own: u64, heartbeat: u64, extra:&str) -> Option
         }
         let fatigue = fatigue::view(*slot, *id);
         text.push_str(&format!("F|{id}|{}|{}\n", fatigue.stacks, fatigue.remaining.ceil() as u32));
+        // Keep local metadata, but send builds only to other viewers.
+        if *id == own { continue; }
         for (kind, icons) in [("S", &build.spells), ("I", &build.items)] {
             for icon in icons {
                 text.push_str(&format!(
@@ -77,21 +77,10 @@ fn wire_extra(state: &mut State, own: u64, heartbeat: u64, extra:&str) -> Option
     Some(packed)
 }
 pub fn roster(value: &serde_json::Value) {
-    if value["type"] == "coop" {
-        if let Ok(mut state) = STATE.lock() {
-            let s = state.get_or_insert_with(State::default);
-            s.joined = value["state"] == "joined";
-            if !s.joined {
-                s.lobby.clear();
-            }
-        }
-        return;
-    }
     if value["type"] != "party" {
         return;
     }
     let mut names = BTreeMap::new();
-    let mut lobby = vec![];
     let valid = value["members"]
         .as_array()
         .filter(|a| a.len() <= asx_game::official::NATIVE_PLAYERS)
@@ -106,12 +95,6 @@ pub fn roster(value: &serde_json::Value) {
                 });
                 match (id, name) {
                     (Some(id), Some(name)) => {
-                        if let Some(class) = row["classId"]
-                            .as_u64()
-                            .filter(|id| [1, 2, 3, 4, 5, 7, 8, 9, 11].contains(id))
-                        {
-                            lobby.push((id, class as u8));
-                        }
                         names.insert(id, name.into()).is_none()
                     }
                     _ => false,
@@ -121,7 +104,6 @@ pub fn roster(value: &serde_json::Value) {
     if let Ok(mut state) = STATE.lock() {
         let s = state.get_or_insert_with(State::default);
         s.names = if valid { names } else { BTreeMap::new() };
-        s.lobby = if valid { lobby } else { vec![] };
     }
 }
 /// Resolve pause participants by the current native actor GUID, never by row
@@ -136,13 +118,6 @@ pub fn pause_view(
         let guid = identities.iter().find(|(id, _)| *id == slot)?.1;
         state.as_ref()?.as_ref()?.names.get(&guid).cloned()
     })
-}
-pub fn lobby_classes() -> Vec<(u64, u8)> {
-    STATE
-        .lock()
-        .ok()
-        .and_then(|s| s.as_ref().filter(|s| s.joined).map(|s| s.lobby.clone()))
-        .unwrap_or_default()
 }
 pub fn reset() {
     if let Ok(mut state) = STATE.lock() {
@@ -233,11 +208,11 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
                     }).unwrap_or(0);
                     let mut text=format!("1|{epoch}|{}|{heartbeat}\nM|{}|0|{}\n",actor.guid,actor.guid,hex(b"Player"));
                     if let Some(b)=blessings::view(0,actor.guid){text.push_str(&format!("B|{}|{}|{}|{}|{}|{}\n",actor.guid,b.boss,b.category,b.rarity,b.amount,b.amount));}
-                    if let Some((event,held,inside))=super::rituals::view(game as u64,actor.guid){text.push_str(&format!("R|{}|{event}|{held}|{}\n",actor.guid,u8::from(inside)));}
+                    if let Some((event,held,inside))=super::rituals::view(game as u64,actor.guid){text.push_str(&format!("R|{}|{event}|{held}|{}|{}\n",actor.guid,u8::from(inside),u8::from(inside)));}
                     for(c,remaining,index)in super::supplies::buffs(game as u64,actor.guid){if index<32&&remaining>0.{text.push_str(&format!("C|{}|{}|{}|{}|{index}|{}|{}|{}\n",actor.guid,c.family as u8,c.tier,remaining.ceil()as u32,hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}
-                    if let Some(d)=super::supplies::discovery(game as u64,actor.guid){text.push_str(&format!("D|{}|{}|{}|{}|{}|{}|{}\n",actor.guid,d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.reward.text().as_bytes())));}
+                    if let Some(d)=super::supplies::discovery(game as u64,actor.guid){text.push_str(&format!("D|{}|{}|{}|{}|{}|{}|{}|{}\n",actor.guid,d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.reward.text().as_bytes()),d.reward.quality()));}
                     if let Some(map)=super::ui_context::minimap(r,actor.guid){
-                        text.push_str(&format!("A|{}|{}|{}|{}|{}",actor.guid,(map.center[0]*100.).round()as i32,(map.center[1]*100.).round()as i32,(map.radius*100.).round()as u32,map.zoom));
+                        text.push_str(&format!("A|{}|{}|{}",actor.guid,(map.center[0]*100.).round()as i32,(map.center[1]*100.).round()as i32));
                         for radius in map.radii{text.push_str(&format!("|{}",(f64::from(radius)*1_000_000.).round()as u64));}
                         text.push_str(&format!("|{}|{}\n",(map.ping[0]*100.).round()as i32,(map.ping[1]*100.).round()as i32));
                         for marker in super::world_events::markers(game as u64){text.push_str(&format!("P|{}|{}|{}|{}|{}|{}\n",actor.guid,marker.id,marker.kind,(marker.position[0]*100.).round()as i32,(marker.position[1]*100.).round()as i32,marker.remaining.ceil()as u32));}
@@ -280,12 +255,12 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
 fn event_text(r:&Runtime,game:u64,slot:u32)->String{
  let Some(party)=r.extension_party()else{return String::new()};
  let Some(actor)=party.actors.iter().find(|a|a.slot==slot)else{return String::new()};let owner=actor.guid;let mut text=String::new();
- if let Some((event,held,inside))=super::world_events::coop::view(game,owner){text.push_str(&format!("R|{owner}|{event}|{held}|{}\n",u8::from(inside)));}
+ if let Some((event,held,inside))=super::world_events::coop::view(game,owner){text.push_str(&format!("R|{owner}|{event}|{held}|{}|{}\n",u8::from(inside),u8::from(super::world_events::coop::all_inside(game))));}
  for(c,remaining,index)in super::supplies::buffs(game,owner){if index<32&&remaining>0.{text.push_str(&format!("C|{owner}|{}|{}|{}|{index}|{}|{}|{}\n",c.family as u8,c.tier,remaining.ceil()as u32,hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}
- if let Some(d)=super::supplies::discovery(game,owner){text.push_str(&format!("D|{owner}|{}|{}|{}|{}|{}|{}\n",d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.reward.text().as_bytes())));}
+ if let Some(d)=super::supplies::discovery(game,owner){text.push_str(&format!("D|{owner}|{}|{}|{}|{}|{}|{}|{}\n",d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.reward.text().as_bytes()),d.reward.quality()));}
  if let Some(mut map)=party.actors.iter().find_map(|a|super::ui_context::minimap(r,a.guid)){
   if slot!=0{map.center=[actor.position[0],actor.position[1]];map.ping=[0.,0.];}
-  text.push_str(&format!("A|{owner}|{}|{}|{}|{}",(map.center[0]*100.).round()as i32,(map.center[1]*100.).round()as i32,(map.radius*100.).round()as u32,map.zoom));
+  text.push_str(&format!("A|{owner}|{}|{}",(map.center[0]*100.).round()as i32,(map.center[1]*100.).round()as i32));
   for radius in map.radii{text.push_str(&format!("|{}",(f64::from(radius)*1_000_000.).round()as u64));}text.push_str(&format!("|{}|{}\n",(map.ping[0]*100.).round()as i32,(map.ping[1]*100.).round()as i32));
   for marker in super::world_events::coop::markers(game,owner){text.push_str(&format!("P|{owner}|{}|{}|{}|{}|{}\n",marker.id,marker.kind,(marker.position[0]*100.).round()as i32,(marker.position[1]*100.).round()as i32,marker.remaining.ceil()as u32));}
  }text
@@ -340,6 +315,34 @@ mod tests {
                 as usize,
             0x10000
         );
+    }
+    #[test]
+    fn recipients_get_remote_builds_local_metadata_and_fresh_heartbeats() {
+        use asx_game::official::PartyIcon;
+        let mut state = State { epoch: 7, ids: vec![(0, 11), (1, 22)], ..Default::default() };
+        for id in [11, 22] {
+            state.names.insert(id, format!("Owner {id}"));
+            let icon = PartyIcon { id: 42, rank: 1, name: "Spell".into(), icon: "Spell_Test".into(), text: "Owner tooltip".into(), spell_tip: None };
+            state.builds.insert(id, PartyBuild { spells: vec![icon.clone()], items: vec![icon] });
+        }
+        for own in [11, 22] {
+            let other = if own == 11 { 22 } else { 11 };
+            let first = wire(&mut state, own, 1).unwrap();
+            let text = &state.encoded[&own].0;
+            assert!(text.starts_with(&format!("1|7|{own}|1\n")));
+            assert!(text.contains(&format!("M|{own}|")));
+            assert!(text.contains(&format!("F|{own}|")));
+            for kind in ["S", "I"] {
+                assert!(!text.contains(&format!("{kind}|{own}|")));
+                assert!(text.contains(&format!("{kind}|{other}|42|1|")));
+            }
+            assert_eq!(first, wire(&mut state, own, 1).unwrap());
+            // No gameplay clock advance: a long common pause still refreshes transport.
+            let later = wire(&mut state, own, 600).unwrap();
+            assert_ne!(first, later);
+            assert!(state.encoded[&own].0.starts_with(&format!("1|7|{own}|600\n")));
+        }
+        assert_eq!(state.builds.len(), 2);
     }
     #[test]
     fn wire_uses_actual_owner_and_hex_escapes_all_external_text() {

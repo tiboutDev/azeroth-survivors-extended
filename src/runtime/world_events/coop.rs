@@ -22,6 +22,7 @@ struct Reserve {
     rules: Supply,
     object: EventObject,
 }
+#[derive(Default)]
 struct State {
     game: u64,
     owner: u64,
@@ -40,6 +41,7 @@ struct State {
     #[cfg(feature="test-hooks")]
     fixture_waited: bool,
     poses: BTreeMap<u64, ([f32; 3], f32, Phase)>,
+    #[cfg(feature="test-hooks")]exit_test:Option<(f32,f32)>,
 }
 impl State {
     fn draw(&mut self, n: u32) -> u32 {
@@ -109,6 +111,7 @@ pub fn encounter(r: &dyn Services, game: u64, total: u64) {
         }
     }
 }
+pub fn active()->bool{STATE.lock().is_ok_and(|s|s.as_ref().is_some_and(|s|s.people.values().any(|p|!p.buffs.is_empty()||!p.auras.is_empty())))}
 pub fn buffs(game: u64, owner: u64) -> Vec<(Consumable, f32, u32)> {
     STATE
         .lock()
@@ -165,6 +168,7 @@ pub fn has_aura(game: u64, owner: u64) -> bool {
         })
     })
 }
+pub fn all_inside(game:u64)->bool{STATE.lock().is_ok_and(|s|s.as_ref().filter(|s|s.game==game).and_then(|s|s.ritual.as_ref()).is_some_and(|v|v.inside()))}
 pub fn view(game: u64, owner: u64) -> Option<(u32, u32, bool)> {
     STATE.lock().ok().and_then(|s| {
         let s = s.as_ref().filter(|s| s.game == game)?;
@@ -347,6 +351,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
             #[cfg(feature="test-hooks")]
             fixture_waited: false,
             poses: BTreeMap::new(),
+            #[cfg(feature="test-hooks")]exit_test:None,
         });
         s.clock = now;
         s.poses = p
@@ -369,7 +374,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
             if actor.hp > 0. && actor.phase == Phase::Playing {
                 for reserve in &mut s.reserves {
                     if let Some(d) = reserve.rules.claim(now, id, actor.position, true) {
-                        hides.push((id, reserve.object));
+                        hides.push((id, reserve.object, actor.position, (actor.position[0]-reserve.rules.position[0]).hypot(actor.position[1]-reserve.rules.position[1])));
                         if person.buffs.accept(now, d.reward) && !refresh.contains(&id) {
                             refresh.push(id)
                         }
@@ -405,7 +410,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
             let stage = s.ritual.take().ok_or("Missing completed ritual")?.encounter;
             completed_scene = s.scene.take();
             for id in &ids {
-                let category = s.draw(5);
+                let category = s.draw(asx_gameplay::blessings::CATEGORY_COUNT);
                 let power = s.draw(100000);
                 let person = s.people.get_mut(id).ok_or("Missing ritual recipient")?;
                 let next = asx_gameplay::rituals::roll(stage, person.fortune, category, power);
@@ -436,12 +441,12 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
         (supply, ritual, s.stage)
     };
     
-    for (id, object) in hides {
+    for (id, object, position, distance) in hides {
         unsafe {
             r.events_hide_event_object(game, id.0, id.1, object)
         }?;
         r.events_info(&format!(
-            "coop supplies claimed: event_guid={} slot={} owner={}",
+            "coop supplies claimed: event_guid={} slot={} owner={} position={position:?} distance={distance}",
             object.guid(),
             id.0,
             id.1
@@ -505,7 +510,11 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
                 .collect::<Vec<_>>()
         };
         let area = r.events_area(game)?;
-        let point = if fixture_enabled() {
+        let point = if catalog_fixture() {
+            let x=p.actors.iter().map(|a|a.position[0]).sum::<f32>()/p.actors.len()as f32;
+            let y=p.actors.iter().map(|a|a.position[1]).sum::<f32>()/p.actors.len()as f32;
+            unsafe{r.events_ground(game,[x,y],0.3,2.)}?
+        } else if fixture_enabled() {
             unsafe {
                 r.events_ground(game, if visual_fixture() && !spawn_ritual {
                         [host.position[0] - 8., host.position[1]]
@@ -564,6 +573,8 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
                                     Reward::Buff(Consumable {
                                         family: if id.0 == 0 {
                                             Family::Critical
+                                        } else if catalog_fixture(){
+                                            Family::Swiftness
                                         } else {
                                             Family::Defense
                                         },
@@ -689,7 +700,12 @@ fn fixture(r: &dyn Services, game: u64, p: &PartyObservation) -> Result<(), Stri
             _ => {}
         }
     }
-    let poses = STATE.lock().ok().and_then(|guard| {
+    let exit=if std::env::var("ASX_TEST_COOP_CIRCLE_EXIT").as_deref()==Ok("1"){
+     let mut state=STATE.lock().map_err(|_|"Exit fixture state")?;let s=state.as_mut().ok_or("Exit fixture missing")?;
+     if s.exit_test.is_none()&&s.ritual.as_ref().is_some_and(|v|v.held>=5.){let held=s.ritual.as_ref().unwrap().held;s.exit_test=Some((p.clock,held));r.events_info(&format!("coop circle exit begin: clock={} held={held}",p.clock));}
+     s.exit_test.map(|(at,held)|{let outside=p.clock-at<5.;if outside{if let Some(v)=&s.ritual{if v.held>held+0.05{r.events_warn(&format!("coop circle exit advanced unexpectedly: before={held} now={}",v.held));}}}outside}).unwrap_or(false)
+    }else{false};
+    let poses = (!catalog_fixture()).then(|| STATE.lock().ok().and_then(|guard| {
         let s = guard.as_ref()?;
         if let Some(v) = &s.ritual {
             Some((v.position, if observed{!s.fixture_waited}else{p.clock-v.created<8.}))
@@ -697,17 +713,17 @@ fn fixture(r: &dyn Services, game: u64, p: &PartyObservation) -> Result<(), Stri
             s.reserves.first().map(|v| {
                 (
                     v.rules.position,
-                    if observed{v.rules.event==1&&!s.people.values().any(|person|person.discovery.is_some_and(|d|d.event==1))}else{p.clock - (v.rules.expires - 60.) < 8. && v.rules.event == 1},
+                    if observed{v.rules.event==1&&!s.people.values().any(|person|person.discovery.is_some_and(|d|d.event==1))}else{p.clock - (v.rules.expires - asx_gameplay::supplies::SUPPLY_SECONDS) < 8. && v.rules.event == 1},
                 )
             })
         }
-    });
-    if let Some((point, separate)) = poses {
+    }));
+    if let Some((point, separate)) = poses.flatten() {
         
         for actor in &p.actors {
             if observed&&actor.phase!=Phase::Playing{continue}
             let mut pos = point;
-            if (visual_fixture() && separate && p.clock < 11.) || (actor.slot != 0 && separate) {
+            if (visual_fixture() && separate && p.clock < 11.) || (actor.slot != 0 && (separate||exit)) {
                 pos[0] += 12.;
             }
             r.events_fixture_event_pose(game, actor.slot, actor.guid, pos)?;
@@ -758,6 +774,16 @@ fn visual_fixture() -> bool {
 mod tests {
     use super::*;
     #[test]
+    fn cooperative_buffs_and_pending_aura_cleanup_keep_projection_active(){
+        let _guard=crate::test_support::TEST_LOCK.lock().unwrap();
+        let old=STATE.lock().unwrap().take();
+        let mut s=State::default();s.game=1;
+        let person=s.people.entry((1,22)).or_default();person.buffs.accept(0.,Reward::Buff(Consumable{family:Family::Defense,tier:2}));
+        *STATE.lock().unwrap()=Some(s);assert!(active());
+        {let mut state=STATE.lock().unwrap();let person=state.as_mut().unwrap().people.get_mut(&(1,22)).unwrap();person.buffs.clear();person.auras.insert(Family::Defense,2);}
+        assert!(active());aura(1,22,&[]);assert!(!active());*STATE.lock().unwrap()=old;
+    }
+    #[test]
     fn downed_paused_missing_health_and_outside_members_cannot_supply_presence() {
         let center = [0.; 3];
         assert!(inside(center, [8., 0., 0.], 1., Phase::Playing));
@@ -780,3 +806,5 @@ pub(in crate::runtime) fn observed_rewards_complete(game:u64)->bool{
  if !fixture_enabled(){return true}
  STATE.lock().ok().is_some_and(|guard|guard.as_ref().filter(|s|s.game==game).is_some_and(|s|s.sequence>=2&&s.reserves.is_empty()&&s.scene.is_none()&&s.ritual.is_none()&&s.people.len()==2&&s.people.values().all(|p|p.fortune.is_some()&&p.discovery.is_some_and(|d|d.event==2))))
 }
+
+fn catalog_fixture()->bool{cfg!(feature="test-hooks")&&std::env::var("ASX_TEST_EVENT_CATALOG_REVIEW").as_deref()==Ok("1")}

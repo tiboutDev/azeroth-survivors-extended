@@ -63,6 +63,7 @@ pub struct Director {
     rng: u64,
     appeared: u32,
     encounters: u32,
+    first_selected: bool,
 }
 impl Director {
     pub fn new(seed: u64) -> Self {
@@ -72,6 +73,7 @@ impl Director {
             rng: seed,
             appeared: 0,
             encounters: 0,
+            first_selected: false,
         }
     }
     fn roll(&mut self, n: u32) -> u32 {
@@ -86,6 +88,13 @@ impl Director {
             }
         }
     }
+    /// Arm a first opportunity only after a completed native boss encounter.
+    /// Re-arm only after a confirmed no-spawn result consumed that opportunity.
+    pub fn ensure_first(&mut self, now:f32) {
+        if now.is_finite() && now>=0. && self.first_selected && self.appeared==0 && self.active.is_none() && self.next.is_none() {
+            self.next=Some(now+20.+self.roll(21) as f32);
+        }
+    }
     pub fn chance(&self) -> u32 {
         match self.appeared {
             0 => 12,
@@ -94,11 +103,18 @@ impl Director {
         }
     }
     /// Called once by the native completed-encounter transition, never per entity.
-    pub fn encounter(&mut self, now: f32) -> bool {
+    pub fn encounter(&mut self, now: f32, normal_bosses:u32) -> bool {
         if !now.is_finite() {
             return false;
         }
         self.encounters = self.encounters.saturating_add(1);
+        if self.appeared==0 {
+            if self.first_selected {self.ensure_first(now);return false;}
+            if self.encounters>=normal_bosses{return false;}
+            let remaining=normal_bosses.saturating_sub(self.encounters).max(1);
+            if self.roll(remaining)!=0{return false;}
+            self.first_selected=true;self.ensure_first(now);return true;
+        }
         if self.active.is_some() || self.next.is_some() {
             return false;
         }
@@ -333,12 +349,32 @@ pub fn escapes(origin: [f32; 3], goal: [f32; 3], pursuers: &[[f32; 3]]) -> bool 
 mod tests {
     use super::*;
     #[test]
-    fn encounters_are_optional_and_repeated_goblins_remain_rare_in_endless() {
+    fn bad_luck_spreads_first_goblin_over_every_prefinal_window(){
+        let mut buckets=[0;4];
+        for seed in 0..10000{
+            let mut d=Director::new(seed);d.ensure_first(10000.);assert!(!d.due(10000.));
+            let mut selected=false;
+            for stage in 1..=4{let now=stage as f32*180.;if d.encounter(now,5){buckets[stage-1]+=1;assert!(!d.due(now+19.));assert!(d.due(now+40.));selected=true;break;}}
+            assert!(selected,"no first goblin before final boss");
+        }
+        for count in buckets{assert!((2200..2800).contains(&count),"first goblin distribution {buckets:?}");}
+    }
+    #[test]
+    fn first_opportunity_is_guaranteed_and_not_rearmed_after_appearance() {
+        for seed in 0..1000 {
+            let mut d=Director::new(seed);d.ensure_first(0.);assert!(!d.due(10000.));assert!(d.encounter(0.,2));
+            for n in 1..20 {d.ensure_first(n as f32);assert!(!d.due(n as f32));}
+            assert!(d.due(40.));d.reserve(40.);d.ensure_first(41.);assert!(d.due(81.));
+            d.reserve(81.);assert!(d.spawned(1,81.));d.resolve(106.,true);d.ensure_first(107.);assert!(!d.due(10000.));
+        }
+    }
+    #[test]
+    fn first_boss_guarantees_one_opportunity_and_repeats_remain_rare() {
         let mut successes = 0;
         for seed in 0..1000 {
             let mut d = Director::new(seed);
             assert!(!d.due(10000.));
-            if d.encounter(10.) {
+            if d.encounter(10.,5) {
                 successes += 1;
                 assert!(!d.due(29.));
                 assert!(d.due(50.));
@@ -346,7 +382,7 @@ mod tests {
                 assert!(!d.due(10000.));
             }
         }
-        assert!((80..160).contains(&successes));
+        assert!((200..300).contains(&successes));
         let mut d = Director::new(7);
         assert_eq!(d.chance(), 12);
         d.spawned(1, 0.);
@@ -360,7 +396,7 @@ mod tests {
         assert_eq!(d.chance(), 3);
         let mut misses = 0;
         for i in 0..1000 {
-            if !d.encounter(100. + i as f32) {
+            if !d.encounter(100. + i as f32,5) {
                 misses += 1;
             }
             d.reserve(100. + i as f32);

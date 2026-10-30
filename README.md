@@ -82,6 +82,21 @@ Found a bug or an interesting build interaction? Open an [issue](https://github.
 - The affected classes and what happened.
 - A screenshot or diagnostic export when useful.
 
+## Optional ASXUI addon
+
+[ASXUI](addons/ASXUI/README.md) independently styles native enemy nameplates,
+preserves the native damage font by default, and renders custom/native-cache
+minimap pins using the ASX projection bridge. Supply/Fortune notifications and
+Sayge progress are configurable ASXUI widgets, with text still supplied by ASX.
+Install its source folder in
+`benilla-config/AddOns/ASXUI`.
+Nameplate styling requires neither the ASX gameplay DLL nor its launcher;
+minimap pins require the matching ASX projection bridge. See its README for
+commands, font licensing and compatibility limits.
+
+The [ASX addon contract](docs/ADDON-API.md) exposes versioned structured values
+and ASX-authored text using native-style Lua globals/getters/handlers.
+
 ## Development
 
 Source currently targets official **0.130.0**. Normal-artifact and in-game

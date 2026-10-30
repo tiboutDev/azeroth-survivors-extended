@@ -18,6 +18,7 @@ pub(super) unsafe extern "system" fn accept(game:u64,index:u64){
  #[cfg(feature="test-hooks")]let index=if fixture::compat121(){RUNTIME.get().and_then(|r|fixture::compat121_pick(r,game)).unwrap_or(index)}else if enchantments::fixture_enabled(){RUNTIME.get().and_then(|r|r.adapter.ring_fixture_pick(&r.local,r.local.base as u64,game).ok().flatten()).unwrap_or(index)}else if gems::fixture_enabled(){RUNTIME.get().and_then(|r|r.adapter.amulet_fixture_pick(&r.local,r.local.base as u64,game).ok().flatten()).unwrap_or(index)}else{index};
  let r=RUNTIME.get().filter(|r|r.rules);
  let enchantment=r.map(|r|enchantments::selecting(r,game,index));let gem=r.map(|r|gems::selecting(r,game,index));
+ if let Some(r)=r{enchantments::retire_choice(r,game,index);}
  let original:unsafe extern "system" fn(u64,u64)=std::mem::transmute(ACCEPT.load(Ordering::Acquire));original(game,index);
  if let(Some(r),Some(e))=(r,enchantment.as_ref()){enchantments::accepted(r,e)}
  if let(Some(r),Some(g))=(r,gem.as_ref()){gems::accepted(r,g)}

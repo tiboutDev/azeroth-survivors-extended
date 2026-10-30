@@ -37,6 +37,13 @@ pub fn selecting(r:&dyn Services,game:u64,index:u64)->Selection{
  let selected=r.ring_selected(game,index).ok().flatten().and_then(|c|STATE.lock().ok().and_then(|s|{let s=s.as_ref().filter(|s|s.game==game)?;if let Some(e)=s.rules.get(c.slot,c.guid,c.ring){return Some((c,e))}s.offers.iter().find(|(o,_)|*o==c).map(|(_,e)|(c,*e))}));
  if let Some(v)=selected{PENDING.with(|p|p.borrow_mut().push(v));}Selection(selected)
 }
+fn retire_offers(s:&mut State,slot:u32,guid:u64){s.offers.retain(|(c,_)|c.slot!=slot||c.guid!=guid);}
+/// Retire declined proposals before native acceptance may construct a new choice.
+/// The captured selection/PENDING scope retains the selected enchantment.
+pub fn retire_choice(r:&dyn Services,game:u64,index:u64){
+ let Ok(Some((slot,guid)))=r.reward_choice_source(game,index)else{return};
+ if let Ok(mut state)=STATE.lock(){if let Some(s)=state.as_mut().filter(|s|s.game==game){retire_offers(s,slot,guid);}}
+}
 fn commit(s:&mut State,c:RingChoice,rank:u32,e:Enchantment)->bool{
  let accepted=s.rules.accept(c.slot,c.guid,c.ring,c.rank,rank,e);
  // Native acceptance can synchronously construct the next reward. Keep offers
@@ -110,6 +117,14 @@ pub fn fixture_tick(r:&Runtime,game:u64){
 
 #[cfg(test)]mod tests{
  use super::*;
+ #[test]fn declined_offers_retire_per_actor_without_locking_or_dropping_new_rewards(){
+  let a=RingChoice{game:1,slot:0,guid:11,ring:0,rank:1,rarity:0,value:0};let b=RingChoice{slot:1,guid:22,..a};
+  let mut s=State{game:1,offers:vec![(a,Enchantment::Might),(b,Enchantment::Warding)],..Default::default()};
+  retire_offers(&mut s,0,11);assert_eq!(s.offers,vec![(b,Enchantment::Warding)]);assert_eq!(s.rules.get(0,11,0),None);
+  s.offers.push((a,Enchantment::Alacrity));assert!(commit(&mut s,a,2,Enchantment::Alacrity));assert_eq!(s.rules.get(0,11,0),Some(Enchantment::Alacrity));
+  retire_offers(&mut s,0,11);assert_eq!(s.rules.get(0,11,0),Some(Enchantment::Alacrity));assert_eq!(s.offers,vec![(b,Enchantment::Warding)]);
+ }
+
  #[test]fn reentrant_reward_build_keeps_the_locked_preview_and_other_ring_offer(){
  let _guard=crate::test_support::TEST_LOCK.lock().unwrap();
   reset();let c=RingChoice{game:10,slot:0,guid:111,ring:0,rank:1,rarity:0,value:1};let other=RingChoice{ring:1,..c};let(e,_)=offer(c).unwrap();let second=offer(other).unwrap();

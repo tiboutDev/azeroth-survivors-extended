@@ -26,6 +26,17 @@ fn world_pass_forwards_native_game_and_only_zeroes_paused_time() {
     OBSERVED.with(|seen| assert_eq!(*seen.borrow(), [(0x12340, 0.125f32.to_bits() as u64), (0x12340, 0)]));
 }
 
+#[test]
+fn both_host_pause_producers_share_one_visual_stop_per_pause_edge(){
+    let _guard=TEST_LOCK.lock().unwrap();let prior=pause::set_active(false);
+    let runtime=world_fake(true,Ok(None));let reason=Some(asx_gameplay::official::PauseReason::Menus{players:vec![]});
+    set_host_pause(&runtime,100,&reason);set_host_pause(&runtime,100,&reason);
+    assert_eq!(*runtime.calls.borrow(),["pause-log","visual-stop"]);
+    set_host_pause(&runtime,100,&None);set_host_pause(&runtime,100,&reason);
+    assert_eq!(*runtime.calls.borrow(),["pause-log","visual-stop","pause-log","pause-log","visual-stop"]);
+    pause::set_active(prior);
+}
+
 unsafe extern "system" fn native_update(server: *mut u8, now: f64) {
     OBSERVED.with(|seen| seen.borrow_mut().push((server as usize, now.to_bits())));
 }
@@ -85,6 +96,7 @@ impl WorldControl for WorldFake {
         self.calls.borrow_mut().push("observe");
         self.observation.borrow().clone()
     }
+    fn stop_remote_motion(&self,_:u64){self.calls.borrow_mut().push("visual-stop");}
     fn capture_world(&self, _: u64) { self.calls.borrow_mut().push("capture"); }
     fn finish_world(&self, _: u64) { self.calls.borrow_mut().push("finish"); }
     fn log_group_pause(&self, _: &Option<asx_gameplay::official::PauseReason>) { self.calls.borrow_mut().push("pause-log"); }
@@ -105,7 +117,7 @@ fn world_control_preserves_observe_capture_native_finish_order_and_host_gate() {
     assert_eq!(delta, 0.0);
     runtime.calls.borrow_mut().push("native");
     finish_world(Some(&runtime), 100);
-    assert_eq!(*runtime.calls.borrow(), ["observe", "pause-log", "capture", "native", "finish"]);
+    assert_eq!(*runtime.calls.borrow(), ["observe", "pause-log", "visual-stop", "capture", "native", "finish"]);
 
     runtime.calls.borrow_mut().clear();
     pause::set_host_authority(false);

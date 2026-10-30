@@ -8,7 +8,7 @@ impl Initialization {
   let mut slots=BTreeSet::new();let mut ids=BTreeSet::new();
   if actors.iter().any(|(slot,id)|*id==0||!slots.insert(*slot)||!ids.insert(*id)){return Err("Ambiguous marker identity".into())}
   self.seen.retain(|slot,id|actors.contains(&(*slot,*id)));
-  let mut free=(0..8).filter(|i|occupied[*i].is_none()).collect::<Vec<_>>();let mut result=vec![];
+  let mut free=(0..7).filter(|i|occupied[*i].is_none()).collect::<Vec<_>>();let mut result=vec![];
   for &(slot,id) in actors {
    if self.seen.get(&slot)==Some(&id){continue}
    // Commit initialization before presentation; an uncertain native action must
@@ -25,7 +25,7 @@ impl Initialization {
 pub fn can_assign(occupied:&[Option<u64>;8],guid:u64,icon:u8)->bool{guid!=0&&(1..=8).contains(&icon)&&occupied[usize::from(icon-1)].is_none()&&!occupied.contains(&Some(guid))}
 #[cfg(test)]mod tests{
  use super::*;
- #[test]fn unique_random_markers_cover_the_whole_native_pool(){let ids=[(0,11),(1,22),(2,33),(3,44),(4,55)];let mut s=Initialization::default();let plan=s.plan(&ids,&[None;8],|n|n-1).unwrap();assert_eq!(plan.iter().map(|p|p.2).collect::<Vec<_>>(),vec![8,7,6,5,4]);}
+ #[test]fn automatic_participant_markers_reserve_skull_for_goblins(){let ids=[(0,11),(1,22),(2,33),(3,44),(4,55)];let mut s=Initialization::default();let plan=s.plan(&ids,&[None;8],|n|n-1).unwrap();assert_eq!(plan.iter().map(|p|p.2).collect::<Vec<_>>(),vec![7,6,5,4,3]);}
  #[test]fn refresh_removal_and_resurrection_do_not_reinitialize(){let ids=[(0,11),(1,22)];let mut s=Initialization::default();assert_eq!(s.plan(&ids,&[None;8],|_|0).unwrap().len(),2);assert!(s.plan(&ids,&[None;8],|_|panic!("redraw")).unwrap().is_empty());}
  #[test]fn late_join_and_reused_slot_keep_current_manual_assignments(){let mut s=Initialization::default();s.plan(&[(0,11)],&[None;8],|_|0).unwrap();let occupied=[Some(11),Some(99),None,None,None,None,None,None];assert_eq!(s.plan(&[(0,11),(1,22)],&occupied,|_|0).unwrap(),vec![(1,22,3)]);assert!(s.plan(&[(0,11),(1,22)],&[None;8],|_|0).unwrap().is_empty());assert_eq!(s.plan(&[(0,11),(1,33)],&occupied,|_|0).unwrap(),vec![(1,33,3)]);}
  #[test]fn a_new_run_preserves_existing_participant_and_unrelated_markers(){let mut s=Initialization::default();let occupied=[Some(11),Some(99),None,None,None,None,None,None];assert!(s.plan(&[(0,11)],&occupied,|_|panic!("existing mark must be preserved")).unwrap().is_empty());assert!(!s.needs([(0,11)].into_iter()));}

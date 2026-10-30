@@ -3,7 +3,7 @@
 use super::presentation;
 use super::{
     addon_activation, blessings, bonus_tooltip, bonus_ui, combat, combat_text, duplicate_loot,
-    elites, experience, fatigue, glyphs, local_base, menu_pause, menu_ui, nameplates, party_ui,
+    elites, experience, fatigue, glyphs, local_base, menu_pause, menu_ui, party_ui,
     pause, reward_cards, run_stats, session, support, wallet, xp_hooks, Adapter, Runtime, RUNTIME,
 };
 use crate::{log::Log, proc::Local};
@@ -79,22 +79,11 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         {
             return Err("Native owner spell formatter changed".into());
         }
-        for entry in adapter
-            .menu_entries()
-            .into_iter()
-            .chain(adapter.menu_cache_entries())
-        {
-            if r.local
-                .read(local_base() + entry.rva as usize, entry.bytes.len())?
-                != entry.bytes
-            {
-                return Err(format!(
-                    "Native menu class-decoration entry changed at {:#x}",
-                    entry.rva
-                ));
-            }
+        let entry=adapter.menu_entries()[4];
+        if r.local.read(local_base()+entry.rva as usize,entry.bytes.len())?!=entry.bytes{
+            return Err("Native reward-header entry changed".into());
         }
-        crate::install::install(&menu_ui::hooks(adapter))?;
+        crate::install::install(&menu_ui::hooks(adapter,local_base()))?;
         crate::install::install(&[party_ui::hook(adapter), party_ui::spell_hook(adapter)])?;
     }
     crate::install::install(&wallet::hooks(adapter))?;
@@ -180,8 +169,6 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         for entry in adapter
             .combat_text_entries()
             .into_iter()
-            .chain(adapter.nameplate_entries())
-            .chain([adapter.ui_unit_hash_entry()])
         {
             if r.local
                 .read(local_base() + entry.rva as usize, entry.bytes.len())?
@@ -194,7 +181,6 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
             }
         }
         crate::install::install(&combat_text::hooks(adapter))?;
-        crate::install::install(&nameplates::hooks(adapter))?;
     }
     crate::install::install(&support::hooks(adapter))?;
     crate::install::install(&combat::hooks(adapter))?;

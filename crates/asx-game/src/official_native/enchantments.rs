@@ -34,6 +34,13 @@ impl Adapter {
   let Some((slot,guid))=self.run_source(m,game)?else{return Ok(None)};
   Ok(Some(RingChoice{game,slot,guid,ring,rank,rarity,value}))
  }
+ pub fn reward_choice_source(self,m:&dyn Mem,game:u64,index:u64)->Result<Option<(u32,u64)>>{
+  if m.read(game+self.field1201(0xca2),1)?!=[2]||m.read(game+self.field1201(0xca0),1)?==[255]{return Ok(None)}
+  let count=q(m,game+self.field1201(0x680))?;let ptr=q(m,game+self.field1201(0x678))?;
+  if count>16||index>=count{return Ok(None)}
+  if ptr<0x10000{return Err("Invalid reward choice storage".into())}
+  self.run_source(m,game)
+ }
  pub fn ring_selected(self,m:&dyn Mem,base:u64,game:u64,index:u64)->Result<Option<RingChoice>>{
   if !self.supports_enchantments()||m.read(game+self.field1201(0xca2),1)?!=[2]||m.read(game+self.field1201(0xca0),1)?==[255]{return Ok(None)}
   let count=q(m,game+self.field1201(0x680))?;let ptr=q(m,game+self.field1201(0x678))?;

@@ -13,7 +13,8 @@ pub(super) fn end(runtime: &dyn Services) {
     super::supplies::reset();
     super::treasure_goblins::reset();
     super::raid_markers::reset();
-    super::nameplates::reset();
+    super::ui_context::reset();
+    super::combat_text::reset();
     menu_pause::reset();
     duplicate_loot::reset();
     wallet::reset();

@@ -184,31 +184,29 @@
     },
     "ASX-23": {
       "profiles": [
-        "official-party-ui"
+        "asxui"
       ],
-      "scope_note": "Lua/native presentation checks exist; no dedicated visual nameplate trial is declared.",
+      "scope_note": "Standalone Lua behavior and separately scoped native-client probes; old ASX live suites do not establish ASXUI parity.",
       "targeted_scenario": {
-        "profile": "official-party-ui",
+        "profile": "asxui",
         "trigger": "Compare ordinary and special-rank native nameplates while health changes.",
-        "expected": "Ordinary labels hidden, special names retained, health updates and visibility preserved.",
-        "limit": "Visual size and world anchoring require a sparse visual trial after native UI changes.",
+        "expected": "Enemy scale changes and restores; native health updates continue; friendly/unknown-name handling remains conservative.",
+        "limit": "Native placement and glyph appearance require explicit sparse visual review of the exact addon.",
         "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
       },
-      "live_suites": [
-        "coop-world-ui",
-        "coop-ui-remaining"
-      ]
+      "live_suites": []
     },
     "ASX-24": {
       "profiles": [
         "official-party-ui",
-        "support"
+        "support",
+        "asxui"
       ],
       "scope_note": "Native text/presentation checks exist; no dedicated declared live healing-text scenario.",
       "targeted_scenario": {
         "profile": "official-party-ui",
         "trigger": "Produce direct and periodic ally healing and an enemy damage number.",
-        "expected": "Recipient identity preserved; one-third enemy text size; native critical animation retained.",
+        "expected": "Recipient identity and native animation retained; ASXUI font loaded without a DLL; glyph scale verified separately.",
         "limit": "Portable presentation checks do not prove rendered world text positioning.",
         "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
       },

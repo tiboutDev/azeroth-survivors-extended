@@ -20,7 +20,7 @@ The goal is to create different ways to use a spell while preserving its identit
 
 The native game includes equipment set bonuses that transform spells.
 
-Glyphs are disabled on the supported 0.125.0 client while we examine how these transformations interact and how the combined choices can remain understandable, useful and balanced.
+Glyphs are disabled on the supported native client while we examine how these transformations interact and how the combined choices can remain understandable, useful and balanced.
 
 ### What we want to preserve
 

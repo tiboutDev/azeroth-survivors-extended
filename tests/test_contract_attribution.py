@@ -27,7 +27,6 @@ class ContractAttributionTests(unittest.TestCase):
                   'official_native.combat.write_combat_mark':'ASX-09',
                   'official_native.immunity_aggro.aggro_prepare':'ASX-11',
                   'official_native.raid_markers.set_raid_marker':'ASX-25',
-                  'official_native.nameplates.nameplate_style':'ASX-23',
                   'official_native.combat_text.draw_native_heal_text':'ASX-24'}
         for name,feature in examples.items():
             contract=self.by_id[name]
@@ -45,7 +44,7 @@ class ContractAttributionTests(unittest.TestCase):
         helper=self.by_id['official_native.gems.q']
         self.assertEqual(helper['link_basis'],'conservative-domain')
         self.assertTrue({'ASX-22','ASX-26'} <= set(helper['features']))
-        context=self.by_id['official_native.nameplates.native_ui_participants']
+        context=self.by_id['official_native.ui_identity.native_ui_participants']
         self.assertEqual(context['link_basis'],'conservative-domain')
         self.assertIn('shared',context['link_evidence']['reason'])
 

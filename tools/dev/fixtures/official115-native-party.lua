@@ -1,6 +1,6 @@
 -- Read-only native-frame probe. No errors, protected actions or UI suppression.
 RegisterCVar("azcoop_native_probe", "")
-local observer=CreateFrame("Frame","AzCoopOfficialPartyProbe",UIParent)
+local observer=CreateFrame("Frame","ASXOfficialPartyProbe",UIParent)
 local previous=0
 local ownerTip=CreateFrame("GameTooltip","AzCoopOfficialOwnerTip",UIParent,"GameTooltipTemplate")
 local function hex(s)return string.gsub(tostring(s or ""),".",function(c)return string.format("%02x",string.byte(c))end)end
@@ -28,7 +28,7 @@ observer:SetScript("OnUpdate",function()
  previous=now
  local count=GetNumPartyMembers()
  local view,built,own={},0,nil
- if AzCoopOfficialPartyReadout then view,built,own=AzCoopOfficialPartyReadout()end
+ if ASXOfficialPartyReadout then view,built,own=ASXOfficialPartyReadout()end
  if own and count==2 then
   for slot=1,6 do
    if HasAction(slot)then

@@ -20,6 +20,7 @@ class ASXTests(unittest.TestCase):
   self.extract(self.m,self.data)
  def release(self,n,extra=True):
   files={k:(ROOT/"asx"/source).read_bytes()for k,source in [("start-asx.cmd","start-asx.cmd"),("README-ASX.txt","README-ASX.txt"),("ASX/Client/launch.py","launch.py"),("ASX/Defaults/channel.json","channel.json"),("ASX/Client/supported-games.json","supported-games.json")]}
+  files["ASX/Client/supported-games.json"]=core.encoded({"schema":1,"games":{"0.125.0":{"sha256":core.digest(self.exe)}}})
   files.update({"ASX/Bin/avrt.dll":b"MZ ASX normal "+str(n).encode(),"ASX/Interface/ASX.toc":b"Presentation.lua","ASX/Interface/Presentation.lua":b"-- normal addon "+str(n).encode()})
   if extra:files["ASX/Client/old.py"]=b"owned old file"
   m={"schema":1,"product":core.PRODUCT,"version":f"0.125.0-asx.{n}","game":{"version":"0.125.0","sha256":core.digest(self.exe),"archives":["Data/patch.MPQ"]},"files":{k:{"size":len(v),"sha256":core.digest(v)}for k,v in files.items()}}
@@ -45,7 +46,240 @@ class ASXTests(unittest.TestCase):
  def update(self,release):
   self.configure();raw,sig,package=release
   def download(url,limit):return raw if url.endswith("asx-latest.json")else sig if url.endswith(".sig")else package
-  with core.locked(self.root):return updates.automatic(self.root,core.digest(self.exe),download)
+  with core.locked(self.root):return updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:True)
+ def test_declining_signed_update_does_not_download_archive_or_advance_sequence(self):
+  self.install();self.configure()
+  m,data=self.release(2);raw,sig,package=self.signed(m,data,13)
+  downloads=[]
+  def download(url,limit):
+   downloads.append(url)
+   if url.endswith("asx-latest.json"):return raw
+   if url.endswith(".sig"):return sig
+   self.fail("Deferred update downloaded its archive")
+  before=core.installed(self.root)
+  with core.locked(self.root):
+   self.assertEqual(updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:False),"deferred")
+  self.assertEqual(len(downloads),2)
+  self.assertIsNone(core.get(self.root,"ASX/State/updates.json"))
+  self.assertEqual(core.installed(self.root),before)
+  self.intact()
+ def test_invalid_update_is_rejected_before_player_is_asked(self):
+  self.install();self.configure()
+  m,data=self.release(2);raw,sig,package=self.signed(m,data,13)
+  def download(url,limit):return raw if url.endswith("asx-latest.json")else b"x"*64
+  with self.assertRaises(ValueError):
+   updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:self.fail("Untrusted update offered"))
+ def test_cancelled_update_never_launches_game(self):
+  self.install()
+  with patch.object(core,"game_running",return_value=False),patch.object(core,"native_paths",return_value=(self.root/"progression.txt",self.root/"benilla-config")),patch.object(updates,"automatic",side_effect=launch.UpdateCancelled()),patch.object(launch.subprocess,"Popen",side_effect=AssertionError("Cancelled launch started game")):
+   self.assertEqual(launch.run(self.root,confirm_update=launch.confirm_update),0)
+  self.intact()
+ def snapshot(self):
+  return {p.relative_to(self.root).as_posix():p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+ def repair_inputs(self,m=None,data=None):
+  m=m or self.m;data=data or self.data;self.configure()
+  raw,sig,archive=self.signed(m,data,1)
+  folder=self.root/"repair-input";folder.mkdir(exist_ok=True)
+  for name,value in (("feed.json",raw),("feed.sig",sig),("package.zip",archive)):(folder/name).write_bytes(value)
+  return dict(archive=folder/"package.zip",feed_path=folder/"feed.json",signature_path=folder/"feed.sig")
+ def test_check_collects_all_issues_without_writing_or_network(self):
+  self.install();(self.root/"README-ASX.txt").write_bytes(b"personal text")
+  (self.root/"ASX/Bin/avrt.dll").unlink();(self.root/"ASX/Client/launch.py").unlink()
+  before=self.snapshot()
+  with patch.object(updates,"fetch",side_effect=AssertionError("network during check")):
+   report=launch.maintenance.diagnose(self.root)
+   self.assertFalse(report["ready"])
+   self.assertGreaterEqual(len(report["issues"]),3)
+   self.assertEqual(launch.run(self.root,check=True),1)
+  self.assertEqual(before,self.snapshot())
+ def test_documentation_and_bootstrap_do_not_block_preparation(self):
+  self.install();(self.root/"README-ASX.txt").write_bytes(b"personal text")
+  (self.root/"start-asx.cmd").unlink()
+  data=core.sources(self.root,self.m,tolerant=True)
+  core.apply(self.root,self.m,data,manual=True,launch=True)
+  self.assertTrue(launch.maintenance.diagnose(self.root)["ready"])
+  self.assertEqual((self.root/"README-ASX.txt").read_bytes(),b"personal text")
+ def test_same_version_repair_restores_critical_file_preserves_documentation_and_rollback(self):
+  self.install();m,data=self.release(2);self.update(self.signed(m,data,2))
+  tx=core.installed(self.root)["rollback"]
+  inputs=self.repair_inputs(m,data)
+  (self.root/"ASX/Bin/avrt.dll").unlink();(self.root/"README-ASX.txt").write_bytes(b"my notes")
+  self.assertEqual(launch.maintenance.repair(self.root,lambda plan:True,**inputs),"installed")
+  self.assertEqual((self.root/"ASX/Bin/avrt.dll").read_bytes(),data["ASX/Bin/avrt.dll"])
+  self.assertEqual((self.root/"README-ASX.txt").read_bytes(),b"my notes")
+  self.assertEqual(core.installed(self.root)["rollback"],tx);self.intact()
+ def test_repair_cancellation_preserves_installation(self):
+  self.install();inputs=self.repair_inputs();(self.root/"ASX/Bin/avrt.dll").unlink();before=self.snapshot()
+  self.assertEqual(launch.maintenance.repair(self.root,lambda plan:False,**inputs),"cancelled")
+  self.assertEqual(before,self.snapshot())
+ def test_repair_rejects_invalid_signature_before_writes(self):
+  self.install();inputs=self.repair_inputs();inputs["signature_path"].write_bytes(b"x"*64);before=self.snapshot()
+  with self.assertRaises(ValueError):launch.maintenance.repair(self.root,lambda plan:self.fail("untrusted repair offered"),**inputs)
+  self.assertEqual(before,self.snapshot())
+ def test_repair_refuses_to_change_release(self):
+  self.install();m,data=self.release(2);inputs=self.repair_inputs(m,data)
+  with self.assertRaisesRegex(ValueError,"installed version"):launch.maintenance.repair(self.root,lambda plan:True,**inputs)
+  self.assertEqual(core.installed(self.root)["version"],self.m["version"])
+ def test_modified_critical_repair_requires_consent_and_backups(self):
+  self.install();inputs=self.repair_inputs();(self.root/"ASX/Bin/avrt.dll").write_bytes(b"changed owned DLL")
+  launch.maintenance.repair(self.root,lambda plan:True,**inputs)
+  backups=list((self.root/"ASX/Backups/Files").rglob("avrt.dll"))
+  self.assertTrue(any(p.read_bytes()==b"changed owned DLL" for p in backups));self.intact()
+ def test_lost_receipt_never_adopts_foreign_loader(self):
+  self.install();inputs=self.repair_inputs();(self.root/core.STATE).unlink();(self.root/"avrt.dll").write_bytes(b"foreign loader")
+  with self.assertRaisesRegex(ValueError,"Foreign loader"):launch.maintenance.repair(self.root,lambda plan:True,**inputs)
+  self.assertEqual((self.root/"avrt.dll").read_bytes(),b"foreign loader")
+ def test_invalid_receipt_can_be_recovered_with_verified_package(self):
+  self.install();inputs=self.repair_inputs();(self.root/core.STATE).write_bytes(b"bad json")
+  (self.root/"ASX/Bin/avrt.dll").unlink()
+  launch.maintenance.repair(self.root,lambda plan:True,**inputs)
+  self.assertEqual(core.installed(self.root)["version"],self.m["version"])
+  self.assertTrue(launch.maintenance.diagnose(self.root)["ready"])
+ def test_manifest_damage_does_not_prevent_diagnostic_export(self):
+  self.install();(self.root/core.MANIFEST).write_bytes(b"invalid json")
+  archive=launch.export(self.root)
+  with zipfile.ZipFile(archive) as z:
+   self.assertIn("metadata_unavailable",json.loads(z.read("ASX-version.json")))
+   self.assertFalse(json.loads(z.read("installation-check.json"))["ready"])
+ def test_update_needs_confirmation_and_preserves_modified_readme(self):
+  self.install();self.configure();m,data=self.release(2);raw,sig,archive=self.signed(m,data,2)
+  def download(url,limit):return raw if url.endswith("asx-latest.json") else sig if url.endswith(".sig") else archive
+  self.assertIn("confirmation required",updates.automatic(self.root,core.digest(self.exe),download))
+  (self.root/"README-ASX.txt").write_bytes(b"personal README")
+  self.assertEqual(updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:True),"installed")
+  self.assertTrue(any(p.read_bytes()==b"personal README" for p in (self.root/"ASX/Backups/Files").rglob("README-ASX.txt")))
+ def test_failed_update_requires_explicit_retry(self):
+  self.install();self.configure();m,data=self.release(2);raw,sig,archive=self.signed(m,data,2)
+  def download(url,limit):return raw if url.endswith("asx-latest.json") else sig if url.endswith(".sig") else archive
+  with patch.object(core,"apply",side_effect=OSError("disk full")),self.assertRaises(OSError):
+   updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:True)
+  self.assertIn("held",updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:self.fail("automatic retry")))
+  self.assertEqual(updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:True,retry=True),"installed")
+ def test_projection_repair_keeps_previous_release_rollback(self):
+  self.install();m,data=self.release(2);self.update(self.signed(m,data,2));tx=core.installed(self.root)["rollback"]
+  (self.root/"avrt.dll").unlink();core.apply(self.root,m,core.sources(self.root,m,tolerant=True),manual=True,launch=True)
+  self.assertEqual(core.installed(self.root)["rollback"],tx)
+ def test_signed_future_registry_allows_update_but_not_old_dll_activation(self):
+  self.install();self.configure();m,data=self.release(2)
+  new_exe=b"MZ reviewed future official game";m["game"].update(version="0.131.0",sha256=core.digest(new_exe))
+  registry=core.encoded({"schema":1,"games":{"0.131.0":{"sha256":core.digest(new_exe)}}})
+  data["ASX/Client/supported-games.json"]=registry
+  m["files"]["ASX/Client/supported-games.json"]={"size":len(registry),"sha256":core.digest(registry)}
+  raw,sig,archive=self.signed(m,data,3);(self.root/"AzerothSurvivors.exe").write_bytes(new_exe)
+  with self.assertRaises(ValueError):core.inspect(self.root,self.m)
+  def download(url,limit):return raw if url.endswith("asx-latest.json") else sig if url.endswith(".sig") else archive
+  self.assertEqual(updates.automatic(self.root,core.digest(new_exe),download,confirm=lambda feed:True),"installed")
+  self.assertEqual(core.installed(self.root)["game"]["version"],"0.131.0")
+ def test_readme_warning_allows_actual_launch_path(self):
+  self.install();(self.root/"README-ASX.txt").unlink()
+  class Child:
+   pid=123
+   def poll(self):return None
+   def wait(self,**kwargs):return 0
+   def terminate(self):pass
+  child=Child()
+  def spawn(*args,**kwargs):
+   session=Path(kwargs["env"]["ASX_READY_FILE"])
+   session.write_bytes(core.encoded({"product":"asx","game_sha256":core.digest(self.exe)}))
+   return child
+  with patch.object(core,"game_running",return_value=False),patch.object(core,"native_paths",return_value=(self.root/"progression.txt",self.root/"benilla-config")),patch.object(launch.subprocess,"Popen",side_effect=spawn):
+   self.assertEqual(launch.run(self.root,offline=True),0)
+  self.intact()
+ def test_read_only_check_does_not_require_profile_or_recover(self):
+  self.install()
+  with patch.object(core,"native_paths",side_effect=AssertionError("profile consulted")),patch.object(core,"recover",side_effect=AssertionError("recovery during check")),patch.object(core,"locked",side_effect=AssertionError("write lock during check")):
+   self.assertEqual(launch.run(self.root,check=True),0)
+ def test_offline_cache_repairs_without_download(self):
+  self.install();self.configure();raw,sig,data=self.signed(self.m,self.data,1)
+  feed=updates.verify(raw,sig,[self.public],core.digest(self.exe))
+  updates.cache(self.root,raw,sig,data,feed);(self.root/"ASX/Bin/avrt.dll").unlink()
+  def download(*args):self.fail("offline repair used network")
+  self.assertEqual(launch.maintenance.repair(self.root,lambda plan:True,offline=True,download=download),"installed")
+ def test_windows_runtime_replacement_requires_manual_archive_before_mutation(self):
+  import types
+  self.install();m,data=self.release(2)
+  name="ASX/Runtime/python.exe";data[name]=b"MZ new runtime";m["files"][name]={"size":len(data[name]),"sha256":core.digest(data[name])}
+  before=self.snapshot()
+  with patch.object(core,"os",types.SimpleNamespace(name="nt")),self.assertRaisesRegex(ValueError,"runtime"):
+   core.apply(self.root,m,data)
+  self.assertEqual(before,self.snapshot())
+ def test_update_failure_exit_is_not_ready_success(self):
+  self.install()
+  with patch.object(core,"game_running",return_value=False),patch.object(updates,"automatic",side_effect=OSError("offline")),patch.object(core,"native_paths",side_effect=AssertionError("profile required for update")),self.assertRaises(OSError):
+   launch.run(self.root,update_only=True)
+ def test_embedded_official_channel_matches_packaged_defaults(self):
+  self.assertEqual(updates.DEFAULT_CHANNEL,json.loads((ROOT/"asx/channel.json").read_text()))
+ def test_repaired_personal_readme_is_backed_up_before_rollback(self):
+  self.install();m,data=self.release(2)
+  data["README-ASX.txt"]+=b"Updated documentation"
+  m["files"]["README-ASX.txt"]={"size":len(data["README-ASX.txt"]),"sha256":core.digest(data["README-ASX.txt"])}
+  self.update(self.signed(m,data,2))
+  inputs=self.repair_inputs(m,data);(self.root/"README-ASX.txt").write_bytes(b"personal rollback notes")
+  (self.root/"ASX/Bin/avrt.dll").unlink();launch.maintenance.repair(self.root,lambda plan:True,**inputs)
+  core.rollback(self.root)
+  self.assertTrue(any(p.read_bytes()==b"personal rollback notes" for p in (self.root/"ASX/Backups/Files").rglob("README-ASX.txt")))
+ def test_update_metadata_and_license_are_not_runtime_requirements(self):
+  self.install();(self.root/"ASX/Defaults/channel.json").unlink()
+  data=core.sources(self.root,self.m,tolerant=True)
+  core.apply(self.root,self.m,data,launch=True)
+  self.assertTrue(launch.maintenance.diagnose(self.root)["ready"])
+  self.assertEqual(core.file_role("ASX/Client/LICENSE"),"documentation")
+ def test_cli_check_works_in_isolated_deployed_layout_without_profile(self):
+  import subprocess
+  for module in ("core.py","updates.py","maintenance.py"):
+   name="ASX/Client/"+module;raw=(ROOT/"asx"/module).read_bytes();self.data[name]=raw
+   self.m["files"][name]={"size":len(raw),"sha256":core.digest(raw)}
+  name="ASX/Client/supported-games.json"
+  raw=core.encoded({"schema":1,"games":{"0.125.0":{"sha256":core.digest(self.exe),"archives":["Data/patch.MPQ"]}}})
+  self.data[name]=raw;self.m["files"][name]={"size":len(raw),"sha256":core.digest(raw)}
+  self.extract(self.m,self.data);self.install()
+  (self.root/"README-ASX.txt").write_bytes(b"personal README")
+  before=self.snapshot();env={k:v for k,v in os.environ.items() if k not in ("APPDATA","BENILLA_HOME","WOW_ROGUE_SAVE")}
+  result=subprocess.run([sys.executable,"-I","-B","-X","utf8",str(self.root/"ASX/Client/launch.py"),"--check"],cwd=self.root,env=env,capture_output=True,text=True,encoding="utf-8",timeout=30)
+  self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+  self.assertIn("README-ASX.txt: modified",result.stdout);self.assertIn("Ready to play",result.stdout)
+  self.assertEqual(before,self.snapshot())
+  (self.root/"ASX/Bin/avrt.dll").unlink();(self.root/"ASX/Interface/Presentation.lua").unlink();before=self.snapshot()
+  result=subprocess.run([sys.executable,"-I","-B","-X","utf8",str(self.root/"ASX/Client/launch.py"),"--check"],cwd=self.root,env=env,capture_output=True,text=True,encoding="utf-8",timeout=30)
+  self.assertEqual(result.returncode,1,result.stdout+result.stderr)
+  self.assertIn("ASX/Bin/avrt.dll: missing",result.stdout);self.assertIn("ASX/Interface/Presentation.lua: missing",result.stdout)
+  self.assertEqual(before,self.snapshot())
+ def test_runtime_update_is_reported_before_archive_download_or_confirmation(self):
+  import types
+  self.install();self.configure();m,data=self.release(2)
+  name="ASX/Runtime/python.exe";data[name]=b"MZ runtime";m["files"][name]={"size":len(data[name]),"sha256":core.digest(data[name])}
+  raw,sig,archive=self.signed(m,data,2)
+  def download(url,limit):
+   if url.endswith("asx-latest.json"):return raw
+   if url.endswith(".sig"):return sig
+   self.fail("runtime archive downloaded before manual-install notice")
+  with patch.object(updates,"os",types.SimpleNamespace(name="nt")):
+   status=updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:self.fail("runtime update offered as automatic"))
+  self.assertIn("manual installation required",status)
+ def test_repaired_installation_does_not_prompt_again_after_restart(self):
+  self.install();inputs=self.repair_inputs();(self.root/"ASX/Bin/avrt.dll").unlink()
+  launch.maintenance.repair(self.root,lambda plan:True,**inputs)
+  self.assertEqual(launch.maintenance.repair(self.root,lambda plan:self.fail("second confirmation"),**inputs),"current")
+ def test_missing_receipt_is_reconstructed_after_consent(self):
+  self.install();inputs=self.repair_inputs();(self.root/core.STATE).unlink()
+  asked=[]
+  self.assertEqual(launch.maintenance.repair(self.root,lambda plan:asked.append(plan) or True,**inputs),"installed")
+  self.assertEqual(len(asked),1);self.assertEqual(core.installed(self.root)["version"],self.m["version"])
+ def test_signed_repair_does_not_require_a_working_local_registry(self):
+  self.install()
+  data=dict(self.data);m=copy.deepcopy(self.m);name="ASX/Client/supported-games.json"
+  data[name]=core.encoded({"schema":1,"games":{"0.125.0":{"sha256":core.digest(self.exe)}}})
+  m["files"][name]={"size":len(data[name]),"sha256":core.digest(data[name])}
+  inputs=self.repair_inputs(m,data);(self.root/name).unlink()
+  with patch.object(core,"supported_native_games",side_effect=FileNotFoundError("registry missing")):
+   self.assertEqual(launch.maintenance.repair(self.root,lambda plan:True,**inputs),"installed")
+  self.assertTrue((self.root/name).is_file())
+ def test_signed_package_registry_mismatch_is_rejected(self):
+  self.install();self.configure();m,data=self.release(2)
+  name="ASX/Client/supported-games.json";data[name]=core.encoded({"schema":1,"games":{}})
+  m["files"][name]={"size":len(data[name]),"sha256":core.digest(data[name])}
+  with self.assertRaisesRegex(ValueError,"registry"):self.update(self.signed(m,data,2))
+  self.assertEqual(core.installed(self.root)["version"],self.m["version"])
  def test_current_patch_b_inventory(self):
   manifest=copy.deepcopy(self.m)
   manifest["game"]["archives"]=["Data/patch.MPQ",*[f"Data/patch-{n}.MPQ"for n in range(2,10)],"Data/patch-A.MPQ","Data/patch-B.MPQ"]
@@ -211,8 +445,8 @@ class ASXTests(unittest.TestCase):
   core.put(self.root,base+"/journal.json",{"phase":"applying","state":old_state,"before":{client:core.digest(old_client),registry:None}})
   core.atomic(core.path(self.root,client),b"# partially upgraded client\n")
   core.atomic(core.path(self.root,registry),self.data[registry])
-  with patch.object(core,"game_running",return_value=False),patch.object(core,"native_paths",return_value=(self.root/"progression.txt",self.root/"benilla-config")),patch.object(core,"manifest",side_effect=AssertionError("Stale client validated restored files")),patch.object(launch.subprocess,"Popen",side_effect=AssertionError("Game launched during recovery")):
-   self.assertEqual(launch.run(self.root,offline=True,check=True),75)
+  with patch.object(launch,"confirm_repair",return_value=True),patch.object(core,"game_running",return_value=False),patch.object(core,"native_paths",return_value=(self.root/"progression.txt",self.root/"benilla-config")),patch.object(core,"manifest",side_effect=AssertionError("Stale client validated restored files")),patch.object(launch.subprocess,"Popen",side_effect=AssertionError("Game launched during recovery")):
+   self.assertEqual(launch.run(self.root,offline=True),75)
   self.assertEqual(core.path(self.root,client).read_bytes(),old_client)
   self.assertFalse(core.path(self.root,registry).exists())
   self.assertEqual(core.installed(self.root),old_state)

@@ -2,7 +2,7 @@
 use std::collections::BTreeMap;
 /// ASX progression stops after the fifth completed encounter, on every map.
 pub const PROGRESSION_BOSS_CAP:u32=5;
-pub const CATEGORY_COUNT:u32=5;
+pub const CATEGORY_COUNT:u32=3;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Blessing {
     pub category: u8,
@@ -27,7 +27,7 @@ impl Blessing {
             category,
             rarity,
             // Round the final award once, so applied stats and UI agree.
-            amount: (([1500, 1200, 2500, 3500, 500][category as usize] * scale / 10 + 50) / 100) * 100,
+            amount: (([1500, 1200, 2500][category as usize] * scale / 10 + 50) / 100) * 100,
             boss,
         }
     }
@@ -83,12 +83,12 @@ mod tests {
             counts[Blessing::roll(1, 0, n).rarity as usize] += 1;
         }
         assert_eq!(counts, [60, 25, 10, 4, 1]);
-        assert_eq!(Blessing::roll(1, 3, 99).amount, 11200);
+        assert_eq!(Blessing::roll(1, 2, 99).amount, 8000);
         assert_eq!(Blessing::roll(5, 1, 85).amount, 3100);
         for c in 0..CATEGORY_COUNT {
             assert_eq!(
                 Blessing::roll(u32::MAX, c, 99).amount,
-                [6000, 4800, 10000, 14000, 2000][c as usize]
+                [6000, 4800, 10000][c as usize]
             );
         }
     }
@@ -107,19 +107,15 @@ mod tests {
         assert_eq!(Blessing::roll(1, 1, 99).factor(), 0.38);
     }
     #[test]
-    fn five_equal_categories_and_swiftness_fixed_progression() {
-        let mut counts=[0;5];for roll in 0..100{counts[Blessing::roll(1,roll,0).category as usize]+=1;}assert_eq!(counts,[20;5]);
-        assert_eq!(Blessing::roll(1,4,0).amount,500);
-        assert_eq!(Blessing::roll(2,4,0).amount,600);
-        assert_eq!(Blessing::roll(5,4,0).amount,900);
-        assert_eq!(Blessing::roll(1,4,99).amount,1600);
-        for category in 0..CATEGORY_COUNT {for rarity in 0..100 {let cap=Blessing::roll(5,category,rarity);for boss in [6,12,u32::MAX]{let b=Blessing::roll(boss,category,rarity);assert_eq!(b.amount,cap.amount);assert_eq!(b.boss,boss);}}}
+    fn three_equal_categories_and_fixed_progression() {
+        let mut counts=[0;3];for draw in 0..300{counts[Blessing::roll(1,draw,0).category as usize]+=1;}assert_eq!(counts,[100;3]);
+        for category in 0..CATEGORY_COUNT{for rarity in 0..100{let cap=Blessing::roll(5,category,rarity);for boss in [6,12,u32::MAX]{assert_eq!(Blessing::roll(boss,category,rarity).amount,cap.amount);}}}
     }
     #[test]
-    fn replacement_clears_personal_speed_and_does_not_add_party_economy() {
+    fn replacement_clears_personal_luck_and_does_not_add_party_economy() {
         let mut s=Blessings::default();let ids=[(0,10),(1,20)];
-        assert!(s.complete(1,&ids,|n|if n==CATEGORY_COUNT{4}else{99}));assert_eq!(s.actors[&ids[0]].category,4);assert_eq!(s.strongest(1),0.);assert_eq!(s.strongest(2),0.);
-        assert!(s.complete(2,&ids,|n|if n==CATEGORY_COUNT{1}else{0}));assert!(s.actors.values().all(|b|b.category==1));assert_eq!(s.strongest(4),0.);assert_eq!(s.strongest(1),0.14);
+        assert!(s.complete(1,&ids,|n|if n==CATEGORY_COUNT{0}else{99}));assert_eq!(s.actors[&ids[0]].category,0);assert_eq!(s.strongest(1),0.);assert_eq!(s.strongest(2),0.);
+        assert!(s.complete(2,&ids,|n|if n==CATEGORY_COUNT{1}else{0}));assert!(s.actors.values().all(|b|b.category==1));assert_eq!(s.strongest(0),0.);assert_eq!(s.strongest(1),0.14);
     }
     #[test]
     fn endless_rewards_continue_with_fixed_map_cap() {
@@ -133,8 +129,8 @@ mod tests {
         assert_eq!(b.amount, 2700);
         assert_eq!(b.amount, Blessing::roll(5, 0, 0).amount);
         assert!(!s.complete(300, &ids, |_| panic!("duplicate callback")));
-        assert!(s.complete(301, &ids, |n| if n == CATEGORY_COUNT { 3 } else { 99 }));
-        assert_eq!(s.actors[&ids[0]].amount, 14000);
+        assert!(s.complete(301, &ids, |n| if n == CATEGORY_COUNT { 2 } else { 99 }));
+        assert_eq!(s.actors[&ids[0]].amount, 10000);
     }
     #[test]
     fn duplicate_event_replacement_disconnect_and_group_max() {

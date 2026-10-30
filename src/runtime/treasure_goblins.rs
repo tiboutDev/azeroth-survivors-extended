@@ -187,13 +187,13 @@ pub fn install(r: &Runtime) {
         )),
     }
 }
-pub fn encounter(game: u64) {
+pub fn encounter(game: u64, normal_bosses:u32) {
     if !AVAILABLE.load(Ordering::Acquire) {
         return;
     }
     if let Ok(mut state) = STATE.lock() {
         if let Some(s) = state.as_mut().filter(|s| s.game == game) {
-            s.rules.encounter(s.clock);
+            s.rules.encounter(s.clock,normal_bosses);
         }
     }
 }
@@ -367,6 +367,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
             ACTIVE.store(false, Ordering::Release);
         }
         state.as_mut().unwrap().clock = now;
+        state.as_mut().unwrap().rules.ensure_first(now);
         state.as_mut().unwrap().pursuers = p
             .actors
             .iter()

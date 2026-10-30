@@ -12,6 +12,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 REPRODUCE = ROOT / "scripts/reproduce.ps1"
 RELEASE = ROOT / "tools/build/release.ps1"
+GAME_VERSION = next(iter(json.loads((ROOT / "asx/supported-games.json").read_text())["games"]))
 POWERSHELL = shutil.which("pwsh") or shutil.which("powershell.exe")
 
 
@@ -58,7 +59,7 @@ class WindowsReproduction(unittest.TestCase):
             invalid = directory / "invalid.json"
             invalid.write_text(json.dumps({
                 "schema": 1,
-                "game_version": "0.125.0",
+                "game_version": GAME_VERSION,
                 "artifact": "avrt.dll",
                 "builder": "xwin-msvc",
                 "sha256": "0" * 64,
@@ -104,7 +105,7 @@ class WindowsReproduction(unittest.TestCase):
             expected = directory / "native-reference.json"
             expected.write_text(json.dumps({
                 "schema": 1,
-                "game_version": "0.125.0",
+                "game_version": GAME_VERSION,
                 "artifact": "avrt.dll",
                 "builder": "windows-msvc",
                 "sha256": hashlib.sha256(fixture_dll).hexdigest(),

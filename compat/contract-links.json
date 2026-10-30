@@ -359,9 +359,6 @@
     "official_native.combat_text.combat_text_entries": [
       "ASX-24"
     ],
-    "official_native.combat_text.damage_entry": [
-      "ASX-24"
-    ],
     "official_native.combat_text.draw_native_heal_text": [
       "ASX-24"
     ],
@@ -792,27 +789,6 @@
     "official_native.menu_pause.pause_notice": [
       "ASX-06",
       "ASX-18"
-    ],
-    "official_native.nameplates.enemy": [
-      "ASX-23"
-    ],
-    "official_native.nameplates.nameplate_entries": [
-      "ASX-23"
-    ],
-    "official_native.nameplates.nameplate_rows": [
-      "ASX-23"
-    ],
-    "official_native.nameplates.nameplate_style": [
-      "ASX-23"
-    ],
-    "official_native.nameplates.native_unit_rank": [
-      "ASX-23"
-    ],
-    "official_native.nameplates.restore_nameplate_style_cache": [
-      "ASX-23"
-    ],
-    "official_native.nameplates.word": [
-      "ASX-23"
     ],
     "official_native.native_marks_enabled": [
       "ASX-21"
@@ -1690,6 +1666,15 @@
       "ASX-26",
       "ASX-27",
       "ASX-28"
+    ],
+    "official_native.pause.stop_body": [
+      "ASX-06"
+    ],
+    "official_native.pause.pause_remote_motion": [
+      "ASX-06"
+    ],
+    "official_native.stat_inputs.apply_consumable_speed": [
+      "ASX-27"
     ]
   },
   "evidence": {
@@ -2345,15 +2330,6 @@
       "shared": false
     },
     "official_native.combat_text.combat_text_entries": {
-      "reason": "Native outgoing damage and allied direct/periodic healing text entries and draw queue.",
-      "references": [
-        "crates/asx-game/src/official_native/combat_text.rs",
-        "src/runtime/combat_text.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.combat_text.damage_entry": {
       "reason": "Native outgoing damage and allied direct/periodic healing text entries and draw queue.",
       "references": [
         "crates/asx-game/src/official_native/combat_text.rs",
@@ -3556,69 +3532,6 @@
       ],
       "role": "native-operation",
       "shared": true
-    },
-    "official_native.nameplates.enemy": {
-      "reason": "Native rank/style readers and reversible nameplate presentation.",
-      "references": [
-        "crates/asx-game/src/official_native/nameplates.rs",
-        "src/runtime/nameplates.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.nameplates.nameplate_entries": {
-      "reason": "Native rank/style readers and reversible nameplate presentation.",
-      "references": [
-        "crates/asx-game/src/official_native/nameplates.rs",
-        "src/runtime/nameplates.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.nameplates.nameplate_rows": {
-      "reason": "Native rank/style readers and reversible nameplate presentation.",
-      "references": [
-        "crates/asx-game/src/official_native/nameplates.rs",
-        "src/runtime/nameplates.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.nameplates.nameplate_style": {
-      "reason": "Native rank/style readers and reversible nameplate presentation.",
-      "references": [
-        "crates/asx-game/src/official_native/nameplates.rs",
-        "src/runtime/nameplates.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.nameplates.native_unit_rank": {
-      "reason": "Native rank/style readers and reversible nameplate presentation.",
-      "references": [
-        "crates/asx-game/src/official_native/nameplates.rs",
-        "src/runtime/nameplates.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.nameplates.restore_nameplate_style_cache": {
-      "reason": "Native rank/style readers and reversible nameplate presentation.",
-      "references": [
-        "crates/asx-game/src/official_native/nameplates.rs",
-        "src/runtime/nameplates.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.nameplates.word": {
-      "reason": "Native rank/style readers and reversible nameplate presentation.",
-      "references": [
-        "crates/asx-game/src/official_native/nameplates.rs",
-        "src/runtime/nameplates.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
     },
     "official_native.native_marks_enabled": {
       "reason": "Current selected client retains upstream personal marks.",
@@ -5354,6 +5267,38 @@
       ],
       "role": "native-operation",
       "shared": true
+    },
+    "official_native.pause.stop_body": {
+      "reason": "Host pause-edge visual stop for other current participants through the existing selected native movement packet sender; authoritative poses and local actor are preserved.",
+      "references": [
+        "crates/asx-game/src/official_native/pause.rs",
+        "src/runtime/session.rs",
+        "src/runtime/session/services.rs",
+        "docs/COOP-PAUSE.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.pause.pause_remote_motion": {
+      "reason": "Host pause-edge visual stop for other current participants through the existing selected native movement packet sender; authoritative poses and local actor are preserved.",
+      "references": [
+        "crates/asx-game/src/official_native/pause.rs",
+        "src/runtime/session.rs",
+        "src/runtime/session/services.rs",
+        "docs/COOP-PAUSE.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.stat_inputs.apply_consumable_speed": {
+      "reason": "Personal Swiftness supplies add to the selected native movement output after baseline reconstruction; gameplay tier and cosmetic quality remain independent.",
+      "references": [
+        "crates/asx-game/src/official_native/stat_inputs.rs",
+        "src/runtime/supplies.rs",
+        "docs/FEATURE-RULES.md"
+      ],
+      "role": "native-operation",
+      "shared": false
     }
   },
   "conservative_notes": {
@@ -5403,7 +5348,6 @@
     "official_native.layout.read_game": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file.",
     "official_native.layout.row_field": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file.",
     "official_native.name": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file.",
-    "official_native.nameplates.native_ui_participants": "Participant UI identities are shared by rendering, event projection and diagnostics; no single-feature narrowing is approved.",
     "official_native.pause_addresses": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file.",
     "official_native.presentation.decorate_party_addon": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file.",
     "official_native.presentation.diagnostic_writer_entry": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file.",
@@ -5425,6 +5369,7 @@
     "official_native.ui_receiver": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file.",
     "official_native.world_events.guid": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file.",
     "official_native.world_events.q": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file.",
-    "official_native.world_update": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file."
+    "official_native.world_update": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file.",
+    "official_native.ui_identity.native_ui_participants": "Bounded native UI aliases shared by healing and event presentation; independent ASXUI does not consume this reader."
   }
 }

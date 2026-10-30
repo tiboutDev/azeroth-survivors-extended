@@ -79,7 +79,7 @@ impl Adapter {
         Ok(Some((game, 5)))
     }
     pub fn blessing_pool_index(self, m: &dyn Mem, frame: u64, index: u64) -> Result<u64> {
-        if !(15 * 72..19 * 72).contains(&index) {
+        if !(16 * 72..19 * 72).contains(&index) {
             return Ok(index);
         }
         let game = q(

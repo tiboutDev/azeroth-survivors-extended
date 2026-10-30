@@ -2,7 +2,7 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use super::super::{
     blessings, combat, duplicate_loot, elites, enchantments, experience, fatigue, gems, glyphs, io,
-    menu_pause, party_ui, pause, support, wallet, Runtime, RUNTIME,
+    menu_pause, party_ui, support, wallet, Runtime, RUNTIME,
 };
 use asx_game::official::Observation;
 use asx_gameplay::official::{PausePresentation, PauseReason};
@@ -14,6 +14,7 @@ pub(super) trait WorldControl {
     fn rules_enabled(&self) -> bool;
     fn observe_world(&self, game: u64) -> Result<Option<PauseReason>, String>;
     fn capture_world(&self, game: u64);
+    fn stop_remote_motion(&self, _game:u64) {}
     fn finish_world(&self, game: u64);
     fn log_group_pause(&self, reason: &Option<PauseReason>);
     fn warn(&self, message: &str);
@@ -92,6 +93,12 @@ impl WorldControl for Runtime {
         }
         Ok(party.and_then(|value| menu_pause::reason(self, game, &value)))
     }
+    fn stop_remote_motion(&self,game:u64){
+        match unsafe{self.adapter.pause_remote_motion(&self.local,self.local.base as u64,game)}{
+            Ok(sent)=>{#[cfg(feature="test-hooks")]self.log.info(&format!("pause remote visual stop: packets={sent}"));#[cfg(not(feature="test-hooks"))]let _=sent;},
+            Err(e)=>self.log.warn(&format!("Pause visual stop rejected: {e}")),
+        }
+    }
     fn capture_world(&self, game: u64) {
         support::capture(self, game);
         combat::capture(self, game);
@@ -131,10 +138,7 @@ impl WorldServices for Runtime {
         let snapshot = if opened { self.adapter.party(&self.local, server).ok().flatten() } else { snapshot };
         super::super::raid_markers::observe(self,server,snapshot.as_ref());
         let reason = snapshot.as_ref().and_then(|party| menu_pause::reason(self, game, party));
-        let active = reason.is_some();
-        if pause::set_active(active) != active {
-            self.log.info(&format!("official group pause: {reason:?}"));
-        }
+        super::set_host_pause(self,game,&reason);
         if let Ok(mut cached) = self.party.lock() { *cached = snapshot; }
     }
     fn finish_experience(&self, server: u64) {

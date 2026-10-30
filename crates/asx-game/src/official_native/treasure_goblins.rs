@@ -385,6 +385,19 @@ impl Adapter {
         for i in before..n {
             let guid = q(m, p + i as u64 * 504 + v::ENEMY_GUID as u64)?;
             if ((guid >> 24) & 0xffffff) == u64::from(v::GOBLIN_ENTRY) {
+                // The existing native raid-target decoder accepts a trusted local
+                // command in solo and host runs, then broadcasts its normal update.
+                // Reuse its reviewed table/command; never overwrite a manual mark.
+                let server=game.checked_sub(16).ok_or("Invalid goblin server")?;
+                let raw=m.read(server+v::SERVER_RAID_MARKS,64)?;
+                if raw.len()!=64{return Err("Truncated goblin marker table".into())}
+                let occupied=std::array::from_fn(|n|{let id=u64::from_le_bytes(raw[n*8..n*8+8].try_into().unwrap());(id!=0).then_some(id)});
+                if skull_available(&occupied,guid){
+                    let mut body=[0u8;9];body[0]=7;body[1..].copy_from_slice(&guid.to_le_bytes());
+                    type Mark=unsafe extern "system" fn(u64,u64,u64,u16,*const u8,usize);
+                    let mark:Mark=std::mem::transmute((base+self.command().rva)as usize);
+                    mark(server,0,0,v::RAID_MARKER_COMMAND,body.as_ptr(),body.len());
+                }
                 return Ok(Some(GoblinHandle { guid, index: i }));
             }
         }
@@ -827,5 +840,16 @@ impl Adapter {
             None
         };
         Ok(Some((op, guid, position)))
+    }
+}
+
+fn skull_available(occupied:&[Option<u64>;8],guid:u64)->bool{
+    guid!=0&&!occupied.contains(&Some(guid))&&occupied[7].is_none_or(|id|((id>>24)&0xffffff)==u64::from(v::GOBLIN_ENTRY))
+}
+#[cfg(test)]mod skull_tests{
+    use super::*;
+    #[test]fn skull_reuses_previous_goblin_but_preserves_manual_player_marks(){
+        let mut marks=[None;8];assert!(skull_available(&marks,42));marks[7]=Some(123);assert!(!skull_available(&marks,42));
+        marks[7]=Some((u64::from(v::GOBLIN_ENTRY)<<24)|1);assert!(skull_available(&marks,42));marks[0]=Some(42);assert!(!skull_available(&marks,42));
     }
 }

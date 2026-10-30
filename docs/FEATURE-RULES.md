@@ -42,7 +42,10 @@ tiers begin at native ring ranks **2/4/7/10/14**: Minor, Lesser, unprefixed,
 Greater and Superior. Kind and rank remain per ring. Native additive-stat inputs
 are temporarily borrowed and restored; repeated rebuilds must not accumulate
 bonuses. Preview/apply/improve text must reflect the accepted native rank.
-Native capped rings can remain unenchantable or low-tier.
+Native capped rings can remain unenchantable or low-tier. Declined previews retire
+when that actor accepts a validated native reward choice, before reentrant
+creation of the next reward. Accepted kinds stay locked; independent draws may
+still randomly repeat an enchantment.
 
 Rules: `gems.rs`, `enchantments.rs`; coordination uses bounded reward services.
 Shared retained-tooltip/card representations do not enable disabled glyphs.
@@ -51,17 +54,18 @@ Shared retained-tooltip/card representations do not enable disabled glyphs.
 
 Sayge's Dark Fortunes grant one personal replacement per completed native boss
 encounter, including endless encounters. One active fortune per player persists
-until replaced or the run ends. Luck, XP, Gold, Pickup Radius and Movement Speed
+until replaced or the run ends. Luck, XP and Gold
 are equally likely; rarity weights are 60/25/10/4/1 and do not use player Luck.
 Strength progression caps at five completed encounters; later encounters still
 replace fortunes. Final percentages are rounded once and used consistently for
 application, tooltip and notification.
 
 Coop XP and Gold use the strongest current fortune in each category. Other
-bonuses remain personal. Pickup modifies the native radius multiplicatively;
-Speed adds to the native speed multiplier. Rebuild native inputs before replacing
-bonuses. Four utility trinkets are excluded from the selected reward pool without
-removing existing inventory. Rules and coefficients: gameplay `blessings.rs`.
+Luck remains personal. Rebuild native inputs before replacing bonuses.
+Three economy trinkets are excluded from the selected reward pool without
+removing existing inventory. The pickup-range Gnomish Universal Remote is available
+again. Movement speed and pickup radius are not Fortune rewards. Rules and
+coefficients: gameplay `blessings.rs`.
 
 ## Optional Treasure Goblins
 
@@ -69,13 +73,17 @@ One host-owned Treasure Goblin (**Venture Co. Treasurer**) may be active at a ti
 in solo or coop. It uses 200% model scale, native placement 6–9 yards away
 (at least 4 yards from each living participant), and a 1.5-second arrival
 pause before fleeing. This pause is included in the 25-second escape window. The
-native completed-encounter transition supplies one optional opportunity, including
-endless encounters; individual boss entities do not roll separately. Chances are
-12% before the first appearance, 6% after one, then 3% thereafter. Misses never
-increase the chance. A successful roll schedules one native placement attempt
-20–40 simulation seconds later. Failed placement consumes that opportunity;
-only an actual appearance lowers future chances. There are no time-based repeat
-attempts or pity guarantees. A goblin escapes after 25 simulation seconds; group
+first opportunity uses bad-luck protection across completed pre-final boss
+encounters, never before the first boss. With five native bosses the conditional
+chances are 25%, 1/3, 50% and 100% if no earlier opportunity was selected. Thus an
+enabled complete normal run selects its first goblin before the final boss,
+with early and late outcomes rather than a fixed first-boss spawn. Selection
+schedules native placement 20–40 simulation seconds later. A confirmed failed
+placement re-arms that selected first opportunity; unknown native failures stop
+the optional feature rather than retrying an uncertain spawn. Short/aborted
+runs and unavailable native placement/contacts cannot promise an appearance.
+After an actual first appearance, later encounter chances remain 6%, then 3%.
+A goblin escapes after 25 simulation seconds; group
 pauses suspend its deadline. A missing native instance is abandoned without a
 reward. The native horde constructor retains time/Heroic/party health scaling
 over the first native guardian’s base health for that map. The event
@@ -165,13 +173,13 @@ reference. No gameplay event listeners, velocity prediction or map/entity scans.
 The reserve uses the native DeadMine Cargo Boxes pile (display 36), scale 1.
 It is independently optional through `lost_supplies` in either mode. First attempt at 30 simulation seconds, then every 30–50
 seconds, with fixed 50% success and no pity. Reserves may coexist and each lasts
-60 simulation seconds. The native pause/choice state freezes deadlines. A living
+90 simulation seconds. The native pause/choice state freezes deadlines. A living
 player collects within two yards. Content and power are fixed at appearance;
 claims reserve slot/GUID/event identity before native IO and never reroll.
 
-90% of rewards are consumables, with six equally likely families. Each lasts
-20 simulation seconds. Different families coexist. The same family renews to
-20 seconds without adding durations or power; a lower tier cannot downgrade a
+90% of rewards are consumables, with seven equally likely families. Each lasts
+60 simulation seconds. Different families coexist. The same family renews to
+60 seconds without adding durations or power; a lower tier cannot downgrade a
 still-active stronger effect. Tiers follow completed native encounters:
 0–1 = I, 2–3 = II, 4+ = III, with no further endless growth.
 
@@ -279,12 +287,12 @@ previous Fortune automatically. Reward reservation precedes native IO.
 
 Prototype power ranges after encounters 1–5 are 10–18, 14–24, 18–30, 22–36 and
 26–40 normalized units. Each unit is one tenth of the category base: Luck 15%,
-Experience 12%, Gold 25%, Pickup Range 35%, Movement Speed 5%. Final displayed
+Experience 12% and Gold 25%. Final displayed
 percentages are whole numbers. The next successful trial raises normalized power
 above the previous success until the cap of 40; a repeat category also advances
 past rounding ties where possible. Missing trials does not hold back map stage.
-Category is uniformly random; Luck does not affect the roll. Visual rarity follows
-power instead of a separate random roll. These ranges are provisional solo tuning,
+Category is uniformly random; Luck does not affect the roll. Structured legacy rarity follows power rather than a separate random roll;
+visual Fortune text uses green +X% values instead of rarity labels. These ranges are provisional solo tuning,
 not approved final balance. At the endless cap further replacements can equal
 power; growth is bounded.
 
@@ -320,3 +328,53 @@ The host's addon payload carries personal event metadata through the existing
 native channel. Cosmetic minimap projection uses the viewer's live native
 GetPingPosition/GetZoom; local ping events rebase the viewer's reference. No
 custom transport, client-side reward decision or simulation authority is added.
+
+## Event presentation and cooperative validation
+
+ASXUI stacks Sayge, Supplies and Fortune panels below the native top HUD,
+centered by default. The shared anchor and each panel's offset, scale, opacity
+and visibility remain configurable; layout accounts for scaled visible heights.
+Sayge exposes collective readiness separately from local presence. Progress
+suspends without resetting whenever a required participant is outside and resumes
+when everyone returns. The local display must not interpolate progress during
+that suspension.
+
+Cooperative Supplies keep native aura projection active independently of Fortunes
+and solo Supplies. Pending aura cleanup keeps that boundary active after buff
+expiry, so stale native aura rows can be retired. Native stat reconstruction
+continues to use each receiving actor's personal buff inputs.
+
+ASXUI presents Fortunes with their actual +X% amount in green, including native
+buff tooltips; rarity remains available as structured data, not the visible
+quality label. Missing/stale snapshots or a new trial do not replay an unchanged
+acquisition notification. Sayge progress uses native WoW casting-bar assets and
+a separate waiting/progress line.
+
+Automatic participant markers use the seven non-skull icons. A newly created
+goblin receives the native skull through the existing native raid-target command
+when that icon is free; manually assigned marks are never displaced. ASXUI
+replaces the native guardian red flag with a masked native taunt icon, using
+AZS_GetFlaggedLair and the same minimap projection as cache/event pins. The HUD
+flag preference is restored when ASXUI pins or projection are unavailable.
+
+Swiftness Potion is a personal 60-second Supplies effect granting +10%, +15% or
++20% movement speed. Native reconstruction resets its baseline; the bounded
+post-rebuild addition must not accumulate across refreshes and disappears on
+expiry. The seven aura families have unique personal slots.
+
+Supply names use Classic item quality independently of the gameplay tier and
+material sale-power bucket: all referenced potions/elixirs/flasks/oils are Common
+(white); Black Lotus, Arcane Crystal and Arcanite Bar are Uncommon (green). Other
+referenced materials are Common. See the reference entries for
+[Swiftness Potion](https://www.wowhead.com/classic/item=2459/swiftness-potion),
+[Black Lotus](https://www.wowhead.com/classic/item=13468/black-lotus),
+[Arcane Crystal](https://www.wowhead.com/classic/item=12363/arcane-crystal), and
+[Arcanite Bar](https://www.wowhead.com/classic/item=12360/arcanite-bar).
+
+The catalog-review coop scenario places scenes near the group's actual native
+positions. It never writes participant poses. A host claim and a guest claim on
+the same object, matching native coordinates, personal speed statistics, trial
+completion on both clients and continuous active API availability are separate
+requirements. The legacy forced-position fixture is not proof of interactive
+collectability. Its presentation delay derives from SUPPLY_SECONDS rather than
+an obsolete 60-second literal.

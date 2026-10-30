@@ -26,7 +26,7 @@ impl Ritual {
 /// A stage gives a range, not a fixed award. Progress is independent of missed rituals.
 pub fn roll(encounter:u32,previous:Option<(u32,Blessing)>,category_draw:u32,power_draw:u32)->(u32,Blessing){
  let stage=encounter.clamp(1,5);let(low,high)=[(10,18),(14,24),(18,30),(22,36),(26,40)][stage as usize-1];
- let category=(category_draw%5)as u8;let mut low=low;
+ let category=(category_draw%crate::blessings::CATEGORY_COUNT)as u8;let mut low=low;
  if let Some((power,old))=previous {
   low=low.max((power+1).min(high));
   while low<high&&old.category==category&&amount(category,low)<=old.amount{low+=1;}
@@ -34,7 +34,7 @@ pub fn roll(encounter:u32,previous:Option<(u32,Blessing)>,category_draw:u32,powe
  let power=low+power_draw%(high-low+1);let rarity=match power{0..=14=>0,15..=21=>1,22..=28=>2,29..=35=>3,_=>4};
  (power,Blessing{category,rarity,amount:amount(category,power),boss:encounter})
 }
-fn amount(category:u8,power:u32)->u32{(([1500,1200,2500,3500,500][category as usize]*power/10+50)/100)*100}
+fn amount(category:u8,power:u32)->u32{(([1500,1200,2500][category as usize]*power/10+50)/100)*100}
 #[cfg(test)]mod tests{
  use super::*;
  #[test]fn group_presence_requires_every_live_identity_and_keeps_partial_progress(){let mut r=Ritual::new(1,0.,[0.;3]).unwrap();r.advance_presence(0.,true);r.advance_presence(0.5,true);let before=r.held;r.advance_presence(1.,false);r.advance_presence(1.5,true);assert_eq!(r.held,before);r.advance_presence(2.,true);assert_eq!(r.held,before+0.5);}
@@ -53,6 +53,6 @@ fn amount(category:u8,power:u32)->u32{(([1500,1200,2500,3500,500][category as us
   let mut successes=0;for i in 0..=45{if r.advance(500.+i as f32/2.,[1.,2.,3.],true)==Outcome::Success{successes+=1;}}
   assert_eq!(successes,1);assert_eq!(roll(r.encounter,None,0,0).0,22);
  }
- #[test]fn ranges_keep_surprise_and_replace_monotonically_until_cap(){let mut previous=None;for stage in 1..=100 {let(p,b)=roll(stage,previous,stage%5,0);if let Some((old,_))=previous{assert!(p>old||p==40);}assert_eq!(b.amount%100,0);assert!(p<=40);previous=Some((p,b));}let(a,_)=roll(1,None,0,0);let(b,_)=roll(1,None,0,8);assert_eq!((a,b),(10,18));}
- #[test]fn skipping_rituals_keeps_map_stage_and_speed_rounding_never_regresses(){let(p,b)=roll(4,None,4,0);assert_eq!(p,22);let(_,new)=roll(5,Some((p,b)),4,0);assert!(new.amount>b.amount);assert_eq!(roll(1,None,1,0).1.amount,1200);}
+ #[test]fn ranges_keep_surprise_and_replace_monotonically_until_cap(){let mut previous=None;for stage in 1..=100 {let(p,b)=roll(stage,previous,stage%crate::blessings::CATEGORY_COUNT,0);if let Some((old,_))=previous{assert!(p>old||p==40);}assert_eq!(b.amount%100,0);assert!(p<=40);previous=Some((p,b));}let(a,_)=roll(1,None,0,0);let(b,_)=roll(1,None,0,8);assert_eq!((a,b),(10,18));}
+ #[test]fn skipping_rituals_keeps_map_stage_and_percentage_rounding_never_regresses(){let(p,b)=roll(4,None,2,0);assert_eq!(p,22);let(_,new)=roll(5,Some((p,b)),2,0);assert!(new.amount>b.amount);assert_eq!(roll(1,None,1,0).1.amount,1200);}
 }

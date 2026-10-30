@@ -32,8 +32,8 @@ def build(output,dll,runtime,version=None,key=None,sequence=1,game_version=None)
         public=base64.b64encode(signing.public_key().public_bytes(serialization.Encoding.Raw,serialization.PublicFormat.Raw)).decode()
         trusted=json.loads((ROOT/"asx/channel.json").read_text())["keys"]
         if public not in trusted:raise ValueError("Signing key does not match the packaged ASX trust keys")
-    files={"ASX/Bin/avrt.dll":raw,"start-asx.cmd":(ROOT/"asx/start-asx.cmd").read_bytes().replace(b"\r\n",b"\n").replace(b"\n",b"\r\n"),"README-ASX.txt":(ROOT/"asx/README-ASX.txt").read_bytes().replace(b"0.115.0",game_version.encode()),"ASX/Defaults/channel.json":(ROOT/"asx/channel.json").read_bytes(),"ASX/Interface/ASX.toc":b"## Interface: 11200\n## Title: Azeroth Survivors Extended\nPresentation.lua\n","ASX/Interface/Presentation.lua":(ROOT/"native-ui/official-party.lua").read_bytes(),"ASX/Client/LICENSE":(ROOT/"LICENSE").read_bytes(),"ASX/Client/supported-games.json":(ROOT/"asx/supported-games.json").read_bytes()}
-    for name in("core.py","updates.py","launch.py","remove.py","remove.ps1"):files["ASX/Client/"+name]=(ROOT/"asx"/name).read_bytes()
+    files={"ASX/Bin/avrt.dll":raw,"start-asx.cmd":(ROOT/"asx/start-asx.cmd").read_bytes().replace(b"\r\n",b"\n").replace(b"\n",b"\r\n"),"README-ASX.txt":(ROOT/"asx/README-ASX.txt").read_bytes().replace(b"{GAME_VERSION}",game_version.encode()),"ASX/Defaults/channel.json":(ROOT/"asx/channel.json").read_bytes(),"ASX/Interface/ASX.toc":b"## Interface: 11200\n## Title: Azeroth Survivors Extended\nPresentation.lua\n","ASX/Interface/Presentation.lua":(ROOT/"native-ui/official-party.lua").read_bytes(),"ASX/Client/LICENSE":(ROOT/"LICENSE").read_bytes(),"ASX/Client/supported-games.json":(ROOT/"asx/supported-games.json").read_bytes()}
+    for name in("core.py","updates.py","maintenance.py","launch.py","remove.py","remove.ps1"):files["ASX/Client/"+name]=(ROOT/"asx"/name).read_bytes()
     runtime=Path(runtime)
     for file in sorted(runtime.rglob("*")):
         relative=file.relative_to(runtime)
@@ -50,7 +50,7 @@ def build(output,dll,runtime,version=None,key=None,sequence=1,game_version=None)
     if signing is not None:
         feed={"schema":1,"product":core.PRODUCT,"sequence":sequence,"manifest":m,"package":{"asset":target.name,"size":len(archive),"sha256":core.digest(archive)}}
         raw=core.encoded(feed);(output/"asx-latest.json").write_bytes(raw);(output/"asx-latest.json.sig").write_bytes(signing.sign(raw))
-    (output/"PREPARATION.json").write_bytes(core.encoded({"product":core.PRODUCT,"version":version,"archive":target.name,"archive_sha256":core.digest(archive),"dll_sha256":core.digest(files["ASX/Bin/avrt.dll"]),"file_count":len(files),"signed":key is not None,"published":False,"live_validation":False,"runtime_updates":"Runtime replacement requires full archive extraction while closed; mod payload updates are automatic."}))
+    (output/"PREPARATION.json").write_bytes(core.encoded({"product":core.PRODUCT,"version":version,"archive":target.name,"archive_sha256":core.digest(archive),"dll_sha256":core.digest(files["ASX/Bin/avrt.dll"]),"file_count":len(files),"signed":key is not None,"published":False,"live_validation":False,"runtime_updates":"Runtime replacement requires full archive extraction while closed; mod payload updates require user confirmation."}))
     return target
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--output",type=Path,required=True);p.add_argument("--dll",type=Path,required=True);p.add_argument("--runtime",type=Path,required=True);p.add_argument("--version");p.add_argument("--private-key",type=Path);p.add_argument("--sequence",type=int,default=1);p.add_argument("--game-version")

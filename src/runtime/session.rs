@@ -43,15 +43,22 @@ fn pre_world(runtime: Option<&dyn WorldControl>, game: u64, dt: f32) -> f32 {
         if let Ok(Ok(reason)) = result {
             let paused = reason.is_some();
             delta = if paused { 0.0 } else { dt };
-            if pause::set_active(paused) != paused {
-                runtime.log_group_pause(&reason);
-            }
+            set_host_pause(runtime,game,&reason);
         } else if pause::set_active(false) {
             runtime.warn("Official pause observation failed; native simulation resumed and mod barrier deactivated");
         }
     }
     if let Some(runtime) = runtime.filter(|r| r.rules_enabled()) { runtime.capture_world(game); }
     delta
+}
+
+// Both world observation and post-server refresh can own the first pause edge.
+fn set_host_pause(runtime:&dyn WorldControl,game:u64,reason:&Option<asx_gameplay::official::PauseReason>){
+    let active=reason.is_some();
+    if pause::set_active(active)!=active{
+        runtime.log_group_pause(reason);
+        if active{runtime.stop_remote_motion(game);}
+    }
 }
 
 fn finish_world(runtime: Option<&dyn WorldControl>, game: u64) {

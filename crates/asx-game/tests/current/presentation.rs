@@ -34,33 +34,6 @@ fn adapter()->SelectedAdapter{SelectedAdapter::select(asx_game::current::SHA256)
  let row=m.read(0xe2038,0x38).unwrap();let ptr=u64::from_le_bytes(row[8..16].try_into().unwrap());assert_eq!(m.read(ptr,3).unwrap(),b"+37");assert_eq!(m.allocs.get(),1);assert_eq!(row[40],2);assert_eq!(&row[32..40],&0x100000019u64.to_le_bytes());assert_eq!(&row[48..],&9u64.to_le_bytes());
 }
 
-#[test]fn native_plate_inputs_hide_only_normal_enemy_labels_before_the_first_draw(){
- unsafe extern "system" fn hash(_:u64,_:*const u64)->u64{0}
- let m=memory();let a=adapter();let mut rows=vec![0;0x58*2];
- for i in 0..2{let at=i*0x58;rows[at+0x10..at+0x18].copy_from_slice(&5u64.to_le_bytes());rows[at+0x18..at+0x1c].copy_from_slice(&1u32.to_le_bytes());rows[at+0x52]=1;rows[at+0x54]=1;rows[at+0x38+i*4..at+0x3c+i*4].copy_from_slice(&1f32.to_le_bytes());}
- let script=0x100000;let style=0x130000;
- m.data.borrow_mut().insert(script,vec![0;0x7000]);
- let ctrl=0x120000;let map=script+asx_game::current::UI_UNIT_MAP;
- m.data.borrow_mut().insert(ctrl-16*asx_game::current::UI_UNIT_STRIDE,vec![0;16*asx_game::current::UI_UNIT_STRIDE as usize+32]);
- m.write(map,&ctrl.to_le_bytes()).unwrap();m.write(map+8,&15u64.to_le_bytes()).unwrap();m.write(map+24,&1u64.to_le_bytes()).unwrap();m.write(ctrl,&[0xff;32]).unwrap();m.write(ctrl,&[0]).unwrap();
- m.write(ctrl-asx_game::current::UI_UNIT_STRIDE,&77u64.to_le_bytes()).unwrap();
- rows[0x20..0x28].copy_from_slice(&77u64.to_le_bytes());
- let base=hash as *const()as usize-asx_game::current::UI_UNIT_HASH.0 as usize;
-
- let config=[110f32,14.,2.,2.,100.,10.,3.,1.,12.,16.,12.,10.,2.].into_iter().flat_map(f32::to_le_bytes).collect::<Vec<_>>();m.data.borrow_mut().insert(style,config);
- m.data.borrow_mut().insert(0xf0000,rows.clone());let modified=unsafe{a.nameplate_rows(&m,base,script,0xf0000,2)}.unwrap().unwrap();assert_eq!(m.read(0xf0000,rows.len()).unwrap(),rows);
- assert_eq!(&modified[0x10..0x1c],&[0;12]);assert_eq!((modified[0x52],modified[0x54]),(0,1));assert_eq!(&modified[0x58..],&rows[0x58..]);assert_eq!(&modified[0x30..0x52],&rows[0x30..0x52]);
- assert_eq!(&modified[0x28..0x30],&rows[0x28..0x30]);
- assert!(unsafe{a.nameplate_rows(&m,base,script,0xf0000,257)}.is_err());
-}
-#[test]fn unknown_classification_preserves_native_name_and_still_hides_level(){
- let m=memory();let a=adapter();let script=0x100000;
- m.data.borrow_mut().insert(script,vec![0;0x7000]);
- let mut row=vec![0;0x58];row[0x10]=5;row[0x18]=1;row[0x52]=1;row[0x38..0x3c].copy_from_slice(&1f32.to_le_bytes());
- m.data.borrow_mut().insert(0xf0000,row.clone());
- let changed=unsafe{a.nameplate_rows(&m,0,script,0xf0000,1)}.unwrap().unwrap();
- assert_eq!(&changed[..0x18],&row[..0x18]);assert_eq!(changed[0x18],0);assert_eq!(changed[0x52],0);
-}
 #[test]fn native_participants_use_current_native_aliases_without_pets_or_duplicates(){
  let m=memory();let a=adapter();let script=0x100000;let aliases=script+asx_game::current::UI_ALIASES;
  m.data.borrow_mut().insert(script,vec![0;0x7000]);
@@ -69,37 +42,6 @@ fn adapter()->SelectedAdapter{SelectedAdapter::select(asx_game::current::SHA256)
  assert_eq!(a.native_ui_participants(&m,script).unwrap(),vec![11,22,33]);
  m.write(aliases+asx_game::current::UI_SELF_GUID,&0u64.to_le_bytes()).unwrap();assert!(a.native_ui_participants(&m,script).unwrap().is_empty());
 }
-#[test]fn native_unit_rank_uses_the_guid_key_and_checks_native_rank(){
- unsafe extern "system" fn hash(_:u64,guid:*const u64)->u64{assert_eq!(*guid,77);0}
- let m=memory();let a=adapter();let script=0x100000;let ctrl=0x120000;let map=script+asx_game::current::UI_UNIT_MAP;
- m.data.borrow_mut().insert(script,vec![0;0x7000]);m.data.borrow_mut().insert(ctrl-16*asx_game::current::UI_UNIT_STRIDE,vec![0;16*asx_game::current::UI_UNIT_STRIDE as usize+32]);
- m.write(map,&ctrl.to_le_bytes()).unwrap();m.write(map+8,&15u64.to_le_bytes()).unwrap();m.write(map+24,&1u64.to_le_bytes()).unwrap();m.write(ctrl,&[0xff;32]).unwrap();m.write(ctrl,&[0]).unwrap();
- let slot=ctrl-asx_game::current::UI_UNIT_STRIDE;m.write(slot,&77u64.to_le_bytes()).unwrap();m.write(slot+8+asx_game::current::UI_UNIT_RANK,&3u32.to_le_bytes()).unwrap();
- let base=hash as *const()as usize-asx_game::current::UI_UNIT_HASH.0 as usize;
- assert_eq!(unsafe{a.native_unit_rank(&m,base,script,77)}.unwrap(),Some(3));
- m.write(slot,&88u64.to_le_bytes()).unwrap();assert_eq!(unsafe{a.native_unit_rank(&m,base,script,77)}.unwrap(),None);
-}
-#[test]fn native_plate_geometry_uses_a_fresh_settings_copy_and_keeps_its_cache_baseline(){
- let m=memory();let a=adapter();let(script,cache,bp,style)=(0x100000u64,0x110000u64,0x120000u64,0x130000u64);
- for(at,n)in [(script,0x5000),(cache,0xe0),(bp,0x400),(style,52)]{m.data.borrow_mut().insert(at,vec![0;n]);}
- m.write(script+asx_game::current::PLATE_CACHE_PTR,&cache.to_le_bytes()).unwrap();m.write(script+asx_game::current::PLATE_CACHE_LEN,&1u64.to_le_bytes()).unwrap();m.write(bp+0x290,&cache.to_le_bytes()).unwrap();m.write(cache+0x38,&1f32.to_le_bytes()).unwrap();
- let original=[110f32,14.,2.,2.,106.,10.,3.,1.,12.,16.,12.,10.,2.].into_iter().flat_map(f32::to_le_bytes).collect::<Vec<_>>();m.write(style,&original).unwrap();
- for _ in 0..3{let(scaled,dest,saved)=a.nameplate_style(&m,asx_game::current::PLATE_STYLE_CALLERS[0],bp,script,0,style).unwrap().unwrap();assert_eq!(scaled[0],110.*0.70);assert_eq!(scaled[10],12.);assert_eq!(dest,cache+0x5c);assert_eq!(saved.as_slice(),original);assert_eq!(m.read(style,52).unwrap(),original);a.restore_nameplate_style_cache(&m,dest,&saved).unwrap();}
- assert!(a.nameplate_style(&m,0,bp,script,0,style).unwrap().is_none());
-}
-
-#[test]fn native_special_enemy_names_are_preserved_while_levels_are_hidden(){
- unsafe extern "system" fn hash(_:u64,_:*const u64)->u64{0}
- let m=memory();let a=adapter();let script=0x100000;let ctrl=0x120000;let style=0x130000;let map=script+asx_game::current::UI_UNIT_MAP;
- m.data.borrow_mut().insert(script,vec![0;0x7000]);m.data.borrow_mut().insert(ctrl-16*asx_game::current::UI_UNIT_STRIDE,vec![0;16*asx_game::current::UI_UNIT_STRIDE as usize+32]);
- m.write(map,&ctrl.to_le_bytes()).unwrap();m.write(map+8,&15u64.to_le_bytes()).unwrap();m.write(map+24,&1u64.to_le_bytes()).unwrap();m.write(ctrl,&[0xff;32]).unwrap();m.write(ctrl,&[0]).unwrap();
- let slot=ctrl-asx_game::current::UI_UNIT_STRIDE;m.write(slot,&77u64.to_le_bytes()).unwrap();
- let mut row=vec![0;0x58];row[0x10..0x18].copy_from_slice(&5u64.to_le_bytes());row[0x20..0x28].copy_from_slice(&77u64.to_le_bytes());row[0x38..0x3c].copy_from_slice(&1f32.to_le_bytes());row[0x18]=1;row[0x52]=1;row[0x54]=1;m.data.borrow_mut().insert(0xf0000,row.clone());
- m.data.borrow_mut().insert(style,[110f32,14.,2.,2.,100.,10.,3.,1.,12.,16.,12.,10.,2.].into_iter().flat_map(f32::to_le_bytes).collect());
- let base=hash as *const()as usize-asx_game::current::UI_UNIT_HASH.0 as usize;
- for rank in 1u32..=4{m.write(slot+8+asx_game::current::UI_UNIT_RANK,&rank.to_le_bytes()).unwrap();let changed=unsafe{a.nameplate_rows(&m,base,script,0xf0000,1)}.unwrap().unwrap();assert_eq!(&changed[..0x18],&row[..0x18]);assert_eq!(changed[0x18],0);assert_eq!(changed[0x52],0);assert_eq!(changed[0x54],1);}
-}
-
 #[test]fn bonus_title_column_consumes_a_fresh_native_node_and_reparents_only_its_title(){
  unsafe extern "system" fn spawn(out:*mut u64,commands:u64,bundle:*mut u64,meta:u64)->u64{
   assert_eq!((commands,meta),(0xe10000,0x20000));assert_eq!(*bundle,0x100000019);
@@ -135,4 +77,46 @@ fn adapter()->SelectedAdapter{SelectedAdapter::select(asx_game::current::SHA256)
  let mut expected=before;let length=(asx_game::current::HEAL_LOG_QUEUE+16)as usize;expected[length..length+8].copy_from_slice(&1u64.to_le_bytes());
  assert_eq!(m.read(game,0x800).unwrap(),expected);assert_eq!(m.read(0xe1000,32).unwrap(),[32u64,0xe2000,25,0x150].into_iter().flat_map(u64::to_le_bytes).collect::<Vec<_>>());assert_eq!(m.frees.get(),0);
  assert!(unsafe{a.emit_fractional_heal_text(&m,base,game,asx_game::official_native::HealText{caster:11,target:22,amount:0,critical:false},139)}.is_err());
+}
+
+#[test]
+fn addon_extension_uses_asx_and_rejects_duplicate_fields_without_allocation() {
+    let m = memory();
+    let a = adapter();
+    let output = 0xd0000;
+    m.data.borrow_mut().insert(output, vec![0; 100]);
+    m.data.borrow_mut().insert(0xd1000, b"AZSRUN".to_vec());
+    m.data.borrow_mut().insert(0xd2000, b"t=42".to_vec());
+    for (offset, value) in [(40, 0xd1000u64), (48, 6), (56, 4), (64, 0xd2000), (72, 4)] {
+        m.write(output + offset, &value.to_le_bytes()).unwrap();
+    }
+    a.decorate_party_addon(&m, output, "0200").unwrap();
+    let header = m.read(output + 56, 24).unwrap();
+    let ptr = u64::from_le_bytes(header[8..16].try_into().unwrap());
+    let len = u64::from_le_bytes(header[16..24].try_into().unwrap());
+    assert_eq!(m.read(ptr, len as usize).unwrap(), b"t=42;asx=0200");
+    let allocations = m.allocs.get();
+    assert!(a.decorate_party_addon(&m, output, "0201").is_err());
+    assert_eq!(m.allocs.get(), allocations);
+    assert_eq!(m.read(output + 56, 24).unwrap(), header);
+}
+
+#[test]
+fn minimap_projection_needs_no_readable_native_zoom_fields() {
+    let m=memory();let a=adapter();let script=0xd0000;
+    let aliases=script+asx_game::current::UI_ALIASES;
+    m.data.borrow_mut().insert(aliases+asx_game::current::UI_SELF_GUID,11u64.to_le_bytes().to_vec());
+    m.data.borrow_mut().insert(aliases+asx_game::current::UI_PARTY_GUIDS,vec![0;32]);
+    m.data.borrow_mut().insert(script+0x6640,[3f32,4.].into_iter().flat_map(f32::to_le_bytes).collect());
+    m.data.borrow_mut().insert(script+0x6648,vec![1]);
+    m.data.borrow_mut().insert(script+0x664c,[10f32,20.].into_iter().flat_map(f32::to_le_bytes).collect());
+    m.data.borrow_mut().insert(script+0x665c,vec![0]);
+    // Both legacy zoom fields deliberately remain unmapped.
+    assert!(m.read(script+0x6654,4).is_err());assert!(m.read(script+0x6658,4).is_err());
+    let outside=a.event_minimap(&m,script,11).unwrap().unwrap();
+    assert_eq!(outside.center,[10.,20.]);assert_eq!(outside.ping,[3.,4.]);
+    assert!((outside.radii[0]-233.33333).abs()<0.001);
+    m.write(script+0x665c,&[1]).unwrap();
+    let inside=a.event_minimap(&m,script,11).unwrap().unwrap();
+    assert_eq!(inside.radii,[150.,120.,90.,60.,40.,25.]);
 }

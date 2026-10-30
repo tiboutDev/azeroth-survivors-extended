@@ -1,6 +1,6 @@
 # Native party presentation
 
-ASX enriches the official 0.125 interface. The native `PlayerFrame` and
+ASX enriches the supported native interface. The native `PlayerFrame` and
 `PartyMemberFrame1..4` retain health, names, death/resurrection and connection
 behavior. Five-player capacity means the local player plus four remote frames;
 ASX does not replace lobby admission or create a second roster authority.
@@ -15,9 +15,10 @@ owners; no player build should be attached to a pet frame.
 
 `src/runtime/party_ui.rs` owns cosmetic GUID/generation freshness and
 presentation policy. Selected native access owns owner HUD translation, native
-formatter output and native string/buffer bounds. The native menu class atlas is
-selected separately; decorations borrow the live native builder and remain
-cosmetic.
+formatter output and native string/buffer bounds. Lobby class-icon decorations
+are retired: ASX installs no atlas-capture, lobby-button, status-refresh or
+roster-cache hooks. Only the shared reward-header sizing hook remains; native
+lobby rendering and in-game party identity remain unchanged.
 
 ## Owner identity and tooltip contents
 
@@ -52,7 +53,8 @@ against the actual artifact; portable checks alone do not establish that result.
 
 [Native world presentation](NATIVE-WORLD-UI.md) documents enemy plate styling,
 world damage/healing text, shared card separators and one-time random cooperative
-markers. These use native owners and the same owned presentation activation gate.
+markers. ASXUI styles nameplates and selects the world-number font independently;
+healing messages and cooperative markers retain their native ASX owners.
 
 ## World-event presentation
 
@@ -103,6 +105,9 @@ panel shows only when native participant presence reports the player inside the 
 leaving hides it without clearing the cumulative objective. Ritual metadata's
 last field is now an inside flag (0/1), not an availability countdown.
 
+ASXUI now owns minimap pins, including native caches read from `AZS_CHESTS`.
+The embedded presentation exposes the read-only versioned `ASX_GetState(1)` bridge
+and creates no pins. Without ASXUI, this optional custom pin layer is absent.
 Minimap pins are circular crate and Fortune-orb images masked by the client's
 SetPortraitToTexture, surrounded by the native tracking ring. They are retained
 children of Minimap, not entries in its engine POI registry. Interior projection
@@ -113,8 +118,10 @@ point, allowing Lua to reconstruct the live center and project at the current
 zoom immediately. One MINIMAP_PING UI listener preserves the last center until
 the changed reference arrives; it never changes the native ping. Pins stay
 visible across zoom changes. No exposed Lua API registers custom engine POIs.
-Only active pin geometry and confirmed progress smoothing run per frame; no model, buff,
-icon asset, entity scan or network rebuild is driven by that path.
+ASXUI updates pin membership at 10 Hz and retained geometry each frame; ASX
+keeps model/buff refresh at 4 Hz and confirmed progress smoothing per frame.
+The read-only bridge checks the current payload freshness without rescanning
+entities or rebuilding unchanged payloads. Missing projection hides pins.
 
 In coop, the host appends each recipient's own consumables, receipt, ritual
 presence and remaining event pins to the retained addon payload. Shared progress
@@ -122,3 +129,69 @@ is identical; panel visibility and claimed reserve pins are personal. The native
 scene packets are independent of cosmetic Lua metadata. Guests reconstruct their
 own minimap center from the live native projection, with local ping-event
 coordinates preserving the reference across subsequent host metadata samples.
+
+## ASX presentation envelope
+
+`AZS_RUN.asx` is an ASX-owned extension transported on the native `AZSRUN`
+line; it is not part of the native addon API. The producer, retained Lua view,
+widget names (`ASXOfficialParty...`) and diagnostic readout
+(`ASXOfficialPartyReadout`) use ASX naming. The former field is not an alias.
+Historical reports and unrelated legacy diagnostic interfaces are unchanged.
+
+Each recipient receives `M` membership and ASX metadata (including local
+Fortune, fatigue and personal events), but `S` spell and `I` item build rows
+only for other players. Local builds are still captured for those other
+recipients. Native local build presentation remains authoritative.
+
+The `A` minimap row is now
+`A|owner|centerX|centerY|r0|r1|r2|r3|r4|r5|pingX|pingY`.
+Coordinates use hundredths and radii use millionths. The unused single radius
+is omitted; six zoom radii, native center and ping coordinates remain available
+for zoom, pan and local-ping projection. Older thirteen-field (zoom) and fourteen-field (radius plus zoom) rows are rejected.
+The current row has twelve fields. ASXUI requires a valid live
+`Minimap:GetZoom()`; there is no payload zoom fallback.
+The compressed envelope and content header versions are unchanged: the renamed
+field and bundled Lua consumer define this private interface together.
+
+The wall-clock heartbeat remains in `1|epoch|recipientGUID|heartbeat`, including
+while native gameplay time is paused. It refreshes native transport without
+changing stable cosmetic identities or invalidating a hovered owner tooltip.
+
+## Extracted ASXUI event presentation
+
+Supply/Fortune notifications and Sayge progress widgets are now owned by
+ASXUI `Events.lua`, not the embedded addon. ASX still formats all semantic text
+through `ASX_GetState(1).texts` from validated current recipient data.
+The addon keeps the native-styled panel recipe, notification lifetimes,
+identity-scoped deduplication/queueing and cosmetic progress smoothing. Saved
+per-widget position, scale, opacity and visibility do not change gameplay.
+Aura tooltips and buff-slot enrichment remain embedded. Native goblin CHAT_MSG
+announcements remain on their existing native channel. This extraction changes
+UI ownership; it does not remove a native gameplay hook.
+
+The supported addon-facing interface is now [ASX contract 1.0](ADDON-API.md):
+`ASX_STATE`, `ASX_STATE_UPDATED`, `ASX_GetAPIVersion()`, `ASX_GetState(1)` and
+registered state handlers. Values and ASX text are separate and getters/handlers
+return detached copies. ASXUI uses this public interface. Older named getters
+remain private compatibility adapters; the compressed wire format stays private.
+
+Event widgets share an ASXUI root anchored below the native top HUD and stack
+visible scaled panels without overlapping by default. Saved old absolute widget
+positions migrate to offsets from stack slots. Sayge's v1.1 API adds collective
+readiness separately from local presence, so an inside player sees an ASX waiting
+message and frozen cosmetic progress while another required player is outside.
+
+## Fortune buff presentation
+
+ASXUI/Buffs.lua promotes the existing native Fortune button into the first
+visual buff position (rightmost in the stock layout). It remaps only frame
+anchors, including wrapped rows. Native IDs, buffIndex, tooltips, duration
+children and click handlers are unchanged. Missing/stale ASX state, an absent
+Fortune or ambiguous icons leave the native layout in control. Original anchors
+are restored only while ASXUI still owns them; fresh native layout changes win.
+Restore clears the owned graph before rebuilding anchors to avoid cycles.
+
+The retained ASX tooltip keeps native GameTooltip styling: white title, green
+effect and secondary scope/lifetime details. When a party fortune is stronger,
+separate Your fortune and Active party bonus rows distinguish the owned value
+from the effective shared value; they are not added together.

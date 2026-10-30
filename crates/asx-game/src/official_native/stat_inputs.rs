@@ -24,7 +24,15 @@ impl Adapter {
   m.write(loan.at,&loan.header)?;m.free_native(loan.owned,loan.size)
  }
  pub fn consumable_stats(self,m:&dyn MutableMemory,game:u64,buffs:&[asx_gameplay::supplies::Consumable])->Result<Option<StatInputLoan>>{
-  let mut seen=std::collections::BTreeSet::new();if buffs.len()>6||buffs.iter().any(|c|!(1..=3).contains(&c.tier)||!seen.insert(c.family)){return Err("Invalid consumable families".into())}
-  let entries=buffs.iter().map(|c|(c.family.stat(),c.value())).collect::<Vec<_>>();self.temporary_stat_input(m,game,&entries)
+  let mut seen=std::collections::BTreeSet::new();if buffs.len()>asx_gameplay::supplies::Family::ALL.len()||buffs.iter().any(|c|!(1..=3).contains(&c.tier)||!seen.insert(c.family)){return Err("Invalid consumable families".into())}
+  let entries=buffs.iter().filter_map(|c|c.family.stat().map(|kind|(kind,c.value()))).collect::<Vec<_>>();self.temporary_stat_input(m,game,&entries)
  }
+ pub fn apply_consumable_speed(self,m:&dyn MutableMemory,game:u64,value:f32)->Result<()>{
+  if !value.is_finite()||!(0.0..=0.20).contains(&value)||self.run_source(m,game)?.is_none(){return Err("Invalid consumable speed scope".into())}
+  let at=game+self.field117(v::BLESSING_STAT_FIELDS[4]);let bytes=m.read(at,4)?;
+  let base=f32::from_le_bytes(bytes.try_into().map_err(|_|"Truncated native movement speed")?);
+  if !base.is_finite()||base<0.{return Err("Invalid native movement speed".into())}
+  m.write(at,&(base+value).to_le_bytes())
+ }
+
 }
