@@ -62,6 +62,9 @@ function makePlate(name,r,g,b)
  p.regions={border,glow,text,level,object("Texture"),object("Texture")}
  table.insert(WorldFrame.children,p);return p
 end
+plateShows=0;layout="stack"
+function ShowNameplates()plateShows=plateShows+1 end
+function SetCVar(key,value)assert(key=="nameplateLayout" and value=="overlap");layout=value end
 function loadAddon()arg1="ASXUI";ASXUIController.scripts.OnEvent();arg1=nil end
 function tick()ASXUIController.scripts.OnUpdate()end
 """
@@ -76,7 +79,7 @@ class ASXUITests(unittest.TestCase):
         self.lua.execute("loadAddon()")
     def run_lua(self,source):self.lua.execute(source)
     def test_enemy_scale_is_stable_and_preserves_native_health_and_scripts(self):
-        self.run_lua('p=makePlate("Boar",1,0,0);for i=1,20 do tick()end;assert(p:GetWidth()==70);assert(p.children[1].health==37);assert(p.regions[3]:GetFont()=="native.ttf");assert(p.scripts.OnUpdate==p.originalUpdate)')
+        self.run_lua('p=makePlate("Boar",1,0,0);for i=1,20 do tick()end;assert(p:GetWidth()==50);assert(p.children[1].health==37);assert(p.regions[3]:GetFont()=="native.ttf");assert(p.scripts.OnUpdate==p.originalUpdate)')
     def test_friendly_reuse_restores_original_scale_and_labels(self):
         self.run_lua('p=makePlate("Boar",1,0,0);tick();p.children[1].color={0,1,0};tick();assert(p:GetWidth()==100);assert(p.regions[3].alpha==1);assert(p.regions[4].alpha==1)')
     def test_unknown_or_ambiguous_classification_hides_names(self):
@@ -87,16 +90,16 @@ class ASXUITests(unittest.TestCase):
         self.run_lua('p=makePlate("Boar",1,0,0);rank="elite";kind="guardian";function AZS_UnitKind()return kind end;tick();assert(p.regions[3].alpha==1);kind="normal";tick();assert(p.regions[3].alpha==0);for _,v in ipairs({"elite","guardian","boss","final"})do kind=v;tick();assert(p.regions[3].alpha==1)end;kind=nil;tick();assert(p.regions[3].alpha==0);p.regions[3].text="Another";kind="boss";tick();assert(p.regions[3].alpha==0)')
     def test_pill_tracks_native_health_color_and_reuses_its_frames(self):
         self.run_lua('''p=makePlate("Boar",1,0,0);tick();local root=ASXUIEnemyHealth1
-        assert(root:GetWidth()==70 and root:GetHeight()==8 and root.visible)
-        assert(ASXUIEnemyHealth1Clip:GetWidth()==68*.37)
+        assert(root:GetWidth()==50 and root:GetHeight()==6 and root.visible)
+        assert(ASXUIEnemyHealth1Clip:GetWidth()==48*.37)
         assert(p.children[1].healthTexture.alpha==0 and p.regions[1].alpha==0 and p.regions[2].alpha==0)
         assert(p.regions[6].alpha==1)
-        p.children[1].health=1;tick();assert(ASXUIEnemyHealth1Clip:GetWidth()==.68)
+        p.children[1].health=1;tick();assert(ASXUIEnemyHealth1Clip:GetWidth()==.48)
         p.children[1].health=0;tick();assert(not ASXUIEnemyHealth1Clip.visible)
         p.children[1].health=999;p.children[1].color={1,.5,0};tick()
-        assert(ASXUIEnemyHealth1Clip:GetWidth()==68 and ASXUIEnemyHealth1Fill.centerTexture.tint[2]==.5)
+        assert(ASXUIEnemyHealth1Clip:GetWidth()==48 and ASXUIEnemyHealth1Fill.centerTexture.tint[2]==ASXUIEnemyHealth1Fill.centerTexture.tint[1]*.5 and ASXUIEnemyHealth1FillLeft1.tint[2]==ASXUIEnemyHealth1Fill.centerTexture.tint[2])
         assert(root==ASXUIEnemyHealth1 and p.children[1].health==999)
-        SlashCmdList.ASXUI("scale 1.5");assert(root:GetWidth()==150 and root:GetHeight()==8)''')
+        SlashCmdList.ASXUI("scale 1.5");assert(root:GetWidth()==150 and root:GetHeight()==6)''')
     def test_pill_restores_native_art_on_invalid_health_friendly_reuse_and_disable(self):
         self.run_lua('''p=makePlate("Boar",1,0,0);p.regions[1].alpha=.6;tick()
         p.children[1].maximum=0;tick();assert(not ASXUIEnemyHealth1.visible and p.regions[1].alpha==.6 and p.children[1].healthTexture.alpha==1)
@@ -104,12 +107,14 @@ class ASXUITests(unittest.TestCase):
         assert(not ASXUIEnemyHealth1.visible and p.regions[1].alpha==.6)
         p.children[1].color={1,0,0};tick();p.visible=false
         SlashCmdList.ASXUI("plates off");assert(not ASXUIEnemyHealth1.visible and p.regions[1].alpha==.6 and p.children[1].healthTexture.alpha==1)''')
+    def test_native_defaults_apply_once_and_later_choices_are_preserved(self):
+        self.run_lua('assert(plateShows==1 and NAMEPLATES_ON==1 and layout=="overlap");layout="stack";NAMEPLATES_ON=0;loadAddon();tick();assert(plateShows==1 and layout=="stack" and NAMEPLATES_ON==0);ASXUIDB.scale=.9;ASXUIDB.compactPlates=nil;loadAddon();assert(ASXUIDB.scale==.9);ASXUIDB.scale=.7;ASXUIDB.compactPlates=nil;loadAddon();assert(ASXUIDB.scale==.5)')
     def test_native_damage_face_is_preserved_by_default(self):
         self.run_lua('assert(DAMAGE_TEXT_FONT=="native.ttf" and ASXUIDB.numbers==false)')
     def test_toggle_restores_native_widgets_and_does_not_toggle_visibility(self):
         self.run_lua('function ShowNameplates()error("visibility changed")end;p=makePlate("Boar",1,0,0);tick();SlashCmdList.ASXUI("plates off");assert(p:GetWidth()==100);assert(p.regions[4].alpha==1);assert(p.regions[5].alpha==1);assert(p.regions[6].alpha==1)')
     def test_invalid_settings_are_bounded_and_numbers_change_next_start(self):
-        self.run_lua('local old=DAMAGE_TEXT_FONT;SlashCmdList.ASXUI("numbers off");assert(DAMAGE_TEXT_FONT==old);loadAddon();assert(DAMAGE_TEXT_FONT=="native.ttf");ASXUIDB.scale=0/0;p=makePlate("Boar",1,0,0);tick();assert(p:GetWidth()==70)')
+        self.run_lua('local old=DAMAGE_TEXT_FONT;SlashCmdList.ASXUI("numbers off");assert(DAMAGE_TEXT_FONT==old);loadAddon();assert(DAMAGE_TEXT_FONT=="native.ttf");ASXUIDB.scale=0/0;p=makePlate("Boar",1,0,0);tick();assert(p:GetWidth()==50)')
     def test_unrelated_world_children_are_untouched(self):
         self.run_lua('p=makePlate("Other",1,0,0);p.regions[1].texture="other";tick();assert(p:GetWidth()==100);assert(p.regions[4].alpha==1)')
     def test_unit_pool_discovery_handles_new_children_and_recycled_names(self):

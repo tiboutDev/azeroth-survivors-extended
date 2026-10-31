@@ -17,7 +17,7 @@ function GameTooltip:SetPlayerBuff(index)self.nativeIndex=index;self.title="Orig
 ASXUI_DockAuras(view)
 ''')
  def test_badges_use_structured_counts_active_party_bonus_and_native_tooltip(self):
-  self.lua.execute('assert(ASXUICrystalMedallion:IsShown() and ASXUICrystalMedallion.counts.blue:GetText()=="2");assert(ASXUIFortuneMedallion.value:GetText()=="+18%" and ASXUIFortuneMedallion.category:GetText()=="XP");assert(BuffButton0:GetAlpha()==0 and BuffButton1:GetAlpha()==0);hudCall("ASXUICrystalMedallion","OnEnter");assert(GameTooltip.nativeIndex==0 and GameTooltip.title=="Original native tooltip");hudCall("ASXUIFortuneMedallion","OnEnter");assert(GameTooltip.nativeIndex==1)')
+  self.lua.execute('assert(ASXUICrystalMedallion:IsShown() and ASXUICrystalMedallion.total:GetText()=="10" and ASXUICrystalMedallion.counts==nil and ASXUICrystalMedallion:GetWidth()==36);assert(ASXUIFortuneMedallion.value:GetText()=="+18%" and ASXUIFortuneMedallion.category:GetText()=="XP");assert(BuffButton0:GetAlpha()==0 and BuffButton1:GetAlpha()==0);hudCall("ASXUICrystalMedallion","OnEnter");assert(GameTooltip.nativeIndex==0 and GameTooltip.title=="Original native tooltip");hudCall("ASXUIFortuneMedallion","OnEnter");assert(GameTooltip.nativeIndex==1)')
  def test_missing_crystal_native_slot_cannot_bind_to_the_fortune_slot(self):
   self.lua.execute('view.data.crystals.index=32;ASXUI_DockAuras(view);assert(ASXUICrystalMedallion.native==nil and ASXUIFortuneMedallion.native==BuffButton1);assert(BuffButton0:GetAlpha()==1);hudCall("ASXUICrystalMedallion","OnEnter");assert(GameTooltip.title=="Crystal Resonance")')
  def test_native_tooltip_does_not_follow_a_reused_aura_index(self):
@@ -39,15 +39,30 @@ class NativeWidgetTests(unittest.TestCase):
  def test_hidden_native_revive_and_invalid_data_fail_open(self):
   self.lua.execute('nativePrefs.revive=false;revive={down=1,share=.5};tick();assert(not res());hudActive=false;tick();nativePrefs.revive=true;hudActive=true;revive={down=1,share=2};tick();assert(nativePrefs.revive and not res())')
  def test_marks_preserve_native_decimal_receipt_and_loot_is_queued(self):
-  self.lua.execute('local marks="|cffffd100You earn 0.5 marks (0.5 in all).|r";receipt("CHAT_MSG_SYSTEM",marks);tick();assert(reward().shown and reward().reward.text==marks and reward().title.text=="Marks earned" and nativePrefs.loot);receipt("CHAT_MSG_LOOT","You receive loot: [Native item]");assert(not nativePrefs.loot);now=now+4;tick();assert(reward().title.text=="Loot received" and reward().reward.text=="You receive loot: [Native item]");hudActive=false;tick();assert(nativePrefs.loot and not reward().shown)')
+  self.lua.execute('local marks="|cffffd100You earn 0.5 marks (0.5 in all).|r";receipt("CHAT_MSG_SYSTEM",marks);tick();assert(reward().shown and reward().reward.text=="|cff1eff00+0.5|r marks" and reward().note.text=="Total: |cff1eff000.5|r" and reward().title.text=="Marks earned" and nativePrefs.loot);receipt("CHAT_MSG_LOOT","You receive loot: [Native item]");assert(not nativePrefs.loot);now=now+4;tick();assert(reward().title.text=="Loot received" and reward().reward.text=="Native item" and reward().note.text=="Quantity: |cff1eff001|r");hudActive=false;tick();assert(nativePrefs.loot and not reward().shown)')
  def test_logout_does_not_allow_event_widgets_to_hide_native_parts_again(self):
   self.lua.execute('revive={reviving="Alice",rshare=.3};tick();receipt("CHAT_MSG_LOOT","You receive loot: [Native item]");tick();assert(not nativePrefs.loot and not nativePrefs.revive);event="PLAYER_LOGOUT";objects.ASXUINativeVisibilityController.scripts.OnEvent();assert(nativePrefs.loot and nativePrefs.revive);tick();receipt("CHAT_MSG_LOOT","You receive loot: [Another item]");assert(nativePrefs.loot and nativePrefs.revive)')
+ def test_native_rewards_present_item_quantity_rarity_and_marks_without_chat_phrase(self):
+  self.lua.execute('receipt("CHAT_MSG_LOOT","You receive loot: |cff0070dd|Hitem:123:0:0|h[Native item]|h|rx2.");tick();assert(reward().reward.text=="|cff0070ddNative item|r" and reward().note.text=="Quantity: |cff1eff002|r");now=now+4;receipt("CHAT_MSG_SYSTEM","You earn 1.25 marks (8.75 in all).");tick();assert(reward().reward.text=="|cff1eff00+1.25|r marks" and reward().note.text=="Total: |cff1eff008.75|r")')
+ def test_recorded_native_collection_receipt_becomes_item_name_and_quantity(self):
+  # Actual English receipt captured in the isolated 0.131.0 solo trial.
+  self.lua.execute("receipt(\"CHAT_MSG_LOOT\",\"You receive loot: |cffffffff[Recruit's Helm]|r |cff40ff40New in your collection!|r\");tick();assert(reward().reward.text==\"|cffffffffRecruit's Helm|r\" and reward().note.text==\"Quantity: |cff1eff001|r\")")
+ def test_incomplete_native_loot_receipt_does_not_hide_native_notice(self):
+  self.lua.execute('receipt("CHAT_MSG_LOOT","You receive loot: unknown payload");tick();assert(nativePrefs.loot and not reward())')
  def test_native_item_icon_accepts_classic_and_extended_item_info(self):
   for count in (9,10):
    with self.subTest(fields=count):
     self.setUp()
     values=['"Native item"','"link"','1','10']+(['1']if count==10 else[])+['"Armor"','"Plate"','1','"INVTYPE_HEAD"','"Interface\\\\Icons\\\\INV_Helmet_01"']
     self.lua.execute('function GetItemInfo()return '+','.join(values)+' end;receipt("CHAT_MSG_LOOT","You receive loot: [Native item]");tick();assert(reward().icon.texture=="Interface\\\\Icons\\\\INV_Helmet_01")')
+ def test_structured_native_loot_uses_actual_icon_and_does_not_repeat_on_chat_or_heartbeat(self):
+  self.lua.execute('local old=ASX_GetState;function ASX_GetState()local s=old();s.api={major=1,minor=6};s.data.loot={{event=1,rarity=0,isNew=true}};s.texts.loot={[1]={name="Recruit Helm",icon="INV_Helmet_02"}};return s end;receipt("CHAT_MSG_SYSTEM","You receive loot: [Recruit Helm]");assert(nativePrefs.loot);tick();tick();assert(not nativePrefs.loot and reward().icon.texture=="Interface\\\\Icons\\\\INV_Helmet_02" and reward().note.text=="New in your collection!");now=now+4;tick();assert(not reward().shown);receipt("CHAT_MSG_SYSTEM","You receive loot: [Recruit Helm]");tick();assert(not reward().shown)')
+ def test_pending_loot_rebinds_recipient_without_showing_old_session_receipt(self):
+  self.lua.execute('local old=ASX_GetState;function ASX_GetState()local s=old();s.api={major=1,minor=6};s.data.loot={{event=1,rarity=0,isNew=true}};s.texts.loot={[1]={name=s.session.recipientGUID=="11"and"Old owner"or"New owner",icon="INV_Helmet_02"}};return s end;view.owner.ritual=nil;tick();view.own="22";view.epoch="2";tick();tick();assert(reward().reward.text=="|cffffffffNew owner|r")')
+ def test_current_provider_waits_for_real_metadata_instead_of_guessing_during_unavailability(self):
+  self.lua.execute('function ASX_GetAPIVersion()return 1,6 end;function ASX_GetState()return {available=false,api={major=1,minor=6}}end;receipt("CHAT_MSG_SYSTEM","You receive loot: [Unresolved item]");tick();assert(nativePrefs.loot and not reward())')
+ def test_already_collected_native_items_hide_both_toasts_but_preserve_marks(self):
+  self.lua.execute('local old=ASX_GetState;function ASX_GetAPIVersion()return 1,6 end;function ASX_GetState()local s=old();s.api={major=1,minor=6};s.data.loot={{event=1,rarity=0,isNew=false}};s.texts.loot={[1]={name="Already collected",icon="INV_Helmet_02"}};return s end;tick();assert(not nativePrefs.loot and not reward());receipt("CHAT_MSG_SYSTEM","You receive loot: [Already collected]");tick();assert(not reward());receipt("CHAT_MSG_SYSTEM","You earn 0.5 marks (2.5 in all).");tick();tick();assert(reward().title.text=="Marks earned");function ASX_GetState()return {available=false}end;tick();assert(nativePrefs.loot)')
  def test_new_ritual_banner_defers_receipts_without_losing_their_lifetime(self):
   self.lua.execute('tick();view.owner.ritual.event=3;receipt("CHAT_MSG_SYSTEM","You earn 0.5 marks (0.5 in all).");tick();assert(not reward());for i=1,21 do tick()end;assert(reward().shown and reward().title.text=="Marks earned")')
  def test_overlapping_choice_and_ritual_wait_do_not_extend_receipt_twice(self):

@@ -912,6 +912,7 @@ impl SelectedAdapter {
 /// Owned presentation data; never a native pointer or a second gameplay authority.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PartyIcon {
+    pub category: Option<&'static str>,
     pub id: u32,
     pub rank: u32,
     pub name: String,
@@ -1622,6 +1623,9 @@ impl SelectedAdapter {
 }
 
 impl SelectedAdapter {
+    pub fn damage_text_size_entry(self) -> Entry {
+        self.native.damage_text_size_entry()
+    }
     pub fn combat_text_entries(self) -> [Entry; 8] {
         self.native.combat_text_entries()
     }

@@ -332,49 +332,51 @@ plus what you expected and what happened.
 
 ### Compact ASXUI HUD
 
-ASXUI adds adjacent Combat/Character buttons beside the native action bar.
-Hover to consult stats, click to keep a panel open, and click again to close.
-The drawer shows nonzero native character stats in three columns. A native-icon
-strip centered flush against the screen top displays kills, gold and the next
-cache price, with native run time and the next-boss countdown below it. Native XP and
-foreground gryphons are preserved. Five circular equipment positions use the
-matching ASX bridge and native item descriptions. `/asxui hud off` restores the
-native layout and its previous visibility preferences immediately.
+ASXUI adds one statistics button beside the native action bar. Hover to consult
+stats, click to keep the panel open, and click again to close. The character-sheet
+keybind also toggles this panel while the ASXUI HUD is enabled. All nonzero native
+stats fit into four columns, with short labels and complete terms on hover.
+The panel opens immediately in front of equipment, beneath the native XP artwork
+and foreground gryphons. The native XP texture and top border stay intact.
 
-The HUD also presents player health without portrait/resources, native buffs and
-debuffs above health, with native durations above their icons, and hides the old player/target frames.
-Cooperative ally builds use matching native textured panels, with allied buffs
-placed immediately outside their right edge. A list in the upper-left
-tracks living guardians and an available Sayge trial. Event rewards use
-the same metal/stone style. These are presentation changes; native health,
-auras, targeting, rewards and objectives remain authoritative.
+A compact ornamented strip sits just below the screen's top edge, showing kills,
+gold and the next cache price. Gold has a soft light behind its value when a cache
+is affordable. The native run clock and next-boss countdown sit below the strip.
+Five circular equipment positions show the amulet, two rings, then two trinkets.
+Native slot silhouettes remain for empty positions. Descriptions use the owner's
+native item text. `/asxui hud off` restores the native layout and previous visibility
+preferences.
 
-The health bar is centered at two thirds of the bottom HUD width. Native buff
-and debuff rows sit above it, each centered independently (eight icons per row,
-including centered partial rows), without shrinking icons or duration text. Native duration labels move above
-the icons; their values and visibility remain native. The statistics drawer
-opens immediately above health and intentionally covers auras while open.
-The top counter ribbon uses the native dialog-header body/sides and lower
-trim, without the upper rail or top corners. Its content area is 36 units high,
-leaving eight units above and below the 20-unit icons before the lower trim.
-The clock remains below it with a clear gap. Player health has a capsule outline and a 22-unit fill, leaving room around
-its 12-unit text. Native circular masks and the native white texture shape
-the ends; a clipping viewport preserves the silhouette at low HP.
+The raised compact player health bar shows current HP, without a portrait or
+resources. Native buffs and debuffs stay above it, with durations above their
+icons. The old player and target frames are hidden while this HUD is enabled.
+Boss, awake-guardian and goblin bars show centered names without percentages.
+Enemy nameplates use smaller smooth health capsules and are visible with
+overlapping layout by default. Native damage numbers keep their world positions
+and font while rendering at one third of their usual size.
 
-Event pickup panels, objectives and allied build panels use an unmarked area of the native quest-log
-parchment, shaded dark brown to soften the background without introducing new
-assets. Other HUD panels keep their existing darker theme. Pickup panels use a
-340-by-88 default footprint and 32-unit icon, growing for wrapped native text;
-the automatic notification stack uses the resulting height and saved scale.
+Cooperative ally builds use matching textured panels, with buffs immediately
+outside their right edge. An ornamented Objectives header below the minimap
+remains visible. One Guardians quest lists living guardians and upcoming arrivals;
+an arrival countdown appears on its own indented line during the final 30 seconds.
+Quest headings and objective entries have separate spacing. Sayge has its own quest.
+Minimap pins cover all active guardians, with event and cache priorities to keep
+important markers above less urgent ones. Goblins no longer receive an automatic
+skull marker.
 
-The warm paper extends beneath the popup/objective/allied-build border rather than leaving
-a black inner gutter. No native texture is redistributed.
+Reward and ally panels use native parchment and border textures. Compact pickup
+panels grow for wrapped text and stack without overlap. Numeric bonuses are green,
+their labels white, and duration appears on a separate line. Supplies sold for
+gold show the exact earned amount beside a native WoW gold coin. New boss-item
+drops use their real icons; already-collected items produce no loot popup. Marks
+keep their own notifications. Original chat messages remain available.
 
+Crystal Resonance and Sayge's Fortune appear as permanent-effect medallions beside
+health. Crystals show one total count on their icon; the tooltip lists accumulated
+bonuses. Fortune has a small icon for the bonus category. The health capsule keeps
+native shaded artwork. Sayge's icon-free channel bar shows remaining time inside
+the bar; the same style also displays native resurrection progress.
 
-Crystal Resonance and Sayge's Fortune now appear as permanent-effect medallions
-beside health: colored crystal counts on the left, active Fortune on the right,
-with details on hover. The health pill keeps the native shaded bar texture.
-Ally builds are vertically aligned with their player frames and keep buffs on
-the outside right. Sayge's icon-free channel style also shows native resurrection
-progress. Native English loot and marks receipts use the compact reward popup;
-the original chat messages remain. Other locales keep the native loot notice.
+These changes use existing client assets. Health, targeting, auras, progression,
+rewards and native game authority remain unchanged. No native textures are shipped
+in ASX.

@@ -46,6 +46,7 @@ function methods:GetID()return self.id end
 function methods:EnableMouse(v)self.mouse=v end
 function methods:SetFrameStrata(v)self.strata=v end
 function methods:SetFrameLevel(v)self.level=v end
+function methods:GetFrameLevel()return self.level or 5 end
 function methods:SetOwner(v)self.owner=v end
 function methods:ClearLines()self.lines={} end
 function methods:AddLine(v)table.insert(self.lines,v)end
@@ -66,6 +67,8 @@ function methods:SetScript(event,fn)self.scripts[event]=fn end
 function methods:RegisterEvent(e)self.events=self.events or {};self.events[e]=true end
 function methods:SetTexture(t)self.texture=t end
 function methods:SetText(t)self.text=t end
+function methods:GetText()return self.text or ""end
+function methods:GetStringWidth()return string.len(self.text or "")*6 end
 function methods:Hide()self.shown=false;visibilityWrites=visibilityWrites+1 end
 function methods:Show()self.shown=true;visibilityWrites=visibilityWrites+1 end
 function methods:IsVisible()return self.shown and (not self.parent or self.parent:IsVisible())end
@@ -106,7 +109,20 @@ function enter(button)this=objects[button];this.scripts.OnEnter();this=nil end
 @unittest.skipUnless(LuaRuntime,"Use the official-party-ui profile for required Lua 5.1 execution")
 class NativePartyLua(unittest.TestCase):
  def setUp(self):
-  self.lua=LuaRuntime();self.lua.execute(STUB);self.lua.execute((ROOT/"native-ui/official-party.lua").read_text().replace("local asxNativeActive = 0 -- ASX_LOCAL_UI_GATE","local asxNativeActive = 1 -- ASX_LOCAL_UI_GATE",1));self.lua.execute((ROOT/"addons/ASXUI/Minimap.lua").read_text());self.lua.execute((ROOT/"addons/ASXUI/Events.lua").read_text());self.lua.execute("update();now=now+0.3;update()")
+  self.lua=LuaRuntime();self.lua.execute(STUB);self.lua.execute((ROOT/"native-ui/official-party.lua").read_text().replace("local asxNativeActive = 0 -- ASX_LOCAL_UI_GATE","local asxNativeActive = 1 -- ASX_LOCAL_UI_GATE",1));self.lua.execute((ROOT/"addons/ASXUI/Theme.lua").read_text());self.lua.execute((ROOT/"addons/ASXUI/Minimap.lua").read_text());self.lua.execute((ROOT/"addons/ASXUI/Events.lua").read_text());self.lua.execute("update();now=now+0.3;update()")
+ def test_native_drop_api_keeps_icon_receipt_and_recipient_identity(self):
+  h=lambda text:text.encode().hex()
+  row=f"Q|11|1|0|1|{h('Recruit Helm')}|{h('INV_Helmet_02')}\n"
+  self.publish(("1|1|11|1\nM|11|0|506c61796572\n"+row).encode().hex())
+  self.lua.execute('local s=ASX_GetState(1);assert(s.api.minor==6 and s.data.loot[1].event==1 and s.data.loot[1].isNew and s.texts.loot[1].icon=="INV_Helmet_02");s.texts.loot[1].icon="mutated";assert(ASX_GetState(1).texts.loot[1].icon=="INV_Helmet_02")')
+  self.publish(("1|1|11|1\nM|11|0|506c61796572\n"+row.replace("Q|11|","Q|22|")).encode().hex())
+  self.lua.execute('assert(not ASX_GetState(1).available)')
+ def test_native_drop_duplicate_sequence_and_invalid_texture_fail_closed(self):
+  h=lambda text:text.encode().hex()
+  base="1|1|11|1\nM|11|0|506c61796572\n"
+  row=f"Q|11|1|0|1|{h('Native item')}|{h('INV_Helmet_02')}\n"
+  for suffix in [row+row,row.replace(h('INV_Helmet_02'),h('../foreign'))]:
+   self.publish((base+suffix).encode().hex());self.lua.execute('assert(not ASX_GetState(1).available)')
  def test_blessing_native_buff_and_single_retained_notification(self):
   text=bytes.fromhex(self.wire()).decode();out=[]
   for line in text.splitlines():
@@ -168,7 +184,7 @@ class NativePartyLua(unittest.TestCase):
   d=lambda event,name,gold:f"D|11|{event}|3|{gold}|{h(name)}|{h('INV_Misc_Gem_Crystal_02')}|{h('Automatically sold for gold')}\n"
   self.publish((base+d(1,'Arcane Crystal',33)).encode().hex())
   self.publish((base+d(2,'Black Lotus',34)).encode().hex())
-  self.lua.execute('assert(objects.ASXSupplyDiscoveryToast.reward.text=="Arcane Crystal");now=now+4;AZS_RUN_UPDATED=now;update();assert(objects.ASXSupplyDiscoveryToast.reward.text=="Black Lotus" and objects.ASXSupplyDiscoveryToast.note.text=="Sold for 34 gold");now=now+4;AZS_RUN_UPDATED=now;update();assert(not objects.ASXSupplyDiscoveryToast.shown)')
+  self.lua.execute('assert(objects.ASXSupplyDiscoveryToast.reward.text=="Arcane Crystal");now=now+4;AZS_RUN_UPDATED=now;update();assert(objects.ASXSupplyDiscoveryToast.reward.text=="Black Lotus" and objects.ASXSupplyDiscoveryToast.note.text=="Sold for 34");now=now+4;AZS_RUN_UPDATED=now;update();assert(not objects.ASXSupplyDiscoveryToast.shown)')
  def test_ritual_visual_fixture_runs_zoom_and_opacity_observations_without_lua_errors(self):
   self.lua.execute('local original=CreateFrame;function CreateFrame(kind,name,parent,template)local f=original(kind,name,parent,template);if kind=="Frame" then auditFrame=f elseif kind=="Font" then auditLabel=f end;return f end;local methods=getmetatable(UIParent).__index;function methods:SetJustifyH()end;Minimap={GetZoom=function()return 0 end,SetZoom=function()end};function ASXRitualReadout()return 1,700,true,true end;function ASXEventVisualReadout()return rewardVisible,1 end;function ASXEventPinsReadout()return {{event=1}}end;rewardVisible=true')
   self.lua.execute((ROOT/'tools/dev/fixtures/asx-ritual-ui-audit.lua').read_text())
@@ -252,7 +268,7 @@ class NativePartyLua(unittest.TestCase):
   self.publish(("\n".join(rows)+"\n").encode().hex())
   self.lua.execute("nativeAura='Interface/Icons/INV_Misc_Orb_02.blp';tooltipLines={};function GameTooltip:AddLine(s)table.insert(tooltipLines,s)end;GameTooltip:SetPlayerBuff(32)")
   self.assertEqual(self.lua.eval("GameTooltip.title"),"Sayge's Dark Fortune of Wisdom")
-  self.lua.execute('assert(tooltipLines[1]=="+12% Experience");assert(objects.ASXDarkmoonBlessingToast.reward.text=="+12% Experience");assert(tooltipLines[2]=="Personal bonus.");local slot,permanent=GetPlayerBuff(32,"HELPFUL");assert(permanent==1 and GetPlayerBuffTimeLeft(32)==0);assert(objects.ASXDarkmoonBlessingToast.shown)')
+  self.lua.execute('assert(tooltipLines[1]=="+12% Experience");assert(objects.ASXDarkmoonBlessingToast.reward.text=="|cff1eff00+12%|r Experience");assert(tooltipLines[2]=="Personal bonus.");local slot,permanent=GetPlayerBuff(32,"HELPFUL");assert(permanent==1 and GetPlayerBuffTimeLeft(32)==0);assert(objects.ASXDarkmoonBlessingToast.shown)')
  def test_swiftness_is_a_personal_permanent_native_fortune(self):
   text=bytes.fromhex(self.wire()).decode();out=[]
   for line in text.splitlines():

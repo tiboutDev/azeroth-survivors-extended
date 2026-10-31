@@ -140,7 +140,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\n")
    if compat121:
     env={k:v for k,v in env.items()if k not in("AZCOOP_TEST_GLYPHS",)}
-    env.update(AZCOOP_TEST_COMPAT121="1",AZCOOP_TEST_GEMS="1",AZCOOP_TEST_ENCHANTMENTS="1",AZCOOP_TEST_BLESSINGS="1",AZCOOP_TEST_OFFICIAL_CHOICE_DELAY="3")
+    env.update(AZCOOP_TEST_COMPAT121="1",AZCOOP_TEST_GEMS="1",ASX_TEST_CRYSTALS="1",AZCOOP_TEST_ENCHANTMENTS="1",AZCOOP_TEST_BLESSINGS="1",AZCOOP_TEST_OFFICIAL_CHOICE_DELAY="3")
     if slot==1:
      env["AZCOOP_TEST_EXTENSIONS"]="1"
      env["AZCOOP_TEST_MARKS121"]="1"
@@ -249,22 +249,20 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     checks={k:checks[k]for k in("clients_alive","started","clean_scripts","clean_adapter","ui_captures_available","startup_ack","three_native_encounters","native_buff_projected")}
     checks["glyphs_disabled"]=all("ASX capabilities: glyphs=false duplicate-gold=false native-marks=true"in text and "glyph accepted:"not in text and "official-glyph-modifiers"not in text for text in logs)
     checks["no_duplicate_gold"]=all("duplicate loot credit"not in text for text in logs)
-    checks["gem_each_player"]=all(f"gem locked: slot={i} "in host for i in range(players))
+    from crystal_core_evidence import assess_core as assess_crystal_core
+    crystal_evidence=assess_crystal_core(host,players);checks.update(crystal_evidence["checks"])
     checks["enchantment_accepted"]="enchantment locked:"in host
     checks["stat_inputs_restored"]="gem fixture rebuild: stable=true restored=true"in host and "restored=false"not in host and "stable=false"not in host
-    from gem_evidence import assess as assess_gems
     from enchantment_evidence import assess_ranked
     combined=[a+"\n"+b for a,b in zip(logs,native)]
-    gem_evidence=assess_gems(host,combined,players)
     enchant_evidence=assess_ranked(host,combined,players)
-    checks["eight_gem_native_values"]=gem_evidence["checks"]["all_eight_native_bonuses"]
     checks["forty_enchantment_native_values"]=enchant_evidence["checks"]["all_40_native_rank_values"]
     marks=[]
     for i in range(1,players+1):
      save=prepare.read(out/f"player-{i}/appdata/wenilla-rogue")
      marks.append(sum(int(v) for v in re.findall(r"^marks\|1\|(\d+)$",save,re.M)))
     checks["native_personal_marks"]=all(v>0 for v in marks)
-    (out/"compat-details.json").write_text(json.dumps(dict(gems=gem_evidence,enchantments=enchant_evidence,native_class_marks=marks),indent=2)+"\n")
+    (out/"compat-details.json").write_text(json.dumps(dict(crystals=crystal_evidence,enchantments=enchant_evidence,native_class_marks=marks),indent=2)+"\n")
    if completion in ("support","fatigue","fatigue-self"):
     from extension_completion_evidence import assess as assess_completion
     evidence=assess_completion(host,completion)

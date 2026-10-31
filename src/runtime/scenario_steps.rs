@@ -18,3 +18,19 @@ pub(super) fn goblin_action(phase:u32,stage:u8,movement_observed:bool,control_av
   assert_eq!(goblin_action(2,0,true,false),2);assert_eq!(goblin_action(2,2,true,true),0);
  }
 }
+
+// A natural opportunity must not bypass cooperative witness setup either.
+pub(super) fn goblin_opportunity(natural:bool,forced:bool,cooperative:bool,encounter_ready:bool,rewards_ready:bool)->bool{
+ (natural||forced)&&(!cooperative||(encounter_ready&&rewards_ready))
+}
+#[cfg(test)]mod spawn_tests{use super::*;
+ #[test]fn natural_and_forced_cooperative_opportunities_wait_for_safe_observed_setup(){
+  for(natural,forced)in[(true,false),(false,true),(true,true)]{
+   assert!(!goblin_opportunity(natural,forced,true,false,true));
+   assert!(!goblin_opportunity(natural,forced,true,true,false));
+   assert!(goblin_opportunity(natural,forced,true,true,true));
+   assert!(goblin_opportunity(natural,forced,false,false,false));
+  }
+  assert!(!goblin_opportunity(false,false,true,true,true));
+ }
+}

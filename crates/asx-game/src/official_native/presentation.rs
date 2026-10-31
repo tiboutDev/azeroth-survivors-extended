@@ -48,8 +48,18 @@ impl Adapter {
             if rows.len() > 16 {
                 return Err("Native build row limit".into());
             }
-            rows.iter()
-                .enumerate()
+            // Native HUD slot metadata, never names or icon guesses. Preserve
+            // order within a category and original cosmetic row identities.
+            let mut ordered: Vec<_> = rows.iter().enumerate().collect();
+            if !spell {
+                ordered.sort_by_key(|(_, row)| match row["slot"].as_str() {
+                    Some("amulet") => 0,
+                    Some("ring") => 1,
+                    Some("trinket") => 2,
+                    _ => 3,
+                });
+            }
+            ordered.into_iter()
                 .map(|(index, row)| {
                     let rank = row["rank"]
                         .as_u64()
@@ -72,6 +82,10 @@ impl Adapter {
                         return Err("Invalid native build icon".into());
                     }
                     Ok(PartyIcon {
+                        category: if spell { None } else { match row["slot"].as_str() {
+                            Some("amulet") => Some("amulet"), Some("ring") => Some("ring"),
+                            Some("trinket") => Some("trinket"), _ => None,
+                        } },
                         id,
                         rank,
                         name: text(row, "name", 256, false)?,

@@ -562,7 +562,12 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
             && if super::scenario_steps::enabled(){observed_encounter_ready&&s.rules.encounters()>0&&s.spawns<2&&(s.spawns==0||observed_rewards_ready)}else{now >= if s.spawns == 0 {21.}else{48.}};
         #[cfg(not(feature = "test-hooks"))]
         let forced = false;
-        if !s.rules.due(now) && !forced {
+        let due=s.rules.due(now)||forced;
+        #[cfg(feature="test-hooks")]
+        let due=if super::scenario_steps::enabled(){
+            super::scenario_steps::goblin_opportunity(s.rules.due(now),forced,p.actors.len()>1,observed_encounter_ready,observed_rewards_ready)
+        }else{due};
+        if !due {
             false
         } else {
             s.rules.reserve(now);
@@ -619,8 +624,8 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
     r.events_goblin_elite(game, &mut initial_handle)?;
     #[cfg(feature="test-hooks")]
     if super::scenario_steps::enabled(){
-        let second=STATE.lock().ok().is_some_and(|s|s.as_ref().is_some_and(|s|s.spawns==2));
-        if second{if let Some(position)=initial_position{
+        let witness=STATE.lock().ok().is_some_and(|s|s.as_ref().is_some_and(|s|s.spawns==2||(s.spawns==1&&p.actors.len()>1)));
+        if witness{if let Some(position)=initial_position{
             let dx=host.position[0]-position[0];let dy=host.position[1]-position[1];let length=dx.hypot(dy).max(0.1);
             let point=[position[0]+dx/length*40.,position[1]+dy/length*40.];
             let safe=unsafe{r.events_ground(game,point,0.3,2.)}?.ok_or("Observed goblin motion needs a walkable witness position")?;

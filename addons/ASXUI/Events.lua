@@ -11,23 +11,32 @@ local asMuted={0.75,0.75,0.75}
 local function eventFont(parent,template,font,size)
     local text=parent:CreateFontString(nil,"OVERLAY",template);text:SetFont("Fonts\\"..font..".TTF",size,"");return text
 end
+-- Keep numeric/effect text intact; only split an authored duration suffix.
+local function durationLines(text)
+ local value=text or""
+ value=string.gsub(value," %- (%d+ seconds)$","\nDuration: %1")
+ value=string.gsub(value," %- (lasts until the end of the run%.)$","\nDuration: until the end of the run.")
+ return value
+end
 local function discoveryToast(name,heading,texture)
     local toast=CreateFrame("Frame",name,UIParent)
-    toast:SetWidth(340);toast:SetHeight(88);toast.asxCompactToast=true;toast:SetPoint("TOP",UIParent,"TOP",0,-140);toast:EnableMouse(false)
+    toast:SetWidth(320);toast:SetHeight(80);toast.asxCompactToast=true;toast:SetPoint("TOP",UIParent,"TOP",0,-140);toast:EnableMouse(false)
     toast:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,tileSize=16,edgeSize=16,insets={left=4,right=4,top=4,bottom=4}})
     toast:SetBackdropColor(0.04,0.04,0.10,1);toast:SetBackdropBorderColor(0.75,0.75,0.75,1)
     if ASXUI_StylePanel then ASXUI_StylePanel(toast,true)end
     local iconFrame=CreateFrame("Frame",nil,toast);iconFrame:SetWidth(36);iconFrame:SetHeight(36);iconFrame:SetPoint("LEFT",toast,"LEFT",14,0)
     toast.icon=iconFrame:CreateTexture(nil,"ARTWORK");toast.icon:SetWidth(32);toast.icon:SetHeight(32);toast.icon:SetPoint("CENTER",iconFrame,"CENTER",0,0);toast.icon:SetTexture(texture)
     local border=iconFrame:CreateTexture(nil,"OVERLAY");border:SetTexture("Interface\\Buttons\\UI-Quickslot2");border:SetWidth(52);border:SetHeight(52);border:SetPoint("CENTER",iconFrame,"CENTER",0,0)
-    toast.title=eventFont(toast,"GameFontNormal","FRIZQT__",12);toast.title:SetPoint("TOPLEFT",toast,"TOPLEFT",62,-12);toast.title:SetText(heading);toast.title:SetTextColor(asGold[1],asGold[2],asGold[3])
-    toast.reward=eventFont(toast,"GameFontHighlight","FRIZQT__",15);toast.reward:SetPoint("TOPLEFT",toast.title,"BOTTOMLEFT",0,-4);toast.reward:SetWidth(264);toast.reward:SetJustifyH("LEFT")
-    toast.note=eventFont(toast,"GameFontHighlightSmall","FRIZQT__",12);toast.note:SetPoint("TOPLEFT",toast.reward,"BOTTOMLEFT",0,-4);toast.note:SetWidth(264);toast.note:SetJustifyH("LEFT");toast.note:SetTextColor(asMuted[1],asMuted[2],asMuted[3])
+    toast.content=CreateFrame("Frame",nil,toast);toast.content:SetWidth(246);toast.content:SetHeight(44);toast.content:SetPoint("LEFT",toast,"LEFT",60,0)
+    toast.title=eventFont(toast.content,"GameFontNormal","FRIZQT__",12);toast.title:SetPoint("TOPLEFT",toast.content,"TOPLEFT",0,0);toast.title:SetWidth(246);toast.title:SetJustifyH("LEFT");toast.title:SetText(heading);toast.title:SetTextColor(asGold[1],asGold[2],asGold[3])
+    toast.reward=eventFont(toast.content,"GameFontHighlight","FRIZQT__",15);toast.reward:SetPoint("TOPLEFT",toast.title,"BOTTOMLEFT",0,-4);toast.reward:SetWidth(246);toast.reward:SetJustifyH("LEFT")
+    toast.note=eventFont(toast.content,"GameFontHighlightSmall","FRIZQT__",12);toast.note:SetPoint("TOPLEFT",toast.reward,"BOTTOMLEFT",0,-4);toast.note:SetWidth(246);toast.note:SetJustifyH("LEFT");toast.note:SetTextColor(asMuted[1],asMuted[2],asMuted[3])
     return toast
 end
 -- Native English UI receipts, not wallet-delta inference or gameplay commands.
 local nativeQueue,nativeCurrent,nativeToast={}
 local nativeUntil,nativeClock,nativeWall=0,nil,0
+local dropScope,dropSequence=nil,0
 local lootPreference
 local nativeTrialScope,nativeAnnouncementUntil,nativeAnnouncementStart=nil,0,0
 local function restoreLootPreference()
@@ -38,44 +47,92 @@ local function nativeNoticeActive()
     local locale=GetLocale and GetLocale()
     return ASXUI_GetHudAnchors and ASXUI_GetHudAnchors()and(locale=="enUS"or locale=="enGB")
 end
-local function noticeKind(message,channel)
+local function noticeData(message,channel)
     if type(message)~="string"or string.len(message)>2048 then return nil end
     local plain=string.gsub(string.gsub(message,"|c%x%x%x%x%x%x%x%x",""),"|r","")
-    if(channel=="CHAT_MSG_LOOT"or channel=="CHAT_MSG_SYSTEM")and string.find(plain,"^You receive loot:")then return"loot"end
-    local _,_,amount=string.find(plain,"^You earn (%d+%.?%d*) marks %(")
-    if channel=="CHAT_MSG_SYSTEM"and amount and tonumber(amount)>0 then return"marks"end
+    local _,_,amount,total=string.find(plain,"^You earn (%d+%.?%d*) marks %((%d+%.?%d*) in all%)%.?$")
+    if channel=="CHAT_MSG_SYSTEM"and amount and tonumber(amount)>0 then
+        return {kind="marks",reward="|cff1eff00+"..amount.."|r marks",note="Total: |cff1eff00"..total.."|r"}
+    end
+    if channel~="CHAT_MSG_LOOT"and channel~="CHAT_MSG_SYSTEM"then return nil end
+    if not string.find(plain,"^You receive loot:")then return nil end
+    local _,_,name=string.find(plain,"%[([^%]]+)%]");if not name then return nil end
+    local _,_,count=string.find(plain,"[xX](%d+)%.?$");count=count or"1"
+    if tonumber(count)<1 or tonumber(count)>100000 then return nil end
+    local _,_,color=string.find(message,"|c(%x%x%x%x%x%x%x%x)|Hitem:")
+    if not color then _,_,color=string.find(message,"|c(%x%x%x%x%x%x%x%x)%[")end
+    return {kind="loot",reward=(color and("|c"..color..name.."|r")or name),note="Quantity: |cff1eff00"..count.."|r"}
 end
 local function noticeIcon(kind,message)
     if kind=="marks"then return"Interface\\Icons\\INV_Misc_Rune_01"end
     if GetItemInfo then
+        local _,_,id=string.find(message,"|Hitem:(%d+)")
         local _,_,name=string.find(message,"%[([^%]]+)%]")
-        if name then
-            local values={pcall(GetItemInfo,name)}
-            -- Accept both retained Classic and extended item-info tuples.
-            local icon=values[11]or values[10]
-            local texture=type(icon)=="string"and(string.find(icon,"^Interface[\\/]")or string.find(icon,"^[Ii][Nn][Vv]_")or string.find(icon,"^[Aa]bility_")or string.find(icon,"^[Ss]pell_"))
-            if values[1]and texture and string.len(icon)<160 and not string.find(icon,"[^%w_./\\]")then
-                if not string.find(icon,"^Interface[\\/]")then icon="Interface\\Icons\\"..icon end
-                return icon
-            end
+        local reference=id and tonumber(id)or name
+        if reference then
+            local values={pcall(GetItemInfo,reference)}
+            -- Native builds differ in tuple length. Select a validated texture,
+            -- never an equip location, price or a hard-coded slot index.
+            if values[1]then for i=2,16 do local icon=values[i]
+                if type(icon)=="string"and string.len(icon)<160 and not string.find(icon,"[^%w_./\\]")and(string.find(icon,"^Interface[\\/]")or string.find(icon,"^[Ii][Nn][Vv]_")or string.find(icon,"^[Aa]bility_")or string.find(icon,"^[Ss]pell_"))then
+                    if not string.find(icon,"^Interface[\\/]")then icon="Interface\\Icons\\"..icon end
+                    return icon
+                end
+            end end
         end
     end
     return"Interface\\Icons\\INV_Box_02"
+end
+
+local function claimLoot()
+    if not AZS_IsHudShown or not AZS_SetHudShown then return false end
+    if ASXUI_ClaimNativeHud then local value=ASXUI_ClaimNativeHud("loot");if lootPreference==nil then lootPreference=value end
+    else if lootPreference==nil then lootPreference=AZS_IsHudShown("loot")and true or false end;if lootPreference then AZS_SetHudShown("loot",false)end end
+    return lootPreference==true
+end
+local function structuredLoot()
+    local snapshot=ASX_GetState and ASX_GetState(1)
+    if snapshot and snapshot.available and snapshot.api and snapshot.api.major==1 and snapshot.api.minor>=6 and snapshot.data and type(snapshot.data.loot)=="table"then return snapshot end
+end
+local function refreshLootReceipts()
+    local snapshot=structuredLoot()
+    if not snapshot or not snapshot.session then
+        local major,minor;if ASX_GetAPIVersion then major,minor=ASX_GetAPIVersion()end
+        if major==1 and type(minor)=="number"and minor>=6 then restoreLootPreference()end
+        return
+    end
+    -- A current structured provider covers local native item receipts. Hide
+    -- native toasts before their arrival, including already-collected drops.
+    local showLoot=claimLoot()
+    local scope=snapshot.session.epoch..":"..snapshot.session.recipientGUID
+    if scope~=dropScope then
+        if dropScope then nativeQueue={};nativeCurrent=nil;if nativeToast then nativeToast:Hide()end end
+        dropScope=scope;dropSequence=0
+    end
+    local colors={"ffffffff","ff1eff00","ff0070dd","ffa335ee","ffff8000","ffe6cc80"}
+    for _,drop in ipairs(snapshot.data.loot)do
+        if type(drop.event)=="number"and drop.event>dropSequence then
+            dropSequence=drop.event
+            local text=snapshot.texts and snapshot.texts.loot and snapshot.texts.loot[drop.event]
+            if drop.isNew==true and showLoot and text and type(text.name)=="string"and type(text.icon)=="string"and string.find(text.icon,"^INV_[%w_]+$")and colors[drop.rarity+1]and table.getn(nativeQueue)<16 then
+                table.insert(nativeQueue,{kind="loot",reward="|c"..colors[drop.rarity+1]..text.name.."|r",note=drop.isNew and"New in your collection!"or"Added to your collection",icon="Interface\\Icons\\"..text.icon,readyAt=GetTime()+.25})
+            end
+        end
+    end
 end
 controller:RegisterEvent("CHAT_MSG_LOOT");controller:RegisterEvent("CHAT_MSG_SYSTEM")
 controller:SetScript("OnEvent",function()
     local message,channel=arg1,event
     if not nativeNoticeActive()then return end
-    local kind=noticeKind(message,channel);if not kind then return end
+    local receipt=noticeData(message,channel);if not receipt then return end;local kind=receipt.kind
     if kind=="loot"then
-        -- Claim the native notice only after receiving a compatible local item
-        -- receipt. Unknown locale/absence of signals leaves the original UI.
-        if not AZS_IsHudShown or not AZS_SetHudShown then return end
-        if ASXUI_ClaimNativeHud then local value=ASXUI_ClaimNativeHud("loot");if lootPreference==nil then lootPreference=value end
-        else if lootPreference==nil then lootPreference=AZS_IsHudShown("loot")and true or false end;if lootPreference then AZS_SetHudShown("loot",false)end end
-        if not lootPreference then return end
+        -- The bundled provider owns exact icons even while its state is not
+        -- ready. Never substitute a name-only chat guess during that gap.
+        local major,minor;if ASX_GetAPIVersion then major,minor=ASX_GetAPIVersion()end
+        if structuredLoot()or(major==1 and type(minor)=="number"and minor>=6)then return end
+        if not claimLoot()then return end
     end
-    if table.getn(nativeQueue)<16 then table.insert(nativeQueue,{kind=kind,text=message,icon=noticeIcon(kind,message),readyAt=GetTime()+.25})end
+    if table.getn(nativeQueue)<16 then table.insert(nativeQueue,{kind=kind,reward=receipt.reward,note=receipt.note,icon=noticeIcon(kind,message),readyAt=GetTime()+.25})end
 end)
 local function refreshNativeRewards()
     local now=GetTime();local previousWall=nativeWall;local dt=math.max(0,now-nativeWall);nativeWall=now
@@ -84,6 +141,7 @@ local function refreshNativeRewards()
         nativeQueue={};nativeCurrent=nil;nativeTrialScope=nil;nativeAnnouncementUntil=0;nativeAnnouncementStart=0;restoreLootPreference();if nativeToast then nativeToast:Hide()end;nativeClock=clock;return
     end
     nativeClock=clock
+    refreshLootReceipts()
     if model and model.owner then
         local ritual=model.owner.ritual
         local scope=model.epoch..":"..model.own..":"..tostring(ritual and ritual.event or "none")
@@ -103,7 +161,7 @@ local function refreshNativeRewards()
         nativeCurrent=table.remove(nativeQueue,1);nativeUntil=now+3
         if not nativeToast then nativeToast=discoveryToast("ASXUINativeRewardToast","",nativeCurrent.icon)end
         nativeToast.title:SetText(nativeCurrent.kind=="marks"and"Marks earned"or"Loot received")
-        nativeToast.icon:SetTexture(nativeCurrent.icon);nativeToast.reward:SetText(nativeCurrent.text);nativeToast.reward:SetTextColor(1,1,1);nativeToast.note:SetText("")
+        nativeToast.icon:SetTexture(nativeCurrent.icon);nativeToast.reward:SetText(nativeCurrent.reward);nativeToast.reward:SetTextColor(1,1,1);nativeToast.note:SetText(nativeCurrent.note);nativeToast.note:SetTextColor(1,1,1)
     end
     if nativeToast then if nativeCurrent then nativeToast:Show()else nativeToast:Hide()end end
 end
@@ -133,7 +191,18 @@ local function refreshSupplyToast()
             supplyToast:SetAlpha(1)
             supplyToast.title:SetText(d.title)
             local c=d.color;supplyToast.icon:SetTexture(d.icon);supplyToast.reward:SetText(d.reward);supplyToast.reward:SetTextColor(c[1],c[2],c[3])
-            supplyToast.note:SetText(d.note)
+            local note=ASXUI_FormatBonus(durationLines(d.note))
+            -- ASX gold is already expressed in whole gold, not WoW copper.
+            -- Reuse the native tooltip coin artwork without changing the value.
+            local sold=type(d.gold)=="number"and d.gold>0 and string.find(d.note or""," gold$")
+            if sold then note=string.gsub(d.note," gold$","")end
+            supplyToast.note:SetText(note);supplyToast.note:SetTextColor(1,1,1)
+            if sold then
+                if not supplyToast.coin then
+                    supplyToast.coin=supplyToast.content:CreateTexture(nil,"OVERLAY");supplyToast.coin:SetTexture("Interface\\MoneyFrame\\UI-GoldIcon");supplyToast.coin:SetWidth(13);supplyToast.coin:SetHeight(13)
+                end
+                supplyToast.coin:ClearAllPoints();supplyToast.coin:SetPoint("TOPLEFT",supplyToast.note,"TOPLEFT",supplyToast.note:GetStringWidth()+3,0);supplyToast.coin:Show()
+            elseif supplyToast.coin then supplyToast.coin:Hide()end
         end
     end
     if not supplyCurrent then if supplyToast then supplyToast:Hide()end;return end
@@ -189,8 +258,8 @@ local function refreshCrystalToast()
             if not crystalToast then crystalToast=discoveryToast("ASXCrystalDiscoveryToast",d.title,d.icon)end
             crystalToast.title:SetText(d.title);crystalToast.icon:SetTexture(d.icon)
             local c=d.titleColor or d.color;crystalToast.title:SetTextColor(c[1],c[2],c[3])
-            crystalToast.reward:SetText(d.reward);crystalToast.reward:SetTextColor(d.color[1],d.color[2],d.color[3])
-            crystalToast.note:SetText(d.note)
+            crystalToast.reward:SetText(ASXUI_FormatBonus(d.reward));crystalToast.reward:SetTextColor(1,1,1)
+            crystalToast.note:SetText(durationLines(d.note))
         end
     end
     if crystalCurrent then crystalToast:Show()elseif crystalToast then crystalToast:Hide()end
@@ -198,7 +267,7 @@ end
 -- Shared native casting-bar recipe. Progress and completion remain native/ASX.
 local function channelFrame(name)
     local f=CreateFrame("Frame",name,UIParent);f:SetWidth(320);f:SetHeight(54);f:EnableMouse(false)
-    local track=CreateFrame("Frame",nil,f);track:SetWidth(300);track:SetHeight(13);track:SetPoint("CENTER",f,"CENTER",0,5)
+    local track=CreateFrame("Frame",nil,f);track:SetWidth(300);track:SetHeight(18);track:SetPoint("CENTER",f,"CENTER",0,5)
     local bg=track:CreateTexture(nil,"BACKGROUND");bg:SetAllPoints(track);bg:SetTexture("Interface\\TargetingFrame\\UI-StatusBar");bg:SetVertexColor(.06,.05,.035,1)
     f.bar=CreateFrame("StatusBar",nil,track);f.bar:SetAllPoints(track);f.bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
     for _,part in ipairs({{22,40,"BOTTOMLEFT",-9},{40,216},{216,234,"BOTTOMRIGHT",9}})do
@@ -206,7 +275,9 @@ local function channelFrame(name)
         if part[3]then edge:SetWidth(part[2]-part[1]);edge:SetPoint(part[3],track,part[3],part[4],-7)
         else edge:SetPoint("BOTTOMLEFT",track,"BOTTOMLEFT",9,-7);edge:SetPoint("BOTTOMRIGHT",track,"BOTTOMRIGHT",-9,-7)end
     end
-    f.title=eventFont(f.bar,"GameFontNormal","FRIZQT__",11);f.title:SetPoint("CENTER",track,"CENTER",0,0);f.title:SetTextColor(1,1,1)
+    local labels=CreateFrame("Frame",nil,track);labels:SetAllPoints(track);labels:SetFrameLevel(f.bar:GetFrameLevel()+2)
+    f.time=eventFont(labels,"GameFontHighlightSmall","FRIZQT__",11);f.time:SetPoint("RIGHT",track,"RIGHT",-5,0);f.time:SetWidth(78);f.time:SetJustifyH("RIGHT");f.time:SetTextColor(1,1,1)
+    f.title=eventFont(labels,"GameFontNormal","FRIZQT__",11);f.title:SetPoint("LEFT",track,"LEFT",5,0);f.title:SetWidth(205);f.title:SetJustifyH("LEFT");f.title:SetTextColor(1,1,1)
     f.note=eventFont(f,"GameFontHighlightSmall","FRIZQT__",12);f.note:SetPoint("TOP",track,"BOTTOM",0,-8);f.note:SetWidth(300);f.note:SetJustifyH("CENTER");f.note:SetTextColor(1,.82,0)
     return f
 end
@@ -248,7 +319,9 @@ local function refreshRitual()
     local identity=model.epoch..":"..model.own..":"..r.event
     if ritualFrame.identity~=identity then ritualFrame.identity=identity;ritualFrame.rendered=r.held end
     if r.allInside==false then ritualFrame.rendered=r.held end
-    ritualFrame.target=r.held;ritualFrame.title:SetText(r.title);ritualFrame.note:SetText(r.note)
+    ritualFrame.target=r.held;ritualFrame.title:SetText(r.title)
+    ritualFrame.time:SetText(string.format("%.1f s",math.max(0,r.maximum-r.held)/100))
+    ritualFrame.note:SetText(r.allInside==false and "Waiting for all players"or"")
     ritualFrame:Show()
 end
 function ASXRitualReadout()
@@ -286,10 +359,9 @@ local function refreshBlessingToast()
         end
         blessingToast:SetAlpha(1)
         blessingToast.title:SetText(b.title);blessingToast.icon:SetTexture(b.icon)
-        local c=b.color
-        blessingToast.reward:SetText(b.reward)
-        blessingToast.reward:SetTextColor(c[1],c[2],c[3])
-        blessingToast.note:SetText(b.note)
+        blessingToast.reward:SetText(ASXUI_FormatBonus(b.reward))
+        blessingToast.reward:SetTextColor(1,1,1)
+        blessingToast.note:SetText(durationLines(b.note))
         blessingToast:SetAlpha(1);blessingToast:Show()
     end
     local remaining=blessingUntil-GetTime()
@@ -343,19 +415,20 @@ local function preference(kind)
 end
 local function layout()
     local p=layoutSettings();p.x=number(p.x,-4096,4096,0);p.y=number(p.y,-4096,4096,-125)
-    local signature=p.x..":"..p.y
-    if anchor.asxPosition~=signature then anchor:ClearAllPoints();anchor:SetPoint("TOP",UIParent,"TOP",p.x,p.y);anchor.asxPosition=signature end
+    local top=p.y;if p.x==0 and p.y==-125 and ASXUI_GetEncounterOffset then top=-ASXUI_GetEncounterOffset()end
+    local signature=p.x..":"..top
+    if anchor.asxPosition~=signature then anchor:ClearAllPoints();anchor:SetPoint("TOP",UIParent,"TOP",p.x,top);anchor.asxPosition=signature end
     local offset=0
     for _,entry in ipairs({{reviveFrame,"revive",54},{ritualFrame,"sayge",54},{supplyToast,"supplies",88},{blessingToast,"fortune",88},{crystalToast,"crystals",88},{nativeToast,nativeCurrent and nativeCurrent.kind or "loot",88}})do
         local frame,kind,height=entry[1],entry[2],entry[3];local pref=preference(kind)
         if frame then
             if frame.asxCompactToast then
-                local measured=32
+                local measured=24;local contentHeight=0;local count=0
                 for _,label in ipairs({frame.title,frame.reward,frame.note})do
                     local value=label.GetStringHeight and label:GetStringHeight()or label:GetHeight()
-                    if type(value)=="number"and value==value and value>0 and value<1024 then measured=measured+value end
+                    if label:GetText()~=""and type(value)=="number"and value==value and value>0 and value<1024 then contentHeight=contentHeight+value;count=count+1;label:Show()else label:Hide()end
                 end
-                height=math.max(88,math.ceil(measured));frame:SetHeight(height)
+                contentHeight=contentHeight+math.max(0,count-1)*4;frame.content:SetHeight(contentHeight);height=math.max(80,math.ceil(measured+contentHeight));frame:SetHeight(height)
             end
             frame:SetScale(pref.scale);frame:SetAlpha(pref.opacity)
             if not pref.visible then frame:Hide()end

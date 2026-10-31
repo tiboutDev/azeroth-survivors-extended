@@ -368,12 +368,13 @@ quality label. Missing/stale snapshots or a new trial do not replay an unchanged
 acquisition notification. Sayge progress uses native WoW casting-bar assets and
 a separate waiting/progress line.
 
-Automatic participant markers use the seven non-skull icons. A newly created
-goblin receives the native skull through the existing native raid-target command
-when that icon is free; manually assigned marks are never displaced. ASXUI
-replaces the native guardian red flag with a masked native taunt icon, using
-AZS_GetFlaggedLair and the same minimap projection as cache/event pins. The HUD
-flag preference is restored when ASXUI pins or projection are unavailable.
+Automatic participant markers keep the seven non-skull icons; skull is left for
+manual use. Goblins receive no automatic raid marker and are identified by their
+ASXUI encounter health bar. Native/manual marks are not cleared or reassigned.
+ASXUI replaces the native guardian red flag using all valid `AZS_GetLairs()`
+entries and the same projection as cache/event pins. Explicit pin layers put
+Sayge above active guardians, Supplies, caches and returning guardians. The
+native HUD flag preference is restored when pins/projection are unavailable.
 
 Swiftness Potion is a personal 60-second Supplies effect granting +10%, +15% or
 +20% movement speed. Native reconstruction resets its baseline; the bounded

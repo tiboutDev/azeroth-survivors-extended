@@ -1,6 +1,6 @@
 # Native world and reward presentation
 
-ASX enriches the reviewed 0.130 client without replacing world rendering,
+ASX enriches the reviewed 0.131.0 client without replacing world rendering,
 combat logs, nameplate health updates or the native marker transport.
 
 ## Standalone presentation: ASXUI
@@ -8,29 +8,39 @@ combat logs, nameplate health updates or the native marker transport.
 The optional [ASXUI addon](../addons/ASXUI/README.md) owns enemy plate styling
 and minimap pin rendering. Install it in `benilla-config/AddOns/ASXUI`, outside
 `ASX/`. Plate styling works through the native addon API without the DLL.
-The DLL installs no plate-input, plate-style or damage-size hooks.
+The DLL installs no plate-input or plate-style hooks. A narrowly scoped exact-build
+damage-size seam preserves the native font and enemy attachment.
 
-ASXUI retains native plate widgets and scales their width to 70% by default.
-Enemy health uses an eight-pixel capsule with a one-pixel outline and the native
-status-bar texture/colors. A clipped full-width fill preserves rounded ends at
+ASXUI retains native plate widgets and scales their width to 50% by default.
+Enemy health uses a six-unit capsule with a one-unit outline and the native
+status-bar grayscale ramp/colors, applied uniformly across body and caps. Its rounded ends use the native 128px portrait alpha mask. A clipped full-width fill preserves rounded ends at
 low HP. Its frames are allocated once per retained plate (bounded to 256), then
 reused; color/geometry writes occur only when changed. Native border/glow and
 health texture are hidden only while the replacement has valid native values,
 and restored on invalid data, friendly reuse or styling disable. Raid markers,
-friendly rows, health updates, placement and visibility keys remain native. Enemy levels/skulls and names are hidden by default. A unique highlighted
+friendly rows, health updates, placement and visibility keys remain native. ASXUI enables enemy plates and native
+`nameplateLayout=overlap` once on first load; subsequent native choices are preserved. Enemy levels/skulls and names are hidden by default. A unique highlighted
 target positively identified as elite/guardian/boss/final keeps its original name
 font and alpha. Missing/ambiguous ranks and untargeted rows remain hidden; the
 addon never infers plate identity from a matching encounter name alone.
 
-The native world-number face is now the default. The earlier renamed OFL face
-with one-third glyph geometry remains opt-in for existing users, with a client
-restart required. It affects the shared world-healing face too. There is no
-confirmed outgoing native same-face size control in the reviewed 0.130 engine:
-`DAMAGE_TEXT_FONT` selects a cached face, while UI `FontString:SetFont` and
-`CombatText` size controls concern separate UI text. Unknown retail CVars are
-not treated as working controls merely because Lua accepts a value. A Lua
-replacement renderer with the native face remains an investigation, not shipped
-world-number parity or a reason to restore native damage-size hooks.
+Native damage uses its unchanged face, projection, lifetime and normal/critical
+animation, at one third of the freshly calculated native size. The selected
+`DAMAGE_TEXT_SIZE` seam is guarded by exact executable identity and instruction
+bytes. The renderer owns the current row in r14 and the interpolated/clamped
+size in xmm7. Only normal/critical categories (0/2), excluding native green
+healing, multiply xmm7 by 1/3 before the original conversion and projection.
+No stored size is modified, so repeated frames do not compound the reduction.
+All other registers and integer flags are preserved; no callbacks or allocations
+occur. Windows execution tests cover repeated baselines, categories and heals.
+This adds one exact native compatibility contact. Critical spell icons remain
+deferred; there is no Lua renderer or guessed target matching.
+
+ASXUI preserves the native world-number face by default. Its earlier optional
+OFL face has one-third glyph geometry and also affects healing: keep
+`/asxui numbers off` for the native-face result above (restart after changing
+the face). Enabling the old geometry option compounds native damage scaling.
+No outgoing size CVar or `FontString` option is claimed to control world text.
 
 ASXUI `Minimap.lua` renders custom supplies/trials and native `AZS_CHESTS` caches
 with the same circular portrait/tracking-ring style. The retained ASX Lua code
@@ -40,6 +50,33 @@ and ping inversion still require this bridge; standalone plate styling does not.
 The addon hides pins when projection is absent/stale, outside a run or disabled,
 and retires old local-ping references on session change. Native cache purchases,
 scenes, availability, raid markers and minimap controls remain untouched.
+
+## Reference addon: projected combat text
+
+Source review of [SurvivorsDragonUi](https://github.com/migwynkriid13/SurvivorsDragonUi/tree/0bef905c1dc75691dc4951d1bf8a06b5df781bf2)
+at `0bef905c1dc75691dc4951d1bf8a06b5df781bf2` identified useful Lua-only techniques:
+
+- `modules/nameplates/parser.lua` derives patterns from native localized combat
+  format globals instead of assuming English chat sentences.
+- `modules/nameplates/sct.lua` obtains already-projected plate centers with
+  `GetCenter()` and effective-scale conversion, snapshots the origin for each
+  animated number, and positions a texture beside critical text.
+- The renderer indexes target names and recent plate HP losses. Its
+  `ResolveOrigin` first prefers a unique matching loss, then a unique loss or
+  visible candidate. Those are correlations, not destination GUID evidence.
+- Ambiguous events use a centroid or ultimately the center of `WorldFrame`.
+  This preserves message visibility but cannot guarantee enemy attachment.
+  Percentage-only health bars cannot be matched to absolute damage amounts.
+
+These findings establish a practical Lua nameplate-text technique, not a new
+native world-to-screen or exact combat-destination API. Multiple same-name
+enemies, interest-set omissions, lethal hits before plate discovery and plate
+visibility remain important limits. ASXUI does not disable native damage or
+ship the reference fallback against the requested enemy-impact behavior.
+Native same-face one-third sizing now uses the exact seam described above;
+exact critical-icon association remains deferred. The reference review is not
+live validation of that external addon.
+No external code, custom textures or fonts have been copied into ASXUI.
 
 ## Native healing messages retained in ASX
 
@@ -80,7 +117,7 @@ packet buffers transfer once, and uncertain commits are never retried.
 
 Exact callback/register/layout contacts belong to the selected version descriptor and
 `official_native/combat_text.rs`, not the portable rules crate. Guards cover
-all new callback/helper entry bytes. The retired damage-size stub and its exclusive ABI tests are removed.
+all new callback/helper entry bytes. The retained damage-size seam and its ABI test are scoped to normal/critical damage.
 Retained healing callbacks keep their argument/register coverage.
 
 ## Reward annotations
@@ -166,3 +203,52 @@ Supply/Fortune notifications and the Sayge progress panel are now extracted into
 ASXUI with per-widget saved position, scale, opacity and visibility. ASX remains
 the text/data producer through `ASX_GetState(1)` (`data` and `texts`). These candidates
 are implemented; aura and party/build presentation remain possible future work.
+
+## Encounter stack and bottom HUD layering
+
+ASXUI reads boss, awake-guardian and ASX goblin health from the native addon
+tables. Goblins are native `AZS_UNITS` elite rows named `Venture Co. Treasurer`,
+the fixed ASX definition/query name, carrying actual spawn ID/HP/max HP. The
+40-row native list bounds discovery; missing data hides the cosmetic row.
+This does not infer a nameplate GUID or introduce a new native memory contact.
+
+Bottom HUD order is equipment, statistics, native XP, then native gryphons.
+XP's complete casting-border artwork remains intact and draws over the stats
+panel joint. The owned XP level is restored on disable, preserving external
+changes. The stats panel has three vertical column rules, no horizontal group
+separator, a thin native tooltip border and a clipped lower edge. Objectives use a taller closed ornamented native header, inset from the minimap
+anchor instead of touching the screen edge. Crystal Resonance has one total count on its icon; its full tooltip is
+unchanged.
+
+## Current tracker presentation
+
+The counter ribbon is detached eight UI units from the top with a complete ornamented
+native border. The 40-unit Objectives header is inset eight units from its
+minimap anchor; one Guardians quest contains live names/counts and upcoming
+arrivals, alongside a separate Sayge quest. Rows size to their text. All active
+lairs receive pins, with explicit retained-frame levels: Sayge, live guardians,
+Supplies, caches, then soon-returning guardians. No coordinate jitter or
+replacement native ping logic is added.
+
+Encounter names are centered, without percentages. Player HP displays only its
+current amount. The character-sheet command toggles stats while the HUD is
+active, preserving configured bindings, other tabs and native fallback.
+Native goblin creation no longer reads the raid table or invokes its command to
+assign skull; no automatic unmarking is performed. The diagnostic raid-table observer is host-only; solo trials explicitly skip
+that raw-table observation rather than counting it as a pass. Existing participant marker policy remains
+unchanged, with skull available for manual use.
+
+Arrival timers are on a separate line beneath their guardian and appear only
+at 30 native seconds or less. Earlier incoming entries have no numeric timer.
+Counter cells anchor by their vertical center, including after HUD reactivation.
+ASXUI suppresses item-drop toasts for native `isNew=false` receipts; earned marks
+keep their own notifications. With a current structured provider, the native loot
+canvas is hidden before drops arrive and restored if the provider becomes
+unavailable or the HUD is disabled. The API journal still exposes every receipt.
+
+Local equipment retains the native HUD `slot` category in the bounded ASX bridge.
+ASXUI reserves neck, two finger and two trinket positions, preserving owner text
+and native order within each category. Legacy category-less providers retain their
+sequential display. The Supplies sale amount remains ASX-owned and uses the native
+small gold coin artwork, without converting whole ASX gold into another currency.
+Quest titles and individual entries have larger gaps than an entry and its timer.

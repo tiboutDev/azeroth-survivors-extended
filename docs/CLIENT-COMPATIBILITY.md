@@ -1,12 +1,12 @@
-# Official 0.130.1 client boundary
+# Official 0.131.0 client boundary
 
 The sole source target is the exact Windows x86-64 executable with SHA-256:
 
 ```text
-e8ff033544095e81d74087ff400d50286b26af02291e649f4c5e4d76cbcf8863
+5dd6819d836748ccf809ab76fe6509c9ee793e087939b5d036c430d835a14e63
 ```
 
-`bindings/official1301.rs` owns current native contacts, complete instruction
+`bindings/official131.rs` owns current native contacts, complete instruction
 guards, field translations and register/frame choices. Version labels and
 similar instruction sequences cannot select another executable. The launcher
 registry and private importer use this same exact identity. Direct native launch
@@ -113,13 +113,21 @@ not validate an installed DLL, a downloaded kit or an unchanged historical build
 reference. No build, deployment, publication or normal-client trial follows
 implicitly from this document.
 
-## 0.130.1 patch review
+## 0.131.0 review
 
-The selected patch preserves consumed host/private/enemy field spans and native
-call/register contracts. Code and data contacts move independently. The native
-version literal and Rust hash keys changed in two matched functions; neither
-changes ASX callback origins. Table and pointer-target review includes map/NPC/
-boss definitions, all 102 retained glyph rows, equipment and support/taunt data.
-The boss-marks table has its own reviewed address rather than a global shift.
-Native balance/text changes outside consumed schemas remain upstream-owned.
-Old executable hashes are rejected; historical descriptors are test-only.
+Code/data contacts move independently. All 262 consumed contacts are reviewed;
+historical canonical keys remain lookup keys. Host/private/enemy consumed field
+translations are unchanged. The shared-XP routine changes its internal ECS
+storage offsets while retaining the ASX receipt/header/call contract. Native
+forwarding owns those storage changes. Dormant menu-cache seams are rebound to
+their equivalent phase/cache comparisons and miss path; no lobby decorations
+are re-enabled. Every generated guard ends on a complete instruction.
+
+Data review covers the complete map/NPC/boss definition region, 102 retained
+glyph rows, equipment, heroic rewards, marks and the support vtable. A conservative
+raw pointer scan retains its findings: short arrays are checked with expanded
+record bounds; exact numeric coefficient/discriminator pairs and two complete
+leaf functions are classified separately, without a regional exemption.
+
+Native gameplay/balance remains upstream-owned. Glyph gameplay stays disabled;
+native marks remain authoritative. Old executable hashes are rejected.

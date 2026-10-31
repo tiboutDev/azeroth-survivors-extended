@@ -120,3 +120,18 @@ fn minimap_projection_needs_no_readable_native_zoom_fields() {
     let inside=a.event_minimap(&m,script,11).unwrap().unwrap();
     assert_eq!(inside.radii,[150.,120.,90.,60.,40.,25.]);
 }
+
+#[test]
+fn equipment_uses_native_categories_stably_and_keeps_owner_text_and_identity() {
+ let row=|slot:&str,name:&str|serde_json::json!({"slot":slot,"name":name,"icon":"INV_Test","text":"Owner +25%","rank":2});
+ let value=serde_json::json!({"abilities":[],"jewelry":[row("ring","R1"),row("trinket","T1"),row("amulet","A"),row("ring","R2"),row("trinket","T2")]});
+ let build=adapter().party_build(&value).unwrap();
+ assert_eq!(build.items.iter().map(|i|i.name.as_str()).collect::<Vec<_>>(),["A","R1","R2","T1","T2"]);
+ assert_eq!(build.items[0].category,Some("amulet"));
+ assert_eq!(build.items.iter().map(|i|i.id).collect::<Vec<_>>(),[3,1,4,2,5]);
+ assert!(build.items.iter().all(|i|i.text=="Owner +25%" && i.rank==2));
+ let partial=serde_json::json!({"abilities":[],"jewelry":[row("trinket","T"),row("ring","R")]});
+ assert_eq!(adapter().party_build(&partial).unwrap().items[0].name,"R");
+ let unknown=serde_json::json!({"abilities":[],"jewelry":[row("future","U1"),row("future","U2")]});
+ assert_eq!(adapter().party_build(&unknown).unwrap().items[0].name,"U1");
+}

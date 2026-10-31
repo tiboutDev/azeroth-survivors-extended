@@ -524,7 +524,7 @@ impl Services for Runtime {
     unsafe fn events_spawn_goblin(&self, g: u64) -> Result<Option<GoblinHandle>> {
         let result=unsafe {self.adapter.spawn_goblin(&self.local,self.local.base as u64,g)};
         #[cfg(feature="test-hooks")]if let Ok(Some(h))=&result{
-            if let Ok(marks)=self.adapter.raid_markers(&self.local,g-16){self.log.info(&format!("goblin native skull: guid={} assigned={}",h.guid(),marks[7]==Some(h.guid())));}
+            if let Ok(marks)=self.adapter.raid_markers(&self.local,g-16){self.log.info(&format!("goblin native marker observation: guid={} skull={}",h.guid(),marks[7]==Some(h.guid())));}
         }
         result
     }

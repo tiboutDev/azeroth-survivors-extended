@@ -36,17 +36,7 @@ def assess_wow_visual(samples):
  shown=[s['buffOrder']for s in samples if s.get('structured',{}).get('fortune')and s.get('buffOrder',{}).get('fortuneShown')]
  return {'fortune_in_first_native_position':bool(shown)and all(v.get('first')for v in shown),'native_fortune_tooltip_observed':any("Sayge's Dark Fortune"in v.get('tooltip','')for v in shown)}
 
-def crystal_stat_checks(text,slot):
- rows=[]
- for found,owner,counts,base,actual,stable,restored in re.findall(r"crystal native stats: slot=(\d+) owner=(\d+) counts=(\[[^\n]+?\]) base=(\[[^\n]+?\]) actual=Ok\((\[[^\n]+?\])\) stable=(true|false) restored=(true|false)",text):
-  if int(found)==slot:rows.append((ast.literal_eval(counts),ast.literal_eval(base),ast.literal_eval(actual),stable,restored))
- close=lambda a,b:math.isclose(a,b,rel_tol=1e-5,abs_tol=.0003)
- valid=bool(rows)
- for c,b,a,stable,restored in rows:
-  valid=valid and len(a)==8 and len(b)==8 and stable==restored=='true'
-  valid=valid and close(a[0]-b[0],c[0]*.10)and a[1]>0 and b[1]>0 and close(1/a[1]-1/b[1],c[1]*.05)and close(a[7]-b[7],c[3]*.10)
-  valid=valid and(a[2]>b[2]if c[2]>0 else close(a[2],b[2]))
- return {'native_personal_stats':bool(valid)}
+from crystal_core_evidence import crystal_stat_checks
 
 def crystal_popup_checks(samples):
  shown=[s['crystalPopup']for s in samples if s.get('crystalPopup',{}).get('shown')]
@@ -127,7 +117,7 @@ def run_trial(args,gate):
     if not catalog_review:checks['circle_exit_exercised']='coop circle exit begin:'in asx
     checks['circle_exit_stopped']='coop circle exit advanced unexpectedly'not in asx
     checks['native_buff_probe']='coop consumable native stats:'in asx
-    if not catalog_review:checks['native_goblin_skull']='assigned=true'in asx and 'goblin native skull:'in asx
+    if not catalog_review:checks['no_automatic_goblin_skull']='skull=false'in asx and 'goblin native marker observation:'in asx
     checks['native_visual_stop']='pause remote visual stop: packets=2'in asx
    durations,pin_max=duration_checks(samples);checks.update(durations)
    if catalog_review:

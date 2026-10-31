@@ -2,14 +2,19 @@
 import sys,unittest
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools/dev'))
-from asxui_hud_trial import compact_popup
+from asxui_hud_trial import compact_popup,native_goblin_unmarked
 
 class PopupAssessorTests(unittest.TestCase):
  def test_native_coordinate_rounding_is_accepted(self):
-  self.assertTrue(compact_popup(dict(width=340.0000134039,height=88.000008206469,icon=32,inside=True)))
+  self.assertTrue(compact_popup(dict(width=320.0000134039,height=80.000008206469,icon=32,inside=True)))
+ def test_goblin_mark_assessment_requires_actual_asx_native_observations(self):
+  log='INFO goblin native marker observation: guid=123 skull=false\n'
+  self.assertTrue(native_goblin_unmarked(log))
+  for bad in ('','skull=false',log+'INFO goblin native marker observation: guid=456 skull=true',log.replace('123','0')):
+   self.assertFalse(native_goblin_unmarked(bad))
  def test_wrong_dimensions_or_clipped_text_are_rejected(self):
   for change in ({'width':388},{'height':70},{'icon':46},{'inside':False},{'width':float('nan')},{'height':None}):
-   value=dict(width=340,height=88,icon=32,inside=True);value.update(change)
+   value=dict(width=320,height=80,icon=32,inside=True);value.update(change)
    self.assertFalse(compact_popup(value))
 
 

@@ -1,10 +1,10 @@
-# ASX addon contract 1.5
+# ASX addon contract 1.6
 
 ASX follows Azeroth Survivors' addon conventions: global tables, matching
 `*_UPDATED` timestamps, `ASX_Get...` functions and registered Lua handlers.
 This is an ASX extension, not a replacement for the game's `AZS_*` API. No new
 network transport, outgoing addon message or gameplay command is introduced.
-The currently supported engine is the reviewed 0.130.1 build.
+The currently supported engine is the reviewed 0.131.0 build.
 
 ## Availability and version
 
@@ -13,7 +13,7 @@ functions may be absent when ASX is disabled or before its Lua has loaded; an
 addon must tolerate that and retry after world entry or with bounded polling.
 ASXUI is a consumer, not the provider: other addons do not need ASXUI installed.
 
-`ASX_GetAPIVersion()` returns `major, minor` (currently `1, 5`). Major 1 is a
+`ASX_GetAPIVersion()` returns `major, minor` (currently `1, 6`). Major 1 is a
 stable contract: incompatible field meanings/types/removals require a new major;
 minor versions may add optional fields. Ignore unknown fields. Tests cover the
 contract; this source change does not update an older installed DLL.
@@ -28,7 +28,7 @@ modifies ASX or snapshots obtained by another consumer.
 
 | Field | Meaning |
 |---|---|
-| `api.major`, `api.minor` | Contract version, currently 1.5 |
+| `api.major`, `api.minor` | Contract version, currently 1.6 |
 | `available` | Boolean; check before accessing run fields |
 | `reason` | When unavailable: `outside_run`, `stale`, or `missing_or_invalid_payload` |
 | `revision` | Monotonic content revision within this Lua environment; not persisted across client reloads |
@@ -198,10 +198,13 @@ color order; no exact cross-color pickup ordering is promised by snapshots.
 ## Local equipment (optional, v1.5)
 
 `data.equipment` is an optional 1-based array of at most five records, each with
-`slot` (native display order, 1..5) and `rank` (1..255). The matching
+`slot` (presentation order, 1..5: amulet, rings, trinkets) and `rank` (1..255). The matching
 `texts.equipment[slot]` contains the native `name`, texture `icon` and formatted
 tooltip `text`. These are already captured owner strings, not formulas for an
-addon to recompute. No item-category or persistent inventory ID is promised.
+addon to recompute. An optional `category` contains native `amulet`, `ring` or `trinket` metadata.
+ASXUI uses it to reserve all five positions even when a slot is empty. Older
+providers without categories retain their sequential display. No persistent
+inventory ID is promised.
 
 An empty array explicitly means a captured empty local build. An absent array
 means unavailable; do not replace it with fake empty slots or retain old items.
@@ -209,3 +212,22 @@ Copies, session ownership, expiration and revision rules match the rest of v1.
 Malformed, duplicate, foreign or incomplete equipment sequences invalidate the
 private snapshot. Native remote build rendering is separate. Local spell rows
 are still omitted, and this extension adds no native hook or memory reader.
+
+## API 1.6: local native loot receipts
+
+`ASX_GetAPIVersion()` returns `1, 6`. `state.data.loot` is an array of up to
+16 recent local native drop receipts, each `{event, rarity, isNew}`.
+`state.texts.loot[event]` contains `{name, icon}`; `icon` is the native
+`INV_...` basename, resolved under `Interface/Icons/`. Rarity is the original
+native 0..5 quality. Treat `event` as an opaque positive receipt sequence scoped
+by `state.session.epoch` and `recipientGUID`; deduplicate it across heartbeats.
+The journal is bounded, not a durable history or gameplay reward endpoint.
+It is cleared at run/recipient identity boundaries. Values come from the
+already-local native `drop` UI event; no new native hooks, grants, collection
+reads, name lookup or extra network messages are involved. Only the separately
+requested damage-size adjustment adds a new guarded native contact.
+
+ASXUI shows item toasts only for `isNew=true`. Already-collected receipts remain
+in this API for other consumers; ASXUI consumes their sequence without a toast.
+Mark notifications are independent. ASXUI owns native loot-canvas visibility
+while this current structured provider is available and restores it otherwise.

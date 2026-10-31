@@ -1,6 +1,6 @@
 # Targeted ASX validation
 
-The supported source target is official 0.130.1. Review the
+The supported source target is official 0.131.0. Review the
 [feature inventory](ASX-FEATURES.md) and [adapter boundary](CLIENT-ADAPTER.md)
 when changing native integration. Validation must cover the changed risk and
 state its limits; test counts alone are not a completion criterion.
@@ -28,7 +28,7 @@ are written under ignored `test-results/targeted/` directories.
 `official-party-ui` separately so its explicit Lua 5.1 check is not replaced by
 generic Python discovery, where that optional dependency can be skipped.
 
-`full` tests the current 0.130 Rust graph, Python suite and Clippy. Retired
+`full` tests the current 0.131 Rust graph, Python suite and Clippy. Retired
 reader/tool implementations and their exclusive tests are not part of the gate.
 
 | Profile | Current risk covered |
@@ -116,7 +116,7 @@ their dependency review establishes that they no longer protect retained code.
 
 Current Rust integrations are under `crates/asx-game/tests/current/`, with
 Cargo targets `client_binding`, `jewelry` and `enemies`. Enemy fixtures exercise
-the selected 0.130 support path, retaining bounds/life/health/motion regressions
+the selected 0.131 support path, retaining bounds/life/health/motion regressions
 without a historical reader dependency. Python evidence assessors used by current
 trials live with the current test suite; their event formats can retain native
 version tags without requiring an obsolete implementation.
@@ -257,7 +257,8 @@ numerical stat deltas and held/resumed API samples as well as harness checks.
 The stat probe suppresses only Supplies during its baseline rebuild and runs
 once per recipient/buff combination; it is compiled only with `test-hooks`.
 
-The reported-fixes scenario also requires a native goblin skull assignment,
+The reported-fixes scenario also requires an observed absence of automatic
+goblin skull assignment in fresh diagnostic profiles,
 remote visual-stop packets on actual host pause edges, and API observations of
 60-second consumables and 90-second supply pins for both clients. Parser boundary
 tests accept exactly 60/90 and reject 61/91. Expected INFO goblin taunt-immunity
@@ -359,3 +360,23 @@ from persisted originals, logout restoration and events that arrive during
 shutdown. The test harness uses process cleanup; that cleanup alone does not
 prove a real client logout/save cycle. The shared visibility layer is also
 exercised by normal HUD off/on stages in the isolated live trial.
+
+### Current core crystal coverage
+
+The core diagnostic scenario enables the existing real world-crystal fixture.
+Its former amulet-gem assignment/eight-bonus acceptance is retired with that
+feature: current acceptance requires actual personal crystal claims, all four
+colors, native bonus equations and stable/restored native stat inputs for every
+participant, plus explicit absence of amulet-gem assignment. Native encounters,
+Fortunes, forty ring-enchantment values, marks and cooperative economy checks
+remain required. The separate crystal API scenario covers common removal and
+individual deadlines in more detail. Failed historical core receipts remain
+failed; changed executable tooling requires new solo/coop receipts.
+
+Observed cooperative goblin fixtures gate both natural and forced opportunities
+on completed encounter/reward witnesses. Both creatures place owned participants
+at the existing walkable motion-witness distance before sampling, preventing
+ordinary burst attacks from killing the first witness prematurely. The first
+still requires a real normal-enemy taunt control and a natural 25-second escape;
+the second requires observed movement before the controlled native kill. No
+health, immunity, lifetime, clock or production scheduling rule is changed.

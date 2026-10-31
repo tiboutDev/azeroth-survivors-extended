@@ -34,9 +34,18 @@ local function source(includeMarkers)
             table.insert(markers,{event=cache.id,kind=2,x=cache.x,y=cache.y,left=0})
         end
     end
-    local lair=type(AZS_GetFlaggedLair)=="function" and AZS_GetFlaggedLair()
-    if type(lair)=="table" and finite(lair.x) and finite(lair.y) and type(lair.index)=="number" and lair.index>=1 and lair.index==math.floor(lair.index) then
-        table.insert(markers,{event=lair.index,kind=3,x=lair.x,y=lair.y,left=0,name=type(lair.name)=="string" and lair.name or "Guardian",active=lair.active})
+    local lairs=type(AZS_GetLairs)=="function"and AZS_GetLairs()
+    if type(lairs)~="table"then
+        local flagged=type(AZS_GetFlaggedLair)=="function"and AZS_GetFlaggedLair()
+        lairs=flagged and{flagged}or{}
+    end
+    local seen={}
+    for i=1,math.min(table.getn(lairs),128)do local lair=lairs[i]
+        local available=type(lair)=="table"and(lair.active~=false or finite(lair.left)and lair.left>=0 and lair.left<=60)
+        if available and finite(lair.x)and finite(lair.y)and finite(lair.index)and lair.index>=1 and lair.index==math.floor(lair.index)and not seen[lair.index]then
+            seen[lair.index]=true
+            table.insert(markers,{event=lair.index,kind=3,x=lair.x,y=lair.y,left=0,name=type(lair.name)=="string"and lair.name or"Guardian",active=lair.active})
+        end
     end
     return map,markers
 end
@@ -60,7 +69,7 @@ local function refreshEventPins()
     if parent and parent:IsVisible() and map then
         for _,data in ipairs(markers or {})do
             if data.kind==1 or data.kind==2 or data.kind==3 or data.left>0 then
-                if used>=138 then break end
+                if used>=265 then break end
                 used=used+1;local pin=eventPins[used]
                 if not pin then
                     pin=CreateFrame("Frame","ASXEventPin"..used,parent);pin:SetWidth(20);pin:SetHeight(20);pin:EnableMouse(true)
@@ -76,6 +85,11 @@ local function refreshEventPins()
                 end
                 if hoveredEventPin==pin and pin.data and (pin.data.event~=data.event or pin.data.kind~=data.kind)then hoveredEventPin=nil;GameTooltip:Hide()end
                 pin.data=data
+                -- Stable semantic layers survive retained-slot reuse. Returning
+                -- guardians stay behind actionable pins; native pins are untouched.
+                local priority=data.kind==1 and 4 or(data.kind==3 and(data.active==false and 0 or 3)or(data.kind==0 and 2 or 1))
+                local level=(parent.GetFrameLevel and parent:GetFrameLevel()or 0)+2+priority*2
+                if pin.priority~=priority or pin.asxLevel~=level then pin:SetFrameLevel(level);pin.priority=priority;pin.asxLevel=level end
                 if pin.kind~=data.kind then
                     SetPortraitToTexture(pin.icon:GetName(),data.kind==3 and "Interface\\Icons\\Ability_Warrior_Challange"or(data.kind==1 and blessingIcon or(data.kind==2 and "Interface\\Icons\\INV_Box_02"or "Interface\\Icons\\INV_Crate_01")));pin.kind=data.kind
                 end
@@ -83,7 +97,7 @@ local function refreshEventPins()
             end
         end
     end
-    nativeFlag(parent and parent:IsVisible() and map and liveZoom(parent)~=nil and type(AZS_GetFlaggedLair)=="function")
+    nativeFlag(parent and parent:IsVisible() and map and liveZoom(parent)~=nil and (type(AZS_GetLairs)=="function"or type(AZS_GetFlaggedLair)=="function"))
     eventPinCount=used
     for n=used+1,table.getn(eventPins)do local pin=eventPins[n];if hoveredEventPin==pin then hoveredEventPin=nil;GameTooltip:Hide()end;pin.data=nil;setShown(pin,false)end
 end
@@ -128,7 +142,7 @@ local function layoutEventPins()
     end
 end
 function ASXUI_MinimapReadout()
-    local result={};for n,pin in ipairs(eventPins)do if pin.asxShown then table.insert(result,{event=pin.data.event,kind=pin.data.kind,outside=pin.outside,x=pin.x,y=pin.y})end end;return result
+    local result={};for n,pin in ipairs(eventPins)do if pin.asxShown then table.insert(result,{event=pin.data.event,kind=pin.data.kind,outside=pin.outside,x=pin.x,y=pin.y,priority=pin.priority,level=pin.asxLevel})end end;return result
 end
 -- A native user/party ping changes the projection's reference world point.
 -- Rebase the observer only; never create, move or suppress a native ping.

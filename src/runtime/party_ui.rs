@@ -10,6 +10,36 @@ struct State {
     names: BTreeMap<u64, String>,
     builds: BTreeMap<u64, PartyBuild>,
     encoded: BTreeMap<u64, (String, String)>,
+    drops: Vec<NativeDrop>,
+    drop_sequence: u64,
+}
+#[derive(Clone)]
+struct NativeDrop { owner:u64, sequence:u64, name:String, icon:String, rarity:u8, is_new:bool }
+impl NativeDrop {
+ fn parse(value:&serde_json::Value,owner:u64,sequence:u64)->Option<Self>{
+  if value["type"]!="drop"||owner==0{return None}
+  let name=value["name"].as_str().filter(|v|!v.is_empty()&&v.len()<=128&&!v.chars().any(char::is_control))?;
+  let icon=value["icon"].as_str().filter(|v|v.starts_with("INV_")&&v.len()<=96&&v.bytes().all(|b|b.is_ascii_alphanumeric()||b==b'_'))?;
+  let rarity=value["rarity"].as_u64().filter(|v|*v<=5)? as u8;
+  Some(Self{owner,sequence,name:name.into(),icon:icon.into(),rarity,is_new:value["new"].as_bool()?})
+ }
+}
+fn drop_wire(state:&State,own:u64)->String {
+ let mut out=String::new();
+ for d in state.drops.iter().filter(|d|d.owner==own){out.push_str(&format!("Q|{own}|{}|{}|{}|{}|{}\n",d.sequence,d.rarity,u8::from(d.is_new),hex(d.name.as_bytes()),hex(d.icon.as_bytes())));}
+ out
+}
+/// Observe the already-local native UI receipt, with no gameplay calls or replay.
+pub fn native_drop(value:&serde_json::Value){
+ if value["type"]!="drop"{return}
+ let Some(r)=RUNTIME.get().filter(|r|r.rules)else{return};
+ let Some(own)=super::ui_context::participants(r).first().copied()else{return};
+ if let Ok(mut state)=STATE.lock(){if let Some(s)=state.as_mut(){
+  if !s.ids.iter().any(|(_,id)|*id==own){return}
+  let Some(sequence)=s.drop_sequence.checked_add(1).filter(|n|*n<=1_000_000_000)else{return};
+  if let Some(drop)=NativeDrop::parse(value,own,sequence){s.drop_sequence=sequence;if s.drops.len()>=16{s.drops.remove(0);}s.drops.push(drop);}
+ }}
+
 }
 static STATE: std::sync::Mutex<Option<State>> = std::sync::Mutex::new(None);
 static HEARTBEAT: OnceLock<std::time::Instant> = OnceLock::new();
@@ -28,8 +58,9 @@ fn local_equipment(build: &PartyBuild, own: u64) -> String {
     if build.items.len() > 5 { return String::new(); }
     let mut text = format!("L|{own}|{}\n", build.items.len());
     for (index, icon) in build.items.iter().enumerate() {
-        text.push_str(&format!("E|{own}|{}|{}|{}|{}|{}\n", index + 1, icon.rank,
-            hex(icon.name.as_bytes()), hex(icon.icon.as_bytes()), hex(icon.text.as_bytes())));
+        text.push_str(&format!("E|{own}|{}|{}|{}|{}|{}{}\n", index + 1, icon.rank,
+            hex(icon.name.as_bytes()), hex(icon.icon.as_bytes()), hex(icon.text.as_bytes()),
+            icon.category.map(|c| format!("|{c}")).unwrap_or_default()));
     }
     text
 }
@@ -55,7 +86,7 @@ fn wire_extra(state: &mut State, own: u64, heartbeat: u64, extra:&str) -> Option
         let fatigue = fatigue::view(*slot, *id);
         text.push_str(&format!("F|{id}|{}|{}\n", fatigue.stacks, fatigue.remaining.ceil() as u32));
         // Only the five local items are needed by ASXUI; local spells remain omitted.
-        if *id == own { text.push_str(&local_equipment(build, own)); continue; }
+        if *id == own { text.push_str(&local_equipment(build, own));text.push_str(&drop_wire(state,own)); continue; }
         for (kind, icons) in [("S", &build.spells), ("I", &build.items)] {
             for icon in icons {
                 text.push_str(&format!(
@@ -137,6 +168,7 @@ pub fn reset() {
             s.ids.clear();
             s.builds.clear();
             s.encoded.clear();
+            s.drops.clear();
         }
     }
 }
@@ -172,6 +204,7 @@ pub fn capture(r: &Runtime, actor: u32, value: &serde_json::Value) {
             s.ids = ids;
             s.builds.clear();
             s.encoded.clear();
+            s.drops.clear();
         }
         let changed = s.builds.get(&owner.guid) != Some(&build);
         s.clock = party.clock;
@@ -214,11 +247,12 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
                     let heartbeat=HEARTBEAT.get_or_init(std::time::Instant::now).elapsed().as_secs();
                     let epoch=STATE.lock().ok().map(|mut state|{
                         let s=state.get_or_insert_with(State::default);
-                        if s.ids!=[(0,actor.guid)] || p.clock+0.5<s.clock{s.epoch=s.epoch.wrapping_add(1);s.ids=vec![(0,actor.guid)];s.builds.clear();s.encoded.clear();}
+                        if s.ids!=[(0,actor.guid)] || p.clock+0.5<s.clock{s.epoch=s.epoch.wrapping_add(1);s.ids=vec![(0,actor.guid)];s.builds.clear();s.encoded.clear();s.drops.clear();}
                         s.clock=p.clock;s.epoch
                     }).unwrap_or(0);
                     let mut text=format!("1|{epoch}|{}|{heartbeat}\nM|{}|0|{}\n",actor.guid,actor.guid,hex(b"Player"));
                     if let Some(items)=STATE.lock().ok().and_then(|state|state.as_ref().and_then(|s|s.builds.get(&actor.guid).map(|b|local_equipment(b,actor.guid)))){text.push_str(&items);}
+                    if let Some(drops)=STATE.lock().ok().and_then(|state|state.as_ref().map(|s|drop_wire(s,actor.guid))){text.push_str(&drops);}
                     if let Some(row)=super::crystals::wire(game as u64,(0,actor.guid)){text.push_str(&row);}
                     if let Some(b)=blessings::view(0,actor.guid){text.push_str(&format!("B|{}|{}|{}|{}|{}|{}\n",actor.guid,b.boss,b.category,b.rarity,b.amount,b.amount));}
                     if let Some((event,held,inside))=super::rituals::view(game as u64,actor.guid){text.push_str(&format!("R|{}|{event}|{held}|{}|{}\n",actor.guid,u8::from(inside),u8::from(inside)));}
@@ -289,6 +323,15 @@ pub fn hook(adapter: Adapter) -> crate::install::HookSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn native_drop_metadata_is_bounded_and_only_sent_to_its_local_owner(){
+        let value=serde_json::json!({"type":"drop","name":"Recruit's Helm","icon":"INV_Helmet_02","rarity":0,"new":true});
+        let drop=NativeDrop::parse(&value,11,1).unwrap();
+        let state=State{drops:vec![drop],..Default::default()};
+        assert!(drop_wire(&state,11).starts_with("Q|11|1|0|1|"));assert!(drop_wire(&state,22).is_empty());
+        assert!(NativeDrop::parse(&value,0,1).is_none());
+        for (key,bad)in [("name",serde_json::json!("bad\nname")),("icon",serde_json::json!("../foreign")),("rarity",serde_json::json!(6)),("new",serde_json::json!(null))]{let mut v=value.clone();v[key]=bad;assert!(NativeDrop::parse(&v,11,1).is_none());}
+    }
     unsafe extern "system" fn native(
         out: *mut u8,
         game: *mut u8,
@@ -335,7 +378,7 @@ mod tests {
         let mut state = State { epoch: 7, ids: vec![(0, 11), (1, 22)], ..Default::default() };
         for id in [11, 22] {
             state.names.insert(id, format!("Owner {id}"));
-            let icon = PartyIcon { id: 42, rank: 1, name: "Spell".into(), icon: "Spell_Test".into(), text: "Owner tooltip".into(), spell_tip: None };
+            let icon = PartyIcon { category:None, id: 42, rank: 1, name: "Spell".into(), icon: "Spell_Test".into(), text: "Owner tooltip".into(), spell_tip: None };
             state.builds.insert(id, PartyBuild { spells: vec![icon.clone()], items: vec![icon] });
         }
         for own in [11, 22] {
@@ -360,7 +403,7 @@ mod tests {
     #[test]
     fn local_equipment_is_bounded_native_text_and_explicitly_empty() {
         use asx_game::official::PartyIcon;
-        let icon=PartyIcon { id:42, rank:2, name:"Native|Ring".into(), icon:"INV_Test".into(), text:"Native text\n+10 damage".into(), spell_tip:None };
+        let icon=PartyIcon { category:None, id:42, rank:2, name:"Native|Ring".into(), icon:"INV_Test".into(), text:"Native text\n+10 damage".into(), spell_tip:None };
         let mut build=PartyBuild { spells:vec![icon.clone()], items:vec![icon.clone()] };
         let text=local_equipment(&build,11);
         assert!(text.starts_with("L|11|1\nE|11|1|2|"));

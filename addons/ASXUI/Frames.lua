@@ -96,13 +96,13 @@ local fortuneIcons={
 }
 local function createMedallion(kind)
  local b=CreateFrame("Button",kind=="crystal"and"ASXUICrystalMedallion"or"ASXUIFortuneMedallion",vitals)
- b.kind=kind;b:SetWidth(104);b:SetHeight(36)
+ b.kind=kind;b:SetWidth(kind=="crystal"and 36 or 104);b:SetHeight(36)
  if kind=="crystal"then b:SetPoint("RIGHT",vitals,"LEFT",-8,0)else b:SetPoint("LEFT",vitals,"RIGHT",8,0)end
  b.icon=b:CreateTexture(b:GetName().."Icon","ARTWORK");b.icon:SetWidth(30);b.icon:SetHeight(30)
  b.icon:SetPoint(kind=="crystal"and"RIGHT"or"LEFT",b,kind=="crystal"and"RIGHT"or"LEFT",0,0)
  local rim=b:CreateTexture(nil,"OVERLAY");rim:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder");rim:SetTexCoord(0,.625,0,.625);rim:SetWidth(40);rim:SetHeight(40);rim:SetPoint("CENTER",b.icon,"CENTER",0,0)
  if kind=="crystal"then
-  b.counts={};for i,key in ipairs(crystalKeys)do local label=font(b,11);label:SetPoint("TOPLEFT",b,"TOPLEFT",math.mod(i-1,2)*32,-4-math.floor((i-1)/2)*16);b.counts[key]=label end
+  b.total=font(b,12);b.total:SetFont("Fonts\\FRIZQT__.TTF",12,"OUTLINE");b.total:SetPoint("BOTTOMRIGHT",b.icon,"BOTTOMRIGHT",2,-1);b.total:SetTextColor(1,1,1)
  else
   -- A small native portrait overlaps the orb without taking tooltip ownership.
   b.nature=b:CreateTexture(b:GetName().."Nature","OVERLAY");b.nature:SetWidth(14);b.nature:SetHeight(14)
@@ -129,11 +129,7 @@ local function updateMedallions(state,crystal,fortune)
    b=b or createMedallion(kind);active[kind]=true;if kind=="crystal"then b.native=crystal else b.native=fortune end
    if b.iconPath~=t.icon then SetPortraitToTexture(b.icon:GetName(),t.icon);b.iconPath=t.icon end
    if kind=="crystal"then
-    for _,color in ipairs(crystalKeys)do
-     local label=b.counts[color];label:SetText(string.format("%.0f",value[color]))
-     local pickup=t.pickups and t.pickups[color];local rgb=pickup and pickup.titleColor
-     if value[color]>0 and rgb then label:SetTextColor(rgb[1],rgb[2],rgb[3])else label:SetTextColor(.65,.65,.65)end
-    end
+    b.total:SetText(string.format("%.0f",value.total))
    else
     local nature=fortuneIcons[value.category]
     if nature then
@@ -193,7 +189,7 @@ local function updateAllies(active)
  if not active then restore(allyOwned);for _,p in pairs(allyPanels)do p:Hide()end;return end
  for index=1,4 do
   local parent=getglobal("PartyMemberFrame"..index);
-  if parent then local above=index>1 and getglobal("PartyMemberFrame"..(index-1))or(objectives and objectives:IsShown()and objectives or nil);move(allyOwned,parent,"TOPLEFT",above or UIParent,above and"BOTTOMLEFT"or"TOPLEFT",above and 0 or 20,above and -12 or -20)end
+  if parent then local above=index>1 and getglobal("PartyMemberFrame"..(index-1))or nil;move(allyOwned,parent,"TOPLEFT",above or UIParent,above and"BOTTOMLEFT"or"TOPLEFT",above and 0 or 20,above and -12 or -20)end
  local spells,items,buffs={},{},{}
   for i=1,16 do
    for _,entry in ipairs({{"Spell",spells},{"Item",items}})do local b=getglobal("ASXOfficialParty"..index..entry[1]..i);if b and b:IsShown()and b.data then table.insert(entry[2],b)end end
@@ -210,39 +206,127 @@ local function updateAllies(active)
 end
 local function updateObjectives(active,state)
  if not active then if objectives then objectives:Hide()end;return end
- local goals,guardianNames,guardianOrder,seen={},{},{},{}
+ local goals,guardianNames,guardianOrder,seen={},{},{},{};local titles,details={},{};local arriving={}
  -- Held lairs include distant guardians outside the local unit interest set.
  local lairs=AZS_GetLairs and AZS_GetLairs()
  local guardians
  if type(lairs)=="table"then
-  guardians={};for i=1,math.min(128,table.getn(lairs))do local g=lairs[i];if type(g)=="table"and g.active==true then table.insert(guardians,g)end end
+  guardians={};for i=1,math.min(128,table.getn(lairs))do local g=lairs[i]
+   if type(g)=="table"then
+    if g.state=="empty"and type(g.name)=="string"and finite(g.left)and g.left>=0 and g.left<=60 then table.insert(arriving,g)
+    elseif g.active==true then table.insert(guardians,g)end
+   end
+  end
  else guardians=AZS_GetGuardians and AZS_GetGuardians()end
  if type(guardians)=="table"then
   for i=1,math.min(12,table.getn(guardians))do local g=guardians[i];if type(g)=="table"and type(g.name)=="string"and(g.hp==nil or finite(g.hp)and g.hp>0)then local id=(type(g.id)=="string"or finite(g.id))and g.id or i;if not seen[id]then seen[id]=true;if not guardianNames[g.name]then table.insert(guardianOrder,g.name);guardianNames[g.name]=0 end;guardianNames[g.name]=guardianNames[g.name]+1 end end end
-  for _,name in ipairs(guardianOrder)do local count=guardianNames[name];table.insert(goals,"Defeat "..name..(count>1 and(" x"..count)or""))end
  end
- if state and state.available and state.data and state.data.sayge then table.insert(goals,"Complete Sayge's Trial")end
- if table.getn(goals)==0 then if objectives then objectives:Hide()end;return end
- if not objectives then objectives=CreateFrame("Frame","ASXUIObjectives",UIParent);objectives:SetWidth(216);objectives:SetPoint("TOPLEFT",UIParent,"TOPLEFT",20,-20);ASXUI_StylePanel(objectives,true);objectives.title=font(objectives,12);objectives.title:SetPoint("TOPLEFT",objectives,"TOPLEFT",10,-11);objectives.title:SetText("Objectives");objectives.title:SetTextColor(1,.82,0)end
+ local guardianLines,guardianDisplay={},{}
+ for _,name in ipairs(guardianOrder)do local count=guardianNames[name];local line="Defeat "..name..(count>1 and(" x"..count)or"");table.insert(guardianLines,line);table.insert(guardianDisplay,line)end
+ table.sort(arriving,function(a,b)return a.left<b.left end)
+ for i=1,math.min(12,table.getn(arriving))do local g=arriving[i]
+  local line=g.left>0 and("Arrives in "..math.ceil(g.left).." s")or"Arriving soon"
+  table.insert(guardianLines,g.name..": "..(g.left<=30 and line or"Incoming"))
+  table.insert(guardianDisplay,"Await "..g.name..(g.left<=30 and("\n    "..line)or""))
+ end
+ if table.getn(guardianLines)>0 then table.insert(goals,table.concat(guardianLines,"; "));table.insert(titles,"Guardians");table.insert(details,table.concat(guardianDisplay,"\n\n  - "))end
+ if state and state.available and state.data and state.data.sayge then table.insert(goals,"Complete Sayge's Trial");table.insert(titles,"Sayge's Trial");table.insert(details,"Complete the ritual")end
+ if table.getn(goals)==0 then table.insert(goals,"No active objectives");table.insert(titles,"No active objectives");table.insert(details,"")end
+ if not objectives then
+  objectives=CreateFrame("Frame","ASXUIObjectives",UIParent);objectives:SetWidth(216)
+  local band=CreateFrame("Frame",nil,objectives);band:SetWidth(216);band:SetHeight(40);band:SetPoint("TOP",objectives,"TOP",0,0);ASXUI_StyleHeader(band)
+  objectives.title=font(band,12);objectives.title:SetPoint("LEFT",band,"LEFT",10,0);objectives.title:SetText("Objectives");objectives.title:SetTextColor(1,.82,0)
+ end
+ -- Reanchor after minimap replacement/resize; hidden maps still provide geometry.
+ local map=MinimapCluster or Minimap
+ objectives:ClearAllPoints();if map then objectives:SetPoint("TOPRIGHT",map,"BOTTOMRIGHT",-8,-12)else objectives:SetPoint("TOPRIGHT",UIParent,"TOPRIGHT",-20,-180)end
+ local offset=48
  for i=1,13 do
-  if goals[i]then if not rows[i]then rows[i]=font(objectives,11);rows[i]:SetWidth(196);rows[i]:SetHeight(28);rows[i]:SetJustifyH("LEFT");rows[i]:SetPoint("TOPLEFT",objectives,"TOPLEFT",10,-31-(i-1)*28)end;rows[i]:SetText(goals[i]);rows[i]:Show()
+  if goals[i]then
+   if not rows[i]then rows[i]=font(objectives,11);rows[i]:SetWidth(200);rows[i]:SetJustifyH("LEFT")end
+   local text=(details[i]==""and"|cffaaaaaa"or"|cffffd100")..titles[i].."|r"..(details[i]~=""and("\n\n|cffffffff  - "..details[i].."|r")or"")
+   local plain=string.gsub(string.gsub(text,"|c%x%x%x%x%x%x%x%x",""),"|r","");local height=0
+   -- Native GetStringHeight can report already-clipped bounds. Reserve a
+   -- conservative wrap budget as well, without dropping names or timers.
+   local at=1
+   while true do local stop=string.find(plain,"\n",at,true);local line=string.sub(plain,at,(stop or(string.len(plain)+1))-1);height=height+math.max(1,math.ceil(string.len(line)/28))*14;if not stop then break end;at=stop+1 end
+   rows[i].summary=goals[i];rows[i]:SetHeight(0);rows[i]:SetText(text)
+   local measured=rows[i].GetStringHeight and rows[i]:GetStringHeight();if finite(measured)then height=math.max(height,measured)end
+   rows[i]:SetHeight(height);rows[i]:ClearAllPoints();rows[i]:SetPoint("TOPLEFT",objectives,"TOPLEFT",8,-offset);rows[i]:Show();offset=offset+height+16
   elseif rows[i]then rows[i]:Hide()end
  end
- objectives:SetHeight(37+table.getn(goals)*28);objectives:Show()
+ objectives:SetHeight(offset);objectives:Show()
 end
+-- Native boss/awake-guardian data, positioned below our top ribbon and clock.
+-- The native canvas exposes visibility but no Lua anchor. Fail open if the
+-- complete bounded health snapshot is unavailable; never fabricate HP.
+local encounters,encounterRows,encounterHeight=nil,{},0
+local function updateEncounters(active)
+ local bosses=active and AZS_GetBosses and AZS_GetBosses()
+ local guardians=active and AZS_GetGuardians and AZS_GetGuardians()
+ -- The ASX native creature definition/query uses this exact fixed name and
+ -- elite rank. Read HP/max and spawn identity from the native special-unit API,
+ -- not a nameplate or a name-based target-token guess.
+ local goblins={}
+ if type(AZS_UNITS)=="table"and table.getn(AZS_UNITS)<=40 then for _,unit in ipairs(AZS_UNITS)do
+  if type(unit)=="table"and unit.kind=="elite"and unit.name=="Venture Co. Treasurer"then table.insert(goblins,unit)end
+ end end
+ local entries,seen={},{}
+ local valid=type(bosses)=="table"and type(guardians)=="table"
+ if valid then
+  for category,list in ipairs({bosses,guardians,goblins})do
+   for _,b in ipairs(list)do
+    if type(b)~="table"then valid=false;break end
+    if category~=2 or b.awake==true then
+     if type(b.name)~="string"or not finite(b.hp)or not finite(b.hpm)or b.hpm<=0 or b.id==nil then valid=false;break end
+     if b.hp>0 and not seen[b.id]then seen[b.id]=true;table.insert(entries,b)end
+    end
+   end
+  end
+  if table.getn(entries)>8 then valid=false end
+ end
+ if not valid or not ASXUI_ClaimNativeHud or not AZS_IsHudShown or not AZS_SetHudShown then
+  encounterHeight=0;if encounters then encounters:Hide()end
+  if ASXUI_RestoreNativeHud then ASXUI_RestoreNativeHud("bosses")end;return
+ end
+ local shown=ASXUI_ClaimNativeHud("bosses")
+ if not shown then encounterHeight=0;if encounters then encounters:Hide()end;return end
+ if not encounters then
+  encounters=CreateFrame("Frame","ASXUIEncounters",UIParent);encounters:SetWidth(320);encounters:SetPoint("TOP",UIParent,"TOP",0,-132)
+ end
+ encounterHeight=table.getn(entries)*31;encounters:SetHeight(math.max(1,encounterHeight))
+ for i=1,math.max(table.getn(entries),table.getn(encounterRows))do
+  local b=entries[i];local row=encounterRows[i]
+  if b then
+   if not row then
+    row=CreateFrame("Frame","ASXUIEncounter"..i,encounters);row:SetWidth(320);row:SetHeight(27);row:SetPoint("TOP",encounters,"TOP",0,-(i-1)*31)
+    ASXUI_StylePanel(row);row.bar=CreateFrame("StatusBar",nil,row);row.bar:SetPoint("TOPLEFT",row,"TOPLEFT",5,-5);row.bar:SetPoint("BOTTOMRIGHT",row,"BOTTOMRIGHT",-5,5)
+    row.bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar");row.bar:SetStatusBarColor(.65,.08,.05);row.bar:SetMinMaxValues(0,1)
+    local labels=CreateFrame("Frame",nil,row);labels:SetAllPoints(row);labels:SetFrameLevel(row.bar:GetFrameLevel()+2)
+    row.title=font(labels,11);row.title:SetPoint("CENTER",row,"CENTER",0,0);row.title:SetWidth(294);row.title:SetJustifyH("CENTER");row.title:SetTextColor(1,1,1)
+
+    encounterRows[i]=row
+   end
+   row.bar:SetStatusBarColor(b.enraged and .9 or .65,b.enraged and .25 or .08,.05)
+   row.title:SetText(b.name);row.bar:SetValue(math.max(0,math.min(1,b.hp/b.hpm)));row:Show()
+  elseif row then row:Hide()end
+ end
+ if encounterHeight>0 then encounters:Show()else encounters:Hide()end
+end
+function ASXUI_GetEncounterOffset()return encounterHeight>0 and 132+encounterHeight+12 or 137 end
 controller:SetScript("OnUpdate",function()
  local a=ASXUI_GetHudAnchors and ASXUI_GetHudAnchors()
- if a and vitals then vitals:ClearAllPoints();vitals:SetPoint("BOTTOM",a.base,"TOP",0,a.topOffset+9)end
+ if a and vitals then vitals:ClearAllPoints();vitals:SetPoint("BOTTOM",UIParent,"BOTTOM",0,184)end
  elapsed=elapsed+(arg1 or 0);if elapsed<.1 then return end;elapsed=0
  if a then
   if not vitals then createVitals(a)end
-  vitals:ClearAllPoints();vitals:SetPoint("BOTTOM",a.base,"TOP",0,a.topOffset+9);vitals:Show()
+  vitals:ClearAllPoints();vitals:SetPoint("BOTTOM",UIParent,"BOTTOM",0,184);vitals:Show()
   local hp=UnitHealth and UnitHealth("player");local max=UnitHealthMax and UnitHealthMax("player")
   if finite(hp)and finite(max)and max>0 then
    local fraction=math.max(0,math.min(hp,max))/max
    health.fraction=fraction;health:SetWidth(math.max(.01,health.fullWidth*fraction))
    if fraction>0 then health:Show()else health:Hide()end
-   healthText:SetText(string.format("%.0f / %.0f",hp,max))
+   healthText:SetText(string.format("%.0f",hp))
   else health.fraction=nil;health:Hide();healthText:SetText("—")end
   auraRoot:ClearAllPoints();auraRoot:SetPoint("BOTTOM",vitals,"TOP",0,8)
   rootVisibility(true)
@@ -250,12 +334,12 @@ controller:SetScript("OnUpdate",function()
   if vitals then vitals:Hide()end;restore(auraOwned);restore(timerOwned);updateMedallions(nil);rootVisibility(false)
  end
  local state=ASX_GetState and ASX_GetState(1)
- updateObjectives(a~=nil,state);updateAllies(a~=nil)
+ updateObjectives(a~=nil,state);updateAllies(a~=nil);updateEncounters(a~=nil)
 end)
 
 function ASXUI_FramesReadout()
- local result={health=healthText and healthText:GetText(),vitalsShown=vitals and vitals:IsVisible(),playerAlpha=PlayerFrame and PlayerFrame:GetAlpha(),targetAlpha=TargetFrame and TargetFrame:GetAlpha(),objectives={},allies=0,allyBuffsOutside=0}
- if objectives and objectives:IsVisible()then for _,row in ipairs(rows)do if row:IsShown()then table.insert(result.objectives,row:GetText())end end end
+ local result={health=healthText and healthText:GetText(),vitalsShown=vitals and vitals:IsVisible(),playerAlpha=PlayerFrame and PlayerFrame:GetAlpha(),targetAlpha=TargetFrame and TargetFrame:GetAlpha(),objectives={},objectiveTexts={},allies=0,allyBuffsOutside=0}
+ if objectives and objectives:IsVisible()then for _,row in ipairs(rows)do if row:IsShown()then table.insert(result.objectives,row.summary);table.insert(result.objectiveTexts,row:GetText())end end end
  for index,panel in pairs(allyPanels)do if panel:IsVisible()then
   result.allies=result.allies+1
   for i=1,16 do local b=getglobal("ASXOfficialParty"..index.."Buff"..i);if b and b:IsVisible()then local _,parent,relative=b:GetPoint(1);if parent==panel and relative=="TOPRIGHT"then result.allyBuffsOutside=result.allyBuffsOutside+1 end end end
@@ -267,19 +351,15 @@ function ASXUI_FramesReadout()
   local timer=getglobal(frame:GetName().."Duration")
   if timer and timer:IsVisible()and finite(timer:GetBottom())and finite(frame:GetTop())and timer:GetBottom()<frame:GetTop()then result.auras.durationsAbove=false end
  end end
- result.medallions={};for kind,b in pairs(medallions)do if b:IsVisible()then result.medallions[kind]={visible=true,value=b.value and b.value:GetText(),native=b.native~=nil};if b.counts then local counts={};for key,label in pairs(b.counts)do counts[key]=label:GetText()end;result.medallions[kind].counts=counts end end end
+ result.encounters={visible=encounters and encounters:IsVisible()or false,height=encounterHeight,rows={}}
+ for _,row in ipairs(encounterRows)do if row:IsVisible()then table.insert(result.encounters.rows,{name=row.title:GetText(),health=row.bar:GetValue()})end end
+ result.medallions={};for kind,b in pairs(medallions)do if b:IsVisible()then result.medallions[kind]={visible=true,value=b.value and b.value:GetText(),total=b.total and b.total:GetText(),native=b.native~=nil};if b.counts then local counts={};for key,label in pairs(b.counts)do counts[key]=label:GetText()end;result.medallions[kind].counts=counts end end end
  if vitals then result.vitalsTop=vitals:GetTop()end
  return result
 end
 
 function ASXUI_GetDrawerAnchor()
- if vitals and vitals:IsVisible()then return vitals,12 end
+ local a=ASXUI_GetHudAnchors and ASXUI_GetHudAnchors();if a then return a.base,0 end
 end
 
--- The drawer intentionally covers auras during consultation. Keep native aura
--- strata/levels unchanged; only the owned clipped panel rises above them.
-function ASXUI_GetDrawerLevel()
- local level=0
- for f in pairs(auraOwned)do if f:IsVisible()then level=math.max(level,f:GetFrameLevel())end end
- return level+2
-end
+-- Drawer layering is owned by Hud.lua: equipment < panel < native gryphons.

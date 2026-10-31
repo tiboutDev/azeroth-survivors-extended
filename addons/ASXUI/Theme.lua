@@ -1,6 +1,6 @@
 -- Native HUD toggles are persistent CVars. Keep the player's original values
 -- in SavedVariables as well as restoring them on a normal logout.
-local nativeParts={"build","tally","clock","loot","revive"}
+local nativeParts={"build","tally","clock","loot","revive","bosses"}
 local closing=false
 local function originals()
  if type(ASXUIDB)~="table"then ASXUIDB={}end
@@ -50,56 +50,83 @@ function ASXUI_StylePanel(frame,warm)
  end
 end
 
--- Open-top ribbon: the native header's vertical sides/body and lower trim.
--- Its upper rail/corners are deliberately omitted. Body and bottom trim have
--- separate vertical sizing so the icon padding cannot stretch the lower edge.
-function ASXUI_StyleTopCounters(frame)
- if frame.asxCounterOrnaments then return end
- frame:SetBackdrop(nil)
- frame.asxCounterOrnaments={}
+-- Native dialog cartouche with complete rails and ornamented corners. Only
+-- the straight body stretches vertically; top/bottom corners keep their size.
+function ASXUI_StyleHeader(frame)
+ frame:SetBackdrop(nil);if frame.asxHeaderOrnaments then return end
+ frame.asxHeaderOrnaments={}
+ local fill=frame:CreateTexture(nil,"BACKGROUND");fill:SetTexture(.035,.031,.025,1);fill:SetPoint("TOPLEFT",frame,"TOPLEFT",7,-7);fill:SetPoint("BOTTOMRIGHT",frame,"BOTTOMRIGHT",-7,7)
  local atlas="Interface\\DialogFrame\\UI-DialogBox-Header"
  for _,part in ipairs({{62,82,"LEFT"},{82,174},{174,194,"RIGHT"}})do
-  for _,strip in ipairs({{12,28,36,"TOP"},{28,38,10,"BOTTOM"}})do
-   local t=frame:CreateTexture(nil,"BORDER");t:SetTexture(atlas)
-   t:SetTexCoord(part[1]/256,part[2]/256,strip[1]/64,strip[2]/64);t:SetHeight(strip[3])
-   if part[3]then t:SetWidth(20);local point=strip[4]..part[3];t:SetPoint(point,frame,point,0,0)
-   else t:SetPoint(strip[4].."LEFT",frame,strip[4].."LEFT",20,0);t:SetPoint(strip[4].."RIGHT",frame,strip[4].."RIGHT",-20,0)end
-   table.insert(frame.asxCounterOrnaments,t)
+  for _,strip in ipairs({{2,12,10,"TOP",0},{12,28,frame:GetHeight()-20,"TOP",-10},{28,38,10,"BOTTOM",0}})do
+   local t=frame:CreateTexture(nil,"BORDER");t:SetTexture(atlas);t:SetTexCoord(part[1]/256,part[2]/256,strip[1]/64,strip[2]/64);t:SetHeight(strip[3])
+   if part[3]then t:SetWidth(20);local point=strip[4]..part[3];t:SetPoint(point,frame,point,0,strip[5])
+   else t:SetPoint(strip[4].."LEFT",frame,strip[4].."LEFT",20,strip[5]);t:SetPoint(strip[4].."RIGHT",frame,strip[4].."RIGHT",-20,strip[5])end
+   table.insert(frame.asxHeaderOrnaments,t)
   end
  end
 end
+function ASXUI_StyleTopCounters(frame)ASXUI_StyleHeader(frame)end
 
--- Capsule made only from the native white texture and native circular portrait
--- mask. The center overlaps half of each cap, avoiding rectangular corners.
+-- Native 128px portrait alpha mask preserves smooth caps at HUD/plate sizes.
+-- Body and caps share the native status-bar bitmap's eight-row grayscale
+-- ramp at pixel-sized bands. Equal shading avoids a cap/body modulation seam.
 function ASXUI_CreatePill(parent,name,width,height,r,g,b,texture)
- texture=texture or"Interface\\Buttons\\WHITE8X8"
+ local mask="Interface\\CharacterFrame\\TempPortraitAlphaMask"
+ local gradient=texture=="Interface\\TargetingFrame\\UI-StatusBar"
  local frame=CreateFrame("Frame",name,parent);frame:SetWidth(width);frame:SetHeight(height)
- local colors={}
+ local colors={};local bodyShades={};local shades={136,189,216,189,144,101,122,101}
+ local bands=gradient and math.ceil(height)or 1
  for _,side in ipairs({"Left","Right"})do
   local point=side=="Left"and"TOPLEFT"or"TOPRIGHT"
-  if texture=="Interface\\TargetingFrame\\UI-StatusBar"then
-   -- The native status-bar bitmap is 64x8; portrait-masking that non-square
-   -- image cuts off its ends. Use the native square white mask for the caps,
-   -- shaded with the reviewed bitmap's eight grayscale rows. The body keeps
-   -- the original status-bar texture and no replacement image is bundled.
-   local shades={136,189,216,189,144,101,122,101}
-   for row,shade in ipairs(shades)do
-    local t=frame:CreateTexture(name..side..row,"ARTWORK");t:SetWidth(height);t:SetHeight(height/8)
-    t:SetPoint(point,frame,point,0,-(row-1)*height/8)
-    SetPortraitToTexture(t:GetName(),"Interface\\Buttons\\WHITE8X8")
-    t:SetTexCoord(0,1,(row-1)/8,row/8);local v=shade/255;t:SetVertexColor(r*v,g*v,b*v,1);table.insert(colors,{t,v})
+  for row=1,bands do
+   local t=frame:CreateTexture(name..side..row,"ARTWORK");t:SetWidth(height);t:SetHeight(height/bands)
+   t:SetPoint(point,frame,point,0,-(row-1)*height/bands)
+   t:SetTexture(mask);t:SetTexCoord(0,1,(row-1)/bands,row/bands)
+   local v=1
+   if gradient then
+    local sample=math.max(0,math.min(7,((row-.5)/bands)*8-.5));local low=math.floor(sample)
+    v=(shades[low+1]+(shades[math.min(8,low+2)]-shades[low+1])*(sample-low))/255
    end
-  else
-   local t=frame:CreateTexture(name..side,"ARTWORK");t:SetWidth(height);t:SetHeight(height)
-   t:SetPoint(string.upper(side),frame,string.upper(side),0,0)
-   SetPortraitToTexture(t:GetName(),texture);t:SetVertexColor(r,g,b,1);table.insert(colors,{t,1})
+   bodyShades[row]=v
+   t:SetVertexColor(r*v,g*v,b*v,1);table.insert(colors,{t,v})
   end
  end
- local center=frame:CreateTexture(nil,"ARTWORK");center:SetTexture(texture);center:SetVertexColor(r,g,b,1)
- center:SetPoint("TOPLEFT",frame,"TOPLEFT",height/2,0);center:SetPoint("BOTTOMRIGHT",frame,"BOTTOMRIGHT",-height/2,0)
- table.insert(colors,{center,1})
+ local center
+ for row=1,bands do
+  local t=frame:CreateTexture(nil,"ARTWORK");t:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
+  t:SetPoint("TOPLEFT",frame,"TOPLEFT",height/2,-(row-1)*height/bands)
+  t:SetPoint("TOPRIGHT",frame,"TOPRIGHT",-height/2,-(row-1)*height/bands);t:SetHeight(height/bands)
+  local v=bodyShades[row];t:SetVertexColor(r*v,g*v,b*v,1);table.insert(colors,{t,v});center=center or t
+ end
  function frame:SetPillColor(red,green,blue)
   for _,entry in ipairs(colors)do local v=entry[2];entry[1]:SetVertexColor(red*v,green*v,blue*v,1)end
  end
  frame.centerTexture=center;return frame
+end
+
+-- ASX owns the wording; only numeric bonus tokens receive native green markup.
+-- Native loot receipts keep their original item rarity and message formatting.
+function ASXUI_FormatBonus(text)
+ return (string.gsub(text or"","([%+%-]?%d+%.?%d*%%?)","|cff1eff00%1|r"))
+end
+
+-- Thin native frame for statistics; its bottom edge is clipped by Hud.lua.
+-- The objectives ribbon uses the native XP/casting trim at its natural height,
+-- with no right end cap against the screen. No stretched dialog-title atlas.
+function ASXUI_StyleOpenPanel(frame,rightOpen)
+ if frame.asxOpenFill then return end
+ local fill=frame:CreateTexture(nil,"BACKGROUND");fill:SetTexture(.035,.031,.025,1);frame.asxOpenFill=fill
+ if not rightOpen then
+  frame:SetBackdrop({bgFile="Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,tileSize=16,edgeSize=8,insets={left=3,right=3,top=3,bottom=3}})
+  frame:SetBackdropColor(.08,.07,.055,1);frame:SetBackdropBorderColor(.8,.77,.68,1)
+  fill:SetPoint("TOPLEFT",frame,"TOPLEFT",3,-3);fill:SetPoint("BOTTOMRIGHT",frame,"BOTTOMRIGHT",-3,3)
+ else
+  frame:SetBackdrop(nil);fill:SetPoint("TOPLEFT",frame,"TOPLEFT",4,-7);fill:SetPoint("BOTTOMRIGHT",frame,"BOTTOMRIGHT",0,6)
+  for _,part in ipairs({{22,40},{40,216}})do
+   local t=frame:CreateTexture(nil,"BORDER");t:SetTexture("Interface\\CastingBar\\UI-CastingBar-Border");t:SetTexCoord(part[1]/256,part[2]/256,.25,.75);t:SetHeight(32)
+   if part[1]==22 then t:SetWidth(18);t:SetPoint("LEFT",frame,"LEFT",-1,0)
+   else t:SetPoint("LEFT",frame,"LEFT",17,0);t:SetPoint("RIGHT",frame,"RIGHT",0,0)end
+  end
+ end
 end

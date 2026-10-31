@@ -10,7 +10,10 @@ def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def compact_popup(popup):
  # Native widget coordinates include renderer floating-point rounding.
  width,height,icon=(popup.get(key)for key in ('width','height','icon'))
- return all(isinstance(value,(int,float))and math.isfinite(value)for value in (width,height,icon))and abs(width-340)<.1 and height>=87.9 and abs(icon-32)<.1 and popup.get('inside')is True
+ return all(isinstance(value,(int,float))and math.isfinite(value)for value in (width,height,icon))and abs(width-320)<.1 and height>=79.9 and abs(icon-32)<.1 and popup.get('inside')is True
+def native_goblin_unmarked(log):
+ rows=re.findall(r'goblin native marker observation: guid=(\d+) skull=(true|false)\b',log)
+ return bool(rows)and all(int(guid)>0 and marked=='false'for guid,marked in rows)
 def run(args,gate):
  source=Path(os.environ['ASX_HUD_TRIAL_RUNTIME']).resolve(strict=True);dll=ROOT/'diagnostic/avrt.dll'
  receipt=json.loads((ROOT/'diagnostic/avrt.artifact.json').read_text())
@@ -36,6 +39,7 @@ def run(args,gate):
    probe=addons/'ASXUIHudAudit';probe.mkdir();(probe/'ASXUIHudAudit.toc').write_text('## Interface: 11200\nProbe.lua\n');shutil.copyfile(ROOT/'tools/dev/fixtures/asxui-hud-live.lua',probe/'Probe.lua')
    env=dict(clean,APPDATA=str(profile/'appdata'),LOCALAPPDATA=str(profile/'localappdata'),BENILLA_HOME=str(profile),ASX_ACTIVE='1',AZCOOP_ENGINE='official',AZCOOP_NATIVE_LOG_DIRECTORY=str(profile),ASX_READY_FILE=str(profile/'ready.json'),WOW_NOSOUND='1',WOW_WIN='1',WOW_ROGUE_UPDATE='0',WOW_ROGUE_UPDATE_AUTO='0',WOW_ROGUE_AUTOPICK='1',WOW_ROGUE_AUTOSTART='1',WOW_ROGUE_AUTOPLAY='4',WOW_ROGUE_SHOTS=str(profile/'shots'),WOW_ROGUE_SHOTS_EVERY='10',RUST_LOG='info',ASX_TREASURE_GOBLINS='0',ASX_LOST_SUPPLIES='1',ASX_DARKMOON_TRIALS='1',ASX_TEST_LOST_SUPPLIES='1',ASX_TEST_DARKMOON_TRIAL='1',AZCOOP_TEST_ENCHANTMENTS='1',ASX_TEST_HUD_FIXTURE='1')
    if args.crystal_badges:env.update(ASX_TEST_CRYSTALS='1',ASX_LOST_SUPPLIES='0',ASX_DARKMOON_TRIALS='0',ASX_TEST_LOST_SUPPLIES='0',ASX_TEST_DARKMOON_TRIAL='0')
+   if args.hud_goblins:env.update(ASX_TREASURE_GOBLINS="1",ASX_TEST_TREASURE_GOBLINS="1")
    if args.hud_trial==2:env.update(WOW_ROGUE_COOP_PASSWORD=password,ASX_TEST_COOP_EVENTS='1');env['WOW_ROGUE_COOP_HOST'if slot==0 else'WOW_ROGUE_COOP_JOIN']=str(port)if slot==0 else f'127.0.0.1:{port}'
    stream=(profile/'stdout.log').open('wb');streams.append(stream);children.append(subprocess.Popen([str(native/'AzerothSurvivors.exe')],cwd=native,env=env,stdout=stream,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW));time.sleep(1)
   deadline=time.monotonic()+args.seconds
@@ -52,18 +56,21 @@ def run(args,gate):
   for stream in streams:stream.close()
  results=[]
  for profile in profiles:
-  text=(profile/'stdout.log').read_text(errors='replace');samples=[]
+  text=(profile/'stdout.log').read_text(errors='replace');native_log=(profile/'azeroth-coop-native.log').read_text(errors='replace');samples=[]
   for line in text.splitlines():
    if 'ASXUI_HUD_LIVE 'in line:
     try:samples.append(json.loads(line.split('ASXUI_HUD_LIVE ',1)[1]))
     except ValueError:pass
   (profile/'samples.json').write_text(json.dumps(samples,indent=2))
   active=[s for s in samples if s.get('available')and s.get('hud',{}).get('enabled')]
-  checks={'native_health_visible':any(s.get('frames',{}).get('vitalsShown')and s.get('frames',{}).get('health')and s.get('frames',{}).get('playerAlpha')==0 for s in active),'real_api_1_5':bool(active)and all(s.get('api',{}).get('minor',0)>=5 for s in active),'native_xp_preserved':bool(active)and all(abs(s['xp']['width']-481)<.1 and abs(s['xp']['height']-13)<.1 for s in active),'combat_opened':any(s.get('hud',{}).get('selected')=='combat'and s['hud'].get('progress',0)>.9 for s in samples),'character_opened':any(s.get('hud',{}).get('selected')=='character'and s['hud'].get('progress',0)>.9 for s in samples),'toggle_restored':any(s.get('age',0)>40 and not s.get('hud',{}).get('enabled')for s in samples),'local_equipment_delivered':any(s.get('equipmentTexts')for s in samples),'asx_started':(profile/'ready.json').exists()}
+  checks={'native_health_visible':any(s.get('frames',{}).get('vitalsShown')and s.get('frames',{}).get('health')and s.get('frames',{}).get('playerAlpha')==0 for s in active),'real_api_1_5':bool(active)and all(s.get('api',{}).get('minor',0)>=5 for s in active),'native_xp_preserved':bool(active)and all(abs(s['xp']['width']-437)<.1 and abs(s['xp']['height']-13)<.1 for s in active),'stats_opened':any(s.get('hud',{}).get('selected')=='stats'and s['hud'].get('progress')==1 for s in samples),'stats_closed':any(20<=s.get('age',0)<30 and s.get('hud',{}).get('progress')==0 for s in samples),'native_plate_defaults':any(s.get('plateLayout')=='overlap'and s.get('platesOn')==1 for s in samples),'affordable_glow_observed':any(s.get('hud',{}).get('affordable')for s in active),'toggle_restored':any(s.get('age',0)>40 and not s.get('hud',{}).get('enabled')for s in samples),'local_equipment_delivered':any(s.get('equipmentTexts')for s in samples),'asx_started':(profile/'ready.json').exists()}
   checks['compact_popup_observed']=any(compact_popup(popup)for v in active for popup in v.get('popups',{}).values())
   if args.crystal_badges:
    checks['crystal_medallion_observed']=any(v.get('frames',{}).get('medallions',{}).get('crystal',{}).get('native')for v in active)
+   checks['crystal_total_observed']=any(int(v.get('frames',{}).get('medallions',{}).get('crystal',{}).get('total')or 0)>0 for v in active)
    checks['crystal_tooltip_observed']=any(v.get('badgeTooltips',{}).get('ASXUICrystalMedallion')=='Crystal Resonance'for v in active)
+  if args.hud_goblins and 'goblin native marker observation:'in native_log:checks['goblin_has_no_automatic_skull']=native_goblin_unmarked(native_log)
+  if args.hud_goblins:checks['native_goblin_health_observed']=any(row.get('name')=='Venture Co. Treasurer'for v in active for row in v.get('frames',{}).get('encounters',{}).get('rows',{}).values())
   checks['guardian_objectives_observed']=any('Defeat 'in str(v.get('frames',{}).get('objectives',{}))for v in samples)
   checks['native_auras_docked']=any(v.get('frames',{}).get('auras',{}).get('helpful',0)>0 and v['frames']['auras'].get('aboveHealth')and v['frames']['auras'].get('durationsAbove')for v in active)
   checks['player_frame_restored']=any(v.get('age',0)>40 and not v.get('hud',{}).get('enabled')and v.get('frames',{}).get('playerAlpha')==1 for v in samples)
@@ -72,6 +79,7 @@ def run(args,gate):
    checks['ally_build_panel_observed']=any(v.get('frames',{}).get('allies',0)>0 for v in active)
    checks['ally_buffs_outside_observed']=any(v.get('frames',{}).get('allyBuffsOutside',0)>0 for v in active)
   observations={
+   'goblin_marker_table':('observed'if 'goblin native marker observation:'in native_log else'unavailable_in_solo_host_guard'),
    'fortune_medallion':any(v.get('frames',{}).get('medallions',{}).get('fortune',{}).get('native')for v in active),
    'sayge_channel':any(v.get('channels',{}).get('ASXSaygeTrialProgress')for v in active),
    'resurrection_channel':any(v.get('channels',{}).get('ASXUIResurrectionProgress')for v in active),
@@ -85,10 +93,11 @@ def run(args,gate):
  (out/'result.json').write_text(json.dumps(result,indent=2));print(json.dumps(result),flush=True)
  if not result['passed']:raise SystemExit(1)
 def parse(argv=None):
- parser=background.build_parser();parser.add_argument('--hud-trial',type=int,choices=(1,2),required=True);parser.add_argument('--crystal-badges',action='store_true');args=parser.parse_args(argv)
+ parser=background.build_parser();parser.add_argument('--hud-trial',type=int,choices=(1,2),required=True);parser.add_argument('--crystal-badges',action='store_true');parser.add_argument('--hud-goblins',action='store_true');args=parser.parse_args(argv)
+ if args.hud_goblins and args.hud_trial!=1:parser.error('Goblin health visual fixture uses one client')
  if args.crystal_badges and args.hud_trial!=1:parser.error('Crystal badge fixture uses one client and no conflicting event-position fixture')
  if not 60<=args.seconds<=150:parser.error('HUD trial requires 60..150 seconds')
  if any(getattr(args,n)for n in ('resource_probe','extensions_trial','ritual_trial','supplies_trial','goblins_trial','gems_trial','enchantments_trial','reward_wallet_trial','immunity_aggro_trial','asx_install','extensions_normal','asx_package')):parser.error('HUD trial is a separate mode')
  return args
 if __name__=='__main__':
- background.__file__=__file__;background.run_child=run;background.parse_args=parse;background.child_flags=lambda a:['--hud-trial',str(a.hud_trial)]+(['--crystal-badges']if a.crystal_badges else[]);background.main()
+ background.__file__=__file__;background.run_child=run;background.parse_args=parse;background.child_flags=lambda a:['--hud-trial',str(a.hud_trial)]+(['--crystal-badges']if a.crystal_badges else[])+(['--hud-goblins']if a.hud_goblins else[]);background.main()

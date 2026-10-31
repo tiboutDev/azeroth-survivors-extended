@@ -11,7 +11,12 @@ local function settings()
     if type(ASXUIDB.plates) ~= "boolean" then ASXUIDB.plates = true end
     if type(ASXUIDB.numbers) ~= "boolean" then ASXUIDB.numbers = false end
     if type(ASXUIDB.scale) ~= "number" or ASXUIDB.scale ~= ASXUIDB.scale
-        or ASXUIDB.scale < 0.5 or ASXUIDB.scale > 1.5 then ASXUIDB.scale = 0.7 end
+        or ASXUIDB.scale < 0.5 or ASXUIDB.scale > 1.5 then ASXUIDB.scale = 0.5 end
+    -- Migrate the previous factory size, retaining other explicit scales.
+    if ASXUIDB.compactPlates~=2 then
+        if ASXUIDB.scale==0.7 or ASXUIDB.scale==0.6 then ASXUIDB.scale=0.5 end
+        ASXUIDB.compactPlates=2
+    end
     return ASXUIDB
 end
 local function say(text)
@@ -64,16 +69,16 @@ local function pill(row,active,r,g,b)
             local name="ASXUIEnemyHealth"..row.index
             local root=CreateFrame("Frame",name,row.plate);root:EnableMouse(false)
             root:SetPoint("CENTER",bar,"CENTER",0,0)
-            local outline=ASXUI_CreatePill(root,name.."Outline",70,8,.36,.34,.29);outline:SetPoint("CENTER",root,"CENTER",0,0)
-            local background=ASXUI_CreatePill(outline,name.."Background",68,6,.045,.045,.035);background:SetPoint("CENTER",outline,"CENTER",0,0)
-            local clip=CreateFrame("ScrollFrame",name.."Clip",background);clip:SetPoint("LEFT",background,"LEFT",0,0);clip:SetHeight(6)
-            local fill=ASXUI_CreatePill(clip,name.."Fill",68,6,r,g,b,"Interface\\TargetingFrame\\UI-StatusBar");clip:SetScrollChild(fill)
+            local outline=ASXUI_CreatePill(root,name.."Outline",60,6,.36,.34,.29);outline:SetPoint("CENTER",root,"CENTER",0,0)
+            local background=ASXUI_CreatePill(outline,name.."Background",58,4,.045,.045,.035);background:SetPoint("CENTER",outline,"CENTER",0,0)
+            local clip=CreateFrame("ScrollFrame",name.."Clip",background);clip:SetPoint("LEFT",background,"LEFT",0,0);clip:SetHeight(4)
+            local fill=ASXUI_CreatePill(clip,name.."Fill",58,4,r,g,b,"Interface\\TargetingFrame\\UI-StatusBar");clip:SetScrollChild(fill)
             row.pill={root=root,outline=outline,background=background,clip=clip,fill=fill}
         end
         local view=row.pill
         local width=math.max(10,bar:GetWidth());local inner=width-2
         if view.width~=width then
-            view.root:SetWidth(width);view.root:SetHeight(8);view.outline:SetWidth(width)
+            view.root:SetWidth(width);view.root:SetHeight(6);view.outline:SetWidth(width)
             view.background:SetWidth(inner);view.fill:SetWidth(inner);view.width=width;view.ratio=nil
         end
         local ratio=math.max(0,math.min(1,(value-low)/(high-low)))
@@ -141,6 +146,11 @@ addon:SetScript("OnEvent",function()
     if arg1~="ASXUI"then return end
     ready=true
     local db=settings()
+    -- One-time native defaults; later visibility/layout choices remain native.
+    if not db.nativePlateDefaults and ShowNameplates and SetCVar then
+        ShowNameplates();NAMEPLATES_ON=1
+        SetCVar("nameplateLayout","overlap");db.nativePlateDefaults=true
+    end
     DAMAGE_TEXT_FONT=db.numbers and numberFont or originalDamageFont
 end)
 addon:SetScript("OnUpdate",refresh)
@@ -170,7 +180,7 @@ end
 function ASXUI_Readout()
     local result={ready=ready,plates=table.getn(plates),numberFont=DAMAGE_TEXT_FONT,rows={}}
     for _,row in ipairs(plates)do
-        table.insert(result.rows,{name=row.name:GetText(),visible=row.plate:IsVisible(),scale=(row.geometry[1] and row.geometry[1][2]~=0 and row.plate:GetWidth()/row.geometry[1][2] or 1),alpha=row.name:GetAlpha(),pill=row.pill and row.pill.root:IsVisible()or false,pillWidth=row.pill and row.pill.width,pillHeight=row.pill and 8,health=row.bar:GetValue()})
+        table.insert(result.rows,{name=row.name:GetText(),visible=row.plate:IsVisible(),scale=(row.geometry[1] and row.geometry[1][2]~=0 and row.plate:GetWidth()/row.geometry[1][2] or 1),alpha=row.name:GetAlpha(),pill=row.pill and row.pill.root:IsVisible()or false,pillWidth=row.pill and row.pill.width,pillHeight=row.pill and row.pill.root:GetHeight(),health=row.bar:GetValue()})
     end
     return result
 end

@@ -43,9 +43,16 @@ class APITests(unittest.TestCase):
         self.lua.execute('AZS_RUN={asx=wire};AZS_RUN_UPDATED=now;now=now+.1')
     def test_local_equipment_native_text_copy_isolation_and_zero_item_snapshot(self):
         self.equipment_wire()
-        self.lua.execute('local major,minor=ASX_GetAPIVersion();assert(major==1 and minor==5);local s=ASX_GetState(1);assert(s.available and s.data.equipment[1].slot==1 and s.data.equipment[1].rank==2 and s.data.equipment[1].name==nil);assert(s.texts.equipment[1].name=="Native ring" and s.texts.equipment[1].text=="Exact owner text\\n+10 damage");s.texts.equipment[1].name="Mutated";assert(ASX_GetState(1).texts.equipment[1].name=="Native ring")')
+        self.lua.execute('local major,minor=ASX_GetAPIVersion();assert(major==1 and minor==6);local s=ASX_GetState(1);assert(s.available and s.data.equipment[1].slot==1 and s.data.equipment[1].rank==2 and s.data.equipment[1].name==nil);assert(s.texts.equipment[1].name=="Native ring" and s.texts.equipment[1].text=="Exact owner text\\n+10 damage");s.texts.equipment[1].name="Mutated";assert(ASX_GetState(1).texts.equipment[1].name=="Native ring")')
         self.equipment_wire(header='L|11|0',row='')
         self.lua.execute('local s=ASX_GetState(1);assert(s.available and table.getn(s.data.equipment)==0 and table.getn(s.texts.equipment)==0)')
+    def test_equipment_retains_native_category_and_rejects_unknown_category(self):
+        h=lambda value:value.encode().hex()
+        row='E|11|1|2|'+h('Native ring')+'|'+h('INV_Ring')+'|'+h('Owner text')+'|ring'
+        self.equipment_wire(row=row)
+        self.lua.execute('assert(ASX_GetState(1).data.equipment[1].category=="ring")')
+        self.equipment_wire(row=row.replace('|ring','|unknown'))
+        self.lua.execute('assert(not ASX_GetState(1).available)')
     def test_local_equipment_rejects_missing_duplicate_out_of_order_or_foreign_items(self):
         h=lambda value:value.encode().hex()
         row=f"E|11|1|2|{h('Ring')}|{h('INV_Test')}|{h('Native text')}"

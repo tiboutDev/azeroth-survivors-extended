@@ -54,6 +54,7 @@ fn handle_hud(runtime: &dyn Services, c: &crate::stub::Context) {
     let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         if let Ok(value) = runtime.read_ui(c.rdx, c.r8) {
             party_ui::roster(&value);
+            party_ui::native_drop(&value);
             menu_pause::session(&value);
             #[cfg(feature = "test-hooks")]
             runtime.economy_hud(&value);
@@ -98,6 +99,7 @@ fn handle_event(runtime: &dyn Services, c: &mut crate::stub::Context) {
             #[cfg(feature = "test-hooks")]
             runtime.fixture_event(c, &value);
             party_ui::roster(&value);
+            party_ui::native_drop(&value);
             let reset = pause_session_ended(&value);
             if reset {
                 runtime.end_session();

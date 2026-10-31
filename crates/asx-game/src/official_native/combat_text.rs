@@ -1,6 +1,24 @@
 //! Borrow the native world-text message writer only during its native log callback.
 use super::*;
 use crate::official::MutableMemory;
+use std::sync::atomic::AtomicUsize;
+pub static DAMAGE_NEXT: AtomicUsize = AtomicUsize::new(0);
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+static THIRD: f32 = 1.0 / 3.0;
+/// The selected renderer keeps the current entry in r14 and its freshly calculated
+/// size in xmm7. No stored size changes; preserve every other register and flags.
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+#[unsafe(naked)]
+pub unsafe extern "C" fn damage_entry() {
+    core::arch::naked_asm!(
+ "pushfq",
+ "cmp byte ptr [r14 + 0x38], 0", "je 2f",
+ "cmp byte ptr [r14 + 0x38], 2", "jne 3f",
+ "2:", "cmp dword ptr [r14 + 0x34], {green}", "je 3f",
+ "mulss xmm7, dword ptr [rip + {third}]",
+ "3:", "popfq", "jmp qword ptr [rip + {next}]",
+ green=const crate::current::HEAL_TEXT_COLOR,third=sym THIRD,next=sym DAMAGE_NEXT);
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct HealText {
     pub caster: u64,
@@ -9,6 +27,12 @@ pub struct HealText {
     pub critical: bool,
 }
 impl Adapter {
+    /// Exact reviewed 0.131 renderer seam, after size interpolation/clamping.
+    pub fn damage_text_size_entry(self) -> super::super::official::Entry {
+        let (rva, bytes) = crate::current::DAMAGE_TEXT_SIZE;
+        super::super::official::Entry { rva, bytes }
+    }
+
     pub fn combat_text_entries(self) -> [super::super::official::Entry; 8] {
         use crate::current as v;
         [
@@ -167,6 +191,48 @@ impl Adapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+    #[test]
+    fn damage_size_uses_fresh_baseline_preserves_other_categories_and_heals() {
+        #[unsafe(naked)]
+        unsafe extern "C" fn end() {
+            core::arch::naked_asm!(
+                "pushfq",
+                "pop rax",
+                "mov [r14 + 0x20], rax",
+                "movaps xmm0, xmm7",
+                "ret"
+            );
+        }
+        #[unsafe(naked)]
+        unsafe extern "system" fn invoke(_row: *const u8, _size: f32) -> f32 {
+            core::arch::naked_asm!("push r14","sub rsp, 48","movaps [rsp + 32], xmm7","mov r14, rcx","movaps xmm7, xmm1","cmp rsp, rsp","call {entry}","movaps xmm7, [rsp + 32]","add rsp, 48","pop r14","ret",entry=sym damage_entry);
+        }
+        let previous = DAMAGE_NEXT.swap(
+            end as *const () as usize,
+            std::sync::atomic::Ordering::Release,
+        );
+        for cat in 0..6 {
+            let mut row = [0u8; 64];
+            row[0x38] = cat;
+            for _ in 0..3 {
+                let got = unsafe { invoke(row.as_ptr(), 0.0275) };
+                let expected = if cat == 0 || cat == 2 {
+                    0.0275 / 3.0
+                } else {
+                    0.0275
+                };
+                assert!((got - expected).abs() < 1e-8);
+                assert_eq!(
+                    u64::from_le_bytes(row[0x20..0x28].try_into().unwrap()) & 0x41,
+                    0x40
+                );
+            }
+            row[0x34..0x38].copy_from_slice(&crate::current::HEAL_TEXT_COLOR.to_le_bytes());
+            assert_eq!(unsafe { invoke(row.as_ptr(), 0.0275) }, 0.0275);
+        }
+        DAMAGE_NEXT.store(previous, std::sync::atomic::Ordering::Release);
+    }
     struct Bytes {
         data: Vec<u8>,
     }

@@ -1,17 +1,18 @@
 # ASX build reproducibility
 
 The [approved local WSL reference](../validation/asx-reproducible-build-xwin.json)
-identifies the current **0.130.1** normal DLL (1,991,168 bytes):
+identifies the approved **0.131.0** normal DLL (1,998,336 bytes):
 
 ```text
-0e5386d0d1bbcbd205976aa626122f200716a417385bce131cae31f6f2801e45
+baab84d20495fd990715320904e6a285a4fd8c59097adac6d2b4dd9e806eaf29
 ```
 
 Two fresh isolated builds produced identical bytes with unchanged source inputs.
 Receipts verify path remapping, disabled diagnostic hooks, PE timestamp 1 and no
-debug directory. The exact DLL passed solo and two-player normal live trials.
+debug directory. The exact DLL passed solo and two-player normal live trials,
+plus installation/startup/coop/uninstall of its signed archive.
 The user explicitly approved this replacement reference on **2026-10-31**.
-The superseded 0.130.0 reference remains in Git history and preserved private
+The superseded 0.130.1 reference remains in Git history and preserved private
 evidence. Pending candidates remain separate from the approved reference.
 
 ## Reproduce

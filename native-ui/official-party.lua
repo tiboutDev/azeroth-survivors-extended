@@ -81,7 +81,7 @@ local function decode(wire)
     local newline=string.find(text,"\n",1,true)
     if not newline then return nil end
     local lines=split(text,"\n")
-    if table.getn(lines)>182 then return nil end
+    if table.getn(lines)>198 then return nil end
     local head=split(lines[1],"|")
     if table.getn(head)~=4 or head[1]~="1" or not integer(head[2],0,1e12) or not identity(head[3]) or not integer(head[4],0,1e9) then return nil end
     local result={epoch=head[2],own=head[3],members={},ordered={},signature=string.sub(text,newline+1)}
@@ -104,6 +104,13 @@ local function decode(wire)
                 local count=integer(a[3],0,5)
                 if count==nil or result.members[id].equipment then return nil end
                 result.members[id].equipment={expected=count,items={}}
+            elseif a[1]=="Q" and table.getn(a)==7 and id==result.own and result.members[id] then
+                local sequence,rarity,isNew=integer(a[3],1,1e9),integer(a[4],0,5),integer(a[5],0,1)
+                local name,icon=unhex(a[6],128),unhex(a[7],96)
+                local member=result.members[id];member.loot=member.loot or{}
+                if not sequence or not rarity or isNew==nil or not name or name==""or string.find(name,"[%c]")or not icon or not string.find(icon,"^INV_[%w_]+$")or table.getn(member.loot)>=16 then return nil end
+                for _,drop in ipairs(member.loot)do if drop.event==sequence then return nil end end
+                table.insert(member.loot,{event=sequence,rarity=rarity,isNew=isNew==1,name=name,icon=icon})
             elseif a[1]=="G" and table.getn(a)==7 and result.members[id] then
                 local red,blue,green,yellow=integer(a[3],0,1000000),integer(a[4],0,1000000),integer(a[5],0,1000000),integer(a[6],0,1000000)
                 local index=integer(a[7],0,32)
@@ -151,12 +158,12 @@ local function decode(wire)
                 local stacks,seconds=integer(a[3],0,3),integer(a[4],0,60)
                 if member.fatigue or not stacks or not seconds or (stacks==0 and seconds~=0) or (stacks>0 and seconds==0) then return nil end
                 member.fatigue={stacks=stacks,seconds=seconds}
-            elseif ((a[1]=="S" and (table.getn(a)==7 or table.getn(a)==11)) or ((a[1]=="I"or a[1]=="E") and table.getn(a)==7)) and result.members[id] then
+            elseif ((a[1]=="S" and (table.getn(a)==7 or table.getn(a)==11)) or (a[1]=="I" and table.getn(a)==7) or (a[1]=="E"and(table.getn(a)==7 or table.getn(a)==8))) and result.members[id] then
                 local itemId,rank=integer(a[3],1,4294967295),integer(a[4],1,255)
                 local name,icon,text=unhex(a[5],256),unhex(a[6],160),unhex(a[7],a[1]=="S" and 8192 or 2048)
                 if not itemId or not rank or not name or name=="" or string.find(name,"[%c]") or not icon or icon=="" or string.find(icon,"[^%w_./\\]") or not text or string.find(text,"[%z\001-\009\011-\031\127]") then return nil end
                 local localItems=result.members[id].equipment
-                if a[1]=="E" and (id~=result.own or not localItems or table.getn(a)~=7 or itemId~=table.getn(localItems.items)+1 or itemId>localItems.expected)then return nil end
+                if a[1]=="E" and (id~=result.own or not localItems or itemId~=table.getn(localItems.items)+1 or itemId>localItems.expected)then return nil end
                 local list=a[1]=="E" and localItems.items or(a[1]=="S" and result.members[id].spells or result.members[id].items)
                 if table.getn(list)>=16 then return nil end
                 local tip=nil
@@ -168,7 +175,9 @@ local function decode(wire)
                         tip[n-7]=value
                     end
                 end
-                table.insert(list,{id=itemId,rank=rank,name=name,icon=icon,text=text,owner=id,tip=tip})
+                local category=a[1]=="E"and a[8]or nil
+                if category and category~="amulet"and category~="ring"and category~="trinket"then return nil end
+                table.insert(list,{id=itemId,rank=rank,name=name,icon=icon,text=text,owner=id,tip=tip,category=category})
             else return nil end
         end
     end
@@ -633,15 +642,20 @@ local function apiState()
     local own=allowed and supplyOwner()or nil
     local input=phase..":"..tostring(own~=nil)..":"..tostring(AZS_RUN_UPDATED)..":"..tostring(modelWire)
     if apiCache and input==apiInput then return apiCache end
-    local state={api={major=1,minor=5},available=own~=nil,phase=phase,data={},texts={}}
+    local state={api={major=1,minor=6},available=own~=nil,phase=phase,data={},texts={}}
     if own then
         state.session={epoch=model.epoch,recipientGUID=model.own}
         state.data={crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
+        state.data.loot={};local lootTexts={}
+        for _,drop in ipairs(own.loot or{})do
+            table.insert(state.data.loot,{event=drop.event,rarity=drop.rarity,isNew=drop.isNew})
+            lootTexts[drop.event]={name=drop.name,icon=drop.icon}
+        end
         local equipmentTexts
         if own.equipment then
             state.data.equipment={};equipmentTexts={}
             for slot,item in ipairs(own.equipment.items)do
-                state.data.equipment[slot]={slot=slot,rank=item.rank}
+                state.data.equipment[slot]={slot=slot,rank=item.rank,category=item.category}
                 equipmentTexts[slot]={name=item.name,icon=item.icon,text=item.text}
             end
         end
@@ -672,7 +686,7 @@ local function apiState()
             if not value then return nil end
             return {title=value.title,icon=value.icon,reward=value.reward,note=value.note,color=apiCopy(value.color)}
         end
-        state.texts={equipment=equipmentTexts,crystals=crystalText,supplies=textOnly(formatted.owner.discovery),fortune=textOnly(formatted.blessing),sayge=textOnly(formatted.owner.ritual),consumables=consumableTexts}
+        state.texts={loot=lootTexts,equipment=equipmentTexts,crystals=crystalText,supplies=textOnly(formatted.owner.discovery),fortune=textOnly(formatted.blessing),sayge=textOnly(formatted.owner.ritual),consumables=consumableTexts}
         if state.texts.supplies then state.texts.supplies.name=own.discovery.name;state.texts.supplies.description=own.discovery.text end
     else
         state.reason=not allowed and "outside_run"or(type(AZS_RUN_UPDATED)=="number"and GetTime()-AZS_RUN_UPDATED>4 and "stale"or"missing_or_invalid_payload")
@@ -683,7 +697,7 @@ local function apiState()
     state.updatedAt=own and modelTime or nil
     apiCache=state;apiInput=input;return state
 end
-function ASX_GetAPIVersion()return 1,5 end
+function ASX_GetAPIVersion()return 1,6 end
 function ASX_GetState(major)
     if major~=nil and major~=1 then return nil,"unsupported_version"end
     return apiCopy(apiState())

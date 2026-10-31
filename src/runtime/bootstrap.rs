@@ -169,6 +169,7 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         for entry in adapter
             .combat_text_entries()
             .into_iter()
+            .chain([adapter.damage_text_size_entry()])
         {
             if r.local
                 .read(local_base() + entry.rva as usize, entry.bytes.len())?
