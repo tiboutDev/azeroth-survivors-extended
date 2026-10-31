@@ -267,3 +267,21 @@ is added. Loot/mark notices consume local native English chat receipts and keep
 their text verbatim; no wallet delta, new memory read or ABI contact is needed.
 Native loot is hidden only after a compatible receipt establishes the replacement;
 unsupported locales retain native presentation. This does not suppress chat.
+
+### Current HUD follow-ups
+
+The optional economy projection reuses the exact XP/gold award calculations and
+does not mutate native stat tables, credit gold, or apply multipliers again.
+Native stats remain the fallback when the projection is unavailable. The stat
+panel rebuilds its nonzero rows at the existing four-Hz cadence. Item annotations
+match native definition icons and verify owner GUID and current rank before
+reading the locked ASX enchantment. Native text is retained independently; missing
+or ambiguous annotation data is omitted. No new hook or native call is installed.
+Fortune award receipts are separate from encounter scaling and ritual identity.
+See the v1.7 [addon contract](ADDON-API.md) for units and notification lifetimes.
+
+The exact local recipient envelope does not wait for cosmetic roster/build data.
+Its internal generic label is not a remote name or a unit-binding fallback.
+Missing local equipment stays absent, and unverified remote builds stay hidden;
+independent local event/economy values can still be decoded. Changed or missing
+equipment data dismisses an already open tooltip instead of showing stale values.

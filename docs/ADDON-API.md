@@ -1,4 +1,4 @@
-# ASX addon contract 1.6
+# ASX addon contract 1.7
 
 ASX follows Azeroth Survivors' addon conventions: global tables, matching
 `*_UPDATED` timestamps, `ASX_Get...` functions and registered Lua handlers.
@@ -13,7 +13,7 @@ functions may be absent when ASX is disabled or before its Lua has loaded; an
 addon must tolerate that and retry after world entry or with bounded polling.
 ASXUI is a consumer, not the provider: other addons do not need ASXUI installed.
 
-`ASX_GetAPIVersion()` returns `major, minor` (currently `1, 6`). Major 1 is a
+`ASX_GetAPIVersion()` returns `major, minor` (currently `1, 7`). Major 1 is a
 stable contract: incompatible field meanings/types/removals require a new major;
 minor versions may add optional fields. Ignore unknown fields. Tests cover the
 contract; this source change does not update an older installed DLL.
@@ -28,7 +28,7 @@ modifies ASX or snapshots obtained by another consumer.
 
 | Field | Meaning |
 |---|---|
-| `api.major`, `api.minor` | Contract version, currently 1.6 |
+| `api.major`, `api.minor` | Contract version, currently 1.7 |
 | `available` | Boolean; check before accessing run fields |
 | `reason` | When unavailable: `outside_run`, `stale`, or `missing_or_invalid_payload` |
 | `revision` | Monotonic content revision within this Lua environment; not persisted across client reloads |
@@ -59,7 +59,8 @@ of this contract. Cache coordinates remain in native `AZS_CHESTS`.
 
 | Record | Fields and units |
 |---|---|
-| `data.fortune` | `boss`: ASX grant/event counter, not an enemy spawn ID; `category`: active rolls 0..2 (Luck/XP/Gold); legacy 3/4 retain pickup/speed meanings but are no longer produced; `rarity` 0..4; `amount`, `best`: hundredths of a percentage point (1200 means 12%) |
+| `data.fortune` | `boss`: encounter progression stage, not a unique reward ID; optional v1.7 `event`: actual award receipt, stable through heartbeat, party-generation and ritual-arrival changes; `category`: active rolls 0..2 (Luck/XP/Gold); legacy 3/4 retain pickup/speed meanings but are no longer produced; `rarity` 0..4; `amount`, `best`: hundredths of a percentage point (1200 means 12%) |
+| `data.economy` | Optional v1.7 cooperative `xp` and `gold` effective multipliers (1.35 means +35%), projected from the actual ASX award policies for the local recipient. Gold retains collector-specific native effects; values need not match across different builds. Missing means unavailable, not zero. These replace the personal `AZS_STATS` values for display; never add them to those values. |
 | `data.fatigue` | `stacks` 0..3; `seconds`: remaining alive-game-time seconds, rounded upward; not a wall-clock deadline |
 | `data.consumables[family]` | Dictionary keyed 0..6, **not** a 1-based list: `family`, `tier` 1..3, `remaining` whole game-time seconds, `index` native aura slot 0..31 |
 | `data.discovery` | `event`: recipient/session-scoped receipt ID; `rarity` 0..3: legacy gameplay reward bucket, not name color; optional v1.2 `quality` 1..2: Classic Common/Uncommon cosmetic quality; `gold`: actual whole-gold sale receipt (0 for a consumable discovery). No native item ID is promised |
@@ -72,8 +73,11 @@ Radius and 4 Movement Speed retain their historical meanings for compatibility,
 but current ASX no longer generates them. Rarity: 0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary (discoveries
 use only 0..3). Consumable families: 0 Recovery, 1 Critical, 2 Defense,
 3 Vitality, 4 Ferocity, 5 Reach, 6 Swiftness (v1.2). Do not use `table.getn`/`ipairs` to enumerate
-consumables; use `pairs` or the explicit family range. Event IDs must be combined
-with `session.epoch` and `session.recipientGUID` for deduplication. Zero `left`
+consumables; use `pairs` or the explicit family range. Discovery/trial IDs must be combined
+with `session.epoch` and `session.recipientGUID` for deduplication. Fortune v1.7
+`event` is a process-lifetime award receipt: deduplicate by recipient and event,
+not by membership epoch or encounter stage. A new award may have identical
+category and amount; an unchanged award survives party-generation changes. Zero `left`
 has different meanings for a persistent trial and an expired supply pin.
 
 Projection still requires native mode/center/ping reads in ASX. Use native
@@ -231,3 +235,18 @@ ASXUI shows item toasts only for `isNew=true`. Already-collected receipts remain
 in this API for other consumers; ASXUI consumes their sequence without a toast.
 Mark notifications are independent. ASXUI owns native loot-canvas visibility
 while this current structured provider is available and restores it otherwise.
+
+### HUD receipt presentation (v1.7)
+
+ASXUI consumes one Fortune receipt once. A pending award waits for a readable
+native phase; pausing a started toast does not restart its six-second wall-time
+lifetime. Missing metadata never grants or re-announces a reward.
+Local and allied item text retains native owner formatting, with an appended
+ASX enchantment name and current effect only when the native ring icon uniquely
+matches a reviewed definition and its current owner GUID/rank is verified.
+Uncertain matches omit the annotation. No previews, viewer stats or guessed
+localized names enter these tooltips.
+Marks still use actual native English receipts. Contiguous receipts within a
+three-second burst add their gains into one popup and retain the latest native
+collection total. Repeated/stale totals are ignored within that burst. Item
+ordering and gaps in observed totals prevent merging; gameplay grants are untouched.

@@ -51,6 +51,7 @@ local function source(includeMarkers)
 end
 -- Retained minimap children use the exact native minimap center and view radius.
 local eventPins,hoveredEventPin={},nil
+local playerPin
 local nativeFlagPreference
 local function nativeFlag(replacing)
     if type(AZS_SetHudShown)~="function"or type(AZS_IsHudShown)~="function"then return end
@@ -104,13 +105,33 @@ end
 -- Native projection at the current zoom. A supplies the native world ping
 -- and all six radii; GetPingPosition supplies its live normalized projection.
 -- Their inverse gives the live center without waiting for a metadata refresh.
+-- Native hero position/facing and native arrow texture; no second world marker
+-- source or memory access. The original native arrow remains the fallback.
+local function playerArrow(parent,cx,cy,radius,halfW,halfH)
+    local run=AZS_RUN
+    if not run or not finite(run.px)or not finite(run.py)or not finite(run.pf)then
+        if playerPin then setShown(playerPin,false)end;return
+    end
+    local x,y=-(run.py-cy)/radius,(run.px-cx)/radius
+    if x*x+y*y>1 then if playerPin then setShown(playerPin,false)end;return end
+    if not playerPin then
+        playerPin=CreateFrame("Frame","ASXUIPlayerMinimapArrow",parent);playerPin:SetWidth(24);playerPin:SetHeight(24);playerPin:EnableMouse(false)
+        playerPin.icon=playerPin:CreateTexture(nil,"OVERLAY");playerPin.icon:SetAllPoints(playerPin);playerPin.icon:SetTexture("Interface\\Minimap\\MinimapArrow")
+    end
+    playerPin:SetFrameLevel((parent.GetFrameLevel and parent:GetFrameLevel()or 0)+12)
+    playerPin:ClearAllPoints();playerPin:SetPoint("CENTER",parent,"CENTER",x*halfW,y*halfH)
+    local c,s=math.cos(run.pf),math.sin(run.pf)
+    local function uv(u,v)return .5+c*u-s*v,.5+s*u+c*v end
+    local ul,vl=uv(-.5,-.5);local ll,lv=uv(-.5,.5);local ur,vr=uv(.5,-.5);local lr,rv=uv(.5,.5)
+    playerPin.icon:SetTexCoord(ul,vl,ll,lv,ur,vr,lr,rv);setShown(playerPin,true)
+end
 local function layoutEventPins()
     local map=source();local parent=getglobal("Minimap")
     if not map or not parent or not parent:IsVisible()then
+        if playerPin then setShown(playerPin,false)end
         for n=1,eventPinCount do setShown(eventPins[n],false)end;mapSample=nil;sessionIdentity=nil;viewCenterX=nil;viewCenterY=nil;localPingX=nil;localPingY=nil;pendingNativePing=false;return
     end
     if sessionIdentity~=map.identity then localPingX=nil;localPingY=nil;viewCenterX=nil;viewCenterY=nil;sessionIdentity=map.identity end
-    if eventPinCount==0 then return end
     local sampleKey=table.concat({map.identity,map.x,map.y,map.pingX,map.pingY,unpack(map.radii)},"|")
     if mapSample~=sampleKey then
         if referencePingX~=map.pingX or referencePingY~=map.pingY then localPingX=nil;localPingY=nil end
@@ -118,6 +139,7 @@ local function layoutEventPins()
     end
     local zoom=liveZoom(parent)
     if not zoom then
+        if playerPin then setShown(playerPin,false)end
         for n=1,eventPinCount do setShown(eventPins[n],false)end
         return
     end
@@ -129,6 +151,7 @@ local function layoutEventPins()
     end
     viewCenterX,viewCenterY=cx,cy
     local halfW,halfH=parent:GetWidth()/2,parent:GetHeight()/2
+    playerArrow(parent,cx,cy,radius,halfW,halfH)
     local edge=math.max(0,1-11/math.max(1,math.min(halfW,halfH)))
     for n=1,eventPinCount do
         local pin=eventPins[n];local data=pin.data

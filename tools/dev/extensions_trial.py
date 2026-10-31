@@ -89,6 +89,9 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
  prepare=writer(exe);out=ROOT/"test-results"/(("glyph-retention-"if glyph_retention else"gems-"+str(players)+"-"if gems else"enchantments-"+str(players)+"-"if enchantments else"extensions-normal-"if normal else"extensions-"+str(players)+"-")+uuid.uuid4().hex[:8]);out.mkdir()
  clean={k:v for k,v in os.environ.items()if not k.upper().startswith(("ASX_","AZCOOP_","COOP_","WOW_","BENILLA_"))}
  with socket.socket()as p:p.bind(("127.0.0.1",0));port=p.getsockname()[1]
+ private_focus=os.environ.get("ASX_TEST_PRIVATE_FOCUS")=="1"
+ if private_focus and completion!="pause":raise ValueError("Private focus is scoped to pause regression trials")
+ focus_samples=[];last_focus=0.
  children=[];handles=[];password=uuid.uuid4().hex;goblin_mark_baselines=[]
  try:
   for slot in range(1,players+1):
@@ -167,6 +170,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     env["AZCOOP_TEST_BONUS_TOOLTIP"]="1";env["AZCOOP_TEST_OFFICIAL_CHOICE_DELAY"]="8"
     if slot==1:env["AZCOOP_TEST_MARKS121"]="1"
    if completion=="pause":
+    env["WOW_ROGUE_AUTOPLAY"]="4" # Explicit held-choice windows own their 3/20-second timing.
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
     env.update(AZCOOP_TEST_OFFICIAL_PAUSE="1",WOW_ROGUE_ROAM="1")
     if shield_only and slot==1:env.update(AZCOOP_TEST_SUPPORT121="1",ASX_TEST_SUPPORT_SHIELD_ONLY="1")
@@ -466,15 +470,24 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     local_logs=[out/f"player-{i}/azeroth-coop-native.log"for i in range(1,players+1)]
     closed=all(p.exists() and"open=false"in p.read_text(encoding="utf-8",errors="replace").split("native menu fixture:")[-1]for p in local_logs)
     if closed and completed_at is None:completed_at=time.monotonic()
-    if completed_at is not None and time.monotonic()-completed_at>=6:break
+    # Closing the menus is not proof of recovered input. Keep observing until
+    # native movement acceptance passes, or preserve failure at the deadline.
+    if completed_at is not None and time.monotonic()-completed_at>=6 and evaluate()["passed"]:break
    if os.environ.get("ASX_TEST_COVERAGE")=="1":
     path=out/"player-1/azeroth-coop-native.log"
     if path.exists() and "coverage native guardian killed:"in path.read_text(errors="replace") and evaluate()["passed"]:break
    if diagnostic_probe:
     native_path=out/"player-1/azeroth-coop-native.log"
     if native_path.exists() and native_path.read_text(encoding="utf-8",errors="replace").count("ASX_DIAG ")>=5:break
+   if private_focus and time.monotonic()-last_focus>=2:
+    from private_trial_focus import notify_owned_windows
+    focus_samples.append(notify_owned_windows([child.pid for child in children if child.poll()is None]));last_focus=time.monotonic()
    time.sleep(1 if all_events or support_only or diagnostic_probe else .25)
   result=evaluate()
+  result["private_focus_notifications"]={"enabled":private_focus,"windows_per_sample":focus_samples,"keyboard_mouse_injected":False}
+  if private_focus:
+   result["checks"]["private_focus_two_owned_windows"]=2 in focus_samples
+   result["passed"]=all(result["checks"].values())
   (out/"result.json").write_text(json.dumps(result,indent=2)+"\n");print(out,flush=True);print(json.dumps(result,indent=2),flush=True)
  finally:
   for p in children:

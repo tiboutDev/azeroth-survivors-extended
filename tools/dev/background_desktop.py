@@ -1,10 +1,12 @@
-"""Run bounded current 0.129 trials in an isolated Windows desktop.
+"""Run bounded reviewed-client trials on a verified private Windows desktop.
 
-No desktop switch, screen capture, focus change or input injection. A kill-on-close
+No desktop switch or OS keyboard/mouse injection. Opt-in pause trials may notify
+only their own game windows of focus. A kill-on-close
 job owns the gated child and descendants; trials use normal priority and all CPUs.
 """
 import argparse
 import ctypes
+import json
 from ctypes import wintypes as W
 import os
 from pathlib import Path
@@ -75,7 +77,6 @@ def child_flags(args):
 
 def run_child(args, gate):
     if args.resource_probe:
-        import json
         k = ctypes.WinDLL('kernel32', use_last_error=True)
         k.GetCurrentProcess.restype = W.HANDLE
         k.GetProcessAffinityMask.argtypes = [W.HANDLE, ctypes.POINTER(ctypes.c_size_t), ctypes.POINTER(ctypes.c_size_t)]
@@ -129,6 +130,10 @@ def main(argv=None):
             if time.monotonic() > until:
                 raise SystemExit('Parent did not assign the isolation job')
             time.sleep(.05)
+        from private_trial_process import current_private_desktop
+        expected_desktop = json.loads((gate.parent/'limits.json').read_text())['desktop_name']
+        verified_desktop = current_private_desktop(expected_desktop)
+        (gate.parent/'desktop.json').write_text(json.dumps({'verified_private_desktop':True,'name':verified_desktop}),encoding='utf-8')
         run_child(args, gate)
         return
 
@@ -179,20 +184,16 @@ def main(argv=None):
         available,system=ctypes.c_size_t(),ctypes.c_size_t()
         if not kernel.GetProcessAffinityMask(kernel.GetCurrentProcess(),ctypes.byref(available),ctypes.byref(system)):raise ctypes.WinError(ctypes.get_last_error())
         limits.basic.flags = 0x2000  # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE only
-        import json
-        (trial/'limits.json').write_text(json.dumps({'mask':available.value,'restricted':False,'priority':'normal'}))
+        (trial/'limits.json').write_text(json.dumps({'mask':available.value,'restricted':False,'priority':'normal','desktop_name':desktop_name}))
         print(f'Owned test job: all {available.value.bit_count()} inherited logical CPUs, normal priority',flush=True)
         if not kernel.SetInformationJobObject(job, 9, ctypes.byref(limits), ctypes.sizeof(limits)):
             raise ctypes.WinError(ctypes.get_last_error())
-        startup = subprocess.STARTUPINFO()
-        startup.lpDesktop = desktop_name
         command = [sys.executable, '-I', '-B', str(Path(__file__).resolve()),
                    '--child', str(trial/'start'), '--seconds', str(args.seconds)]
         command.extend(child_flags(args))
         with (trial/'harness.log').open('wb') as stream:
-            child = subprocess.Popen(command, cwd=ROOT, startupinfo=startup,
-                                     creationflags=subprocess.CREATE_NO_WINDOW | subprocess.NORMAL_PRIORITY_CLASS,
-                                     stdout=stream, stderr=subprocess.STDOUT)
+            from private_trial_process import spawn
+            child = spawn(command, ROOT, desktop_name, stream)
             if not kernel.AssignProcessToJobObject(job, W.HANDLE(int(child._handle))):
                 raise ctypes.WinError(ctypes.get_last_error())
             (trial/'start').write_text('owned\n', encoding='ascii')
@@ -205,6 +206,7 @@ def main(argv=None):
         if child and child.poll() is None:
             child.terminate()
             child.wait(timeout=10)
+        if child and hasattr(child,"close"):child.close()
         if desktop:user.CloseDesktop(desktop)
 
 

@@ -4,6 +4,9 @@ pub use crate::official_native::pause::PauseLayout;
 pub use crate::official_native::NATIVE_PLAYERS;
 use crate::{memory::Mem, official_native, Result};
 pub trait MutableMemory: Mem {
+    /// Only a registered ASX patch over this exact reviewed prefix may match.
+    fn owns_native_entry(&self, _address: u64, _expected: &[u8]) -> bool { false }
+
     fn write(&self, address: u64, bytes: &[u8]) -> Result<()>;
     fn allocate_native(&self, bytes: &[u8]) -> Result<u64>;
     fn free_native(&self, address: u64, capacity: usize) -> Result<()>;
@@ -601,6 +604,7 @@ impl SelectedAdapter {
     ) -> Result<(f64, f64)> {
         self.native.credit_support(io, game, slot, spell, amount)
     }
+    pub fn wallet_reroll_entry(self) -> Entry { self.native.wallet_reroll_entry() }
     pub fn chest_entry(self) -> Entry {
         self.native.chest_entry()
     }
@@ -909,6 +913,11 @@ impl SelectedAdapter {
     }
 }
 
+impl SelectedAdapter {
+    pub fn presented_ring(self,m:&dyn Mem,game:u64,slot:u32,guid:u64,icon:&str,rank:u32,base:u64)->Result<Option<u8>>{
+        self.native.presented_ring(m,game,slot,guid,icon,rank,base)
+    }
+}
 /// Owned presentation data; never a native pointer or a second gameplay authority.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PartyIcon {

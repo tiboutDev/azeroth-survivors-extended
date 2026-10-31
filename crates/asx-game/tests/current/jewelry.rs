@@ -91,3 +91,14 @@ fn amulet_memory()->Memory{
  assert_eq!(a.blessing_pool_index(&m,frame,15*72).unwrap(),15*72);
  for index in 16..19{assert_eq!(a.blessing_pool_index(&m,frame,index*72).unwrap(),19*72);}
 }
+
+#[test]fn presented_ring_uses_native_icon_and_current_owner_rank_not_order_or_name(){
+ let m=memory();let a=adapter();
+ for i in 0..9u64{let icon=format!("INV_Ring_{i}");let ptr=0xd0000+i*256;m.data.borrow_mut().insert(ptr,icon.as_bytes().to_vec());let definition=BASE+v::RING_TABLE+i*v::RING_STRIDE;m.write(definition+0x20,&ptr.to_le_bytes()).unwrap();m.write(definition+0x28,&(icon.len()as u64).to_le_bytes()).unwrap();}
+ assert_eq!(a.presented_ring(&m,GAME,0,111,"INV_Ring_0",1,BASE).unwrap(),Some(0));
+ assert_eq!(a.presented_ring(&m,GAME,0,111,"Interface\\Icons\\INV_Ring_0",1,BASE).unwrap(),Some(0));
+ assert_eq!(a.presented_ring(&m,GAME,0,111,"INV_Ring_0",2,BASE).unwrap(),None);
+ assert_eq!(a.presented_ring(&m,GAME,0,111,"INV_Ring_1",1,BASE).unwrap(),None);
+ assert!(a.presented_ring(&m,GAME,0,222,"INV_Ring_0",1,BASE).is_err());
+ m.write(BASE+v::RING_TABLE+0x28,&161u64.to_le_bytes()).unwrap();assert!(a.presented_ring(&m,GAME,0,111,"INV_Ring_0",1,BASE).is_err());
+}

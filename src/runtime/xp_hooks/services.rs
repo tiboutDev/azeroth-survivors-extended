@@ -25,17 +25,7 @@ impl Services for Runtime {
         experience::capture(self, game, sum);
     }
     fn multiplier(&self) -> Option<f32> {
-        let multiplier = self.party.lock().ok().and_then(|p| {
-            p.as_ref().and_then(|party| {
-                asx_gameplay::official::shared_xp_multiplier(
-                    party.actors.iter().map(|a| (
-                        a.xp_multiplier - blessings::personal(a.slot, a.guid, 1),
-                        self.adapter.racial_xp_bonus(a.race_id),
-                    )),
-                ).ok()
-            })
-        })?;
-        Some(multiplier + blessings::strongest(1))
+        effective_multiplier(self)
     }
     fn return_site(&self, stack: u64) -> Option<u64> {
         let stack = self.local.read(stack as usize, 8).ok()?;
@@ -53,3 +43,17 @@ impl Services for Runtime {
     fn info(&self, message: &str) { self.log.info(message); }
     fn warn(&self, message: &str) { self.log.warn(message); }
 }
+
+pub(in crate::runtime) fn effective_multiplier(runtime:&Runtime)->Option<f32>{
+        let multiplier = runtime.party.lock().ok().and_then(|p| {
+            p.as_ref().and_then(|party| {
+                asx_gameplay::official::shared_xp_multiplier(
+                    party.actors.iter().map(|a| (
+                        a.xp_multiplier - blessings::personal(a.slot, a.guid, 1),
+                        runtime.adapter.racial_xp_bonus(a.race_id),
+                    )),
+                ).ok()
+            })
+        })?;
+        Some(multiplier + blessings::strongest(1))
+    }

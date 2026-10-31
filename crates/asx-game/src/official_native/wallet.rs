@@ -6,6 +6,12 @@ use crate::{
     Result,
 };
 impl Adapter {
+    pub fn wallet_reroll_entry(self) -> Entry {
+        Entry {
+            rva: self.contact117(crate::current::GLYPH_REROLL_RVA),
+            bytes: self.extension_bytes117(0x5c09350, crate::current::GLYPH_REROLL_BYTES),
+        }
+    }
     pub fn chest_entry(self) -> Entry {
         Entry {
             rva: self.rva(0x5963be0),
@@ -375,7 +381,7 @@ impl Adapter {
     pub unsafe fn fixture_reward_action(self,m:&dyn MutableMemory,base:usize,game:u64,action:u8)->Result<()>{
         self.reward_choice_kind(m,game)?.ok_or("Reward fixture requires native choices")?;
         let (rva,bytes)=if action==2{let e=self.convert_entry();(e.rva,e.bytes)}else{(self.contact117(crate::current::GLYPH_REROLL_RVA),self.extension_bytes117(0x5c09350,crate::current::GLYPH_REROLL_BYTES))};
-        if m.read(base as u64+rva,bytes.len())?!=bytes{return Err("Reward fixture action binding".into())}
+        if m.read(base as u64+rva,bytes.len())?!=bytes && !m.owns_native_entry(base as u64+rva,bytes){return Err("Reward fixture action binding".into())}
         if action==2{self.fixture_conversion_flag(m,game,true)?;}else if action<=1{m.write(game+self.field117(crate::current::GLYPH_REROLLS),&u32::from(action==0).to_le_bytes())?;}else{return Err("Invalid reward fixture action".into())}
         let call:unsafe extern "system" fn(u64)=std::mem::transmute(base+rva as usize);call(game);Ok(())
     }

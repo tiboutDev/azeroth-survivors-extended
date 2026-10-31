@@ -5,8 +5,9 @@ def assess(text):
  rows=[tuple(map(int,m))for m in ROW.findall(text)]
  keys=[(r[0],r[2],r[3])for r in rows]
  expected={(s,k,a)for s in range(2)for k in range(2)for a in range(3)}
+ caches=[tuple(map(int,row))for row in re.findall(r"official group chest: owner=(\d+) opened=(\d+) next_cost=(\d+) paid=(\d+) expected_cost=(\d+) balance=(\d+)",text)]
  samples=[re.findall(r"phase: (?:Playing|Choosing), gold: (\d+)",line)for line in text.splitlines()if "official party: clock="in line]
- checks=dict(all_reward_actions=set(keys)==expected and len(keys)==12,
+ checks=dict(cache_purchases_debit_once=len(caches)==3 and all(paid==cost and cost>0 for _,_,_,paid,cost,_ in caches),all_reward_actions=set(keys)==expected and len(keys)==12,
   native_matches_shared=bool(rows)and all(r[4]==r[9]==r[12]and r[5:7]==r[10:12]and r[7:9]==r[13:15]for r in rows),
   free_reroll_unchanged=bool(rows)and all(r[5:7]==r[7:9]for r in rows if r[3]==0),
   paid_reroll_debits_once=bool(rows)and all(r[5]-r[7]in(100,300)and r[6]==r[8]for r in rows if r[3]==1),

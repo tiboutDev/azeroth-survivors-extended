@@ -10,6 +10,7 @@ struct State {
     names: BTreeMap<u64, String>,
     builds: BTreeMap<u64, PartyBuild>,
     encoded: BTreeMap<u64, (String, String)>,
+    enchantments: BTreeMap<(u64,u32),String>,
     drops: Vec<NativeDrop>,
     drop_sequence: u64,
 }
@@ -54,12 +55,17 @@ fn hex(bytes: &[u8]) -> String {
     out
 }
 // Reuse already captured native item text; never recapture a local spell build.
-fn local_equipment(build: &PartyBuild, own: u64) -> String {
+fn item_text(icon:&asx_game::official::PartyIcon,own:u64,notes:&BTreeMap<(u64,u32),String>)->String{
+    match notes.get(&(own,icon.id)){Some(note)=>format!("{}\n\n{note}",icon.text),None=>icon.text.clone()}
+}
+#[cfg(test)]
+fn local_equipment(build: &PartyBuild, own: u64) -> String {local_equipment_notes(build,own,&BTreeMap::new())}
+fn local_equipment_notes(build: &PartyBuild, own: u64, notes:&BTreeMap<(u64,u32),String>) -> String {
     if build.items.len() > 5 { return String::new(); }
     let mut text = format!("L|{own}|{}\n", build.items.len());
     for (index, icon) in build.items.iter().enumerate() {
         text.push_str(&format!("E|{own}|{}|{}|{}|{}|{}{}\n", index + 1, icon.rank,
-            hex(icon.name.as_bytes()), hex(icon.icon.as_bytes()), hex(icon.text.as_bytes()),
+            hex(icon.name.as_bytes()), hex(icon.icon.as_bytes()), hex(item_text(icon,own,notes).as_bytes()),
             icon.category.map(|c| format!("|{c}")).unwrap_or_default()));
     }
     text
@@ -71,22 +77,24 @@ fn wire_extra(state: &mut State, own: u64, heartbeat: u64, extra:&str) -> Option
     }
     let mut text = format!("1|{}|{own}|{heartbeat}\n", state.epoch);
     for (slot, id) in &state.ids {
-        let Some(name) = state.names.get(id) else {
-            continue;
-        };
-        let Some(build) = state.builds.get(id) else {
-            continue;
-        };
+        let build=state.builds.get(id);
+        // The exact native recipient is known independently of cosmetic roster
+        // delivery. Its internal label is never used to bind a remote unit.
+        let name=state.names.get(id).map(String::as_str).or_else(||(*id==own).then_some("Player"));
+        let Some(name)=name else{continue};
+        if *id!=own&&build.is_none(){continue}
         text.push_str(&format!("M|{id}|{slot}|{}\n", hex(name.as_bytes())));
         if let Some(b)=blessings::view(*slot,*id){
             let best=blessings::strongest(b.category);
             text.push_str(&format!("B|{id}|{}|{}|{}|{}|{}\n",b.boss,b.category,b.rarity,b.amount,(best*10000.0).round() as u32));
+            if let Some(receipt)=blessings::receipt(*slot,*id){text.pop();text.push_str(&format!("|{receipt}\n"));}
         }
         if let Some(row)=super::crystals::member_wire((*slot,*id)){text.push_str(&row);}
         let fatigue = fatigue::view(*slot, *id);
         text.push_str(&format!("F|{id}|{}|{}\n", fatigue.stacks, fatigue.remaining.ceil() as u32));
         // Only the five local items are needed by ASXUI; local spells remain omitted.
-        if *id == own { text.push_str(&local_equipment(build, own));text.push_str(&drop_wire(state,own)); continue; }
+        if *id == own { if let Some(build)=build{text.push_str(&local_equipment_notes(build, own,&state.enchantments));}text.push_str(&drop_wire(state,own)); continue; }
+        let Some(build)=build else{continue};
         for (kind, icons) in [("S", &build.spells), ("I", &build.items)] {
             for icon in icons {
                 text.push_str(&format!(
@@ -95,7 +103,7 @@ fn wire_extra(state: &mut State, own: u64, heartbeat: u64, extra:&str) -> Option
                     icon.rank,
                     hex(icon.name.as_bytes()),
                     hex(icon.icon.as_bytes()),
-                    hex(icon.text.as_bytes())
+                    hex(if kind=="I"{item_text(icon,*id,&state.enchantments)}else{icon.text.clone()}.as_bytes())
                 ));
                 if kind == "S" {
                     let tip = icon.spell_tip.clone().unwrap_or_default();
@@ -143,6 +151,8 @@ pub fn roster(value: &serde_json::Value) {
                 }
             })
         });
+    #[cfg(feature="test-hooks")]
+    if std::env::var("ASX_TEST_HUD_OWNERS").as_deref()==Ok("1"){if let Some(r)=RUNTIME.get(){static SAMPLES:AtomicUsize=AtomicUsize::new(0);if SAMPLES.fetch_add(1,Ordering::Relaxed)<4{r.log.info(&format!("party roster diagnostic: valid={valid} identities={:?}",names.keys().collect::<Vec<_>>()));}}}
     if let Ok(mut state) = STATE.lock() {
         let s = state.get_or_insert_with(State::default);
         s.names = if valid { names } else { BTreeMap::new() };
@@ -166,7 +176,7 @@ pub fn reset() {
         if let Some(s) = state.as_mut() {
             s.epoch = s.epoch.wrapping_add(1);
             s.ids.clear();
-            s.builds.clear();
+            s.builds.clear();s.enchantments.clear();
             s.encoded.clear();
             s.drops.clear();
         }
@@ -180,7 +190,10 @@ pub fn capture(r: &Runtime, actor: u32, value: &serde_json::Value) {
     let Some(owner) = party.actors.iter().find(|a| a.slot == actor) else {
         return;
     };
-    let Ok(build) = r.adapter.party_build(value) else {
+    let parsed=r.adapter.party_build(value);
+    #[cfg(feature="test-hooks")]
+    if let Err(error)=&parsed{static SAMPLES:AtomicUsize=AtomicUsize::new(0);if std::env::var("ASX_TEST_HUD_OWNERS").as_deref()==Ok("1")&&SAMPLES.fetch_add(1,Ordering::Relaxed)<4{r.log.warn(&format!("party build diagnostic rejected: actor={actor} reason={error} value={value}"));}}
+    let Ok(build) = parsed else {
         if let Ok(mut state) = STATE.lock() {
             if let Some(state) = state.as_mut() {
                 state.builds.remove(&owner.guid);
@@ -202,7 +215,7 @@ pub fn capture(r: &Runtime, actor: u32, value: &serde_json::Value) {
         if s.ids != ids || party.clock + 0.5 < s.clock {
             s.epoch = s.epoch.wrapping_add(1);
             s.ids = ids;
-            s.builds.clear();
+            s.builds.clear();s.enchantments.clear();
             s.encoded.clear();
             s.drops.clear();
         }
@@ -210,7 +223,7 @@ pub fn capture(r: &Runtime, actor: u32, value: &serde_json::Value) {
         s.clock = party.clock;
         s.builds.insert(owner.guid, build);
         #[cfg(feature = "test-hooks")]
-        if changed && std::env::var("AZCOOP_TEST_OFFICIAL_PARTY_UI").as_deref() == Ok("1") {
+        if changed && std::env::var("ASX_TEST_HUD_OWNERS").as_deref() == Ok("1") && {static SAMPLES:AtomicUsize=AtomicUsize::new(0);SAMPLES.fetch_add(1,Ordering::Relaxed)<16} {
             r.log.info(&format!(
                 "official party build: actor={} guid={} abilities={} jewelry={}",
                 actor, owner.guid, value["abilities"], value["jewelry"]
@@ -241,20 +254,23 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
             let Ok(Some((slot,_))) = r.adapter.run_source(&r.local, game as u64) else {
                 return;
             };
+            #[cfg(feature="test-hooks")]
+            if std::env::var("ASX_TEST_HUD_OWNERS").as_deref()==Ok("1"){static SAMPLE:AtomicUsize=AtomicUsize::new(0);if {let n=SAMPLE.fetch_add(1,Ordering::Relaxed);n<800&&n%100==0}{if let Ok(s)=STATE.lock(){if let Some(s)=s.as_ref(){r.log.info(&format!("party cache diagnostic: ids={:?} names={:?} builds={:?}",s.ids,s.names,s.builds.keys().collect::<Vec<_>>()));}}}}
+            refresh_enchantments(r,game as u64);
             let solo=r.solo.lock().ok().and_then(|p|p.clone());
             let payload = if let Some(p)=solo {
                 p.actors.first().map(|actor|{
                     let heartbeat=HEARTBEAT.get_or_init(std::time::Instant::now).elapsed().as_secs();
                     let epoch=STATE.lock().ok().map(|mut state|{
                         let s=state.get_or_insert_with(State::default);
-                        if s.ids!=[(0,actor.guid)] || p.clock+0.5<s.clock{s.epoch=s.epoch.wrapping_add(1);s.ids=vec![(0,actor.guid)];s.builds.clear();s.encoded.clear();s.drops.clear();}
+                        if s.ids!=[(0,actor.guid)] || p.clock+0.5<s.clock{s.epoch=s.epoch.wrapping_add(1);s.ids=vec![(0,actor.guid)];s.builds.clear();s.enchantments.clear();s.encoded.clear();s.drops.clear();}
                         s.clock=p.clock;s.epoch
                     }).unwrap_or(0);
                     let mut text=format!("1|{epoch}|{}|{heartbeat}\nM|{}|0|{}\n",actor.guid,actor.guid,hex(b"Player"));
-                    if let Some(items)=STATE.lock().ok().and_then(|state|state.as_ref().and_then(|s|s.builds.get(&actor.guid).map(|b|local_equipment(b,actor.guid)))){text.push_str(&items);}
+                    if let Some(items)=STATE.lock().ok().and_then(|state|state.as_ref().and_then(|s|s.builds.get(&actor.guid).map(|b|local_equipment_notes(b,actor.guid,&s.enchantments)))){text.push_str(&items);}
                     if let Some(drops)=STATE.lock().ok().and_then(|state|state.as_ref().map(|s|drop_wire(s,actor.guid))){text.push_str(&drops);}
                     if let Some(row)=super::crystals::wire(game as u64,(0,actor.guid)){text.push_str(&row);}
-                    if let Some(b)=blessings::view(0,actor.guid){text.push_str(&format!("B|{}|{}|{}|{}|{}|{}\n",actor.guid,b.boss,b.category,b.rarity,b.amount,b.amount));}
+                    if let Some(b)=blessings::view(0,actor.guid){text.push_str(&format!("B|{}|{}|{}|{}|{}|{}\n",actor.guid,b.boss,b.category,b.rarity,b.amount,b.amount));if let Some(receipt)=blessings::receipt(0,actor.guid){text.pop();text.push_str(&format!("|{receipt}\n"));}}
                     if let Some((event,held,inside))=super::rituals::view(game as u64,actor.guid){text.push_str(&format!("R|{}|{event}|{held}|{}|{}\n",actor.guid,u8::from(inside),u8::from(inside)));}
                     for(c,remaining,index)in super::supplies::buffs(game as u64,actor.guid){if index<32&&remaining>0.{text.push_str(&format!("C|{}|{}|{}|{}|{index}|{}|{}|{}\n",actor.guid,c.family as u8,c.tier,remaining.ceil()as u32,hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}
                     if let Some(d)=super::supplies::discovery(game as u64,actor.guid){text.push_str(&format!("D|{}|{}|{}|{}|{}|{}|{}|{}\n",actor.guid,d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.reward.text().as_bytes()),d.reward.quality()));}
@@ -299,9 +315,23 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
     }
     result
 }
+fn refresh_enchantments(r:&Runtime,game:u64){
+ let Some(party)=r.extension_party()else{return};
+ let builds=STATE.lock().ok().and_then(|s|s.as_ref().map(|s|s.builds.clone())).unwrap_or_default();let mut notes=BTreeMap::new();
+ for actor in party.actors{if let Some(build)=builds.get(&actor.guid){for icon in &build.items{
+  if icon.category!=Some("ring"){continue}
+  if let Ok(Some(ring))=r.adapter.presented_ring(&r.local,game,actor.slot,actor.guid,&icon.icon,icon.rank,r.local.base as u64){
+   if let Some(e)=enchantments::retained(actor.slot,actor.guid,ring,icon.rank,game){let note=format!("Enchantment: {}\n{}",e.name(),e.text());if icon.text.len()+note.len()+2<=2048{notes.insert((actor.guid,icon.id),note);}}
+  }
+ }}}
+ if let Ok(mut state)=STATE.lock(){if let Some(s)=state.as_mut(){s.enchantments=notes;}}
+}
 fn event_text(r:&Runtime,game:u64,slot:u32)->String{
  let Some(party)=r.extension_party()else{return String::new()};
  let Some(actor)=party.actors.iter().find(|a|a.slot==slot)else{return String::new()};let owner=actor.guid;let mut text=String::new();
+ if let (Some(xp),Some(gold))=(super::xp_hooks::services::effective_multiplier(r),super::wallet::effective_multiplier(r,game,actor)){
+  if [xp,gold].iter().all(|v|v.is_finite()&&*v>=0.&&*v<=10000.){text.push_str(&format!("O|{owner}|{}|{}\n",(f64::from(xp)*1_000_000.).round()as u64,(f64::from(gold)*1_000_000.).round()as u64));}
+ }
  if let Some((event,held,inside))=super::world_events::coop::view(game,owner){text.push_str(&format!("R|{owner}|{event}|{held}|{}|{}\n",u8::from(inside),u8::from(super::world_events::coop::all_inside(game))));}
  for(c,remaining,index)in super::supplies::buffs(game,owner){if index<32&&remaining>0.{text.push_str(&format!("C|{owner}|{}|{}|{}|{index}|{}|{}|{}\n",c.family as u8,c.tier,remaining.ceil()as u32,hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}
  if let Some(d)=super::supplies::discovery(game,owner){text.push_str(&format!("D|{owner}|{}|{}|{}|{}|{}|{}|{}\n",d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.reward.text().as_bytes()),d.reward.quality()));}
@@ -401,6 +431,21 @@ mod tests {
         assert_eq!(state.builds.len(), 2);
     }
     #[test]
+    fn local_feature_envelope_does_not_require_cosmetic_build_or_roster_delivery(){
+        let _guard=crate::test_support::TEST_LOCK.lock().unwrap();
+        let mut state=State{epoch:1,ids:vec![(0,11),(1,22)],..Default::default()};
+        assert!(wire_extra(&mut state,22,1,"O|22|1350000|1600000\n").is_some());
+        let text=&state.encoded[&22].0;assert!(text.contains("M|22|1|"));assert!(text.contains("O|22|1350000|1600000"));
+        assert!(!text.contains("M|11|")&&!text.contains("E|22|")&&!text.contains("L|22|"));
+    }
+    #[test]
+    fn item_annotations_preserve_owner_text_and_do_not_cross_item_or_actor_identity(){
+        let icon=asx_game::official::PartyIcon{category:Some("ring"),id:3,rank:4,name:"Owner ring".into(),icon:"INV_Ring".into(),text:"Exact native owner effect".into(),spell_tip:None};
+        let notes=BTreeMap::from([((11,3),"Enchantment: Lesser Might\n+9% damage".into())]);
+        assert_eq!(item_text(&icon,11,&notes),"Exact native owner effect\n\nEnchantment: Lesser Might\n+9% damage");
+        assert_eq!(item_text(&icon,22,&notes),icon.text);let other=asx_game::official::PartyIcon{id:4,..icon.clone()};assert_eq!(item_text(&other,11,&notes),icon.text);
+    }
+    #[test]
     fn local_equipment_is_bounded_native_text_and_explicitly_empty() {
         use asx_game::official::PartyIcon;
         let icon=PartyIcon { category:None, id:42, rank:2, name:"Native|Ring".into(), icon:"INV_Test".into(), text:"Native text\n+10 damage".into(), spell_tip:None };
@@ -466,7 +511,7 @@ unsafe extern "system" fn spell_presentation(
                 return;
             };
             #[cfg(feature = "test-hooks")]
-            if std::env::var("AZCOOP_TEST_OFFICIAL_PARTY_UI").as_deref() == Ok("1") || std::env::var("AZCOOP_TEST_NATIVE_TIPS121").as_deref()==Ok("1") {
+            if std::env::var("ASX_TEST_HUD_OWNERS").as_deref() == Ok("1") || std::env::var("AZCOOP_TEST_NATIVE_TIPS121").as_deref()==Ok("1") {
                 let changed = TIP_SAMPLES.lock().ok().is_some_and(|mut cache| {
                     if cache.len() > 128 {
                         cache.clear();

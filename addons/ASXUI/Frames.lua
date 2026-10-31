@@ -1,6 +1,6 @@
 -- Native health/aura values and retained ally children, presented beside the HUD.
 local controller=CreateFrame("Frame","ASXUIFramesController",UIParent)
-local vitals,health,healthText,auraRoot,objectives
+local vitals,health,healthText,levelText,auraRoot,objectives
 local hiddenRoots,auraOwned,timerOwned,allyOwned,allyPanels={},{},{},{},{}
 local rows={};local elapsed=0;local auraRows=0
 local function finite(n)return type(n)=="number"and n==n and math.abs(n)<1e12 end
@@ -46,6 +46,7 @@ local function createVitals(a)
  local fill=ASXUI_CreatePill(health,"ASXUIHudHealthFill",health.fullWidth,22,.12,.7,.22,"Interface\\TargetingFrame\\UI-StatusBar");health:SetScrollChild(fill)
  local label=CreateFrame("Frame","ASXUIHudHealthLabel",vitals);label:SetAllPoints(background);label:SetFrameLevel(fill:GetFrameLevel()+1);label:EnableMouse(false)
  healthText=font(label,12);healthText:SetPoint("CENTER",background,"CENTER",0,0);healthText:SetTextColor(1,1,1)
+ levelText=font(label,10);levelText:SetPoint("LEFT",background,"LEFT",10,0);levelText:SetTextColor(1,.82,0)
  auraRoot=CreateFrame("Frame","ASXUIHudAuras",a.root);auraRoot:SetWidth(8*43);auraRoot:SetHeight(80);auraRoot:SetPoint("BOTTOM",vitals,"TOP",0,8)
 end
 local function auraKind(f,state)
@@ -321,6 +322,8 @@ controller:SetScript("OnUpdate",function()
  if a then
   if not vitals then createVitals(a)end
   vitals:ClearAllPoints();vitals:SetPoint("BOTTOM",UIParent,"BOTTOM",0,184);vitals:Show()
+  local level=AZS_RUN and AZS_RUN.lvl
+  levelText:SetText(finite(level)and level>=1 and level==math.floor(level)and("Lv "..level)or"")
   local hp=UnitHealth and UnitHealth("player");local max=UnitHealthMax and UnitHealthMax("player")
   if finite(hp)and finite(max)and max>0 then
    local fraction=math.max(0,math.min(hp,max))/max
@@ -338,7 +341,7 @@ controller:SetScript("OnUpdate",function()
 end)
 
 function ASXUI_FramesReadout()
- local result={health=healthText and healthText:GetText(),vitalsShown=vitals and vitals:IsVisible(),playerAlpha=PlayerFrame and PlayerFrame:GetAlpha(),targetAlpha=TargetFrame and TargetFrame:GetAlpha(),objectives={},objectiveTexts={},allies=0,allyBuffsOutside=0}
+ local result={level=levelText and levelText:GetText(),health=healthText and healthText:GetText(),vitalsShown=vitals and vitals:IsVisible(),playerAlpha=PlayerFrame and PlayerFrame:GetAlpha(),targetAlpha=TargetFrame and TargetFrame:GetAlpha(),objectives={},objectiveTexts={},allies=0,allyBuffsOutside=0}
  if objectives and objectives:IsVisible()then for _,row in ipairs(rows)do if row:IsShown()then table.insert(result.objectives,row.summary);table.insert(result.objectiveTexts,row:GetText())end end end
  for index,panel in pairs(allyPanels)do if panel:IsVisible()then
   result.allies=result.allies+1

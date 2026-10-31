@@ -36,3 +36,10 @@ The local actor receives no stop for itself. Actor coordinates, simulation,
 network processing and native resume authority remain unchanged; ordinary native
 movement updates resume the display. The sender's selected bytes and current
 slot/GUID identities are checked. No new hook or transport is added.
+
+The retained native pause renderer also forces visibility for a participant-owned
+menu. The native guest Input::Pause branch alone does not open that menu; ASX
+must carry personal ownership through the same retained visibility/rebuild path
+as the waiting panel, while preserving native menu actions. A personal menu is
+distinct from another participant's waiting panel and does not release the
+shared barrier on close.

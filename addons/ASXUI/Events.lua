@@ -4,7 +4,6 @@ local model
 local function supplyOwner()return model and model.owner end
 local function blessingFor()return model and model.blessing end
 local blessingToast,blessingSeen,blessingUntil=nil,nil,0
-local blessingClock
 -- Classic WoW tooltip/quickslot assets; gameplay wording remains ASX-owned.
 local asGold={1,0.82,0}
 local asMuted={0.75,0.75,0.75}
@@ -51,8 +50,8 @@ local function noticeData(message,channel)
     if type(message)~="string"or string.len(message)>2048 then return nil end
     local plain=string.gsub(string.gsub(message,"|c%x%x%x%x%x%x%x%x",""),"|r","")
     local _,_,amount,total=string.find(plain,"^You earn (%d+%.?%d*) marks %((%d+%.?%d*) in all%)%.?$")
-    if channel=="CHAT_MSG_SYSTEM"and amount and tonumber(amount)>0 then
-        return {kind="marks",reward="|cff1eff00+"..amount.."|r marks",note="Total: |cff1eff00"..total.."|r"}
+    if channel=="CHAT_MSG_SYSTEM"and amount and tonumber(amount)>0 and tonumber(amount)<=1e12 and tonumber(total)>=tonumber(amount)and tonumber(total)<=1e12 then
+        return {kind="marks",amount=tonumber(amount),total=tonumber(total),reward="|cff1eff00+"..amount.."|r marks",note="Total: |cff1eff00"..total.."|r"}
     end
     if channel~="CHAT_MSG_LOOT"and channel~="CHAT_MSG_SYSTEM"then return nil end
     if not string.find(plain,"^You receive loot:")then return nil end
@@ -120,6 +119,20 @@ local function refreshLootReceipts()
         end
     end
 end
+local function markNumber(value)return string.gsub(string.gsub(string.format("%.6f",value),"0+$",""),"%.$","")end
+local function mergeMarks(receipt,now)
+    if receipt.kind~="marks"then return false end
+    local last=nativeQueue[table.getn(nativeQueue)]
+    if not last and nativeCurrent and nativeCurrent.kind=="marks"and now<nativeUntil then last=nativeCurrent end
+    if not last or last.kind~="marks"or not last.amount or not last.total or not last.firstAt or now-last.firstAt>3 then return false end
+    -- A repeated/stale total is not a second gain. A discontinuity starts a new receipt.
+    if receipt.total<=last.total then return true end
+    if math.abs(receipt.total-last.total-receipt.amount)>.00001 then return false end
+    last.amount=last.amount+receipt.amount;last.total=receipt.total
+    last.reward="|cff1eff00+"..markNumber(last.amount).."|r marks";last.note="Total: |cff1eff00"..markNumber(last.total).."|r"
+    if last==nativeCurrent and nativeToast then nativeToast.reward:SetText(last.reward);nativeToast.note:SetText(last.note)end
+    return true
+end
 controller:RegisterEvent("CHAT_MSG_LOOT");controller:RegisterEvent("CHAT_MSG_SYSTEM")
 controller:SetScript("OnEvent",function()
     local message,channel=arg1,event
@@ -132,7 +145,8 @@ controller:SetScript("OnEvent",function()
         if structuredLoot()or(major==1 and type(minor)=="number"and minor>=6)then return end
         if not claimLoot()then return end
     end
-    if table.getn(nativeQueue)<16 then table.insert(nativeQueue,{kind=kind,reward=receipt.reward,note=receipt.note,icon=noticeIcon(kind,message),readyAt=GetTime()+.25})end
+    local now=GetTime();if mergeMarks(receipt,now)then return end
+    if table.getn(nativeQueue)<16 then table.insert(nativeQueue,{kind=kind,amount=receipt.amount,total=receipt.total,firstAt=now,reward=receipt.reward,note=receipt.note,icon=noticeIcon(kind,message),readyAt=now+.25})end
 end)
 local function refreshNativeRewards()
     local now=GetTime();local previousWall=nativeWall;local dt=math.max(0,now-nativeWall);nativeWall=now
@@ -331,25 +345,16 @@ end
 local function refreshBlessingToast()
     local b=blessingFor("player")
     local runPhase=AZS_GetPhase and AZS_GetPhase()
-    if runPhase and runPhase~="playing" and runPhase~="choosing" and runPhase~="paused" and runPhase~="dead" then blessingSeen=nil;blessingClock=nil end
+    if runPhase and runPhase~="playing" and runPhase~="choosing" and runPhase~="paused" and runPhase~="dead" then blessingSeen=nil end
     if not b then
         -- Missing/stale data hides the widget without replaying an acquired Fortune.
         if blessingToast then blessingToast:Hide()end
         return
     end
-    local key=model.own..":"..b.boss
-    local clock=AZS_GetRunTime and AZS_GetRunTime()
-    if type(clock)=="number" then
-        if blessingClock and clock+0.5<blessingClock then blessingSeen=nil end
-        blessingClock=clock
-    end
-    -- Boss XP commonly opens the native choice overlay. Announce when readable.
+    local key=model.own..":"..tostring(b.event or(b.boss..":"..tostring(b.category)..":"..tostring(b.amount)))
     local phase=AZS_GetPhase and AZS_GetPhase()
-    if phase and phase~="playing" and phase~="dead" then
-        if blessingToast then
-            if blessingUntil>GetTime()then blessingUntil=GetTime()+6 end
-            blessingToast:Hide()
-        end
+    if phase and phase~="playing"and phase~="dead"then
+        if blessingToast then blessingToast:Hide()end
         return
     end
     if key~=blessingSeen then

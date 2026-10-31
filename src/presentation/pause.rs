@@ -82,7 +82,7 @@ unsafe extern "system" fn check(_c: &mut crate::stub::Context) {
     // Despawn the previous retained native root, then build once with the new
     // reason/roster. Native deferred ECS destruction completes between these calls.
     CHECK.store(
-        if redraw > 0 || DISPLAY.load(Ordering::Acquire) & 5 == 1 {
+        if redraw > 0 || DISPLAY.load(Ordering::Acquire) & 1 == 1 {
             BASE.load(Ordering::Relaxed) + rva(0x1bfc1)
         } else {
             CHECK_ORIGINAL.load(Ordering::Relaxed)
@@ -93,7 +93,7 @@ unsafe extern "system" fn check(_c: &mut crate::stub::Context) {
 unsafe extern "system" fn visible(c: &mut crate::stub::Context) {
     let display = DISPLAY.load(Ordering::Acquire);
     let clearing = CLEARING.load(Ordering::Acquire) != 0;
-    if clearing || display & 5 == 1 {
+    if clearing || display & 1 == 1 {
         c.rdx = (c.rdx & !255) | u64::from(!clearing && display & 2 != 0);
         // These are the native builder's borrowed pause-vs-menu presentation flag
         // and matching Resume label selector, not the simulation's phase/resource.
@@ -341,6 +341,20 @@ mod tests {
         assert_eq!(take_action().as_deref(),Some("42|continue"));
         assert_eq!(CLICK.load(Ordering::Acquire),0x10000000 + asx_game::official::SelectedAdapter::select(asx_game::current::SHA256).unwrap().pause_addresses()[10]);
         *RECOVERY_ROOT.lock().unwrap()=None;BASE.store(0,Ordering::Release);*LAYOUT.lock().unwrap()=None;
+    }
+    #[test]
+    fn guest_personal_menu_forces_native_visibility_and_retains_native_buttons() {
+        let _guard=crate::test_support::TEST_LOCK.lock().unwrap();
+        *LAYOUT.lock().unwrap()=Some(asx_game::official::SelectedAdapter::select(asx_game::current::SHA256).unwrap().pause_layout());
+        BASE.store(0x10000000,Ordering::Release);
+        publish(&PauseView{active:true,local_menu:true,visible:false,..Default::default()});
+        // Consume the deferred clear pass, then rebuild and keep the menu visible.
+        unsafe{check(&mut std::mem::zeroed())};unsafe{check(&mut std::mem::zeroed())};unsafe{check(&mut std::mem::zeroed())};
+        assert_eq!(CHECK.load(Ordering::Acquire),0x10000000+rva(0x1bfc1));
+        let mut frame=[0u8;0x400];let mut c:crate::stub::Context=unsafe{std::mem::zeroed()};c.rbp=frame.as_mut_ptr()as u64;c.rdx=0;
+        unsafe{visible(&mut c)};assert_eq!(c.rdx&255,1);assert_eq!(frame[0x2fe],1);
+        let mut items=[2usize,0x12340,2];c.rdx=items.as_mut_ptr()as u64;unsafe{build(&mut c)};assert_eq!(items[2],2,"Personal menu keeps native actions");
+        publish(&PauseView::default());BASE.store(0,Ordering::Release);
     }
     #[test]
     fn unchanged_presentation_does_not_request_a_new_native_tree() {

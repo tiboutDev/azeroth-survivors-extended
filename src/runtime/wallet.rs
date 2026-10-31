@@ -36,6 +36,7 @@ static GOLD_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 static GOLD_SAMPLES: AtomicU64 = AtomicU64::new(0);
 static SWAP_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 static CURRENCY_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
+static REROLL_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 thread_local! {static PROJECTING:std::cell::Cell<bool>=const {std::cell::Cell::new(false)};}
 fn projected<T>(action: impl FnOnce() -> T) -> T {
     struct Guard(bool);
@@ -238,8 +239,36 @@ unsafe extern "system" fn swap(game: u64, row: u64) {
         ));
     }
 }
-pub fn hooks(adapter: Adapter) -> [crate::install::HookSpec; 4] {
+// Native 0.131 spending inlines its coin-map update. Observe the completed
+// native action as well as the generic setter; equality makes both paths idempotent.
+fn settle_native_spend(runtime: &Runtime, game: u64) -> Result<(), String> {
+    let Some(previous) = state(game) else { return Ok(()) };
+    let (gold, _, _) = runtime.adapter.current_gold(&runtime.local, game)?;
+    let next = previous.wallet.native_debit(gold)?;
+    if next != previous.wallet {
+        commit(previous, next)?;
+        runtime.log.info(&format!("official gold spend: amount={} balance={}", previous.wallet.gold-next.gold, next.gold));
+    }
+    Ok(())
+}
+type Reroll = unsafe extern "system" fn(u64);
+unsafe extern "system" fn reroll(game: u64) {
+    let original: Reroll = std::mem::transmute(REROLL_ORIGINAL.load(Ordering::Acquire));
+    original(game);
+    if let Some(runtime) = RUNTIME.get().filter(|r| r.rules) {
+        if let Err(error) = settle_native_spend(runtime, game) {
+            runtime.log.warn(&format!("Official reroll debit rejected: {error}"));
+        }
+    }
+}
+pub fn hooks(adapter: Adapter) -> [crate::install::HookSpec; 5] {
     [
+        crate::install::HookSpec {
+            name: "official-wallet-reroll",
+            target: local_base() + adapter.wallet_reroll_entry().rva as usize,
+            detour: reroll as *const () as usize,
+            trampoline: &REROLL_ORIGINAL,
+        },
         crate::install::HookSpec {
             name: "official-group-chest",
             target: local_base() + adapter.chest_entry().rva as usize,
@@ -276,6 +305,7 @@ pub fn reset() {
 static CHEST_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 type Chest = unsafe extern "system" fn(u64) -> bool;
 unsafe extern "system" fn chest(game: u64) -> bool {
+    let before = state(game).map(|s|(s.wallet.gold,s.cost));
     let original: Chest = std::mem::transmute(CHEST_ORIGINAL.load(Ordering::Acquire));
     let result = original(game);
     if !result {
@@ -284,6 +314,9 @@ unsafe extern "system" fn chest(game: u64) -> bool {
     let Some(runtime) = RUNTIME.get().filter(|r| r.rules) else {
         return result;
     };
+    if let Err(error) = settle_native_spend(runtime, game) {
+        runtime.log.warn(&format!("Official chest debit rejected: {error}"));
+    }
     let Some(mut state) = state(game) else {
         return result;
     };
@@ -299,8 +332,9 @@ unsafe extern "system" fn chest(game: u64) -> bool {
         state.cost = cost;
         *STATE.lock().map_err(|_| "Wallet state unavailable")? = Some(state);
         runtime.log.info(&format!(
-            "official group chest: owner={slot} opened={} next_cost={cost}",
-            state.opened
+            "official group chest: owner={slot} opened={} next_cost={cost} paid={} expected_cost={} balance={}",
+            state.opened, before.map_or(0,|(gold,_)|gold.saturating_sub(state.wallet.gold)),
+            before.map_or(0,|(_,cost)|cost),state.wallet.gold
         ));
         Ok(())
     })();
@@ -395,6 +429,10 @@ fn normalized_award(runtime:&Runtime,state:&State,game:u64,raw:u32,source:asx_ga
     normalized_for_actor(runtime,state,raw,source,(multiplier,race,collector,false))
 }
 fn normalized_for_actor(runtime:&Runtime,state:&State,raw:u32,source:asx_gameplay::official::Award,origin:(f32,u8,(u32,u64),bool))->Result<u32,String>{
+    let (multiplier,race,best)=normalized_multiplier(runtime,state,origin)?;
+    shared_gold_award(raw,multiplier,runtime.adapter.racial_gold_bonus(race),best,state.members,source)
+}
+fn normalized_multiplier(runtime:&Runtime,state:&State,origin:(f32,u8,(u32,u64),bool))->Result<(f32,u8,f32),String>{
     let (multiplier,race,collector,terminal)=origin;
     let actors=runtime.party.lock().ok().and_then(|p|p.as_ref().map(|p|p.actors.iter().map(|a|(a.slot,a.guid,a.race_id,a.phase)).collect::<Vec<_>>())).ok_or("Missing gold membership")?;
     let best=actors.iter().map(|a|runtime.adapter.racial_gold_bonus(a.2)).fold(0.0f32,f32::max);
@@ -410,7 +448,14 @@ fn normalized_for_actor(runtime:&Runtime,state:&State,raw:u32,source:asx_gamepla
         asx_gameplay::official::shared_gold_equipment_multiplier(multiplier,own,equipment)?
     }else if equipment.is_empty(){multiplier}else{return Err("Gold collector absent from armory membership".into())};
     let multiplier=multiplier-blessings::personal(collector.0,collector.1,2)+blessings::strongest(2);
-    shared_gold_award(raw,multiplier,runtime.adapter.racial_gold_bonus(race),best,state.members,source)
+    Ok((multiplier,race,best))
+}
+/// Read-only UI projection; the same provenance as a native world-gold receipt.
+pub(super) fn effective_multiplier(runtime:&Runtime,game:u64,actor:&asx_game::official::ActorObservation)->Option<f32>{
+    let state=state(game)?;
+    let (value,race,best)=normalized_multiplier(runtime,&state,(actor.gold_multiplier,actor.race_id,(actor.slot,actor.guid),false)).ok()?;
+    let result=(f64::from(value)-f64::from(runtime.adapter.racial_gold_bonus(race))+f64::from(best)).max(0.)as f32;
+    result.is_finite().then_some(result)
 }
 /// Credit already-issued rewards once, without dividing by party size.
 /// Apply the same current gold provenance once, then credit one transaction.
@@ -439,3 +484,28 @@ pub fn reward_credit(runtime:&Runtime,game:u64,collector:(u32,u64),base:u32,coun
 }
 
 pub fn duplicate_credit(runtime:&Runtime,game:u64,collector:(u32,u64),base:u32,count:usize)->Result<Vec<u32>,String>{reward_credit(runtime,game,collector,base,count,"duplicate loot")}
+
+#[cfg(test)]
+mod spending_regressions {
+    use super::*;
+    #[test]
+    fn inline_native_spends_commit_once_without_changing_earned_or_overwriting_nested_awards() {
+        let _guard=crate::test_support::TEST_LOCK.lock().unwrap();
+        let initial=State {game:123,clock:1.,members:2,wallet:SharedWallet{gold:100,earned:200},opened:0,cost:20,delivered:[0;NATIVE_PLAYERS],armory:[None;NATIVE_PLAYERS]};
+        *STATE.lock().unwrap()=Some(initial);
+        let after=initial.wallet.native_debit(80).unwrap();commit(initial,after).unwrap();
+        let current=state(123).unwrap();assert_eq!(current.wallet,SharedWallet{gold:80,earned:200});
+        assert_eq!(current.wallet.native_debit(80).unwrap(),after);
+        assert!(current.wallet.native_debit(81).is_err());
+        let nested=current.wallet.credit(5).unwrap();commit(current,nested).unwrap();
+        assert!(commit(current,current.wallet.native_debit(60).unwrap()).is_err());
+        assert_eq!(state(123).unwrap().wallet,nested);reset();
+    }
+    unsafe extern "system" fn native_reroll(game:u64) { assert_eq!(game,0x12340); }
+    #[test]
+    fn reroll_wrapper_preserves_native_receiver_without_an_active_runtime() {
+        let _guard=crate::test_support::TEST_LOCK.lock().unwrap();
+        let old=REROLL_ORIGINAL.swap(native_reroll as *const() as usize,Ordering::AcqRel);
+        unsafe{reroll(0x12340)};REROLL_ORIGINAL.store(old,Ordering::Release);
+    }
+}

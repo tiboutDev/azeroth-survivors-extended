@@ -380,3 +380,30 @@ ordinary burst attacks from killing the first witness prematurely. The first
 still requires a real normal-enemy taunt control and a natural 25-second escape;
 the second requires observed movement before the controlled native kill. No
 health, immunity, lifetime, clock or production scheduling rule is changed.
+
+### Verified private Windows desktops
+
+The background dispatcher uses `private_trial_process.py` to supply the real
+Win32 STARTUPINFOEX `lpDesktop` and an explicit inherited-handle list. CPython's
+`subprocess.STARTUPINFO` does not expose that field; assigning an arbitrary
+Python attribute is insufficient. Before starting any game, the gated child
+queries its actual thread desktop and must match the exact desktop name in the
+parent's receipt. The resource probe validates this path without launching a game.
+The owned kill-on-close job, normal priority and full inherited CPU mask remain.
+
+The pause regression scene uses native autoplay for ordinary choices; its
+explicit 3/20-second held-choice fixtures own the waiting windows. It may stop
+early only after all acceptance checks pass, including movement after menu close.
+Closing the menu alone is insufficient. `ASX_TEST_PRIVATE_FOCUS=1` is an optional
+pause-only model for two real players' focused clients: only visible windows of
+the two known child PIDs receive focus notifications on the verified private
+desktop. It injects no OS keyboard/mouse events and changes no game coordinates,
+phase or movement state. Samples record how many owned windows were notified.
+
+The opt-in HUD follow-up trial (`asxui_hud_trial.py --hud-trial 2
+--hud-followups --seconds 130`) adds read-only checks for native character level,
+effective cooperative economy metadata, stable Fortune receipts and owner-ring
+enchantment text rendered in GameTooltip. Its bounded `ASX_TEST_HUD_OWNERS`
+observer writes local diagnostic logs only; it does not enable the retired native
+CVar diagnostic channel. A shorter run may stop before the real trial completes;
+that missing Fortune witness remains a failure, not a waived check.

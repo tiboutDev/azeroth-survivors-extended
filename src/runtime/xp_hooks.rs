@@ -3,7 +3,7 @@
 //! remains in experience. Preserve TLS nesting around the native shared wrapper.
 use super::Adapter;
 use services::Services;
-mod services;
+pub(super) mod services;
 use crate::install::HookSpec;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 

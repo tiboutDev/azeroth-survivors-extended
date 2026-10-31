@@ -5,6 +5,7 @@ from reward_wallet_evidence import assess
 class RewardWalletEvidence(unittest.TestCase):
  def fixture(self):
   lines=["official party: clock=4 actors=[phase: Choosing, gold: 1000, phase: Choosing, gold: 1000]"]
+  lines += [f"official group chest: owner=0 opened={i+1} next_cost=24 paid=20 expected_cost=20 balance=980"for i in range(3)]
   for s in range(2):
    for k in range(2):
     for a in range(3):
@@ -12,6 +13,9 @@ class RewardWalletEvidence(unittest.TestCase):
      wallet=lambda g,e:f"SharedWallet {{ gold: {g}, earned: {e} }}"
      lines.append(f"reward wallet fixture: slot={s} guid={111+s} kind={k} action={a} game=99 before={wallet(old,earned)} after={wallet(new,ne)} shared_before=Some((99, {wallet(old,earned)})) shared_after=Some((99, {wallet(new,ne)}))")
   return "\n".join(lines)
+ def test_free_cache_or_missing_purchase_witness_cannot_pass(self):
+  self.assertFalse(assess(self.fixture().replace("paid=20", "paid=0"))["checks"]["cache_purchases_debit_once"])
+  self.assertFalse(assess(self.fixture().replace("official group chest:", "unrelated:"))["passed"])
  def test_native_and_shared_reward_transactions(self):self.assertTrue(assess(self.fixture())["passed"])
  def test_missing_or_duplicate_transaction_cannot_pass(self):
   t=self.fixture();self.assertFalse(assess(t.rsplit("\n",1)[0])["passed"]);self.assertFalse(assess(t+"\n"+t.splitlines()[-1])["passed"])

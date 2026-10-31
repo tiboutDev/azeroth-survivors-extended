@@ -40,8 +40,8 @@ addon files and preserves preferences and unknown files.
 - The native damage font is preserved by default. The earlier renamed OFL number
   face remains an explicit opt-in (`numbers on`), rather than a default. Existing
   saved `numbers=true` preferences are respected; use `numbers off` and restart
-  to restore the startup native face. No confirmed same-face outgoing world-number
-  size setting has been found for the reviewed engine.
+  to restore the startup native face. Standalone Lua has no confirmed same-face size control. With the matching
+  ASX DLL, native outgoing damage renders at one third size without changing fonts.
 - ASXUI owns the circular custom-event and native-cache minimap pins, their native
   portrait mask, tracking-ring border, hover text and edge projection. Supply and
   trial icons retain their styles; caches use the native `INV_Box_02` icon; supplies retain `INV_Crate_01`.
@@ -65,7 +65,7 @@ hero coordinates alone cannot reconstruct a panned minimap reliably. Hidden or
 stale data, menus and `/asxui pins off` hide all addon pins. Available caches and
 events remain visible while choosing or paused. Removing ASXUI removes this
 optional pin presentation, not native world objects or gameplay. Only the replaced native guardian flag is hidden, with its prior preference
-restored when pins are disabled/unavailable. Up to nine custom, one guardian
+restored when pins are disabled/unavailable. Up to nine custom, 128 guardian
 and 128 native cache rows
 are rendered; extra native caches are omitted from this bounded cosmetic view.
 
@@ -223,8 +223,9 @@ All 29 native character statistics are supported through `AZS_STATS`, using the
 same units and rounding as the native character pane. Displayed zero bonuses
 are omitted; multiplier 1 therefore hides a +0% bonus but critical damage 100%
 does not disappear. Missing values are unavailable, not fabricated zeros. Row
-membership is chosen when opening a panel and stays stable while its values
-refresh. A newly relevant statistic appears on the next opening.
+membership and values refresh at the existing four-Hz cadence, so a newly
+relevant statistic appears while the panel is open. Cooperative XP/gold values
+use the optional effective award multipliers from ASX API 1.7.
 
 Native kills, gold and the next cache cost come from `AZS_RUN.kills`, `gold` and
 `chest`. Native crossed-blade, coin and `INV_Box_02` icons replace the three
@@ -332,16 +333,13 @@ the native state. The prior native `revive` visibility preference restores on
 HUD disable or unavailable/invalid API data. `/asxui widget revive ...` uses the
 same scale, opacity, position and visibility controls as other event widgets.
 
-Loot and marks use local native chat receipts, not inventory/wallet comparisons.
-The reviewed English native messages arrive through `CHAT_MSG_SYSTEM` and/or
-`CHAT_MSG_LOOT`; the popup extracts item name/rarity and quantity, or earned
-marks and their total. Decimal mark strings retain their precision. It does not
-echo the chat sentence; malformed/unrecognized receipts keep native presentation.
-After a compatible item receipt, the native loot notice is hidden to avoid a
-second popup; its previous preference restores on HUD disable. Unknown locales
-retain native loot presentation. Ordinary chat messages remain untouched.
-Loot uses a native item texture when `GetItemInfo` resolves it, otherwise a
-generic native box; marks use the native rune icon. These messages queue through
+Current boss-item popups use API 1.6 structured local receipts with their real
+native icon, rarity and new-collection flag. Already-collected items are silent.
+Marks use recognized local English chat receipts and the native rune icon,
+preserving decimal amounts. Older providers retain their bounded chat fallback;
+unknown locales keep native loot presentation. Ordinary chat is untouched.
+The prior native loot preference restores when the HUD/provider is unavailable.
+These messages queue through
 choices/pauses without replaying past receipts after HUD disable. A new
 ritual arrival reserves six seconds for its native announcement before native
 reward popups continue; queued receipts keep their full display lifetime. Widget names
@@ -482,3 +480,20 @@ neck, finger or trinket silhouette; items never move into a different category.
 Supplies sold for gold show the exact ASX amount with the native WoW tooltip
 gold coin. Quest titles, objective entries and arrival timers use distinct
 spacing; arrival timers remain limited to the final 30 seconds.
+
+The player arrow is repeated above ASX pins with its native texture and Lua
+position/facing. Native map input and the original arrow stay intact. Disabling
+pins, unavailable data or a panned-offscreen hero hides this foreground copy.
+
+### Live stats, level and reward receipts
+
+API 1.7 supplies optional cooperative effective XP/gold multipliers from ASX's
+actual award policy. The HUD substitutes those values for personal AZS_STATS;
+other stats stay native, and zero/nonzero row membership refreshes while open.
+Character level uses native AZS_RUN.lvl beside current HP. Item tooltips retain
+native owner lines and rank, plus verified current ring enchantments. A stale or
+unmatched ring never inherits another player's enchantment.
+Fortune notifications consume stable award receipts; choices defer pending
+notifications but cannot re-arm an already started toast. Contiguous native mark
+receipts within three seconds share one popup with summed gains and the newest
+native total, preserving decimals and unrelated item order.

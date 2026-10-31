@@ -47,3 +47,12 @@ fn native_encounter_pool_and_stat_abi() {
     unsafe { run_stats::stats(frame) };
     assert_eq!(GAME.load(Ordering::SeqCst), frame);
 }
+
+#[test]
+fn actual_award_receipts_are_distinct_for_identical_values_and_survive_observation(){
+    let mut s=State::default();let id=(0,11);let b=Blessing::roll(1,0,0);
+    s.rules.actors.insert(id,b);record_receipt(&mut s,id);let first=s.receipts[&id];
+    assert_eq!(s.rules.actors.get(&id),Some(&b));assert_eq!(s.receipts[&id],first);
+    s.rules.actors.insert(id,b);record_receipt(&mut s,id);assert!(s.receipts[&id]>first);
+    let second=s.receipts[&id];record_receipt(&mut s,(1,22));assert_eq!(s.receipts[&id],second);
+}

@@ -24,6 +24,8 @@ for i=0,3 do local f=CreateFrame("Button","BuffButton"..i,UIParent);f.buffFilter
         self.lua.execute((ROOT/'addons/ASXUI/Theme.lua').read_text())
         self.lua.execute((ROOT/'addons/ASXUI/Frames.lua').read_text())
         self.lua.execute('arg1=.1;ASXUIFramesController.scripts.OnUpdate();ASXUI_DockAuras(view);arg1=.1;ASXUIFramesController.scripts.OnUpdate()')
+    def test_character_level_uses_native_run_value_and_clears_invalid_data(self):
+        self.lua.execute('AZS_RUN.lvl=42;arg1=.2;ASXUIFramesController.scripts.OnUpdate();assert(ASXUI_FramesReadout().level=="Lv 42");AZS_RUN.lvl=0/0;arg1=.2;ASXUIFramesController.scripts.OnUpdate();assert(ASXUI_FramesReadout().level=="")')
     def test_hp_only_native_values_and_root_restoration(self):
         self.run_lua('assert(PlayerFrame:GetAlpha()==0 and TargetFrame:GetAlpha()==0);assert(ASXUIHudHealth.fraction==.5 and ASXUIHudHealth:GetWidth()==143.5);assert(ASXUIHudHealth:GetHeight()==22 and ASXUIHudHealthFill:GetWidth()==287 and ASXUIHudHealth.anchor[1]=="LEFT");playerHP=0;arg1=.1;ASXUIFramesController.scripts.OnUpdate();assert(ASXUIHudHealth.fraction==0 and not ASXUIHudHealth:IsShown());ASXUI_ConfigureHud("off");ASXUIFramesController.scripts.OnUpdate();assert(PlayerFrame:GetAlpha()==1 and TargetFrame:GetAlpha()==1 and PlayerFrame:IsMouseEnabled() and TargetFrame:IsMouseEnabled())')
     def test_pill_fill_clips_its_fixed_silhouette_at_low_full_and_missing_health(self):

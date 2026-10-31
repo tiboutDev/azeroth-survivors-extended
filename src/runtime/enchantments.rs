@@ -75,6 +75,10 @@ pub fn native_stats(r:&dyn Services,game:u64,native:impl FnOnce()){
   Err(e)=>{r.warn(&format!("Enchantment stats rejected: {e}"));native();}
  }
 }
+/// Cosmetic, copied identity-bound text; no offers or preview values leak here.
+pub(super) fn retained(slot:u32,guid:u64,ring:u8,rank:u32,game:u64)->Option<RankedEnchantment>{
+ STATE.lock().ok().and_then(|s|s.as_ref().filter(|s|s.game==game)?.rules.get(slot,guid,ring))?.at_ring_rank(rank)
+}
 pub fn annotation(content:&str)->Option<(RankedEnchantment,usize)>{let at=content.find("\n\nEnchantment:").or_else(||content.find("\n\nActive enchantment:"));let(rest,prefix)=at.map(|at|(&content[at+2..],at)).unwrap_or((content,0));let name=rest.strip_prefix("Enchantment: ").or_else(||rest.strip_prefix("Active enchantment: "))?.lines().next()?;for kind in Enchantment::ALL{for rank in Rank::ALL{let e=RankedEnchantment{kind,rank};if e.name()==name{return Some((e,prefix))}}}None}
 
 #[cfg(feature="test-hooks")]thread_local!{static OVERRIDE:std::cell::Cell<Option<RankedEnchantment>>=const{std::cell::Cell::new(None)};}

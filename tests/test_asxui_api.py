@@ -16,6 +16,12 @@ class APITests(unittest.TestCase):
         self.lua.execute('local value,reason=ASX_GetState(2);assert(value==nil and reason=="unsupported_version");local s=ASX_GetState(1);assert(ASX_GetAPIVersion()==1 and s.api.major==1 and not s.available and s.reason=="missing_or_invalid_payload" and next(s.data)==nil);local token,error=ASX_RegisterStateHandler("bad");assert(token==nil and error=="invalid_callback");assert(not ASX_UnregisterStateHandler(999))')
     def test_structured_values_and_texts_are_separate_and_guid_is_exact(self):
         self.publish();self.lua.execute('local s=ASX_GetState(1);assert(s.available and s.session.recipientGUID=="18446744073709551615");assert(s.data.fortune.amount==1200 and s.data.fatigue.seconds==45);assert(s.data.discovery.gold==33 and s.data.discovery.name==nil and s.data.discovery.text==nil);assert(s.texts.supplies.name=="Elixir" and s.texts.supplies.description=="Description" and s.texts.supplies.note=="Sold for 33 gold");assert(s.data.sayge.held==700 and s.data.sayge.maximum==2000 and s.texts.sayge.note=="7 / 20 sec");assert(s.data.minimap.zoom==nil and s.data.minimap.radii[1]==100)')
+    def test_common_economy_and_fortune_receipt_are_detached_and_heartbeat_stable(self):
+        h=lambda value:value.encode().hex()
+        text="1|1|11|1\nM|11|0|"+h("Player")+"\nB|11|2|1|0|1200|2000|77\nO|11|1350000|1600000\n"
+        self.lua.globals().wire=text.encode().hex();self.lua.execute('AZS_RUN={asx=wire};AZS_RUN_UPDATED=now;local s=ASX_GetState();assert(s.data.fortune.event==77 and s.data.economy.xp==1.35 and s.data.economy.gold==1.6);s.data.economy.gold=99;assert(ASX_GetState().data.economy.gold==1.6)')
+        for bad in ('O|11|-1|1600000','O|11|nan|1600000','O|11|10000000001|1600000','O|22|1350000|1600000'):
+            self.lua.globals().wire=text.replace('O|11|1350000|1600000',bad).encode().hex();self.lua.execute('AZS_RUN.asx=wire;AZS_RUN_UPDATED=now;assert(not ASX_GetState().available)')
     def test_nested_mutation_never_reaches_asx_or_another_consumer(self):
         self.publish();self.lua.execute('local a=ASX_GetState(1);a.data.fortune.amount=999;a.data.minimap.radii[1]=999;a.texts.fortune.color[1]=999;a.session.recipientGUID="bad";local b=ASX_GetState(1);assert(b.data.fortune.amount==1200 and b.data.minimap.radii[1]==100 and b.texts.fortune.color[1]==.12 and b.session.recipientGUID=="18446744073709551615");local map=ASX_GetMinimapData();map.radii[1]=999;assert(ASX_GetState(1).data.minimap.radii[1]==100)')
     def test_heartbeat_and_timestamp_refresh_do_not_advance_revision(self):
@@ -43,7 +49,7 @@ class APITests(unittest.TestCase):
         self.lua.execute('AZS_RUN={asx=wire};AZS_RUN_UPDATED=now;now=now+.1')
     def test_local_equipment_native_text_copy_isolation_and_zero_item_snapshot(self):
         self.equipment_wire()
-        self.lua.execute('local major,minor=ASX_GetAPIVersion();assert(major==1 and minor==6);local s=ASX_GetState(1);assert(s.available and s.data.equipment[1].slot==1 and s.data.equipment[1].rank==2 and s.data.equipment[1].name==nil);assert(s.texts.equipment[1].name=="Native ring" and s.texts.equipment[1].text=="Exact owner text\\n+10 damage");s.texts.equipment[1].name="Mutated";assert(ASX_GetState(1).texts.equipment[1].name=="Native ring")')
+        self.lua.execute('local major,minor=ASX_GetAPIVersion();assert(major==1 and minor==7);local s=ASX_GetState(1);assert(s.available and s.data.equipment[1].slot==1 and s.data.equipment[1].rank==2 and s.data.equipment[1].name==nil);assert(s.texts.equipment[1].name=="Native ring" and s.texts.equipment[1].text=="Exact owner text\\n+10 damage");s.texts.equipment[1].name="Mutated";assert(ASX_GetState(1).texts.equipment[1].name=="Native ring")')
         self.equipment_wire(header='L|11|0',row='')
         self.lua.execute('local s=ASX_GetState(1);assert(s.available and table.getn(s.data.equipment)==0 and table.getn(s.texts.equipment)==0)')
     def test_equipment_retains_native_category_and_rejects_unknown_category(self):

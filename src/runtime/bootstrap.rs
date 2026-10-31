@@ -86,6 +86,10 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         crate::install::install(&menu_ui::hooks(adapter,local_base()))?;
         crate::install::install(&[party_ui::hook(adapter), party_ui::spell_hook(adapter)])?;
     }
+    let spend_entry = adapter.wallet_reroll_entry();
+    if runtime.local.read(local_base()+spend_entry.rva as usize,spend_entry.bytes.len())? != spend_entry.bytes {
+        return Err("Native wallet reroll changed".into());
+    }
     crate::install::install(&wallet::hooks(adapter))?;
     if let Some(entry) = adapter.fatigue_aura_entry() {
         let r = RUNTIME.get().ok_or("Missing official runtime")?;

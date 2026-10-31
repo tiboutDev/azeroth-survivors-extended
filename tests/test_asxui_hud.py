@@ -8,7 +8,10 @@ nativeCharacterCalls={};function ToggleCharacter(tab)table.insert(nativeCharacte
 ASXUIDB={};hudPrefs={build=true,tally=true,clock=true};xpWrites=0
 function AZS_IsHudShown(k)return hudPrefs[k]end
 function AZS_SetHudShown(k,v)hudPrefs[k]=v end
-function GameTooltip:SetText(v)self.title=v end
+function GameTooltip:SetText(v)self.title=v;self.lines={}end
+function GameTooltip:ClearLines()self.lines={}end
+function GameTooltip:AddLine(value,r,g,b,wrap)table.insert(self.lines,{value,r,g,b});self.detail=value end
+function GameTooltip:AddDoubleLine(left,right)self.title=left;self.right=right end
 local create=CreateFrame
 function CreateFrame(kind,name,parent,template)
  local f=create(kind,name,parent,template)
@@ -80,12 +83,18 @@ class HUDTests(unittest.TestCase):
         self.run_lua('for _,v in ipairs(ASXUIHudCounters.values)do assert(v.button.anchor[1]=="LEFT" and v.button.anchor[3]=="LEFT" and v.button.anchor[5]==0)end;ASXUI_ConfigureHud("off");ASXUI_ConfigureHud("on");for _,v in ipairs(ASXUIHudCounters.values)do assert(v.button.anchor[1]=="LEFT" and v.button.anchor[5]==0)end')
     def test_gold_glow_tracks_actual_affordability_and_invalid_data(self):
         self.run_lua('assert(not ASXUI_HudReadout().affordable);AZS_RUN.gold=40;hudTick();assert(ASXUI_HudReadout().affordable);AZS_RUN.chest=41;hudTick();assert(not ASXUI_HudReadout().affordable);AZS_RUN.gold=100;AZS_RUN.chest=0;hudTick();assert(not ASXUI_HudReadout().affordable);AZS_RUN.chest=40;AZS_RUN.gold=0/0;hudTick();assert(not ASXUI_HudReadout().affordable);AZS_RUN.gold=100;hudTick();ASXUI_ConfigureHud("off");assert(not ASXUI_HudReadout().affordable)')
-    def test_membership_is_frozen_while_values_refresh_and_rebuilt_on_reopen(self):
-        self.run_lua('hudCall("ASXUIHudStats","OnClick");hudTick();local n=table.getn(ASXUI_HudReadout().rows);AZS_STATS.echo=.2;AZS_STATS.dmg=1;hudTick();local r=ASXUI_HudReadout().rows;assert(table.getn(r)==n and r[1].value=="+0%");hudCall("ASXUIHudStats","OnClick");hudTick();hudCall("ASXUIHudStats","OnClick");hudTick();local seen={};for _,v in ipairs(ASXUI_HudReadout().rows)do seen[v.key]=v.value end;assert(seen.dmg==nil and seen.echo=="20%")')
+    def test_live_membership_adds_new_nonzero_stats_and_removes_zero_without_reopening(self):
+        self.run_lua('hudCall("ASXUIHudStats","OnClick");hudTick();local n=table.getn(ASXUI_HudReadout().rows);AZS_STATS.echo=.2;AZS_STATS.dmg=1;hudTick();local r=ASXUI_HudReadout().rows;local live={};for _,v in ipairs(r)do live[v.key]=v.value end;assert(table.getn(r)==n and live.dmg==nil and live.echo=="20%");hudCall("ASXUIHudStats","OnClick");hudTick();hudCall("ASXUIHudStats","OnClick");hudTick();local seen={};for _,v in ipairs(ASXUI_HudReadout().rows)do seen[v.key]=v.value end;assert(seen.dmg==nil and seen.echo=="20%")')
+    def test_common_stats_replace_personal_values_without_mutating_native_table(self):
+        self.run_lua('view.data.economy={xp=1.35,gold=1.6};hudCall("ASXUIHudStats","OnClick");hudTick();local values={};for _,v in ipairs(ASXUI_HudReadout().rows)do values[v.key]=v.value end;assert(values.xp=="+35%" and values.gold=="+60%" and AZS_STATS.xp==1 and AZS_STATS.gold==1);view.data.economy={xp=1,gold=1.8};hudTick();values={};for _,v in ipairs(ASXUI_HudReadout().rows)do values[v.key]=v.value end;assert(values.xp==nil and values.gold=="+80%");view.available=false;hudTick();for _,v in ipairs(ASXUI_HudReadout().rows)do assert(v.key~="gold")end')
+    def test_item_tooltip_preserves_native_lines_rank_and_actual_enchantment(self):
+        self.run_lua('view.texts.equipment[1].text="Native owner effect\\n\\nEnchantment: Lesser Might\\n+9% damage";hudTick();hudCall("ASXUIHudEquipment1","OnEnter");assert(GameTooltip.right=="Rank 2" and GameTooltip.lines[1][1]=="Native owner effect" and GameTooltip.lines[3][1]=="Enchantment: Lesser Might" and GameTooltip.lines[3][2]==.12 and GameTooltip.lines[4][1]=="+9% damage")')
+    def test_hovered_item_tooltip_hides_on_changed_or_missing_owner_data(self):
+        self.run_lua('hudCall("ASXUIHudEquipment1","OnEnter");assert(not GameTooltip.hidden);view.texts.equipment[1].text="Changed owner effect";hudTick();assert(GameTooltip.hidden);hudCall("ASXUIHudEquipment1","OnEnter");assert(not GameTooltip.hidden);view.available=false;hudTick();assert(GameTooltip.hidden)')
     def test_partial_native_categories_reserve_all_five_equipment_positions(self):
         self.run_lua('view.data.equipment={{slot=1,rank=2,category="ring"},{slot=2,rank=1,category="trinket"}};view.texts.equipment={{name="Ring",icon="INV_Ring",text="Ring owner"},{name="Trinket",icon="INV_Trinket",text="Trinket owner"}};hudTick();local r=ASXUI_HudReadout().equipment;assert(r[1]==nil and r[2].name=="Ring" and r[3]==nil and r[4].name=="Trinket" and r[5]==nil);hudCall("ASXUIHudEquipment2","OnEnter");assert(GameTooltip.title=="Ring");view.data.equipment[1].category="amulet";hudTick();assert(ASXUI_HudReadout().equipment[1].name=="Ring" and ASXUI_HudReadout().equipment[2]==nil)')
     def test_native_equipment_text_is_verbatim_and_missing_data_restores_native_build(self):
-        self.run_lua('assert(not hudPrefs.build);hudCall("ASXUIHudEquipment1","OnEnter");assert(GameTooltip.title=="Native ring" and GameTooltip.detail=="Exact native tooltip\\n+10 damage");view.available=false;hudTick();assert(hudPrefs.build and not ASXUIHudEquipment:IsShown());assert(ASXUI_HudReadout().equipment[1]==nil)')
+        self.run_lua('assert(not hudPrefs.build);hudCall("ASXUIHudEquipment1","OnEnter");assert(GameTooltip.title=="Native ring" and GameTooltip.right=="Rank 2" and GameTooltip.lines[1][1]=="Exact native tooltip" and GameTooltip.lines[2][1]=="+10 damage");view.available=false;hudTick();assert(hudPrefs.build and not ASXUIHudEquipment:IsShown());assert(ASXUI_HudReadout().equipment[1]==nil)')
     def test_toggle_restores_owned_anchors_and_preferences_but_preserves_external_changes(self):
         self.run_lua('ActionButton2:ClearAllPoints();ActionButton2:SetPoint("TOP",UIParent,"TOP",123,9);assert(ASXUI_ConfigureHud("off"));assert(not ASXUI_HudReadout().enabled and hudPrefs.build and hudPrefs.tally and MainMenuExpBar:GetWidth()==393);assert(ActionButton1.anchor[2]==MainMenuBarArtFrame);assert(ActionButton2.anchor[1]=="TOP" and ActionButton2.anchor[4]==123);assert(not ASXUI_ConfigureHud("bad"))')
     def test_missing_values_are_not_invented_and_retained_frames_do_not_allocate_each_tick(self):

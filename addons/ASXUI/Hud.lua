@@ -6,7 +6,7 @@ local originalXPLevel,appliedXPLevel
 local originalCharacterToggle,ownedCharacterToggle
 local owned,original,hiddenArt,widths={},{},{},{}
 local preferences={}
-local selected,pinned,visibleDefs,lastSession,lastClock
+local selected,pinned,visibleDefs,lastSession,lastClock,equipmentHovered
 local progress,target,elapsed,leaveAt=0,0,0,nil
 local font="Fonts\\FRIZQT__.TTF"
 local defs={
@@ -79,9 +79,16 @@ end
 local function close()
  pinned=nil;target=0;progress=0;leaveAt=nil;if buttons and buttons.stats then buttons.stats:SetChecked(false)end;if mask then mask:Hide()end
 end
-local function layoutStats(kind)
- selected=kind;visibleDefs={}
- for _,def in ipairs(allStats)do local value,zero=format(def,AZS_STATS);if value and not zero then table.insert(visibleDefs,def)end end
+local function statsView()
+ local stats={};for key,value in pairs(AZS_STATS or{})do stats[key]=value end
+ local view=ASX_GetState and ASX_GetState(1)
+ local common=view and view.available and view.data and view.data.economy
+ if common then for _,key in ipairs({"xp","gold"})do if finite(common[key])and common[key]>=0 then stats[key]=common[key]end end end
+ return stats
+end
+local function layoutStats(kind,stats)
+ selected=kind;visibleDefs={};stats=stats or statsView()
+ for _,def in ipairs(allStats)do local value,zero=format(def,stats);if value and not zero then table.insert(visibleDefs,def)end end
  local n=table.getn(visibleDefs);local h=18+math.ceil(n/4)*23
  -- The native backdrop's lower edge sits outside the clipped viewport.
  drawer:SetHeight(h+8);mask:SetHeight(h);mask.content:SetHeight(h*2)
@@ -97,7 +104,7 @@ local function layoutStats(kind)
   if def then
    local index=i-1
    row:ClearAllPoints();row:SetPoint("TOPLEFT",drawer,"TOPLEFT",12+math.mod(index,4)*((drawer:GetWidth()-24)/4),-12-math.floor(index/4)*23)
-   row:SetWidth((drawer:GetWidth()-24)/4-9);row.label:SetText(shortLabels[def[1]]or def[2]);row.fullLabel=def[2];row:Show()
+   row:SetWidth((drawer:GetWidth()-24)/4-9);row.label:SetText(shortLabels[def[1]]or def[2]);row.fullLabel=def[2];row.value:SetText(format(def,stats));row:Show()
   else row:Hide()end
  end
  drawer.visibleHeight=h
@@ -121,6 +128,11 @@ end
 local function hoverTip(owner,title,body)
  GameTooltip:SetOwner(owner,"ANCHOR_TOP");GameTooltip:SetText(title,1,1,1)
  if body and body~=""then GameTooltip:AddLine(body,1,.82,0,1)end;GameTooltip:Show()
+end
+local function setEquipment(button,item)
+ local old=button.item
+ if equipmentHovered==button and(not item or not old or old.name~=item.name or old.text~=item.text or old.rank~=item.rank)then GameTooltip:Hide();equipmentHovered=nil end
+ button.item=item
 end
 local function build()
  local bar,art,xp=MainMenuBar,MainMenuBarArtFrame,MainMenuExpBar
@@ -165,7 +177,19 @@ local function build()
   local b=CreateFrame("Button","ASXUIHudEquipment"..i,equipment);b:SetWidth(36);b:SetHeight(36);b:SetFrameLevel(equipment:GetFrameLevel());b:SetPoint("LEFT",equipment,"LEFT",(i-1)*44,0)
   b.icon=b:CreateTexture("ASXUIHudEquipmentIcon"..i,"ARTWORK");b.icon:SetWidth(32);b.icon:SetHeight(32);b.icon:SetPoint("CENTER",b,"CENTER",0,0)
   local rim=b:CreateTexture(nil,"OVERLAY");rim:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder");rim:SetTexCoord(0,.625,0,.625);rim:SetWidth(42);rim:SetHeight(42);rim:SetPoint("CENTER",b,"CENTER",0,0)
-  b:SetScript("OnEnter",function()if this.item then hoverTip(this,this.item.name,this.item.text)end end);b:SetScript("OnLeave",function()GameTooltip:Hide()end);table.insert(icons,b)
+  b:SetScript("OnEnter",function()
+   if not this.item then return end;equipmentHovered=this
+   GameTooltip:SetOwner(this,"ANCHOR_TOP");GameTooltip:ClearLines()
+   GameTooltip:AddDoubleLine(this.item.name,"Rank "..this.item.rank,1,.82,0,.7,.7,.7)
+   local body=(this.item.text or"").."\n";local start=1
+   while start<=string.len(body)do
+    local stop=string.find(body,"\n",start,true);if not stop then break end
+    local line=string.sub(body,start,stop-1);start=stop+1
+    local enchant=string.find(line,"^Enchantment:")or string.find(line,"^Active enchantment:")
+    GameTooltip:AddLine(line,enchant and .12 or 1,1,enchant and 0 or 1,true)
+   end
+   GameTooltip:Show()
+  end);b:SetScript("OnLeave",function()GameTooltip:Hide();equipmentHovered=nil end);table.insert(icons,b)
  end
  buttons={};for i,kind in ipairs({"stats"})do
   local b=CreateFrame("CheckButton","ASXUIHudStats",root);b:SetWidth(36);b:SetHeight(36);b:SetPoint("BOTTOMLEFT",root,"BOTTOMLEFT",403,4)
@@ -196,6 +220,7 @@ local function activate()
 end
 local function deactivate()
  local wasEnabled=enabled;enabled=false;if wasEnabled then restore()end;close();progress=0;selected=nil;visibleDefs=nil
+ if equipmentHovered then GameTooltip:Hide();equipmentHovered=nil end
  if root then root:Hide();mask:Hide();equipment:Hide();clock:Hide()end
 end
 local function refresh()
@@ -234,20 +259,20 @@ local function refresh()
     local maximum=category=="amulet"and 1 or 2
     if counts[category]>maximum then available=false;break end
     local slot=category=="amulet"and 1 or(category=="ring"and(1+counts[category])or(3+counts[category]))
-    display[slot]=texts[i]
+    display[slot]={name=texts[i].name,icon=texts[i].icon,text=texts[i].text,rank=item.rank}
    end
-  else display=texts end
+  else for i,item in ipairs(items)do local t=texts[i];display[i]={name=t.name,icon=t.icon,text=t.text,rank=item.rank}end end
   for i,b in ipairs(icons)do
-   b.item=available and display[i]or nil
+   setEquipment(b,available and display[i]or nil)
    local empty=i==1 and"Neck"or(i<=3 and"Finger"or"Trinket")
    local path=b.item and b.item.icon or("Interface\\PaperDoll\\UI-PaperDoll-Slot-"..empty)
    if not string.find(path,"^Interface[\\/]")then path="Interface\\Icons\\"..path end
    SetPortraitToTexture(b.icon:GetName(),path)
   end
   if available then equipment:Show()else equipment:Hide()end
- else for _,b in ipairs(icons)do b.item=nil end;equipment:Hide()end
+ else for _,b in ipairs(icons)do setEquipment(b,nil)end;equipment:Hide()end
  replacePart("build",available)
- if visibleDefs and selected then for i,def in ipairs(visibleDefs)do rows[i].value:SetText(format(def,AZS_STATS)or"—")end end
+ if visibleDefs and selected then layoutStats(selected,statsView())end
 end
 controller:RegisterEvent("ADDON_LOADED")
 controller:SetScript("OnEvent",function()if arg1=="ASXUI"then ready=true;db()end end)

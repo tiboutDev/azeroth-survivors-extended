@@ -252,3 +252,10 @@ and native order within each category. Legacy category-less providers retain the
 sequential display. The Supplies sale amount remains ASX-owned and uses the native
 small gold coin artwork, without converting whole ASX gold into another currency.
 Quest titles and individual entries have larger gaps than an entry and its timer.
+
+The native player arrow is also presented above ASX pins using the existing
+`Interface\Minimap\MinimapArrow` texture, native `AZS_RUN.px/py/pf`, and the same
+live minimap projection. It has no mouse handler and adds no memory contact.
+The original native arrow remains intact as the fallback; the foreground copy
+hides when metadata is unavailable, pins are disabled or the hero is outside a
+panned view. Its frame level is above every ASX event/cache/guardian pin.

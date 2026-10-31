@@ -17,6 +17,11 @@ impl Mem for Access<'_> {
     }
 }
 impl MutableMemory for Access<'_> {
+    fn owns_native_entry(&self, address:u64, expected:&[u8]) -> bool {
+        self.local.read(address as usize,expected.len()).is_ok_and(|actual|
+            crate::install::owns_entry_guard(address as usize,&actual,expected))
+    }
+
     fn write(&self, address: u64, bytes: &[u8]) -> Result<(), String> {
         self.local.write(address as usize, bytes)
     }

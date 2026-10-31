@@ -397,3 +397,12 @@ completion on both clients and continuous active API availability are separate
 requirements. The legacy forced-position fixture is not proof of interactive
 collectability. Its presentation delay derives from SUPPLY_SECONDS rather than
 an obsolete 60-second literal.
+
+### Native spending receipts
+
+The selected 0.131 client inlines coin-map writes for cache purchases and paid
+rerolls. ASX observes their completed native handlers in addition to the generic
+currency setter. It commits only native decreases to the shared wallet and leaves
+earned-gold totals unchanged. Seeing the same balance through both paths is
+idempotent. A concurrent/nested wallet change cannot be overwritten by a stale
+observation. Free and rejected rerolls retain native costs and availability.

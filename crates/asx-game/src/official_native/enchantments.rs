@@ -24,6 +24,19 @@ impl Adapter {
   for n in 0..count {let row=ptr+n*24;if q(m,row)?==base+self.ring_table()+u64::from(ring)*v::RING_STRIDE{let rank=u(m,row+20)?;let value=u(m,row+16)?;if rank==0||rank>100000||!f32::from_bits(value).is_finite(){return Err("Invalid native ring rank/value".into())}return Ok(Some((rank,value)))}}
   Ok(None)
  }
+ pub fn presented_ring(self,m:&dyn Mem,game:u64,slot:u32,guid:u64,icon:&str,rank:u32,base:u64)->Result<Option<u8>>{
+  let icon=icon.strip_prefix("Interface\\Icons\\").unwrap_or(icon);let mut found=None;
+  for ring in 0..9u8{
+   let definition=base+self.ring_table()+u64::from(ring)*v::RING_STRIDE;
+   if self.ring_definition(m,base,definition)?!=Some(ring){return Err("Ring definition identity changed".into())}
+   // Reviewed native &str icon at +0x20 (key +0, title +0x10).
+   let length=q(m,definition+0x28)?;if length==0||length>160{return Err("Invalid ring icon extent".into())}
+   if m.read(q(m,definition+0x20)?,length as usize)?==icon.as_bytes(){
+    if found.is_some(){return Err("Ambiguous ring icon".into())}
+    if self.ring_actor_owned(m,game,slot,guid,ring,base)?.is_some_and(|(owned,_)|owned==rank){found=Some(ring);}
+   }
+  }Ok(found)
+ }
  pub fn ring_actor_owned(self,m:&dyn Mem,game:u64,slot:u32,guid:u64,ring:u8,base:u64)->Result<Option<(u32,u32)>>{let row=self.support_row(m,game,slot)?;if q(m,row+self.row_field(row==game,0x478))?!=guid{return Err("Ring actor identity changed".into())}self.ring_owned(m,row,ring,base)}
  pub fn ring_card(self,m:&dyn Mem,base:u64,game:u64,output:u64)->Result<Option<RingChoice>>{
   if !self.supports_enchantments(){return Ok(None)}

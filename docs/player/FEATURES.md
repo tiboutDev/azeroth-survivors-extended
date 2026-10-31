@@ -238,8 +238,8 @@ amulet choice still applies. Each participant receives personal rewards.
 
 The goblin ignores taunts and cannot attack. Its health uses the first native
 guardian's base, with native time, difficulty and party scaling. Group pauses
-freeze its escape timer. A native announcement signals its arrival, and it
-receives the **skull marker when that icon is free**; manual marks are preserved.
+freeze its escape timer. A native announcement and encounter health bar signal
+its arrival. Goblins receive no automatic skull; manual markers remain available.
 Automatic player markers use the other seven icons. Goblin rewards do not remove
 ordinary boss or guardian rewards.
 
@@ -299,9 +299,10 @@ without restarting:
 /asxui widget crystals reset
 ```
 
-Widget names are `crystals`, `supplies`, `fortune` and `sayge`. Hiding a widget
+Widget names are `crystals`, `supplies`, `fortune`, `sayge`, `revive`, `loot` and `marks`. Hiding a widget
 only changes its display; it never disables rewards or changes trial progress.
-The native damage font is kept by default. The optional smaller number face
+The native damage font is kept by default; matching ASX reduces outgoing damage
+size by three. The optional alternative number face
 requires a client restart. See the [ASXUI guide](../../addons/ASXUI/README.md)
 for all commands and nameplate limits.
 
@@ -336,6 +337,8 @@ ASXUI adds one statistics button beside the native action bar. Hover to consult
 stats, click to keep the panel open, and click again to close. The character-sheet
 keybind also toggles this panel while the ASXUI HUD is enabled. All nonzero native
 stats fit into four columns, with short labels and complete terms on hover.
+Visible rows refresh while the panel is open. In coop, XP and gold show the
+effective ASX shared-award bonuses instead of only personal native values.
 The panel opens immediately in front of equipment, beneath the native XP artwork
 and foreground gryphons. The native XP texture and top border stay intact.
 
@@ -344,10 +347,10 @@ gold and the next cache price. Gold has a soft light behind its value when a cac
 is affordable. The native run clock and next-boss countdown sit below the strip.
 Five circular equipment positions show the amulet, two rings, then two trinkets.
 Native slot silhouettes remain for empty positions. Descriptions use the owner's
-native item text. `/asxui hud off` restores the native layout and previous visibility
+native item text, rank and any verified active ring enchantment. `/asxui hud off` restores the native layout and previous visibility
 preferences.
 
-The raised compact player health bar shows current HP, without a portrait or
+The raised compact player health bar shows current HP and character level, without a portrait or
 resources. Native buffs and debuffs stay above it, with durations above their
 icons. The old player and target frames are hidden while this HUD is enabled.
 Boss, awake-guardian and goblin bars show centered names without percentages.
@@ -361,7 +364,7 @@ remains visible. One Guardians quest lists living guardians and upcoming arrival
 an arrival countdown appears on its own indented line during the final 30 seconds.
 Quest headings and objective entries have separate spacing. Sayge has its own quest.
 Minimap pins cover all active guardians, with event and cache priorities to keep
-important markers above less urgent ones. Goblins no longer receive an automatic
+important markers above less urgent ones. The player arrow stays above ASX pins. Goblins no longer receive an automatic
 skull marker.
 
 Reward and ally panels use native parchment and border textures. Compact pickup
@@ -369,7 +372,9 @@ panels grow for wrapped text and stack without overlap. Numeric bonuses are gree
 their labels white, and duration appears on a separate line. Supplies sold for
 gold show the exact earned amount beside a native WoW gold coin. New boss-item
 drops use their real icons; already-collected items produce no loot popup. Marks
-keep their own notifications. Original chat messages remain available.
+gained together add up in one notification, with the latest native total.
+Fortune acquisition appears once per actual reward; a pause or new ritual does
+not replay the previous reward. Original chat messages remain available.
 
 Crystal Resonance and Sayge's Fortune appear as permanent-effect medallions beside
 health. Crystals show one total count on their icon; the tooltip lists accumulated

@@ -116,11 +116,17 @@ local function decode(wire)
                 local index=integer(a[7],0,32)
                 if red==nil or blue==nil or green==nil or yellow==nil or index==nil or result.members[id].crystals or red+blue+green+yellow==0 then return nil end
                 result.members[id].crystals={red=red,blue=blue,green=green,yellow=yellow,index=index,total=red+blue+green+yellow}
-            elseif a[1]=="B" and table.getn(a)==7 and result.members[id] then
+            elseif a[1]=="O" and table.getn(a)==4 and id==result.own and result.members[id] then
+                local xp,gold=integer(a[3],0,1e10),integer(a[4],0,1e10)
+                if not xp or not gold or result.members[id].economy then return nil end
+                result.members[id].economy={xp=xp/1000000,gold=gold/1000000}
+            elseif a[1]=="B" and (table.getn(a)==7 or table.getn(a)==8) and result.members[id] then
                 local boss,category,rarity=integer(a[3],1,4294967295),integer(a[4],0,4),integer(a[5],0,4)
                 local amount,best=integer(a[6],1,14000),integer(a[7],0,14000)
                 if result.members[id].blessing or not boss or not category or not rarity or not amount or not best then return nil end
-                result.members[id].blessing={boss=boss,category=category,rarity=rarity,amount=amount,best=best}
+                local receipt=a[8]and integer(a[8],1,1e9)or nil
+                if a[8]and not receipt then return nil end
+                result.members[id].blessing={boss=boss,category=category,rarity=rarity,amount=amount,best=best,event=receipt}
             elseif a[1]=="R" and (table.getn(a)==5 or table.getn(a)==6) and result.members[id] then
                 local event,held,inside=integer(a[3],1,4294967295),integer(a[4],0,2000),integer(a[5],0,1)
                 local allInside;if table.getn(a)==6 then allInside=integer(a[6],0,1)end
@@ -642,10 +648,10 @@ local function apiState()
     local own=allowed and supplyOwner()or nil
     local input=phase..":"..tostring(own~=nil)..":"..tostring(AZS_RUN_UPDATED)..":"..tostring(modelWire)
     if apiCache and input==apiInput then return apiCache end
-    local state={api={major=1,minor=6},available=own~=nil,phase=phase,data={},texts={}}
+    local state={api={major=1,minor=7},available=own~=nil,phase=phase,data={},texts={}}
     if own then
         state.session={epoch=model.epoch,recipientGUID=model.own}
-        state.data={crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
+        state.data={economy=apiCopy(own.economy),crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
         state.data.loot={};local lootTexts={}
         for _,drop in ipairs(own.loot or{})do
             table.insert(state.data.loot,{event=drop.event,rarity=drop.rarity,isNew=drop.isNew})
@@ -697,7 +703,7 @@ local function apiState()
     state.updatedAt=own and modelTime or nil
     apiCache=state;apiInput=input;return state
 end
-function ASX_GetAPIVersion()return 1,6 end
+function ASX_GetAPIVersion()return 1,7 end
 function ASX_GetState(major)
     if major~=nil and major~=1 then return nil,"unsupported_version"end
     return apiCopy(apiState())

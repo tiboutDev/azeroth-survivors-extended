@@ -33,6 +33,10 @@ class EventTests(unittest.TestCase):
         self.run_lua('local f=objects.ASXSupplyDiscoveryToast;assert(f:GetWidth()==320 and f:GetHeight()==80 and f.icon:GetWidth()==32);function f.title:GetStringHeight()return 14 end;function f.reward:GetStringHeight()return 36 end;function f.note:GetStringHeight()return 28 end;tick();assert(f:GetHeight()==110);assert(objects.ASXDarkmoonBlessingToast.anchor[5]==f.anchor[5]-110-12)')
     def test_fortune_does_not_replay_on_missing_data_new_epoch_or_new_trial(self):
         self.run_lua('now=now+10;tick();assert(not objects.ASXDarkmoonBlessingToast.shown);local getter=ASX_GetState;ASX_GetState=nil;tick();ASX_GetState=getter;view.epoch="2";view.owner.ritual.event=3;tick();assert(not objects.ASXDarkmoonBlessingToast.shown);view.blessing.boss=2;tick();assert(objects.ASXDarkmoonBlessingToast.shown)')
+    def test_fortune_popup_is_not_rearmed_by_choice_or_transient_clock_rollback(self):
+        self.run_lua('phase="choosing";for i=1,40 do tick()end;phase="playing";tick();assert(not objects.ASXDarkmoonBlessingToast.shown);function AZS_GetRunTime()return 0 end;tick();assert(not objects.ASXDarkmoonBlessingToast.shown);view.owner.ritual.event=99;tick();assert(not objects.ASXDarkmoonBlessingToast.shown)')
+    def test_fortune_receipt_announces_identical_rewards_once_and_defers_new_receipts(self):
+        self.run_lua('view.blessing.event=101;tick();now=now+8;tick();assert(not objects.ASXDarkmoonBlessingToast.shown);view.blessing.best=9000;view.epoch="2";tick();assert(not objects.ASXDarkmoonBlessingToast.shown);phase="choosing";view.blessing.event=102;tick();phase="playing";tick();assert(objects.ASXDarkmoonBlessingToast.shown);now=now+8;tick();assert(not objects.ASXDarkmoonBlessingToast.shown)')
     def test_old_absolute_positions_migrate_to_relative_offsets(self):
         self.run_lua('ASXUIDB={widgets={supplies={x=20,y=-180},fortune={y=-260},sayge={y=-75}}};tick();assert(ASXUIDB.widgetLayoutVersion==2 and ASXUIDB.widgets.supplies.y==-40 and ASXUIDB.widgets.fortune.y==0 and ASXUIDB.widgets.sayge.y==0)')
     def test_invalid_inputs_do_not_change_valid_preferences(self):

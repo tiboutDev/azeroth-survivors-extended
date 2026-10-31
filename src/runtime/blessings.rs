@@ -13,6 +13,7 @@ struct State {
     pending: BTreeSet<u64>,
     next_event: u64,
     rng: u64,
+    receipts: std::collections::BTreeMap<(u32,u64),u64>,
 }
 static STATE: std::sync::Mutex<Option<State>> = std::sync::Mutex::new(None);
 pub static ACTIVE: AtomicBool = AtomicBool::new(false);
@@ -48,6 +49,7 @@ pub fn observe(game: u64, p: Option<&asx_game::official::PartyObservation>) {
                 .map(|a| (a.slot, a.guid))
                 .collect::<Vec<_>>(),
         );
+        s.receipts.retain(|id,_|s.rules.actors.contains_key(id));
         ACTIVE.store(!s.rules.actors.is_empty(), Ordering::Release);
     }
 }
@@ -57,6 +59,12 @@ pub fn view(slot: u32, guid: u64) -> Option<Blessing> {
         .ok()
         .and_then(|s| s.as_ref()?.rules.actors.get(&(slot, guid)).copied())
 }
+static NEXT_RECEIPT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+fn record_receipt(s:&mut State,id:(u32,u64)){
+    let sequence=NEXT_RECEIPT.fetch_add(1,Ordering::Relaxed);
+    if sequence<=1_000_000_000{s.receipts.insert(id,sequence);}else{s.receipts.remove(&id);}
+}
+pub(super) fn receipt(slot:u32,guid:u64)->Option<u64>{STATE.lock().ok().and_then(|s|s.as_ref()?.receipts.get(&(slot,guid)).copied())}
 pub fn personal(slot: u32, guid: u64, kind: u8) -> f32 {
     view(slot, guid)
         .filter(|b| b.category == kind)
@@ -119,6 +127,7 @@ pub fn finish(r: &dyn Services, game: u64) {
                         );
                     }
                 }
+                for id in &ids {record_receipt(s,*id);}
                 for (id, b) in &s.rules.actors {
                     r.info(&format!("blessing granted: event={event} slot={} guid={} boss={} category={} rarity={} amount={}",id.0,id.1,b.boss,b.category,b.rarity,b.amount));
                 }
@@ -148,11 +157,11 @@ pub(super) fn encounter(game:u64){
     if let Ok(mut guard)=STATE.lock(){if let Some(s)=guard.as_mut().filter(|s|s.game==game){if s.pending.len()<256{s.next_event+=1;s.pending.insert(s.next_event);}}}
 }
 pub(super) fn ritual_rewards(r:&dyn Services,game:u64,rewards:&[((u32,u64),Blessing)])->Result<(),String>{
-    {let mut guard=STATE.lock().map_err(|_|"Fortune state unavailable")?;let s=guard.as_mut().filter(|s|s.game==game).ok_or("Fortune run changed")?;for(id,b)in rewards{s.rules.actors.insert(*id,*b);}}
+    {let mut guard=STATE.lock().map_err(|_|"Fortune state unavailable")?;let s=guard.as_mut().filter(|s|s.game==game).ok_or("Fortune run changed")?;for(id,b)in rewards{s.rules.actors.insert(*id,*b);record_receipt(s,*id);}}
     ACTIVE.store(true,Ordering::Release);r.refresh_blessings(game,&rewards.iter().map(|(id,_)|*id).collect::<Vec<_>>())?;Ok(())
 }
 pub(super) fn ritual_reward(r:&dyn Services,game:u64,owner:u64,b:Blessing)->Result<(),String>{
-    {let mut guard=STATE.lock().map_err(|_|"Fortune state unavailable")?;let s=guard.as_mut().filter(|s|s.game==game).ok_or("Fortune run changed")?;s.rules.actors.insert((0,owner),b);}
+    {let mut guard=STATE.lock().map_err(|_|"Fortune state unavailable")?;let s=guard.as_mut().filter(|s|s.game==game).ok_or("Fortune run changed")?;s.rules.actors.insert((0,owner),b);record_receipt(s,(0,owner));}
     ACTIVE.store(true,Ordering::Release);r.refresh_blessings(game,&[(0,owner)])?;
     r.info(&format!("ritual fortune: owner={owner} stage={} category={} amount={}",b.boss,b.category,b.amount));Ok(())
 }
