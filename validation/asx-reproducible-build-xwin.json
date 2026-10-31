@@ -3,8 +3,8 @@
   "artifact": {
     "file": "avrt.dll",
     "game_version": "0.131.0",
-    "sha256": "baab84d20495fd990715320904e6a285a4fd8c59097adac6d2b4dd9e806eaf29",
-    "size_bytes": 1998336,
+    "sha256": "7a1d9e3c67afdf34226c5e7b29c2038d536a5f7fb0104751fea6ee6dcc801441",
+    "size_bytes": 2039808,
     "target": "x86_64-pc-windows-msvc"
   },
   "build_recipe": {
@@ -41,18 +41,18 @@
       "-Clink-arg=/DEBUG:NONE",
       "-Clink-arg=/TIMESTAMP:1"
     ],
-    "source_fingerprint_sha256": "b94f2ab2b2b846a0fe397263de2c0d9a2a1a8e12cefaee5d195d1d1a50541b71",
+    "source_fingerprint_sha256": "fe87f285e911d690893d282452ae9f10c84d65a13fc0cb0648b860a4b90ecd6f",
     "test_hooks": "disabled-and-checked-absent",
     "tool_versions": {
       "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
       "cargo_xwin": "cargo-xwin-xwin 0.23.1",
       "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
-      "pefile": "2024.8.26",
-      "python": "3.14.7",
+      "pefile": "2023.2.7",
+      "python": "3.12.3",
       "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
     }
   },
-  "build_recipe_sha256": "d8a5269bedebc8bfdef1cc8e43a093ed8f83fa9a0576ceb09a6222cf77d6e677",
+  "build_recipe_sha256": "59419ae44ae6371507cbcd572136322de1d0a28668a3a8c45e249a25fb8a8d7a",
   "builder": "xwin-msvc",
   "builder_script": "tools/build/asx_release_binary.py",
   "cargo_lock_sha256": "d52b1d4fd2c92c7e50312cf09be54cfd79954d28060c45b85bc455fbe1536bbf",
@@ -198,8 +198,8 @@
       },
       {
         "path": "crates/asx-game/src/official.rs",
-        "sha256": "e3ece3a110febd388cbcff32cbeb3deb3baca4404e5066b4515aee2ab398c41d",
-        "size_bytes": 65486
+        "sha256": "f5127a7b4116c50b8dde427087cedf52befed3469c68c5a660a416f46e471980",
+        "size_bytes": 65951
       },
       {
         "path": "crates/asx-game/src/official_native.rs",
@@ -243,8 +243,8 @@
       },
       {
         "path": "crates/asx-game/src/official_native/enchantments.rs",
-        "sha256": "d9c51975ac607b61b5cca87bef6eb5934203760614d024d21e4aa369be87922c",
-        "size_bytes": 5784
+        "sha256": "eb7020d6ba6d5862b23926b7de95d5ccd44a916a2d39205ed5978b786aac22cd",
+        "size_bytes": 6638
       },
       {
         "path": "crates/asx-game/src/official_native/event_placement.rs",
@@ -348,8 +348,8 @@
       },
       {
         "path": "crates/asx-game/src/official_native/wallet.rs",
-        "sha256": "d5cdad53cc57a28e91408ddd1bb2ef3e576158b591be05f684f324d67353fe12",
-        "size_bytes": 17921
+        "sha256": "62d110f5812085a10e6f8cc27579d85c50dbbdf7e347e78c54cc4bf65b295985",
+        "size_bytes": 18207
       },
       {
         "path": "crates/asx-game/src/official_native/world_events.rs",
@@ -523,8 +523,8 @@
       },
       {
         "path": "native-ui/official-party.lua",
-        "sha256": "5f835477df54aed88a57af13b628b2b94d3e8f0cd840023fb73b2b4fd2c29238",
-        "size_bytes": 41708
+        "sha256": "1876b1dac4f22b19a148a4484d6115a8d92cb727dcad0146860ab5c4f06e9e40",
+        "size_bytes": 42230
       },
       {
         "path": "resources/windows/avrt-exports.txt",
@@ -578,8 +578,8 @@
       },
       {
         "path": "src/presentation/pause.rs",
-        "sha256": "10fbac361e61e56215ecbbe3f3dbd81b6f0d84892d61a5b5bef1e38838920480",
-        "size_bytes": 14659
+        "sha256": "06952e7a4facf9be018009b3147dcf84927f3f50e92b1d0e4427a6197174d822",
+        "size_bytes": 15832
       },
       {
         "path": "src/proc.rs",
@@ -598,8 +598,8 @@
       },
       {
         "path": "src/runtime/blessings.rs",
-        "sha256": "aa1b1c935817329675c5465e35c2d2f461831944ee99c21ecedb777b0d39d5b6",
-        "size_bytes": 8098
+        "sha256": "2d159d69b8c51f68aa9d6a24017a3f8de91b46399a23e621fcfed7ff04dbad02",
+        "size_bytes": 8754
       },
       {
         "path": "src/runtime/blessings/services.rs",
@@ -613,8 +613,8 @@
       },
       {
         "path": "src/runtime/blessings/tests.rs",
-        "sha256": "08598b1269a5c5a32fdd89f0326369526f98da12e2fb173d5c166cf2866fa0df",
-        "size_bytes": 1912
+        "sha256": "b53562fc7c39c589dd15a470c7c0093ea0580d08edb560a4e68ae307cb23345a",
+        "size_bytes": 2439
       },
       {
         "path": "src/runtime/bonus_catalog.rs",
@@ -633,8 +633,8 @@
       },
       {
         "path": "src/runtime/bootstrap.rs",
-        "sha256": "9399eaafdee2aa1462ca22e31e75f4a2a56c5896f45357b91231347a193d2ed1",
-        "size_bytes": 10798
+        "sha256": "8df5a5a9affac9f9316e2d18fc9c2a1e47a1721642093aa8c4d3d3d3c925a343",
+        "size_bytes": 11029
       },
       {
         "path": "src/runtime/combat.rs",
@@ -678,8 +678,8 @@
       },
       {
         "path": "src/runtime/enchantments.rs",
-        "sha256": "827feab483bfc3f1b15dd93103708fdef14f184f2113b1504ba56a6f9b1ace0e",
-        "size_bytes": 12096
+        "sha256": "81c002e42cb4b0f79b76a52a2ff53c09102652df4e5ec7d255526da7d53dabfd",
+        "size_bytes": 12389
       },
       {
         "path": "src/runtime/encounters.rs",
@@ -728,8 +728,8 @@
       },
       {
         "path": "src/runtime/io.rs",
-        "sha256": "31e26210f920434979cb621884e47ba9d752241535c2a1ffa0462308dea7f535",
-        "size_bytes": 12124
+        "sha256": "d85f82c01f4eaaff25a41e7958d4328c8f0d12f4559b45320fe155319aacea1d",
+        "size_bytes": 12359
       },
       {
         "path": "src/runtime/lifecycle.rs",
@@ -768,8 +768,8 @@
       },
       {
         "path": "src/runtime/party_ui.rs",
-        "sha256": "64b251516cdc6c26295c12efe99b4ddf57566afad20058073b0ada65a4d178c6",
-        "size_bytes": 25956
+        "sha256": "77ee5b54def5176e233fbca37d6e1090ecf027b4456a741fd288b84ffa17a042",
+        "size_bytes": 30656
       },
       {
         "path": "src/runtime/pause.rs",
@@ -888,8 +888,8 @@
       },
       {
         "path": "src/runtime/wallet.rs",
-        "sha256": "691b2a04561a8e3028ad261bff375f5c3d28101f720d0144dc98ba7f1dcd2eeb",
-        "size_bytes": 21273
+        "sha256": "ab6519241e04cc84a8a1bb447e8f8e470f8cdaab767c4a09e9ad4623e8285b65",
+        "size_bytes": 25216
       },
       {
         "path": "src/runtime/world_events.rs",
@@ -903,13 +903,13 @@
       },
       {
         "path": "src/runtime/xp_hooks.rs",
-        "sha256": "03d3963260e3ce8f1523f2a2ca65cacc5676534ff31841d98843132649b042e3",
-        "size_bytes": 3759
+        "sha256": "70d7b035af97219ab4e6346e32bfaf018641a7159948051a36a7e3b36aba5e76",
+        "size_bytes": 3770
       },
       {
         "path": "src/runtime/xp_hooks/services.rs",
-        "sha256": "b9124d92c2894abad8100c7169ec1875e6d6abc32bea05483e1ca58d12fd3db6",
-        "size_bytes": 2349
+        "sha256": "a4ddc3a5852ca50f61abfa650c718695bab38bc6ff52b73d086451623faff4e6",
+        "size_bytes": 2476
       },
       {
         "path": "src/runtime/xp_hooks/tests.rs",
@@ -972,25 +972,25 @@
         "size_bytes": 2003
       }
     ],
-    "sha256": "b94f2ab2b2b846a0fe397263de2c0d9a2a1a8e12cefaee5d195d1d1a50541b71"
+    "sha256": "fe87f285e911d690893d282452ae9f10c84d65a13fc0cb0648b860a4b90ecd6f"
   },
   "status": "technically-reviewed-local-reference",
   "technical_review": {
-    "human_approval": "Explicit user approval in release preparation conversation on 2026-10-31",
+    "human_approval": "Explicit user approval of this exact hash for 0.131.0-asx.3 in release preparation conversation on 2026-10-31",
     "not_established": [
       "Cross-host reproduction",
       "Windows-native reproduction",
       "Publication authorization"
     ],
-    "result": "Two independent identical normal builds, portable/native checks, normal solo/coop and exact signed archive trials passed",
+    "result": "Two independent identical normal builds; full portable, explicit Lua, Windows runtime and normal solo/coop tests; exact signed archive CMD installation/coop/uninstall passed",
     "scope": "Same local WSL/xwin environment"
   },
   "tool_versions": {
     "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
     "cargo_xwin": "cargo-xwin-xwin 0.23.1",
     "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
-    "pefile": "2024.8.26",
-    "python": "3.14.7",
+    "pefile": "2023.2.7",
+    "python": "3.12.3",
     "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
   },
   "verification": {
