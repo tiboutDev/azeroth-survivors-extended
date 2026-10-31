@@ -283,7 +283,8 @@ restoration, anchor cycles and intervening native layout changes.
 mode. Source staging must include the exact diagnostic artifact/receipt, retained
 Lua and ASXUI. The fixture creates all four native displays with actual scene
 packets. With two clients, it first aligns the owned host to the group center
-so both actors can actually reach the five nearby crystals at the production
+after the initial native spawn/choice transition (at least five simulation
+seconds), so both actors can actually reach the five nearby crystals at the production
 pickup radius. It then moves only the owned host to claim an outlying witness.
 The guest remains out of range of that witness to exercise personal claims and
 shared expiry. Native simulation and grants remain authoritative throughout.
@@ -292,3 +293,9 @@ when this `test-hooks` flag is absent. Inspect actual native stat values, API
 counts, aura index/texture/permanence and tooltip, plus creation/removal logs.
 No marker may be emitted for a crystal. Normal DLL/release qualification remains
 a separate scope; this trial uses disposable profiles and at most two clients.
+
+`ASX_API_TRIAL_CRYSTAL_POPUP=1` additionally requires visible native crystal
+notification frames, verbatim ASX title/effect/note and multiple observed colors
+on each client. Its sparse screenshot cadence is seven seconds; notification
+lifetime remains the production three seconds. Missing frames/texts fail the
+assessor. The fixture never substitutes API data or extends popup duration.

@@ -59,6 +59,18 @@ class HygieneGateExceptions(unittest.TestCase):
         self.assertFalse(GATE.forbidden_binary(relative, ".res", raw))
         self.assertTrue(GATE.forbidden_binary(relative, ".res", raw + b"changed"))
 
+    def test_only_reviewed_ofl_font_bytes_and_license_are_allowed(self):
+        raw = (ROOT / GATE.ASXUI_FONT_PATH).read_bytes()
+        self.assertFalse(GATE.forbidden_binary(GATE.ASXUI_FONT_PATH, ".ttf", raw))
+        self.assertTrue(GATE.forbidden_binary(GATE.ASXUI_FONT_PATH, ".ttf", raw + b"changed"))
+        self.assertTrue(GATE.forbidden_binary("other/font.ttf", ".ttf", raw))
+        with tempfile.TemporaryDirectory() as directory, patch.object(GATE, "ROOT", Path(directory)):
+            self.assertTrue(GATE.forbidden_binary(GATE.ASXUI_FONT_PATH, ".ttf", raw))
+            license_path = Path(directory) / GATE.ASXUI_FONT_LICENSE
+            license_path.parent.mkdir(parents=True)
+            license_path.write_bytes(b"unreviewed license")
+            self.assertTrue(GATE.forbidden_binary(GATE.ASXUI_FONT_PATH, ".ttf", raw))
+
     def test_game_asset_payloads_remain_forbidden(self):
         extension = "mp" + "q"
         self.assertTrue(GATE.forbidden_binary("Data/patch." + extension, "." + extension))

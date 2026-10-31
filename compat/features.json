@@ -229,7 +229,7 @@
     },
     {
       "id": "ASX-22",
-      "contract": "Crystal Resonance replaces amulet gems: independent map-wide UnGoro crystals, free equal color draws, individual once-only claims, one shared 60-second simulation deadline after the first claim, common removal after all eligible players collect or timeout, personal additive run-local bonuses and one native permanent buff with cumulative tooltip. No minimap pins. Prototype Red +10% damage, Blue +5% cooldown recovery, Green +15% maximum health, Yellow +10% area of effect; 4\u20136 random opportunities in the normal-run window and continued endless generation.",
+      "contract": "Crystal Resonance replaces amulet gems: independent map-wide UnGoro crystals, free equal color draws, individual once-only claims, one shared 60-second simulation deadline after the first claim, common removal after all eligible players collect or timeout, personal additive run-local bonuses and one native permanent buff with cumulative tooltip. No minimap pins. Prototype Red +10% damage, Blue +5% cooldown recovery, Green +15% maximum health, Yellow +10% area of effect; 4–6 random opportunities in the normal-run window and continued endless generation. ASXUI announces newly observed personal pickups with ASX-authored color/effect text; restored totals are not replayed.",
       "mode": "Both",
       "reference": "[Contract](FEATURE-RULES.md)",
       "native_domains": [
@@ -300,7 +300,7 @@
     },
     {
       "id": "ASX-28",
-      "contract": "Optional Sayge\u2019s Trial: native encounter trigger only between bosses, native ground rune, decorative Classic Sayge and candles, map-wide placement with flatness preference and walkable fallback/ASXUI minimap pin, persistent unfinished scene with stable identity and encounter-upgraded reward, cumulative presence that suspends until every active participant returns, explicit collective-wait presentation, bounded randomized power, automatic Fortune replacement and ASXUI progress UI with configurable position, scale, opacity and visibility, shown only during native circle presence. Host-owned cooperative scene and shared progress require every active participant inside; personal Fortunes replace cooperative boss grants, with strongest XP/gold contributions preserved.",
+      "contract": "Optional Sayge’s Trial: native encounter trigger only between bosses, native ground rune, decorative Classic Sayge and candles, map-wide placement with flatness preference and walkable fallback/ASXUI minimap pin, persistent unfinished scene with stable identity and encounter-upgraded reward, cumulative presence that suspends until every active participant returns, explicit collective-wait presentation, bounded randomized power, automatic Fortune replacement and ASXUI progress UI with configurable position, scale, opacity and visibility, shown only during native circle presence. Host-owned cooperative scene and shared progress require every active participant inside; personal Fortunes replace cooperative boss grants, with strongest XP/gold contributions preserved.",
       "mode": "Solo / Coop",
       "reference": "[Contract](FEATURE-RULES.md)",
       "native_domains": [

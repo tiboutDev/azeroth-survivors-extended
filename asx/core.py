@@ -5,6 +5,14 @@ from pathlib import Path,PurePosixPath
 PRODUCT="azeroth-survivors-extended"
 MANIFEST="ASX/manifest.json"
 STATE="ASX/State/install.json"
+ASXUI_FILES=('ASXUI.toc', 'ASXUI.lua', 'Minimap.lua', 'Events.lua', 'Buffs.lua', 'Fonts/ASXUI-Numbers.ttf', 'Fonts/OFL.txt', 'LICENSE', 'README.md')
+ASXUI_SOURCE="ASX/Interface/ASXUI/"
+ASXUI_TARGET="benilla-config/AddOns/ASXUI/"
+def ui_target(name):return name in {ASXUI_TARGET+n for n in ASXUI_FILES}
+def projections(m):
+    result={"avrt.dll":"ASX/Bin/avrt.dll","benilla-config/AddOns/ASX/ASX.toc":"ASX/Interface/ASX.toc","benilla-config/AddOns/ASX/Presentation.lua":"ASX/Interface/Presentation.lua"}
+    result.update({ASXUI_TARGET+n:ASXUI_SOURCE+n for n in ASXUI_FILES if ASXUI_SOURCE+n in m["files"]})
+    return result
 PRIVATE={"state","logs","backups","updates","settings"}
 RESERVED={"con","prn","aux","nul",*(f"com{i}" for i in range(1,10)),*(f"lpt{i}" for i in range(1,10))}
 VERSION=re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
@@ -34,7 +42,7 @@ def payload_name(name):
     if name.lower().endswith((".mpq",".pem",".key",".log",".jsonl"))or "characters.txt"in name.lower()or "azerothsurvivors.exe"in name.lower():raise ValueError("Native or private files cannot be ASX payloads")
     return name
 def owned_name(name):
-    if name=="avrt.dll"or name in("benilla-config/AddOns/ASX/ASX.toc","benilla-config/AddOns/ASX/Presentation.lua"):return name
+    if ui_target(name)or name=="avrt.dll"or name in("benilla-config/AddOns/ASX/ASX.toc","benilla-config/AddOns/ASX/Presentation.lua"):return name
     return payload_name(name)
 def path(root,name):
     root=Path(root).resolve();out=root.joinpath(*name.split("/"))
@@ -100,6 +108,8 @@ def validate(m,reviewed=True):
     if total>256<<20:raise ValueError("ASX payload too large")
     required={"start-asx.cmd","README-ASX.txt","ASX/Bin/avrt.dll","ASX/Client/launch.py","ASX/Client/supported-games.json","ASX/Interface/ASX.toc","ASX/Interface/Presentation.lua","ASX/Defaults/channel.json"}
     if not required<=files.keys():raise ValueError("Incomplete ASX distribution")
+    ui_files={n for n in files if n.startswith(ASXUI_SOURCE)}
+    if ui_files and ui_files!={ASXUI_SOURCE+n for n in ASXUI_FILES}:raise ValueError("Incomplete or unknown bundled ASXUI inventory")
     return m
 def manifest(root):return validate(get(root,MANIFEST,{}))
 def inspect(root,m=None):
@@ -112,7 +122,7 @@ def inspect(root,m=None):
             if not path(root,name).is_file():raise ValueError("Required native game file missing: "+name)
     return actual
 def file_role(name):
-    if name in ("README-ASX.txt","ASX/Client/LICENSE"):return "documentation"
+    if name in ("README-ASX.txt","ASX/Client/LICENSE") or any(name==prefix+suffix for prefix in (ASXUI_SOURCE,ASXUI_TARGET)for suffix in ("README.md","LICENSE","Fonts/OFL.txt")):return "documentation"
     if name=="ASX/Defaults/channel.json":return "update-metadata"
     if name=="start-asx.cmd":return "bootstrap"
     return "critical"
@@ -128,7 +138,8 @@ def sources(root,m,tolerant=False):
     return out
 def projection(data,m):
     out=dict(data);out[MANIFEST]=encoded(m)
-    for target,source in (("avrt.dll","ASX/Bin/avrt.dll"),("benilla-config/AddOns/ASX/ASX.toc","ASX/Interface/ASX.toc"),("benilla-config/AddOns/ASX/Presentation.lua","ASX/Interface/Presentation.lua")):out[target]=data[source]
+    for target,source in projections(m).items():
+        if source in data:out[target]=data[source]
     return out
 def adopt(root,m,data):
     """Record the explicitly extracted payload without activating an unsupported game."""
@@ -137,7 +148,9 @@ def adopt(root,m,data):
     for name,b in projection(data,m).items():
         target=path(root,name)
         if name not in owned and target.exists():
-            if sha(target)!=digest(b):raise ValueError("Existing loader/addon belongs to another installation; preserved: "+name)
+            if sha(target)!=digest(b):
+                if ui_target(name):continue # Migration needs explicit consent in apply, never silent adoption.
+                raise ValueError("Existing loader/addon belongs to another installation; preserved: "+name)
             owned[name]=digest(b)
     put(root,STATE,{"schema":1,"version":m["version"],"owned":owned,"game":m["game"]})
 def installed(root):
@@ -197,7 +210,7 @@ def apply(root,m,data,manual=False,fault=lambda n:None,launch=False,trusted=Fals
         if len(b)!=m["files"][name]["size"]or digest(b)!=m["files"][name]["sha256"]:raise ValueError("ASX package file failed verification: "+name)
     new=projection(data,m);previous=get(root,STATE);old=installed(root)["owned"]
     if launch:
-        new={n:b for n,b in new.items() if file_role(n)=="critical"}
+        new={n:b for n,b in new.items() if file_role(n)=="critical"or(ui_target(n)and not path(root,n).exists())}
     preserved={};conflicts=[]
     for name in set(old)|set(new):
         target=path(root,owned_name(name))
@@ -215,7 +228,7 @@ def apply(root,m,data,manual=False,fault=lambda n:None,launch=False,trusted=Fals
         elif expected!=current:
             # Lost receipts can be recovered for internal ASX files with consent,
             # never by adopting an unknown root loader or projected addon.
-            if repair and name.startswith("ASX/") and approve is not None:conflicts.append(name)
+            if (repair and name.startswith("ASX/") or ui_target(name)and file_role(name)=="critical") and approve is not None:conflicts.append(name)
             elif file_role(name)!="critical":
                 preserved[name]=current
                 if repair and file_role(name)=="documentation":new.pop(name,None)

@@ -83,6 +83,14 @@ f:SetScript("OnUpdate",function()
         end
         out.crystalBuff=v
     end
+    local popup=getglobal("ASXCrystalDiscoveryToast")
+    if popup then
+        local v={shown=popup:IsShown(),title=popup.title:GetText(),reward=popup.reward:GetText(),note=popup.note:GetText(),alpha=popup:GetAlpha(),scale=popup:GetScale(),verbatim=false}
+        for _,text in pairs(nextState.texts.crystals and nextState.texts.crystals.pickups or{})do
+            if v.title==text.title and v.reward==text.reward and v.note==text.note then v.verbatim=true end
+        end
+        out.crystalPopup=v
+    end
     if ASX_WOW_VISUAL_AUDIT then
         local v={};local right,top=-1e9,-1e9;local fortune,slot
         for n=0,31 do local button=getglobal("BuffButton"..n)

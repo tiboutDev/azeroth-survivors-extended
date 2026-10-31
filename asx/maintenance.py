@@ -15,7 +15,7 @@ def diagnose(root):
     except (ValueError,OSError,KeyError,TypeError) as error:issue(core.MANIFEST,"critical",str(error))
     if manifest:
         inventory={**manifest["files"]}
-        for target,source in (("avrt.dll","ASX/Bin/avrt.dll"),("benilla-config/AddOns/ASX/ASX.toc","ASX/Interface/ASX.toc"),("benilla-config/AddOns/ASX/Presentation.lua","ASX/Interface/Presentation.lua")):
+        for target,source in core.projections(manifest).items():
             inventory[target]=manifest["files"][source]
         for name,spec in inventory.items():
             try:

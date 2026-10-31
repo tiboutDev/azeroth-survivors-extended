@@ -178,7 +178,8 @@
     "ASX-22": {
       "profiles": [
         "crystals",
-        "official-party-ui"
+        "official-party-ui",
+        "asxui"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },

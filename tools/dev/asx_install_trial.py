@@ -48,7 +48,7 @@ def run(seconds,game_version=VERSION,package_path=None):
             cmd=[str(python),"-I","-B",str(script),"--check","--offline"]
             result=subprocess.run(cmd,cwd=folder,env=env,capture_output=True,timeout=40)
             (output/f"install-{slot}.log").write_bytes(result.stdout+result.stderr)
-            checks[f"install_{slot}"]=result.returncode==0 and before==(sha(save/"characters.txt"),sha(home/"config.toml")) and sha(folder/"avrt.dll")==proof["dll_sha256"]
+            checks[f"install_{slot}"]=result.returncode==1 and before==(sha(save/"characters.txt"),sha(home/"config.toml")) and not(folder/"avrt.dll").exists()
             if not checks[f"install_{slot}"]:raise RuntimeError("Packaged Windows installation failed; see "+str(output))
         # Same native profile, direct EXE: proxy forwards, ASX stays inactive.
         folder=folders[0];env=dict(environments[0],WOW_ROGUE_AUTOPICK="1",WOW_ROGUE_AUTOSTART="1",WOW_ROGUE_AUTOPLAY="3600")
@@ -76,6 +76,10 @@ def run(seconds,game_version=VERSION,package_path=None):
         from script_diagnostics import assess
         for slot,folder in enumerate(folders,1):
             logs=list((folder/"ASX/Logs").glob("*/game-output.log"));text=logs[0].read_text(errors="replace")if logs else"";native.append(text)
+            with zipfile.ZipFile(package)as z:
+                bundle={name[len("ASX/Interface/ASXUI/"):]:z.read(name)for name in z.namelist()if name.startswith("ASX/Interface/ASXUI/")}
+            checks[f"bundled_ui_{slot}"]=bool(bundle)and all((folder/"benilla-config/AddOns/ASXUI"/name).read_bytes()==data for name,data in bundle.items())
+            checks[f"projected_dll_{slot}"]=sha(folder/"avrt.dll")==proof["dll_sha256"]
             checks[f"active_{slot}"]=bool(list((folder/"ASX/Logs").glob("*/ready.json"))) and "ASX is active"in(output/f"launcher-{slot}.log").read_text(errors="replace")
             checks[f"native_joined_{slot}"]='"state":"joined"'in text
             checks[f"native_profile_{slot}"]=("uiwarrior","uipaladin","uidruid")[slot-1]in text.lower()
@@ -86,7 +90,9 @@ def run(seconds,game_version=VERSION,package_path=None):
         for p in children[1:]:p.wait(timeout=20)
         checks["gameplay_started"]=all('"type":"start"'in text and '"type":"choices"'in text and '"type":"resume"'in text for text in native)
         # Real self-uninstall on a disposable installation, preserve user files.
-        folder=folders[-1];unknown=folder/"ASX/Client/user-note.txt";unknown.write_text("keep")
+        folder=folders[-1];ui_note=folder/"benilla-config/AddOns/ASXUI/user-note.txt";ui_note.write_text("preserve UI note")
+        ui_settings=folder/"benilla-config/SavedVariables/ASXUI.lua";ui_settings.parent.mkdir(parents=True,exist_ok=True);ui_settings.write_text("ASXUIDB = {scale=1.25}")
+        unknown=folder/"ASX/Client/user-note.txt";unknown.write_text("keep")
         save=folder/"profile/appdata/wenilla-rogue/characters.txt";home=folder/"benilla-config/config.toml";before=(sha(save),sha(home),sha(folder/"AzerothSurvivors.exe"))
         cmd=[str(folder/"ASX/Runtime/python.exe"),"-I","-B",str(folder/"ASX/Client/launch.py"),"--export-diagnostics"]
         report=subprocess.run(cmd,cwd=folder,env=environments[-1],capture_output=True,timeout=30);(output/"export.log").write_bytes(report.stdout+report.stderr)
@@ -100,6 +106,8 @@ def run(seconds,game_version=VERSION,package_path=None):
         outcome=json.loads(result_path.read_text(encoding="utf-8-sig"))if result_path.exists()else{}
         (output/"uninstall-result.json").write_text(json.dumps(outcome,indent=2))
         checks["uninstall_completed"]=removal.returncode==0 and outcome.get("completed",False) and not(folder/"avrt.dll").exists()and not(folder/"start-asx.cmd").exists()and not(folder/"ASX/Runtime/python.exe").exists()
+        checks["uninstall_ui_removed"]=not(folder/"benilla-config/AddOns/ASXUI/ASXUI.toc").exists()
+        checks["uninstall_ui_preferences_preserved"]=ui_note.read_text()=="preserve UI note"and ui_settings.read_text()=="ASXUIDB = {scale=1.25}"
         checks["uninstall_preserved"]=unknown.read_text()=="keep"and before==(sha(save),sha(home),sha(folder/"AzerothSurvivors.exe"))and bool(list((folder/"ASX/Backups/Progression").glob("*.txt")))
         result=dict(checks=checks,passed=all(checks.values()),archive_sha256=proof["archive_sha256"],dll_sha256=proof["dll_sha256"],players=len(folders),muted=True,desktop_input=False,production_binary=True,transport="official engine loopback fixture; public lobby service not exercised")
         (output/"result.json").write_text(json.dumps(result,indent=2)+"\n");print(json.dumps(result,indent=2),flush=True);print(output,flush=True)

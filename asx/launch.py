@@ -118,7 +118,7 @@ def run(root,offline=False,check=False,update_only=False,confirm_update=None,ret
             for n,b in projected.items())
         if needs_preparation:
             core.adopt(root,m,data)
-            with operation("Preparing owned ASX files"):core.apply(root,m,data,manual=True,launch=True)
+            with operation("Preparing owned ASX files"):core.apply(root,m,data,manual=True,launch=True,approve=lambda names:all(core.ui_target(n)for n in names)and confirm_files(names))
         report=maintenance.diagnose(root);maintenance.print_report(report)
         if not report["ready"]:raise ValueError("Repair required. Use --repair; --check shows all problems.")
         with operation("Backing up native progression"):backup(root,save)

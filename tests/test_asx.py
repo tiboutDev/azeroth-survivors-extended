@@ -47,6 +47,73 @@ class ASXTests(unittest.TestCase):
   self.configure();raw,sig,package=release
   def download(url,limit):return raw if url.endswith("asx-latest.json")else sig if url.endswith(".sig")else package
   with core.locked(self.root):return updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:True)
+ def bundled_ui(self,n):
+  m,data=self.release(n)
+  for name in core.ASXUI_FILES:
+   data[core.ASXUI_SOURCE+name]=(ROOT/"addons/ASXUI"/name).read_bytes()
+  data[core.ASXUI_SOURCE+"ASXUI.lua"]+=f"\n-- test release {n}\n".encode()
+  m["files"]={k:{"size":len(b),"sha256":core.digest(b)}for k,b in data.items()}
+  return m,data
+ def ui_preferences(self):
+  core.atomic(self.root/"benilla-config/SavedVariables/ASXUI.lua",b"ASXUIDB = {scale=1.25}")
+  core.atomic(self.root/(core.ASXUI_TARGET+"user-note.txt"),b"keep addon note")
+ def assert_ui_preferences(self):
+  self.assertEqual((self.root/"benilla-config/SavedVariables/ASXUI.lua").read_bytes(),b"ASXUIDB = {scale=1.25}")
+  self.assertEqual((self.root/(core.ASXUI_TARGET+"user-note.txt")).read_bytes(),b"keep addon note")
+ def test_bundled_ui_install_update_and_uninstall_preserve_preferences(self):
+  self.ui_preferences();self.m,self.data=self.bundled_ui(1);self.extract(self.m,self.data)
+  self.install()
+  for name in core.ASXUI_FILES:
+   target=core.ASXUI_TARGET+name
+   self.assertEqual((self.root/target).read_bytes(),self.data[core.ASXUI_SOURCE+name]);self.assertIn(target,core.installed(self.root)["owned"])
+  m,data=self.bundled_ui(2);self.assertEqual(self.update(self.signed(m,data,2)),"installed")
+  self.assertEqual((self.root/(core.ASXUI_TARGET+"ASXUI.lua")).read_bytes(),data[core.ASXUI_SOURCE+"ASXUI.lua"])
+  import remove
+  remove.uninstall(self.root)
+  self.assertFalse((self.root/(core.ASXUI_TARGET+"ASXUI.toc")).exists());self.assert_ui_preferences();self.intact()
+ def test_first_launch_projects_bundled_ui_licenses_and_preserves_existing_notes(self):
+  self.m,self.data=self.bundled_ui(1);self.extract(self.m,self.data)
+  core.adopt(self.root,self.m,self.data)
+  core.apply(self.root,self.m,core.sources(self.root,self.m,tolerant=True),manual=True,launch=True)
+  for name in core.ASXUI_FILES:
+   self.assertEqual((self.root/(core.ASXUI_TARGET+name)).read_bytes(),self.data[core.ASXUI_SOURCE+name])
+  target=self.root/(core.ASXUI_TARGET+"README.md");target.write_bytes(b"personal notes")
+  (self.root/(core.ASXUI_TARGET+"Events.lua")).unlink()
+  core.apply(self.root,self.m,core.sources(self.root,self.m,tolerant=True),manual=True,launch=True)
+  self.assertEqual(target.read_bytes(),b"personal notes")
+ def test_unowned_ui_migration_requires_consent_and_backups(self):
+  self.install();self.ui_preferences();target=core.ASXUI_TARGET+"Buffs.lua";core.atomic(self.root/target,b"older independent addon")
+  m,data=self.bundled_ui(2);before=self.snapshot()
+  for approve in (None,lambda names:False):
+   with self.assertRaises(ValueError):core.apply(self.root,m,data,approve=approve)
+   self.assertEqual(self.snapshot(),before)
+  seen=[];core.apply(self.root,m,data,approve=lambda names:seen.extend(names)or True)
+  self.assertEqual(seen,[target]);self.assertTrue(any(p.read_bytes()==b"older independent addon"for p in(self.root/"ASX/Backups/Files").rglob("Buffs.lua")))
+  self.assert_ui_preferences();self.intact()
+ def test_fresh_bootstrap_does_not_silently_adopt_conflicting_ui(self):
+  self.m,self.data=self.bundled_ui(1);self.extract(self.m,self.data);target=core.ASXUI_TARGET+"ASXUI.lua";core.atomic(self.root/target,b"custom ui")
+  core.adopt(self.root,self.m,self.data);self.assertNotIn(target,core.installed(self.root)["owned"])
+  with self.assertRaises(ValueError):core.apply(self.root,self.m,self.data,manual=True,launch=True,approve=lambda names:False)
+  self.assertEqual((self.root/target).read_bytes(),b"custom ui");self.assertFalse((self.root/"avrt.dll").exists())
+  core.apply(self.root,self.m,self.data,manual=True,launch=True,approve=lambda names:True)
+  self.assertEqual((self.root/target).read_bytes(),self.data[core.ASXUI_SOURCE+"ASXUI.lua"])
+ def test_ui_diagnosis_repair_and_rollback_keep_user_files(self):
+  self.install();self.ui_preferences();m,data=self.bundled_ui(2);self.update(self.signed(m,data,2))
+  target=core.ASXUI_TARGET+"Events.lua";(self.root/target).unlink()
+  import maintenance
+  self.assertTrue(any(x["file"]==target and x["severity"]=="critical"for x in maintenance.diagnose(self.root)["issues"]))
+  core.apply(self.root,m,data,manual=True,launch=True);self.assertTrue((self.root/target).exists())
+  core.atomic(self.root/(core.ASXUI_TARGET+"README.md"),b"my notes")
+  self.assertTrue(maintenance.diagnose(self.root)["ready"])
+  core.apply(self.root,m,data,repair=True,approve=lambda names:True)
+  self.assertEqual((self.root/(core.ASXUI_TARGET+"README.md")).read_bytes(),b"my notes")
+  core.rollback(self.root);self.assertFalse((self.root/target).exists());self.assert_ui_preferences();self.intact()
+ def test_ui_projection_inventory_rejects_preferences_unknown_files_and_partial_bundle(self):
+  m,data=self.bundled_ui(1);self.assertIs(core.validate(m),m)
+  for suffix in ("SavedVariables.lua","../Other/code.lua","Fonts/unknown.ttf"):
+   with self.assertRaises(ValueError):core.owned_name(core.ASXUI_TARGET+suffix)
+  del m["files"][core.ASXUI_SOURCE+"Buffs.lua"]
+  with self.assertRaises(ValueError):core.validate(m)
  def test_declining_signed_update_does_not_download_archive_or_advance_sequence(self):
   self.install();self.configure()
   m,data=self.release(2);raw,sig,package=self.signed(m,data,13)

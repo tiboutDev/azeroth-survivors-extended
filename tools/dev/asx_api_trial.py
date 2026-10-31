@@ -1,5 +1,5 @@
 """Opt-in real ASX API/widget trial, one solo or two coop clients in a private desktop."""
-import ast,hashlib,json,math,os,re,shutil,socket,subprocess,sys,time
+import ast,hashlib,json,math,os,re,secrets,shutil,socket,subprocess,sys,time
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'tools/dev'))
@@ -48,6 +48,10 @@ def crystal_stat_checks(text,slot):
   valid=valid and(a[2]>b[2]if c[2]>0 else close(a[2],b[2]))
  return {'native_personal_stats':bool(valid)}
 
+def crystal_popup_checks(samples):
+ shown=[s['crystalPopup']for s in samples if s.get('crystalPopup',{}).get('shown')]
+ return {'native_crystal_popup_visible':bool(shown),'native_crystal_popup_asx_text':bool(shown)and all(p.get('verbatim')for p in shown),'multiple_crystal_popup_colors':len({p.get('title')for p in shown})>=2}
+
 def assess_crystals(samples):
  available=[s for s in samples if s.get('available')]
  rows=[s['structured']['crystals']for s in available if s.get('structured',{}).get('crystals')]
@@ -73,7 +77,7 @@ def run_trial(args,gate):
  prepare=writer(native/'AzerothSurvivors.exe')
  clean={k:v for k,v in os.environ.items()if not k.upper().startswith(('ASX_','AZCOOP_','COOP_','WOW_','BENILLA_'))}
  with socket.socket()as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
- password='ASX-API-private-local'
+ password=secrets.token_hex(16)
  children=[];handles=[]
  try:
   for slot in range(players):
@@ -85,7 +89,7 @@ def run_trial(args,gate):
    shutil.copyfile(ROOT/'native-ui/official-party.lua',addon/'Presentation.lua')
    shutil.copytree(ROOT/'addons/ASXUI',addons/'ASXUI')
    probe=addons/'ASXAPIAudit';probe.mkdir();(probe/'ASXAPIAudit.toc').write_text('## Interface: 11200\n## Title: ASX API audit\nAudit.lua\n');(probe/'Audit.lua').write_text(('ASX_WOW_VISUAL_AUDIT=true\n'if wow_visual else'')+(ROOT/'tools/dev/fixtures/asx-api-live-audit.lua').read_text())
-   env=dict(clean,APPDATA=str(profile/'appdata'),LOCALAPPDATA=str(profile/'localappdata'),BENILLA_HOME=str(profile),ASX_ACTIVE='1',AZCOOP_ENGINE='official',AZCOOP_NATIVE_LOG_DIRECTORY=str(profile),ASX_READY_FILE=str(profile/'ready.json'),WOW_NOSOUND='1',WOW_WIN='1',WOW_ROGUE_UPDATE='0',WOW_ROGUE_UPDATE_AUTO='0',WOW_ROGUE_AUTOPICK='1',WOW_ROGUE_AUTOSTART='1',WOW_ROGUE_AUTOPLAY='4',WOW_ROGUE_SHOTS=str(profile/'shots'),WOW_ROGUE_SHOTS_EVERY='10',RUST_LOG='info',ASX_TREASURE_GOBLINS='0',ASX_LOST_SUPPLIES='1',ASX_DARKMOON_TRIALS='1')
+   env=dict(clean,APPDATA=str(profile/'appdata'),LOCALAPPDATA=str(profile/'localappdata'),BENILLA_HOME=str(profile),ASX_ACTIVE='1',AZCOOP_ENGINE='official',AZCOOP_NATIVE_LOG_DIRECTORY=str(profile),ASX_READY_FILE=str(profile/'ready.json'),WOW_NOSOUND='1',WOW_WIN='1',WOW_ROGUE_UPDATE='0',WOW_ROGUE_UPDATE_AUTO='0',WOW_ROGUE_AUTOPICK='1',WOW_ROGUE_AUTOSTART='1',WOW_ROGUE_AUTOPLAY='4',WOW_ROGUE_SHOTS=str(profile/'shots'),WOW_ROGUE_SHOTS_EVERY='7'if os.environ.get('ASX_API_TRIAL_CRYSTAL_POPUP')=='1'else'10',RUST_LOG='info',ASX_TREASURE_GOBLINS='0',ASX_LOST_SUPPLIES='1',ASX_DARKMOON_TRIALS='1')
    if reported_fixes:env.update(ASX_TREASURE_GOBLINS='1',ASX_TEST_COOP_BUFF_STATS='1',ASX_TEST_COOP_CIRCLE_EXIT='1')
    if catalog_review:env.update(ASX_TEST_EVENT_CATALOG_REVIEW='1',ASX_TEST_COOP_CIRCLE_EXIT='0',ASX_TREASURE_GOBLINS='1')
    if players==1:env.update(ASX_TEST_LOST_SUPPLIES='1',ASX_TEST_DARKMOON_TRIAL='1')
@@ -115,6 +119,7 @@ def run_trial(args,gate):
   samples=[json.loads(line.split('ASX_API_LIVE ',1)[1])for line in text.splitlines()if 'runtime error: ASX_API_LIVE 'in line]
   errors=[line for line in text.splitlines()if 'ui_script: runtime error:'in line and 'ASX_API_LIVE 'not in line]
   checks=assess_crystals(samples)if crystals else assess(samples);checks['clean_lua']=not errors;checks['asx_started']=(profile/'ready.json').exists()
+  if crystals and os.environ.get('ASX_API_TRIAL_CRYSTAL_POPUP')=='1':checks.update(crystal_popup_checks(samples))
   if reported_fixes:
    asx=(profile/'azeroth-coop-native.log').read_text(errors='replace')
    if slot==0:

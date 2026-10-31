@@ -11,11 +11,19 @@ official game separately before installing ASX.
 ASX FEATURES
 - Shared co-op progression and gold, allied support and party spell tooltips.
 - Spell glyphs are disabled on this client pending review of native set interactions.
-- Ring enchantments at ring ranks 2 / 4 / 7 / 10 / 14, and eight fixed amulet gems.
-- Sayge's Dark Fortunes after boss encounters, including movement speed.
+- Ring enchantments at ring ranks 2 / 4 / 7 / 10 / 14.
+- Personal colored world crystals replace amulet gems; Crystal Resonance tracks run-long bonuses.
+- Sayge's Trials grant Dark Fortunes: Luck, Experience or Gold.
 - Resurrection Sickness: temporary damage/healing penalties after revival.
 - Native enemy difficulty, density and Heroic levels.
 - Native personal marks replace ASX in-run gold for duplicate boss drops.
+
+ASXUI is included and installed automatically in benilla-config/AddOns/ASXUI
+when ASX launches. Signed ASX updates also update its managed addon files.
+ASXUI remains a separate Lua addon with native SavedVariables preferences;
+updates and uninstall preserve these settings and unknown files. Existing
+customized ASXUI code requires confirmation and a backup before replacement.
+No separate ASXUI download is required.
 
 Both launches use your existing native progression and settings. No import or
 save synchronization is needed. Use one game at a time for the same profile.

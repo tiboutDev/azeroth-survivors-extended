@@ -12,7 +12,9 @@ This page describes features that are temporarily disabled or still being explor
 
 **Status: Temporarily disabled · Design under review**
 
-Glyphs reshape individual spells through meaningful benefits and drawbacks, offered directly on spell upgrade cards.
+Glyphs are not available in the current source. Their intended role is to reshape
+individual spells through meaningful benefits and drawbacks, offered on spell
+upgrade cards.
 
 The goal is to create different ways to use a spell while preserving its identity: a choice that changes your playstyle, rather than another automatic upgrade.
 

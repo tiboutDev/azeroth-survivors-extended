@@ -104,7 +104,7 @@ SlashCmdList["ASXUI"]=function(message)
     local db=settings()
     if command=="widget" and ASXUI_ConfigureWidget then
         local _,_,kind,property,a,b=string.find(argument,"^(%S+)%s+(%S+)%s*(%S*)%s*(%S*)$")
-        if not ASXUI_ConfigureWidget(kind,property,a,b)then say("widget anchor|supplies|fortune|sayge: position X Y; scale 0.5..2; opacity 0..1; show on|off; reset")else say(kind.." widget updated.")end
+        if not ASXUI_ConfigureWidget(kind,property,a,b)then say("widget anchor|supplies|fortune|crystals|sayge: position X Y; scale 0.5..2; opacity 0..1; show on|off; reset")else say(kind.." widget updated.")end
     elseif command=="pins" and (argument=="on"or argument=="off")then
         db.pins=argument=="on";say("Minimap markers "..argument..".")
     elseif command=="plates" and (argument=="on"or argument=="off")then
@@ -116,7 +116,7 @@ SlashCmdList["ASXUI"]=function(message)
     elseif command=="numbers"and(argument=="on"or argument=="off")then
         db.numbers=argument=="on";say("World number font "..argument..". Applies after restarting the client.")
     else
-        say("/asxui widget supplies|fortune|sayge ...; /asxui pins on|off; /asxui plates on|off; /asxui scale 0.5..1.5; /asxui numbers on|off")
+        say("/asxui widget supplies|fortune|crystals|sayge ...; /asxui pins on|off; /asxui plates on|off; /asxui scale 0.5..1.5; /asxui numbers on|off")
     end
 end
 function ASXUI_Readout()

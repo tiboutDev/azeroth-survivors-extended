@@ -10,14 +10,15 @@
 - Your own copy of **Azeroth Survivors**, in the exact version supported by your ASX release.
 - An ASX release explicitly compatible with that game version.
 
-ASX does not include the original game. Check the release notes for compatibility information before installing.
+ASX does not include the original game. These pages describe the current source;
+check the release notes for the features and exact compatibility of your download.
 
 ## Install and launch
 
-1. Download the compatible archive from the [ASX releases page](https://github.com/tiboutDev/azeroth-survivors-extended/releases).
+1. Download **ASX.zip**, or the equivalent versioned ASX archive, from the [ASX releases page](https://github.com/tiboutDev/azeroth-survivors-extended/releases).
 2. Close Azeroth Survivors.
 3. Extract the archive into your game folder, beside `AzerothSurvivors.exe`.
-4. Run **`start-asx.cmd`**. ASX starts automatically after its checks.
+4. Run **`start-asx.cmd`**. The launcher installs the included addons and starts ASX automatically after its checks.
 
 If a signed update is available, the launcher asks before installing it. Pressing
 Enter postpones the update. Use `start-asx.cmd --menu` to open maintenance choices;
@@ -27,6 +28,26 @@ Use `start-asx.cmd` whenever you want to play with ASX, in solo or co-op.
 
 Your existing progression and settings are reused. The launcher creates a progression backup before each ASX launch.
 
+## Included addons and preferences
+
+No separate ASXUI download or manual addon copy is required. The launcher manages
+two complementary folders:
+
+| Folder in your game installation | Purpose |
+| --- | --- |
+| `benilla-config/AddOns/ASX` | Connects the native ASX mod to Lua, exposes ASX data and enriches buff tooltips. |
+| `benilla-config/AddOns/ASXUI` | Displays nameplate styling, minimap markers, notifications and configurable event widgets. |
+
+Keep the top-level `ASX` folder beside the game executable; do not move it into
+AddOns. The launcher puts the required addon files in their correct locations.
+ASXUI remains an independent Lua addon, while its packaged files are installed
+and updated with ASX.
+
+Existing matching ASXUI files can be adopted. Different pre-existing addon code
+requires your confirmation and a backup before replacement. Native SavedVariables
+preferences and unknown files are preserved. Use the [ASXUI commands](../../addons/ASXUI/README.md)
+to configure its widgets instead of editing managed source files.
+
 ## Play with friends
 
 Launch ASX, then use the game’s official **Co-op** menu to create or join a lobby.
@@ -35,14 +56,17 @@ All participants should use the same compatible game and ASX versions.
 
 ## Play without ASX
 
-Close the game, then launch **`AzerothSurvivors.exe`** directly.
+Close the game, then launch **`AzerothSurvivors.exe`** directly. ASX gameplay
+remains inactive. ASXUI is a standalone addon, so its independent nameplate
+styling can still be present when the addon is enabled in the native client.
 
 ## Updates
 
 The launcher checks for signed ASX updates before playing online. Choose to
 install, postpone, or cancel. **Every update requires confirmation**, including
 `--update-only` and `--retry-update`. Without an interactive console, updates are
-deferred. A successful update restarts the launcher before continuing.
+deferred. A successful update restarts the launcher before continuing. The
+included ASXUI files are updated too; no separate addon update is needed.
 
 To update without starting the game:
 
@@ -94,7 +118,8 @@ start-asx.cmd --repair --offline --archive "asx-VERSION.zip" --feed "asx-latest.
 These three files must belong to the same release. Repair never substitutes a
 newer version silently. Unknown installation identity or a damaged ownership
 receipt requires explicit recovery consent; an unknown conflicting root loader
-or projected addon is still preserved and blocks replacement. An invalid channel
+or conflicting internal ASX bridge is still preserved and blocks replacement.
+The known ASXUI addon can be migrated only with consent and a backup. An invalid channel
 configuration can be restored to the official channel during an approved repair,
 with its old contents backed up.
 
@@ -123,7 +148,9 @@ Close the game, then run:
 start-asx.cmd --uninstall
 ```
 
-The uninstaller removes owned, unchanged ASX files while preserving your progression and settings.
+The uninstaller removes owned, unchanged ASX files, including the managed
+ASXUI addon files. Native progression, settings, SavedVariables preferences,
+unknown files and modified owned files are preserved.
 
 ## Export diagnostics
 

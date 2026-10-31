@@ -624,7 +624,7 @@ local function apiState()
     local own=allowed and supplyOwner()or nil
     local input=phase..":"..tostring(own~=nil)..":"..tostring(AZS_RUN_UPDATED)..":"..tostring(modelWire)
     if apiCache and input==apiInput then return apiCache end
-    local state={api={major=1,minor=3},available=own~=nil,phase=phase,data={},texts={}}
+    local state={api={major=1,minor=4},available=own~=nil,phase=phase,data={},texts={}}
     if own then
         state.session={epoch=model.epoch,recipientGUID=model.own}
         state.data={crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
@@ -635,6 +635,14 @@ local function apiState()
             local c=state.data.crystals
             c.bonuses={damage=c.red*10,cooldownRecovery=c.blue*5,maximumHealth=c.green*15,areaOfEffect=c.yellow*10}
             crystalText={title="Crystal Resonance",icon=crystalIcon,note="Crystals collected: "..c.total}
+            crystalText.pickups={}
+            local names={"Red","Blue","Green","Yellow"}
+            local keys={"red","blue","green","yellow"}
+            local gains={"+10% damage","+5% cooldown recovery","+15% maximum health","+10% area of effect"}
+            local colors={{1,.25,.2},{.3,.65,1},{.12,1,0},{1,.82,0}}
+            for i,key in ipairs(keys)do
+                crystalText.pickups[key]={title=names[i].." Crystal collected",reward=gains[i],note="Crystal Resonance - lasts until the end of the run.",icon=crystalIcon,color={.12,1,0},titleColor=colors[i]}
+            end
         end
         local consumableTexts={}
         for family,c in pairs(state.data.consumables or{})do
@@ -658,7 +666,7 @@ local function apiState()
     state.updatedAt=own and modelTime or nil
     apiCache=state;apiInput=input;return state
 end
-function ASX_GetAPIVersion()return 1,3 end
+function ASX_GetAPIVersion()return 1,4 end
 function ASX_GetState(major)
     if major~=nil and major~=1 then return nil,"unsupported_version"end
     return apiCopy(apiState())

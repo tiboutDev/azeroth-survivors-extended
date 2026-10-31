@@ -1,4 +1,4 @@
-# ASX addon contract 1.3
+# ASX addon contract 1.4
 
 ASX follows Azeroth Survivors' addon conventions: global tables, matching
 `*_UPDATED` timestamps, `ASX_Get...` functions and registered Lua handlers.
@@ -13,7 +13,7 @@ functions may be absent when ASX is disabled or before its Lua has loaded; an
 addon must tolerate that and retry after world entry or with bounded polling.
 ASXUI is a consumer, not the provider: other addons do not need ASXUI installed.
 
-`ASX_GetAPIVersion()` returns `major, minor` (currently `1, 3`). Major 1 is a
+`ASX_GetAPIVersion()` returns `major, minor` (currently `1, 4`). Major 1 is a
 stable contract: incompatible field meanings/types/removals require a new major;
 minor versions may add optional fields. Ignore unknown fields. Tests cover the
 contract; this source change does not update an older installed DLL.
@@ -28,7 +28,7 @@ modifies ASX or snapshots obtained by another consumer.
 
 | Field | Meaning |
 |---|---|
-| `api.major`, `api.minor` | Contract version, currently 1.2 |
+| `api.major`, `api.minor` | Contract version, currently 1.4 |
 | `available` | Boolean; check before accessing run fields |
 | `reason` | When unavailable: `outside_run`, `stale`, or `missing_or_invalid_payload` |
 | `revision` | Monotonic content revision within this Lua environment; not persisted across client reloads |
@@ -181,3 +181,16 @@ values named `damage`, `cooldownRecovery`, `maximumHealth`, `areaOfEffect`.
 `state.texts.crystals` contains the ASX-authored title, icon and collection note.
 Every getter/handler snapshot remains detached. No crystal position is exposed
 to the minimap bridge. Aura indices are presentation metadata, not identities.
+
+## Crystal pickup presentation (API minor 4)
+
+`texts.crystals.pickups[red|blue|green|yellow]` supplies ASX-authored `title`,
+`reward`, `note`, `icon`, RGB `color` (effect) and `titleColor` (crystal color).
+These are per-crystal values; structured accumulated totals remain in `data`.
+Consumers can compare consecutive personal counts to announce new pickups. This
+is a snapshot interface, not receipt history: seed a baseline on first available
+state, recipient/session change or reconnect, and do not replay restored totals.
+Counts decreasing or native run time resetting retire the old baseline/queue.
+ASXUI queues each observed increment for three seconds, capped at 16 notices,
+and defers display through choices/pauses. Coalesced different colors use a stable
+color order; no exact cross-color pickup ordering is promised by snapshots.

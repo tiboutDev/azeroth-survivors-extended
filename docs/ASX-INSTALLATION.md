@@ -28,18 +28,20 @@ failed check by modifying official game assets.
 | Location | Owner and role |
 | --- | --- |
 | `ASX/Bin`, `ASX/Client`, `ASX/Runtime` | Internal DLL source, launcher and bundled Python |
-| `ASX/Interface` | Internal sources for the gated ASX gameplay presentation |
+| `ASX/Interface` | Internal sources for the gated ASX presentation and bundled standalone ASXUI |
 | `benilla-config/AddOns/ASX` | Owned deployment of that gated presentation; not a standalone UI addon |
-| `benilla-config/AddOns/ASXUI` | Independently installed native addon; outside the ASX installer inventory |
+| `benilla-config/AddOns/ASXUI` | Bundled native addon, projected and updated by ASX using an exact owned-file list |
 | `ASX/Defaults`, `ASX/Settings` | Packaged defaults and private channel configuration |
 | `ASX/State`, `ASX/Updates` | Ownership, locks, update history, signed caches and transactions |
 | `ASX/Backups`, `ASX/Logs`, `ASX/Reports` | Preserved private data and local diagnostics |
 | `ASX/options.json` | Current launcher event preferences; retained at this path for compatibility |
 
 ASXUI preferences use the native addon's SavedVariables mechanism. They are not
-launcher preferences. The ASX updater/uninstaller does not own, remove or silently
-replace an independently installed ASXUI. The internal `ASX/Interface` source and
-its native addon deployment are distinct from the optional autonomous ASXUI.
+launcher preferences. ASX installs and updates ASXUI automatically. Its Lua addon remains independent
+of the native DLL, but its packaged code/font/license files are owned by ASX.
+Existing matching files can be adopted; differing pre-existing code requires
+explicit consent and a backup. Unknown files and native SavedVariables are never
+owned or removed. Internal sources and their projected addon files are distinct.
 
 ## Launcher interaction and file policy
 

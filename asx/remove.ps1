@@ -24,7 +24,7 @@ try {
         $name = [string]$property.Name
         if ($name -eq 'ASX/State/installation.lock') { continue }
         if ($name -match '(^|/)(\.\.?|[^/]*[:\\*?"<>|][^/]*)(/|$)' -or $name -match '(^|/)/') { throw 'Unsafe ASX removal path.' }
-        $allowed = $name -in @('start-asx.cmd','README-ASX.txt','avrt.dll','ASX/manifest.json','ASX/State/install.json','ASX/State/installation.lock') -or $name -match '^ASX/(Client|Bin|Runtime|Interface|Defaults)/' -or $name -in @('benilla-config/AddOns/ASX/ASX.toc','benilla-config/AddOns/ASX/Presentation.lua')
+        $allowed = $name -in @('start-asx.cmd','README-ASX.txt','avrt.dll','ASX/manifest.json','ASX/State/install.json','ASX/State/installation.lock') -or $name -match '^ASX/(Client|Bin|Runtime|Interface|Defaults)/' -or $name -in @('benilla-config/AddOns/ASX/ASX.toc','benilla-config/AddOns/ASX/Presentation.lua','benilla-config/AddOns/ASXUI/ASXUI.toc','benilla-config/AddOns/ASXUI/ASXUI.lua','benilla-config/AddOns/ASXUI/Minimap.lua','benilla-config/AddOns/ASXUI/Events.lua','benilla-config/AddOns/ASXUI/Buffs.lua','benilla-config/AddOns/ASXUI/Fonts/ASXUI-Numbers.ttf','benilla-config/AddOns/ASXUI/Fonts/OFL.txt','benilla-config/AddOns/ASXUI/LICENSE','benilla-config/AddOns/ASXUI/README.md')
         if (-not $allowed) { throw 'Removal inventory contains a non-ASX path.' }
         $target = [IO.Path]::GetFullPath((Join-Path $root $name.Replace('/','\')))
         if (-not $target.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)) { throw 'Removal path escaped the game folder.' }

@@ -20,10 +20,13 @@ Available in **solo and co-op**:
 Choose an enchantment when upgrading a ring, then strengthen it as that ring gains ranks.
 
 💎 **Crystal Resonance** — *Balance in progress*\
-Find colored crystals while exploring. Collect personal bonuses to damage, cooldown recovery, maximum health and area of effect, tracked in one run-long buff.
+Find colored crystals while exploring, without minimap markers. Each player collects their own bonuses, shown in a pickup notice and one run-long buff.
 
 🎪 **Sayge’s Dark Fortunes** — *Balance in progress*\
-Receive a random fortune after each completed boss encounter. Keep one active at a time, with stronger bonuses as you progress.
+Complete Sayge’s Trial between bosses to earn a personal Luck, Experience or Gold fortune. Keep one active at a time; a new fortune replaces it.
+
+📦 **Explore for rewards** — *Balance in progress*\
+Find Lost Supplies for temporary buffs or gold, and chase Venture Co. Treasure Goblins for personal rewards. First-goblin bad-luck protection applies after the first boss.
 
 [Explore the build features →](docs/player/FEATURES.md#build-choices)
 
@@ -49,6 +52,8 @@ Repeated resurrections temporarily reduce your damage and healing. Stay alive to
 
 ASX is actively evolving. **Balance in progress** means bonus values and progression are still being tuned. **Playtesting** means a feature needs more feedback from real runs. **Established** features have a more settled design and behavior, though issues can still occur.
 
+These pages describe the current source; published releases may contain an earlier feature set. Check the notes of the release you download.
+
 These labels describe feature maturity, not exhaustive validation of every class, interaction or game update. See the [feature guide](docs/player/FEATURES.md) for the feedback we are looking for and each release’s notes for compatibility information.
 
 ## Start playing
@@ -57,7 +62,9 @@ These labels describe feature maturity, not exhaustive validation of every class
 
 1. Close the game.
 2. Extract the compatible ASX archive into your game folder, beside `AzerothSurvivors.exe`.
-3. Run **`start-asx.cmd`**.
+3. Run **`start-asx.cmd`**. It installs the included ASXUI addon and starts ASX automatically.
+
+ASXUI needs no separate download. ASX updates its managed files with your confirmed ASX updates and preserves its saved preferences.
 
 For multiplayer, use the official **Co-op** menu. All participants should use the same compatible game and ASX versions.
 
@@ -82,14 +89,18 @@ Found a bug or an interesting build interaction? Open an [issue](https://github.
 - The affected classes and what happened.
 - A screenshot or diagnostic export when useful.
 
-## Optional ASXUI addon
+## Included ASXUI addon
 
 [ASXUI](addons/ASXUI/README.md) independently styles native enemy nameplates,
 preserves the native damage font by default, and renders custom/native-cache
-minimap pins using the ASX projection bridge. Supply/Fortune notifications and
-Sayge progress are configurable ASXUI widgets, with text still supplied by ASX.
-Install its source folder in
-`benilla-config/AddOns/ASXUI`.
+minimap pins using the ASX projection bridge. Supplies, Fortune and crystal
+notifications, plus Sayge progress, are configurable ASXUI widgets with text
+still supplied by ASX.
+ASX installs it automatically in `benilla-config/AddOns/ASXUI` and keeps its
+managed files updated. Native SavedVariables preferences are preserved.
+Use `/asxui widget crystals show off` to hide crystal notices without changing
+crystal rewards. Position, scale and opacity can be adjusted for each widget.
+
 Nameplate styling requires neither the ASX gameplay DLL nor its launcher;
 minimap pins require the matching ASX projection bridge. See its README for
 commands, font licensing and compatibility limits.

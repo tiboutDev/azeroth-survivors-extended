@@ -1,7 +1,7 @@
 import unittest,sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools/dev'))
-from asx_api_trial import assess_crystals,crystal_stat_checks
+from asx_api_trial import assess_crystals,crystal_stat_checks,crystal_popup_checks
 class CrystalEvidence(unittest.TestCase):
  def test_presence_without_native_buff_or_tooltip_is_not_success(self):
   sample={'available':True,'copyIsolated':True,'structured':{'crystals':{'red':1,'blue':2,'green':1,'yellow':1,'total':5,'index':3}}}
@@ -13,4 +13,10 @@ class CrystalEvidence(unittest.TestCase):
   self.assertTrue(crystal_stat_checks(row,1)['native_personal_stats']);self.assertFalse(crystal_stat_checks(row,0)['native_personal_stats'])
   self.assertFalse(crystal_stat_checks(row.replace('restored=true','restored=false'),1)['native_personal_stats'])
   self.assertFalse(crystal_stat_checks(row.replace('1.1, 0.9090909','1.2, 0.9090909'),1)['native_personal_stats'])
+ def test_popup_proof_requires_visible_frames_with_asx_wording(self):
+  self.assertFalse(all(crystal_popup_checks([]).values()))
+  rows=[{'crystalPopup':{'shown':True,'title':'Red','verbatim':True}},{'crystalPopup':{'shown':True,'title':'Blue','verbatim':True}}]
+  self.assertTrue(all(crystal_popup_checks(rows).values()))
+  rows[0]['crystalPopup']['verbatim']=False
+  self.assertFalse(crystal_popup_checks(rows)['native_crystal_popup_asx_text'])
 if __name__=='__main__':unittest.main()

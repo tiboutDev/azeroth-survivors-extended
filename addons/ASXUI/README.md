@@ -6,10 +6,17 @@ projection/event bridge described below. No addon memory reads or hooks.
 
 ## Install
 
-Copy this whole folder to `AzerothSurvivors\benilla-config\AddOns\ASXUI`, then
-restart the client. Keep its `.toc`, Lua, font and licenses together. It does not
-belong inside the game's `ASX` folder. Removing the addon restores the native
-presentation at the next client start; its saved preferences may remain.
+ASX includes this addon and installs it automatically in
+`AzerothSurvivors/benilla-config/AddOns/ASXUI` when starting ASX. Its code is
+updated with signed ASX updates; no separate archive is needed. Preferences stay
+in the native SavedVariables store. Do not edit the managed source files to
+configure the addon; use the commands below.
+
+For standalone nameplate styling without ASX, copy this source folder to the
+same addon location and restart the client. Keep its `.toc`, Lua, font and
+licenses together. ASX can later adopt matching files or, with consent and a
+backup, replace different code. Removing ASX removes only its unchanged managed
+addon files and preserves preferences and unknown files.
 
 ## Behavior and commands
 
@@ -79,9 +86,8 @@ same plates/pins or selects a conflicting damage font at the same time.
 
 Source is in this directory. Run `sh tools/dev/check.sh --profile asxui` from the
 repository root for required Lua 5.1 tests. API probes are explicitly opt-in
-helpers under `tools/dev`, not shipped addon files. Existing ASX DLLs still
-contain their old styling until rebuilt; do not combine their scaling with this
-addon when judging size. Standalone tests use an exact native executable without
+helpers under `tools/dev`, not shipped addon files. Use the matching ASX release for dependent widgets; do not combine this addon
+with an older build that also applies native nameplate scaling. Standalone tests use an exact native executable without
 any ASX DLL. Visual size, layout and special-rank coverage require separately
 scoped live observations; portable tests alone are not rendering evidence.
 
@@ -108,7 +114,7 @@ uv run --with fonttools python tools/build/asxui_font.py --source <source-font.t
 
 ## ASX event widgets
 
-`Events.lua` owns Supply/Fortune discovery panels and Sayge's progress bar.
+`Events.lua` owns Supply/Fortune/crystal pickup panels and Sayge's progress bar.
 `ASX_GetState(1)` supplies structured values in `data` and every semantic title,
 reward, note and color in `texts`, all from ASX. ASXUI does not calculate
 rewards, timers or gameplay. Goblin appearance/defeat/escape announcements keep
@@ -116,7 +122,7 @@ their existing native CHAT_MSG channel; they are not these custom panels.
 
 Each widget has independent saved settings in `ASXUIDB.widgets`, applied without
 a client restart. A shared anchor is centered below the native top HUD (UIParent TOP, 0,-85).
-Visible widgets stack in Sayge, Supplies, Fortune order, with a 12-unit gap;
+Visible widgets stack in Sayge, Supplies, Fortune, Crystal order, with a 12-unit gap;
 scaled height is included and hidden/expired panels leave no empty slot.
 Widget position settings are offsets from their automatic stack slot, not world
 coordinates. Scale changes the full widget/text without shifting the shared
@@ -127,13 +133,14 @@ Old absolute Y preferences migrate to equivalent offsets from their old defaults
 /asxui widget anchor position 0 -85
 /asxui widget supplies position 0 0
 /asxui widget fortune scale 1.2
+/asxui widget crystals scale 1.1
 /asxui widget sayge opacity 0.75
 /asxui widget supplies show off
 /asxui widget supplies show on
 /asxui widget fortune reset
 ```
 
-Widget names: `supplies`, `fortune`, `sayge`; `anchor` accepts position/reset. Position bounds are -4096..4096,
+Widget names: `supplies`, `fortune`, `crystals`, `sayge`; `anchor` accepts position/reset. Position bounds are -4096..4096,
 scale 0.5..2 and opacity 0..1. Invalid commands are rejected; malformed saved
 preferences return to safe defaults. Hidden notifications still consume their
 normal presentation lifetime and do not replay when enabled. Choice/pause
@@ -145,7 +152,7 @@ or stale ASX data hides all widgets. The matching rebuilt ASX bridge is required
 
 ## Public ASX data contract
 
-ASXUI consumes [ASX addon contract 1.0](../../docs/ADDON-API.md) through
+ASXUI consumes [ASX addon contract](../../docs/ADDON-API.md) through
 `ASX_GetState(1)` and `ASX_GetAPIVersion()`. Structured values live in `data`;
 ASX-owned wording/assets/colors live in `texts`. It no longer consumes the old
 private presentation/minimap getters. Other addons can use the same native-style
@@ -160,13 +167,13 @@ bar texture/border, with the trial title inside and status below. Fortunes use
 green +X% values rather than visible rarity labels. Supplies buffs last 60 game
 seconds; unclaimed piles last 90 game seconds (claimed piles still retire early).
 
-ASX contract 1.2 adds the seventh consumable family (`6`, Swiftness) and a
-separate `discovery.quality` for Classic name colors. ASXUI uses supplied colors
+The seventh consumable family (`6`, Swiftness) and the separate
+`discovery.quality` field describe the effect family and Classic name color. ASXUI uses supplied colors
 and text; it does not infer color from buff tier or gold value.
 
 ## Classic WoW notifications and buff order
 
-Supplies/Fortune popups use native UI-Tooltip-Background/Border, UI-Quickslot2
+Supplies/Fortune/crystal popups use native UI-Tooltip-Background/Border, UI-Quickslot2
 and Friz Quadrata, preserving ASX wording, quality colors, anchors, scaling,
 opacity and notification lifetime. Cache pins use native INV_Box_02, distinct
 from Supplies INV_Crate_01. No texture is generated or bundled.
@@ -178,3 +185,14 @@ matching native icon. Buff IDs/clicks/durations remain native.
 Native anchor changes are preserved, and ASXUI restores its original anchors
 when neither priority buff is present or ASX data is unavailable. The native tooltip distinguishes
 owned Fortune strength from a stronger effective party bonus.
+
+## Crystal pickup notices
+
+New personal crystal pickups show an ASX-authored native-style notification with
+color and permanent bonus, stacked under the shared HUD anchor. Each notice lasts
+three readable seconds; choices and pauses defer display. Rapid pickups queue separately (maximum 16). Restored totals after
+addon reload, stale data or session changes do not replay old rewards. Notices
+consume consecutive personal snapshots, not a historical event feed.
+
+`/asxui widget crystals position X Y`, `scale 0.5..2`, `opacity 0..1`,
+`show on|off` and `reset` use the same controls as other event widgets.

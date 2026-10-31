@@ -58,6 +58,12 @@ class MenuTests(unittest.TestCase):
                 readme=z.read("README-ASX.txt").decode()
                 self.assertIn(manifest["game"]["version"]+" build",readme)
                 self.assertNotIn("{GAME_VERSION}",readme)
+                for name in launch.core.ASXUI_FILES:
+                    source=launch.core.ASXUI_SOURCE+name
+                    self.assertIn(source,manifest["files"])
+                    self.assertEqual(z.read(source),(ROOT/"addons/ASXUI"/name).read_bytes())
+                self.assertIn("ASXUI is included",readme)
+                self.assertNotIn("eight fixed amulet gems",readme)
                 import re
                 self.assertEqual(set(re.findall(r"0\.\d+\.\d+",readme)),{manifest["game"]["version"]})
 

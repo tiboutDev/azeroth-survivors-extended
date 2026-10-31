@@ -23,7 +23,7 @@ fn tick(r:&dyn Services,game:u64)->Result<(),String>{
  {let mut guard=STATE.lock().map_err(|_|"Crystal state unavailable")?;if guard.as_ref().is_none_or(|s|s.game!=game||s.owner!=host.guid||now+0.01<s.clock){let seed=game^host.guid^std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos()as u64;*guard=Some(State{game,owner:host.guid,clock:now,last:None,director:Director::new(seed),sequence:0,reserves:vec![],collection:Collection::default(),auras:BTreeMap::new(),pending:BTreeSet::new(),fixture:0,#[cfg(feature="test-hooks")]fixture_pose:0,#[cfg(feature="test-hooks")]fixture_setup:false,#[cfg(feature="test-hooks")]fixture_home:host.position});}}
  #[cfg(feature="test-hooks")]if fixture_enabled(){
   let expected=std::env::var("ASX_TEST_CRYSTAL_PLAYERS").ok().and_then(|v|v.parse::<usize>().ok()).unwrap_or(1);
-  if p.actors.len()<expected||p.actors.iter().any(|a|a.phase!=Phase::Playing||a.hp<=0.){return Ok(())}
+  if now<5.||p.actors.len()<expected||p.actors.iter().any(|a|a.phase!=Phase::Playing||a.hp<=0.){return Ok(())}
   let align={let mut guard=STATE.lock().map_err(|_|"Crystal fixture setup unavailable")?;let s=guard.as_mut().ok_or("Crystal fixture missing")?;if !s.fixture_setup{s.fixture_setup=true;if p.actors.len()>1{Some([p.actors.iter().map(|a|a.position[0]).sum::<f32>()/p.actors.len()as f32,p.actors.iter().map(|a|a.position[1]).sum::<f32>()/p.actors.len()as f32,host.position[2]])}else{None}}else{None}};
   if let Some(point)=align{r.events_fixture_event_pose(game,0,host.guid,point)?;r.events_info(&format!("crystal fixture aligned owned host with group center: point={point:?}"));return Ok(())}
  }

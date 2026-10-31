@@ -55,6 +55,62 @@ local function refreshSupplyToast()
     if not supplyCurrent then if supplyToast then supplyToast:Hide()end;return end
     supplyToast:Show()
 end
+-- Snapshot deltas announce only newly observed personal pickups, never a restored total.
+local crystalToast,crystalScope,crystalCounts,crystalClock,crystalCurrent
+local crystalQueue,crystalUntil={},0
+local crystalKeys={"red","blue","green","yellow"}
+local function clearCrystalToast()
+    crystalQueue={};crystalCurrent=nil
+    if crystalToast then crystalToast:Hide()end
+end
+local function refreshCrystalToast()
+    if not model then
+        clearCrystalToast();crystalScope=nil;crystalCounts=nil;crystalClock=nil;return
+    end
+    local scope=model.epoch..":"..model.own
+    local counts={};local data=model.crystals
+    for _,key in ipairs(crystalKeys)do
+        local n=data and data[key]or 0
+        if type(n)~="number"or n~=n or n<0 or n>1000000 or math.floor(n)~=n then
+            clearCrystalToast();crystalScope=nil;crystalCounts=nil;return
+        end
+        counts[key]=n
+    end
+    local clock=AZS_GetRunTime and AZS_GetRunTime()
+    local reset=scope~=crystalScope or not crystalCounts or(type(clock)=="number"and crystalClock and clock+.5<crystalClock)
+    if crystalCounts then for _,key in ipairs(crystalKeys)do if counts[key]<crystalCounts[key]then reset=true end end end
+    if reset then
+        clearCrystalToast();crystalScope=scope;crystalCounts=counts;crystalClock=clock;return
+    end
+    for _,key in ipairs(crystalKeys)do
+        local text=model.crystalTexts and model.crystalTexts[key]
+        if text then
+            for n=1,math.min(16,counts[key]-crystalCounts[key])do
+                table.insert(crystalQueue,text)
+                if table.getn(crystalQueue)>16 then table.remove(crystalQueue,1)end
+            end
+        end
+    end
+    crystalCounts=counts;crystalClock=clock
+    local phase=AZS_GetPhase and AZS_GetPhase()
+    if phase and phase~="playing"and phase~="dead"then
+        if crystalCurrent then crystalUntil=GetTime()+3 end
+        if crystalToast then crystalToast:Hide()end
+        return
+    end
+    if not crystalCurrent or GetTime()>=crystalUntil then
+        crystalCurrent=table.remove(crystalQueue,1)
+        if crystalCurrent then
+            local d=crystalCurrent;crystalUntil=GetTime()+3
+            if not crystalToast then crystalToast=discoveryToast("ASXCrystalDiscoveryToast",d.title,d.icon)end
+            crystalToast.title:SetText(d.title);crystalToast.icon:SetTexture(d.icon)
+            local c=d.titleColor or d.color;crystalToast.title:SetTextColor(c[1],c[2],c[3])
+            crystalToast.reward:SetText(d.reward);crystalToast.reward:SetTextColor(d.color[1],d.color[2],d.color[3])
+            crystalToast.note:SetText(d.note)
+        end
+    end
+    if crystalCurrent then crystalToast:Show()elseif crystalToast then crystalToast:Hide()end
+end
 -- Retained display only: native simulation owns presence, progress and completion.
 local ritualFrame
 local function refreshRitual()
@@ -136,7 +192,7 @@ function ASXEventVisualReadout()
     return blessingToast and blessingToast:IsShown()or false,blessingToast and blessingToast:GetAlpha()or 0,supplyToast and supplyToast:IsShown()or false,supplyToast and supplyToast:GetAlpha()or 0
 end
 
-local defaults={supplies={x=0,y=0},fortune={x=0,y=0},sayge={x=0,y=0}}
+local defaults={supplies={x=0,y=0},fortune={x=0,y=0},crystals={x=0,y=0},sayge={x=0,y=0}}
 local anchor=CreateFrame("Frame","ASXUIEventAnchor",UIParent)
 anchor:SetWidth(1);anchor:SetHeight(1);anchor:EnableMouse(false)
 local function layoutSettings()
@@ -167,7 +223,7 @@ local function layout()
     local signature=p.x..":"..p.y
     if anchor.asxPosition~=signature then anchor:ClearAllPoints();anchor:SetPoint("TOP",UIParent,"TOP",p.x,p.y);anchor.asxPosition=signature end
     local offset=0
-    for _,entry in ipairs({{ritualFrame,"sayge",70},{supplyToast,"supplies",106},{blessingToast,"fortune",106}})do
+    for _,entry in ipairs({{ritualFrame,"sayge",70},{supplyToast,"supplies",106},{blessingToast,"fortune",106},{crystalToast,"crystals",106}})do
         local frame,kind,height=entry[1],entry[2],entry[3];local pref=preference(kind)
         if frame then
             frame:SetScale(pref.scale);frame:SetAlpha(pref.opacity)
@@ -191,9 +247,9 @@ local function update()
             local value={};for key,item in pairs(raw)do value[key]=item end;for key,item in pairs(text)do value[key]=item end
             return value
         end
-        model={epoch=snapshot.session.epoch,own=snapshot.session.recipientGUID,owner={discovery=present(data.discovery,texts.supplies),ritual=present(data.sayge,texts.sayge)},blessing=present(data.fortune,texts.fortune)}
+        model={epoch=snapshot.session.epoch,own=snapshot.session.recipientGUID,owner={discovery=present(data.discovery,texts.supplies),ritual=present(data.sayge,texts.sayge)},blessing=present(data.fortune,texts.fortune),crystals=data.crystals,crystalTexts=texts.crystals and texts.crystals.pickups}
     end
-    refreshSupplyToast();refreshBlessingToast();refreshRitual()
+    refreshSupplyToast();refreshBlessingToast();refreshRitual();refreshCrystalToast()
     layout()
     updateRitualBar(GetTime())
 end

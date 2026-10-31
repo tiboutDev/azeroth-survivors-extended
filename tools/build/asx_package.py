@@ -34,6 +34,10 @@ def build(output,dll,runtime,version=None,key=None,sequence=1,game_version=None)
         if public not in trusted:raise ValueError("Signing key does not match the packaged ASX trust keys")
     files={"ASX/Bin/avrt.dll":raw,"start-asx.cmd":(ROOT/"asx/start-asx.cmd").read_bytes().replace(b"\r\n",b"\n").replace(b"\n",b"\r\n"),"README-ASX.txt":(ROOT/"asx/README-ASX.txt").read_bytes().replace(b"{GAME_VERSION}",game_version.encode()),"ASX/Defaults/channel.json":(ROOT/"asx/channel.json").read_bytes(),"ASX/Interface/ASX.toc":b"## Interface: 11200\n## Title: Azeroth Survivors Extended\nPresentation.lua\n","ASX/Interface/Presentation.lua":(ROOT/"native-ui/official-party.lua").read_bytes(),"ASX/Client/LICENSE":(ROOT/"LICENSE").read_bytes(),"ASX/Client/supported-games.json":(ROOT/"asx/supported-games.json").read_bytes()}
     for name in("core.py","updates.py","maintenance.py","launch.py","remove.py","remove.ps1"):files["ASX/Client/"+name]=(ROOT/"asx"/name).read_bytes()
+    for name in core.ASXUI_FILES:
+        source=ROOT/"addons/ASXUI"/name
+        if any(part.is_symlink()for part in (source,source.parent,ROOT/"addons",ROOT/"addons/ASXUI")):raise ValueError("Bundled addon links cannot be distributed")
+        files[core.ASXUI_SOURCE+name]=source.read_bytes()
     runtime=Path(runtime)
     for file in sorted(runtime.rglob("*")):
         relative=file.relative_to(runtime)

@@ -29,75 +29,102 @@ BINARY_EXT = {'.exe', '.dll', '.mpq', '.bin', '.png', '.jpg', '.jpeg', '.blp', '
 RESOURCE_PATH = 'resources/windows/version.res'
 RESOURCE_SHA256 = 'a6f67c43eab06f32b9cb887f9e7053af4056a58feaa8551fae0dd768d93b1263'
 
+# ASXUI Combat: renamed OFL Barlow derivative, never a native game font.
+ASXUI_FONT_PATH = 'addons/ASXUI/Fonts/ASXUI-Numbers.ttf'
+ASXUI_FONT_SHA256 = '7957386f307c66a996ff986518a3a28f4039009144b3c8af6f4587ac063238fa'
+ASXUI_FONT_LICENSE = 'addons/ASXUI/Fonts/OFL.txt'
+ASXUI_FONT_LICENSE_SHA256 = '10b0e6bb43166a50fbe7cde2895bd7f703738a5da843acb5c97c95dc9ea26817'
+
 ASSET_NAME_RULE = re.compile(r'\b\w+\.(?:mpq|blp|m2|wmo|adt|wdt|wdl|dbc)\b', re.I)
 
 # Exact source-line hashes scope exceptions to reviewed textual references.
 # A new line/name or stale exception makes this gate fail pending review.
-REVIEWED_ASSET_REFERENCE_LINES = {
-# Reviewed asset-name references: relative path -> line SHA-256 -> exact occurrence count.
-# These entries exempt only the reviewed text lines below, never binary/assets or new names.
-    'asx/supported-games.json': {
-        '3c577b33d4e6a040579477b864c361fb18a82d336044d16cf2be837876c3b8c0': 1,
-        '454e059a30b1343fb25703d6d885f1f652a405e0959699a39af829d74c62b623': 1,
-        '4f60db51367fc1da51fba1b0268f7e7d34cbbdbdd9bd238a44158e90d2e90bdb': 1,
-        '56c6a3d1f018fed53effe0a56880d695add8d68f274ce9770d312c7ea26254ab': 1,
-        '7aef9aff33be71b0e36ded42368a306ff90de706cb7a8aecdaadeb543076c3d0': 1,
-        '7e9a714340dc15bf794ea4ceaee78964ff64d73010bc937b4c2a6c1fb4351eef': 1,
-        '94adb605320fb188e74f8f031033e2cc26f0ed5be2a79666493fa9e1f0c4c8ae': 1,
-        '9ef5f521339d22941d2bc4e81e8cec677728aeef96a0ec722bf3f04996116af8': 1,
-        'b30d46266a30b249f17d0f71ade9b24f2febc6af3c07db3a0666272332db88fb': 1,
-        'bf9f25504aed147519744db3c91348c80a94cddc4b192d7da141826c4aaaa426': 1,
-        'f77569ff58e2540b1e76d826f5e01f85545c183d0edc94a7db15688007d2f652': 1,
-    },
-    'tests/test_asx.py': {
-        '0833cc8e0382e0d94a3f161ab643d8321725e3e6a735fc8ccdfd9fafe6b85e41': 1,
-        '25241c357a2ba72da76249e533ed72f2aa049f90ebde4f62d94908c9a793c7d8': 1,
-        '3bc245cdfc52416e79aae406dd103a5cd44bbd4aeb78fb8ae55b7541ff4e413a': 1,
-        'f31f62afa0a422f9e042fe9cea0308f03fd0eefeb2f8e50df01749cb810b9128': 1,
-        '8db6365b038a3b75742c13d19e129ae36bbd3356f3e971560a1b43dfaeb14e12': 1,
-        '909b30f21a9a8e16c8787c90eb8189f1b4bdd3a5a8d64cd4cffd866b10be4e84': 1,
-        '987eee303b7ed4d5db512611753c407296f197734eff0a8433989202196cf048': 1,
-        'ae6d4e51b48b613f1d08bb978435e977ccce5999cbea929822e4c1ebd1db6e43': 2,
-        'bc00817d9234576cce10abdd3ff150417114a0215eb6c52a2032d9e519f8008f': 1,
-        'c6e58abcf8e62bd45abf1cc0ee7fc007ddbac56db902cc520cf73d87f7db069a': 1,
-        'c88519b8fcf03d88aa60189927db84c313681728b121cc9073920b2a85c17a65': 1,
-        'cada535360ad0ff6273d08bd35e003aff192a4759e360e5433a02e02a6a0c0c2': 1,
-        'd13c297b698cc4c7eb21aca3dd50a62ac6a0a10fc2fd43d83088fc0498f412c2': 1,
-        'dd39f74ee2d53cd19d33ad4d5620cac457903ac55442ae55b19d8ae05175d180': 1,
-        'e2899e0fcdfb29507821b67fce521a448e3154464b4a24ee6930150b42a37a3b': 1,
-        'ee07538ad31e9c473f632da38e9d10f3784d7222c6ed5cdb98d3ef388552cc87': 1,
-        '902003f8de23ed368ca65dc37d2e15303b6cec334f192607b046ab10c621e97f': 1,
-        'f6e4350af6233b9c3c4956c5c8f3add8fabbd369addc9914f758e1fccbffa1f8': 1,
-        'fd4090474d09cf694b3751763c7bed38ef90ce58e6a7610d0a0ef14dddea5b18': 1,
-    },
-    'tests/test_client_binding.py': {
-        '2dffd64610c8814803de1b9e2fa363e9f0a568d40f5c7d41ee5ae1a6830ce191': 1,
-    },
-    'tests/test_native_runtime_import.py': {
-        '45a8f0070ead71b4811813cd87e7cc44f43a8414bb75d19665945d2596e9cc14': 1,
-        '7e72ab631c9f89bd4a281dbaf6ad9ad6a9d7495f388cf389bca8c3cf8ceda1ac': 1,
-        '8054eaee4f05dd9a6e43da87868af10c82656b41907c5d52b3eebfaa5362d5fc': 1,
-        'aac923aee8d5ee75aee442bd82f82ad5dedaf674304165ad020a2169d1b2280d': 1,
-        'bb26f75061689e9e6fbedfa2dadb08dbd3108ff7c0bb52cfbd9223792f9fa9e0': 1,
-        'd433d6cf007ebfdf79ab71284bd35df63f2d63efff37a6cbd81cd6d91c889cb5': 1,
-    },
-    'tests/test_official_party_lua.py': {
-        'bbadb2a299d31ba42593b65042fe21db4818fa0592a525d5e34dfe994d9745ba': 1,
-        'c4910c426541d081376e4144dda15ad1df4502bbf33588eb3d277df4d283127d': 1,
-        'def99ee383a0a4f747527436548ac32c1ac5055e11c122d6819aed476894d571': 1,
-        'e9fc312477cdba035620859a5db6a7f7e065d33bbcb4eef593e889d45763a4c0': 1,
-    },
-    'tests/test_ui_archive.py': {
-        'fba092889029c54141f1a6d61a8cf04bba46659ffcc37e7cd4202773c94952a3': 1,
-    },
-    'tools/build/asx_package.py': {
-        '5fc49340d2f478585efbd9ed817f7e47ba2ae6124de7560e07604884c4282d09': 1,
-    },
-    'tools/dev/native_runtime_import.py': {
-        '361111e124fa477a98a175b88877d753bd6a7b08a64b81e7a3cf12fa09421c6d': 1,
-    },
-}
-ASSET_REFERENCE_REASONS = {'asx/supported-games.json': 'Supported archive names consumed by the native-folder importer; this manifest contains paths only, not archives.', 'tests/test_asx.py': 'Temporary archive names used to verify path ownership and safe installation behavior; no game asset bytes are fixtures.', 'tests/test_client_binding.py': 'The native-image fixture refers to an archive suffix in synthetic PE input; it does not contain a game archive.', 'tests/test_native_runtime_import.py': 'Temporary archive names exercise the importer’s path and inventory checks; no archive contents are included.', 'tests/test_official_party_lua.py': 'UI tests mention texture atlas identifiers returned by the game; no texture assets are included.', 'tests/test_ui_archive.py': 'Temporary addon asset-name string used to check archive filtering; no image data is included.', 'tools/build/asx_package.py': 'Packager emits an addon manifest referencing native game-provided UI assets; it does not package those assets.', 'tools/dev/native_runtime_import.py': 'Importer recognizes native archive filenames inside the selected game installation and never copies archives into the package.'}
+REVIEWED_ASSET_REFERENCE_LINES = {'asx/supported-games.json': {'3c577b33d4e6a040579477b864c361fb18a82d336044d16cf2be837876c3b8c0': 1,
+                              '454e059a30b1343fb25703d6d885f1f652a405e0959699a39af829d74c62b623': 1,
+                              '4f60db51367fc1da51fba1b0268f7e7d34cbbdbdd9bd238a44158e90d2e90bdb': 1,
+                              '56c6a3d1f018fed53effe0a56880d695add8d68f274ce9770d312c7ea26254ab': 1,
+                              '7aef9aff33be71b0e36ded42368a306ff90de706cb7a8aecdaadeb543076c3d0': 1,
+                              '7e9a714340dc15bf794ea4ceaee78964ff64d73010bc937b4c2a6c1fb4351eef': 1,
+                              '94adb605320fb188e74f8f031033e2cc26f0ed5be2a79666493fa9e1f0c4c8ae': 1,
+                              '9ef5f521339d22941d2bc4e81e8cec677728aeef96a0ec722bf3f04996116af8': 1,
+                              'b30d46266a30b249f17d0f71ade9b24f2febc6af3c07db3a0666272332db88fb': 1,
+                              'bf9f25504aed147519744db3c91348c80a94cddc4b192d7da141826c4aaaa426': 1,
+                              'f77569ff58e2540b1e76d826f5e01f85545c183d0edc94a7db15688007d2f652': 1},
+ 'crates/asx-game/src/official_native/treasure_goblins.rs': {'2040f9652bac09b9b9a0ddb7fa6c5dd0774f28e484e1900896c3d3d844bd0fff': 1,
+                                                             '38100239d1f35a2defff487dc1c3c85d76bcefe2cdebc371e0df5f50471fbb9b': 2,
+                                                             '5930b855d221e6514e550c21e6fe377993308bc40f94f7b2dcf21f884ab22e4c': 1,
+                                                             '5a2c009d64056e224badd8753766203006a3c6830f56253fed63a95984e2ec34': 1,
+                                                             'cb0abbfea67a3e197c3feaea0d60cf4427fd03371d052e5a8ea12f0c318a0c80': 1,
+                                                             'e2326fcb370f64c08d3fa8fcf1e8b7b669beff7b3e263882a22d4b6b701f18b6': 1},
+ 'tests/test_asx.py': {'0833cc8e0382e0d94a3f161ab643d8321725e3e6a735fc8ccdfd9fafe6b85e41': 1,
+                       '25241c357a2ba72da76249e533ed72f2aa049f90ebde4f62d94908c9a793c7d8': 1,
+                       '31638acbbd33e5ced8350c4835fc345f5cdf62c9200a502c7bb2d42c0fb567b7': 1,
+                       '3bc245cdfc52416e79aae406dd103a5cd44bbd4aeb78fb8ae55b7541ff4e413a': 1,
+                       '8db6365b038a3b75742c13d19e129ae36bbd3356f3e971560a1b43dfaeb14e12': 1,
+                       '902003f8de23ed368ca65dc37d2e15303b6cec334f192607b046ab10c621e97f': 1,
+                       '909b30f21a9a8e16c8787c90eb8189f1b4bdd3a5a8d64cd4cffd866b10be4e84': 1,
+                       '987eee303b7ed4d5db512611753c407296f197734eff0a8433989202196cf048': 1,
+                       'ae6d4e51b48b613f1d08bb978435e977ccce5999cbea929822e4c1ebd1db6e43': 2,
+                       'bc00817d9234576cce10abdd3ff150417114a0215eb6c52a2032d9e519f8008f': 1,
+                       'bc65f4411ba8c1dbac35cd5e65bc32b312f613c02902f783ad92949bdecff3f3': 1,
+                       'c6e58abcf8e62bd45abf1cc0ee7fc007ddbac56db902cc520cf73d87f7db069a': 1,
+                       'c88519b8fcf03d88aa60189927db84c313681728b121cc9073920b2a85c17a65': 1,
+                       'cada535360ad0ff6273d08bd35e003aff192a4759e360e5433a02e02a6a0c0c2': 1,
+                       'd13c297b698cc4c7eb21aca3dd50a62ac6a0a10fc2fd43d83088fc0498f412c2': 1,
+                       'dd39f74ee2d53cd19d33ad4d5620cac457903ac55442ae55b19d8ae05175d180': 1,
+                       'e2899e0fcdfb29507821b67fce521a448e3154464b4a24ee6930150b42a37a3b': 1,
+                       'ee07538ad31e9c473f632da38e9d10f3784d7222c6ed5cdb98d3ef388552cc87': 1,
+                       'f6e4350af6233b9c3c4956c5c8f3add8fabbd369addc9914f758e1fccbffa1f8': 1,
+                       'fd4090474d09cf694b3751763c7bed38ef90ce58e6a7610d0a0ef14dddea5b18': 1},
+ 'tests/test_asx_reproducibility.py': {'234e5ad9377c95c0f68cec45fa84caf39aee75e119d92ada4e5d6292ed5d5a3a': 1},
+ 'tests/test_asxui_buffs.py': {'29e76b7cd558287c1e43bba669853531e0cb69d601f7e48351c4e25da99d9c5a': 1,
+                               '383fc8a3a940e2567fe77645ddfa9a429c8dd28a16cb90f37301244e1b654cd4': 1,
+                               '3c20ed41a7024a4bb383885da64cb94c6b598130e083c2bec0e7ea6a15845c73': 1,
+                               '88ede70ffc5bf4b300d1cb50b3a875af62967c3fc80c5389cdd964ecec50ab0e': 1,
+                               '98db9237fdf146fcc9288dbdcaac5f06b67e2c3d501031a24129f645b26b8bea': 1},
+ 'tests/test_client_binding.py': {'2dffd64610c8814803de1b9e2fa363e9f0a568d40f5c7d41ee5ae1a6830ce191': 1},
+ 'tests/test_client_registry.py': {'2514fd6f33cf6910cd57df9dfa1843388f0926104c1d126fd8604652373a4619': 1,
+                                   '79cdd467bceca81f5563077a272242eb99365568051c4d1c6b2dc6e13c23e31e': 1},
+ 'tests/test_native_runtime_import.py': {'45a8f0070ead71b4811813cd87e7cc44f43a8414bb75d19665945d2596e9cc14': 1,
+                                         '7e72ab631c9f89bd4a281dbaf6ad9ad6a9d7495f388cf389bca8c3cf8ceda1ac': 1,
+                                         '8054eaee4f05dd9a6e43da87868af10c82656b41907c5d52b3eebfaa5362d5fc': 1,
+                                         'aac923aee8d5ee75aee442bd82f82ad5dedaf674304165ad020a2169d1b2280d': 1,
+                                         'bb26f75061689e9e6fbedfa2dadb08dbd3108ff7c0bb52cfbd9223792f9fa9e0': 1,
+                                         'd433d6cf007ebfdf79ab71284bd35df63f2d63efff37a6cbd81cd6d91c889cb5': 1},
+ 'tests/test_official_party_lua.py': {'0a00467764bb90279de608384f5c7e99d5ac15a55b1ad47dc59f8292002e3225': 1,
+                                      'a5604d8df020dea1d9d5f002493fc356003468f4e9d0d698ae57ec47ef0a4649': 1,
+                                      'bbadb2a299d31ba42593b65042fe21db4818fa0592a525d5e34dfe994d9745ba': 1,
+                                      'c4910c426541d081376e4144dda15ad1df4502bbf33588eb3d277df4d283127d': 1,
+                                      'c75e88ba36fee8141136cd924fd2f5af47e69b431f1f50cbd625d5d1576d5819': 1,
+                                      'e9fc312477cdba035620859a5db6a7f7e065d33bbcb4eef593e889d45763a4c0': 1,
+                                      'f62e6da63d10ce3fa235dd67ecb2977dca159f6f1b03fe4b4380f3f96882f427': 1,
+                                      'fa39ad1ec18d0d0ff67859a55630edc4c95ca340359aa78f25281d4eda0f9c29': 1},
+ 'tests/test_ui_archive.py': {'fba092889029c54141f1a6d61a8cf04bba46659ffcc37e7cd4202773c94952a3': 1},
+ 'tools/build/asx_package.py': {'5fc49340d2f478585efbd9ed817f7e47ba2ae6124de7560e07604884c4282d09': 1},
+ 'tools/dev/native_runtime_import.py': {}}
+ASSET_REFERENCE_REASONS = {'asx/supported-games.json': 'Supported archive names consumed by the native-folder importer; this manifest '
+                             'contains paths only, not archives.',
+ 'crates/asx-game/src/official_native/treasure_goblins.rs': 'Exact game-provided goblin skin identifiers and '
+                                                            'synthetic lookup tests; no skin bytes are '
+                                                            'distributed.',
+ 'tests/test_asx.py': 'Temporary archive names used to verify path ownership and safe installation behavior; '
+                      'no game asset bytes are fixtures.',
+ 'tests/test_asx_reproducibility.py': 'Synthetic archive paths exercise source fingerprint coverage; no '
+                                      'archive data.',
+ 'tests/test_asxui_buffs.py': 'Native icon identifiers in Lua order fixtures; no texture data.',
+ 'tests/test_client_binding.py': 'The native-image fixture refers to an archive suffix in synthetic PE '
+                                 'input; it does not contain a game archive.',
+ 'tests/test_client_registry.py': 'Archive names verify selected registry contracts; no archive data.',
+ 'tests/test_native_runtime_import.py': 'Temporary archive names exercise the importer’s path and inventory '
+                                        'checks; no archive contents are included.',
+ 'tests/test_official_party_lua.py': 'UI tests mention texture atlas identifiers returned by the game; no '
+                                     'texture assets are included.',
+ 'tests/test_ui_archive.py': 'Temporary addon asset-name string used to check archive filtering; no image '
+                             'data is included.',
+ 'tools/build/asx_package.py': 'Packager emits an addon manifest referencing native game-provided UI assets; '
+                               'it does not package those assets.',
+ 'tools/dev/native_runtime_import.py': 'Importer recognizes native archive filenames inside the selected '
+                                       'game installation and never copies archives into the package.'}
 
 FORBIDDEN = [
     ('windows user path', re.compile(r'[A-Za-z]:\\\\?Users\\\\?[^\s"\']+', re.I), 'leaks a local user profile path'),
@@ -182,6 +209,11 @@ def forbidden_binary(rel, suffix, raw=None):
     suffix = suffix.lower()
     if suffix == '.res':
         return not approved_embedded_resource(rel, raw or b'')
+    if rel == ASXUI_FONT_PATH and suffix == '.ttf':
+        license_path = ROOT / ASXUI_FONT_LICENSE
+        return not (hashlib.sha256(raw or b'').hexdigest() == ASXUI_FONT_SHA256
+                    and license_path.is_file()
+                    and hashlib.sha256(license_path.read_bytes()).hexdigest() == ASXUI_FONT_LICENSE_SHA256)
     return suffix in BINARY_EXT
 
 
@@ -207,6 +239,10 @@ def scan():
                 continue
             hits.append((rel, 0, 'binary/asset file', 'unreviewed Windows resource file'))
             continue
+        if rel == ASXUI_FONT_PATH and suffix == '.ttf':
+            raw = path.read_bytes()
+            if not forbidden_binary(rel, suffix, raw):
+                continue
         if forbidden_binary(rel, suffix, resource_bytes):
             note = f'a {suffix} file must not be in the audit repo'
             hits.append((rel, 0, 'binary/asset file', note))
