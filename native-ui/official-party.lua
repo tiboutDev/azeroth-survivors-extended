@@ -81,7 +81,7 @@ local function decode(wire)
     local newline=string.find(text,"\n",1,true)
     if not newline then return nil end
     local lines=split(text,"\n")
-    if table.getn(lines)>176 then return nil end
+    if table.getn(lines)>182 then return nil end
     local head=split(lines[1],"|")
     if table.getn(head)~=4 or head[1]~="1" or not integer(head[2],0,1e12) or not identity(head[3]) or not integer(head[4],0,1e9) then return nil end
     local result={epoch=head[2],own=head[3],members={},ordered={},signature=string.sub(text,newline+1)}
@@ -100,6 +100,10 @@ local function decode(wire)
                 lastSlot=slot
                 local member={id=id,slot=slot,name=name,spells={},items={},consumables={},markers={}}
                 result.members[id]=member;table.insert(result.ordered,member)
+            elseif a[1]=="L" and table.getn(a)==3 and id==result.own and result.members[id] then
+                local count=integer(a[3],0,5)
+                if count==nil or result.members[id].equipment then return nil end
+                result.members[id].equipment={expected=count,items={}}
             elseif a[1]=="G" and table.getn(a)==7 and result.members[id] then
                 local red,blue,green,yellow=integer(a[3],0,1000000),integer(a[4],0,1000000),integer(a[5],0,1000000),integer(a[6],0,1000000)
                 local index=integer(a[7],0,32)
@@ -147,11 +151,13 @@ local function decode(wire)
                 local stacks,seconds=integer(a[3],0,3),integer(a[4],0,60)
                 if member.fatigue or not stacks or not seconds or (stacks==0 and seconds~=0) or (stacks>0 and seconds==0) then return nil end
                 member.fatigue={stacks=stacks,seconds=seconds}
-            elseif ((a[1]=="S" and (table.getn(a)==7 or table.getn(a)==11)) or (a[1]=="I" and table.getn(a)==7)) and result.members[id] then
+            elseif ((a[1]=="S" and (table.getn(a)==7 or table.getn(a)==11)) or ((a[1]=="I"or a[1]=="E") and table.getn(a)==7)) and result.members[id] then
                 local itemId,rank=integer(a[3],1,4294967295),integer(a[4],1,255)
                 local name,icon,text=unhex(a[5],256),unhex(a[6],160),unhex(a[7],a[1]=="S" and 8192 or 2048)
                 if not itemId or not rank or not name or name=="" or string.find(name,"[%c]") or not icon or icon=="" or string.find(icon,"[^%w_./\\]") or not text or string.find(text,"[%z\001-\009\011-\031\127]") then return nil end
-                local list=a[1]=="S" and result.members[id].spells or result.members[id].items
+                local localItems=result.members[id].equipment
+                if a[1]=="E" and (id~=result.own or not localItems or table.getn(a)~=7 or itemId~=table.getn(localItems.items)+1 or itemId>localItems.expected)then return nil end
+                local list=a[1]=="E" and localItems.items or(a[1]=="S" and result.members[id].spells or result.members[id].items)
                 if table.getn(list)>=16 then return nil end
                 local tip=nil
                 if a[1]=="S" and table.getn(a)==11 then
@@ -165,6 +171,9 @@ local function decode(wire)
                 table.insert(list,{id=itemId,rank=rank,name=name,icon=icon,text=text,owner=id,tip=tip})
             else return nil end
         end
+    end
+    for _,member in ipairs(result.ordered)do
+        if member.equipment and table.getn(member.equipment.items)~=member.equipment.expected then return nil end
     end
     result.signature=table.concat(signature,"\n")
     if not result.members[result.own] then return nil end
@@ -624,10 +633,18 @@ local function apiState()
     local own=allowed and supplyOwner()or nil
     local input=phase..":"..tostring(own~=nil)..":"..tostring(AZS_RUN_UPDATED)..":"..tostring(modelWire)
     if apiCache and input==apiInput then return apiCache end
-    local state={api={major=1,minor=4},available=own~=nil,phase=phase,data={},texts={}}
+    local state={api={major=1,minor=5},available=own~=nil,phase=phase,data={},texts={}}
     if own then
         state.session={epoch=model.epoch,recipientGUID=model.own}
         state.data={crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
+        local equipmentTexts
+        if own.equipment then
+            state.data.equipment={};equipmentTexts={}
+            for slot,item in ipairs(own.equipment.items)do
+                state.data.equipment[slot]={slot=slot,rank=item.rank}
+                equipmentTexts[slot]={name=item.name,icon=item.icon,text=item.text}
+            end
+        end
         if state.data.sayge then state.data.sayge.maximum=2000 end
         if state.data.discovery then local d=state.data.discovery;state.data.discovery={event=d.event,rarity=d.rarity,quality=d.quality,gold=d.gold}end
         local crystalText
@@ -655,7 +672,7 @@ local function apiState()
             if not value then return nil end
             return {title=value.title,icon=value.icon,reward=value.reward,note=value.note,color=apiCopy(value.color)}
         end
-        state.texts={crystals=crystalText,supplies=textOnly(formatted.owner.discovery),fortune=textOnly(formatted.blessing),sayge=textOnly(formatted.owner.ritual),consumables=consumableTexts}
+        state.texts={equipment=equipmentTexts,crystals=crystalText,supplies=textOnly(formatted.owner.discovery),fortune=textOnly(formatted.blessing),sayge=textOnly(formatted.owner.ritual),consumables=consumableTexts}
         if state.texts.supplies then state.texts.supplies.name=own.discovery.name;state.texts.supplies.description=own.discovery.text end
     else
         state.reason=not allowed and "outside_run"or(type(AZS_RUN_UPDATED)=="number"and GetTime()-AZS_RUN_UPDATED>4 and "stale"or"missing_or_invalid_payload")
@@ -666,7 +683,7 @@ local function apiState()
     state.updatedAt=own and modelTime or nil
     apiCache=state;apiInput=input;return state
 end
-function ASX_GetAPIVersion()return 1,4 end
+function ASX_GetAPIVersion()return 1,5 end
 function ASX_GetState(major)
     if major~=nil and major~=1 then return nil,"unsupported_version"end
     return apiCopy(apiState())

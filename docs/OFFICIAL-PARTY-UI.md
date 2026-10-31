@@ -140,7 +140,9 @@ Historical reports and unrelated legacy diagnostic interfaces are unchanged.
 
 Each recipient receives `M` membership and ASX metadata (including local
 Fortune, fatigue and personal events), but `S` spell and `I` item build rows
-only for other players. Local builds are still captured for those other
+only for other players. Contract 1.5 additionally carries at most five local
+items in a separate bounded equipment sequence for ASXUI; local spells remain
+omitted. Local builds are still captured for those other
 recipients. Native local build presentation remains authoritative.
 
 The `A` minimap row is now
@@ -197,3 +199,71 @@ The retained ASX tooltip keeps native GameTooltip styling: white title, green
 effect and secondary scope/lifetime details. When a party fortune is stronger,
 separate Your fortune and Active party bonus rows distinguish the owned value
 from the effective shared value; they are not added together.
+
+## ASXUI local HUD
+
+ASXUI `Hud.lua` extends the native action-bar artwork using existing textures,
+retains native action/micro-button scripts and preserves native XP rendering/height/scripts while widening its geometry. Native gryphons remain at the front. A top-centered icon counter strip flush with the screen edge
+reads native kills/gold/cache cost independently of the bottom layout; a three-column fixed-size drawer slides
+through a clipping scroll frame and omits displayed-zero character stats.
+Native time and the next-boss countdown are displayed below the counters using
+public native run APIs; the native clock has no movable Lua frame. Its prior
+visibility is retained, including an already hidden clock. The native build/tally/clock visibility preferences and owned anchors are restored on
+disable or unavailable data. Local equipment is provided by contract 1.5 from
+the existing captured owner build, with explicit empty snapshots and native
+tooltip text; no additional native capture, ABI contact or gameplay hook is added.
+
+The user-selected local layout now visually hides the old PlayerFrame/TargetFrame
+roots (without unregistering their native events) and shows native health values
+in a health-only HUD bar. Original alpha/mouse states are restored on disable.
+The retained aura buttons dock above this bar, separating harmful filters and
+preserving Fortune/Crystal priority, IDs, duration/click handlers and restoration.
+Health and aura anchors stay fixed while the title-free drawer slides above
+health, intentionally covering the aura rows and their duration labels. Closing
+the drawer exposes the original aura buttons for inspection/cancellation.
+Ally panels style existing retained
+spell/item children without replacing party roots or owner formatting. Allied
+buff buttons sit outside the panel on its right, with up to eight icons per
+row and two rows. Native IDs, owner/recipient data and tooltip scripts stay
+unchanged, and their original anchors restore when the HUD is disabled.
+Read-only objectives in the upper-left use held native lairs (including distant guardians), falling back to living-guardian rows when the lair API is absent, and ASX Sayge state; retained party frames are laid out beneath them.
+
+The health bar is centered at two thirds of the bottom HUD width. Native buff
+and debuff rows sit above it, each centered independently (eight icons per row,
+including centered partial rows), without shrinking icons or duration text. Native duration labels move above
+the icons; their values and visibility remain native. The statistics drawer
+opens immediately above health and intentionally covers auras while open.
+The top counter ribbon uses the native dialog-header body/sides and lower
+trim, without the upper rail or top corners. Its content area is 36 units high,
+leaving eight units above and below the 20-unit icons before the lower trim.
+The clock remains below it with a clear gap. Player health has a capsule outline and a 22-unit fill, leaving room around
+its 12-unit text. Native circular masks and the native white texture shape
+the ends; a clipping viewport preserves the silhouette at low HP.
+
+Event pickup panels, objectives and allied build panels use an unmarked area of the native quest-log
+parchment, shaded dark brown to soften the background without introducing new
+assets. Other HUD panels keep their existing darker theme. Pickup panels use a
+340-by-88 default footprint and 32-unit icon, growing for wrapped native text;
+the automatic notification stack uses the resulting height and saved scale.
+
+The warm paper extends beneath the popup/objective/allied-build border rather than leaving
+a black inner gutter. No native texture is redistributed.
+
+
+### Native-textured health, permanent badges and channels
+
+The capsule's foreground uses the original native status-bar texture. Retained
+ally build panels align center-to-center with their party roots, with aura
+children outside the panel. Crystal/Fortune medallions use only current public
+ASX state and prefer the selected native buff tooltip. Index reuse is checked
+again on hover; ambiguous/missing indices never target another aura. Native
+buttons are visually suppressed only while a valid badge replaces them, then
+restore their original alpha/mouse state. Other aura rows keep native handlers.
+
+Sayge and resurrection share a native casting-bar skin without an icon. The
+resurrection view consumes `AZS_GetRevive()` directly and retains/restores the
+native visibility preference. No revival command, timing or participant policy
+is added. Loot/mark notices consume local native English chat receipts and keep
+their text verbatim; no wallet delta, new memory read or ABI contact is needed.
+Native loot is hidden only after a compatible receipt establishes the replacement;
+unsupported locales retain native presentation. This does not suppress chat.

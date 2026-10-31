@@ -97,7 +97,8 @@ pub fn fixture_tick(r:&Runtime,game:u64){
   }
   let _=asx_game::official::SupportCalls::refresh_support(&io,game);
  }
- let due=NEXT.lock().ok().is_some_and(|mut n|{if p.clock<n.0||n.1>=40{return false}n.0=p.clock+0.6;n.1+=1;true});
+ let limit=if std::env::var("ASX_TEST_HUD_FIXTURE").as_deref()==Ok("1"){5}else{40};
+ let due=NEXT.lock().ok().is_some_and(|mut n|{if p.clock<n.0||n.1>=limit{return false}n.0=p.clock+0.6;n.1+=1;true});
  if due{
   type Gold=unsafe extern "system" fn(u64,u32)->usize;type Chest=unsafe extern "system" fn(u64)->bool;
   let gold:Gold=unsafe{std::mem::transmute(r.local.base+r.adapter.gold_entry().rva as usize)};let chest:Chest=unsafe{std::mem::transmute(r.local.base+r.adapter.chest_entry().rva as usize)};

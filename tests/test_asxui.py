@@ -7,13 +7,25 @@ except ImportError:
     LuaRuntime=None
 ROOT=Path(__file__).resolve().parents[1]
 STUB=r"""
-objects={}; SlashCmdList={}; ASXUIDB=nil; DAMAGE_TEXT_FONT="native.ttf"
+math.huge=nil;objects={}; SlashCmdList={}; ASXUIDB=nil; DAMAGE_TEXT_FONT="native.ttf"
 function getglobal(n)return _G[n]end
 function UnitExists(unit)return unit=="target"end
 function UnitName(unit)return "Boar"end
 rank="normal";function UnitClassification(unit)return rank end
 local function object(kind,name)
  local o={kind=kind,name=name,alpha=1,scale=1,visible=true,children={},regions={},scripts={}}
+ function o:GetName()return self.name end
+ function o:SetPoint(...)self.point={...}end
+ function o:EnableMouse(v)self.mouse=v end
+ function o:SetTexture(v)self.texture=v end
+ function o:SetTexCoord(...)self.coords={...}end
+ function o:SetVertexColor(...)self.tint={...}end
+ function o:Show()self.visible=true end
+ function o:Hide()self.visible=false end
+ function o:SetScrollChild(v)self.scrollChild=v end
+ function o:CreateTexture(name,layer)local t=object("Texture",name);table.insert(self.regions,t);return t end
+ function o:GetStatusBarTexture()return self.healthTexture end
+ function o:GetMinMaxValues()return 0,self.maximum end
  function o:GetObjectType()return self.kind end
  function o:GetTexture()return self.texture end
  function o:GetRegions()return unpack(self.regions)end
@@ -39,10 +51,11 @@ local function object(kind,name)
  return o
 end
 function CreateFrame(kind,name,parent)return object(kind,name)end
+function SetPortraitToTexture(name,path)_G[name].portrait=path end
 UIParent=object("Frame","UIParent");WorldFrame=object("Frame","WorldFrame")
 function makePlate(name,r,g,b)
  local p=object("Frame");p.originalUpdate=function()end;p.scripts.OnUpdate=p.originalUpdate
- local bar=object("StatusBar");bar.health=37;bar.color={r,g,b};p.children={bar}
+ local bar=object("StatusBar");bar.health=37;bar.maximum=100;bar.healthTexture=object("Texture");bar.color={r,g,b};p.children={bar}
  local border=object("Texture");border.texture="Interface\\Tooltips\\Nameplate-Border"
  local glow=object("Texture");local text=object("FontString");text.text=name
  local level=object("FontString");level.text="5"
@@ -59,6 +72,7 @@ class ASXUITests(unittest.TestCase):
         self.lua=LuaRuntime(unpack_returned_tuples=True)
         self.lua.execute(STUB)
         self.lua.execute((ROOT/"addons/ASXUI/ASXUI.lua").read_text())
+        self.lua.execute((ROOT/"addons/ASXUI/Theme.lua").read_text())
         self.lua.execute("loadAddon()")
     def run_lua(self,source):self.lua.execute(source)
     def test_enemy_scale_is_stable_and_preserves_native_health_and_scripts(self):
@@ -71,6 +85,25 @@ class ASXUITests(unittest.TestCase):
         self.run_lua('p=makePlate("Boar",1,0,0);tick();assert(p.regions[3].alpha==0);rank="elite";tick();assert(p.regions[3].alpha==1)')
     def test_native_kind_wins_over_generic_classification_and_does_not_leak_on_reuse(self):
         self.run_lua('p=makePlate("Boar",1,0,0);rank="elite";kind="guardian";function AZS_UnitKind()return kind end;tick();assert(p.regions[3].alpha==1);kind="normal";tick();assert(p.regions[3].alpha==0);for _,v in ipairs({"elite","guardian","boss","final"})do kind=v;tick();assert(p.regions[3].alpha==1)end;kind=nil;tick();assert(p.regions[3].alpha==0);p.regions[3].text="Another";kind="boss";tick();assert(p.regions[3].alpha==0)')
+    def test_pill_tracks_native_health_color_and_reuses_its_frames(self):
+        self.run_lua('''p=makePlate("Boar",1,0,0);tick();local root=ASXUIEnemyHealth1
+        assert(root:GetWidth()==70 and root:GetHeight()==8 and root.visible)
+        assert(ASXUIEnemyHealth1Clip:GetWidth()==68*.37)
+        assert(p.children[1].healthTexture.alpha==0 and p.regions[1].alpha==0 and p.regions[2].alpha==0)
+        assert(p.regions[6].alpha==1)
+        p.children[1].health=1;tick();assert(ASXUIEnemyHealth1Clip:GetWidth()==.68)
+        p.children[1].health=0;tick();assert(not ASXUIEnemyHealth1Clip.visible)
+        p.children[1].health=999;p.children[1].color={1,.5,0};tick()
+        assert(ASXUIEnemyHealth1Clip:GetWidth()==68 and ASXUIEnemyHealth1Fill.centerTexture.tint[2]==.5)
+        assert(root==ASXUIEnemyHealth1 and p.children[1].health==999)
+        SlashCmdList.ASXUI("scale 1.5");assert(root:GetWidth()==150 and root:GetHeight()==8)''')
+    def test_pill_restores_native_art_on_invalid_health_friendly_reuse_and_disable(self):
+        self.run_lua('''p=makePlate("Boar",1,0,0);p.regions[1].alpha=.6;tick()
+        p.children[1].maximum=0;tick();assert(not ASXUIEnemyHealth1.visible and p.regions[1].alpha==.6 and p.children[1].healthTexture.alpha==1)
+        p.children[1].maximum=100;tick();p.children[1].color={0,1,0};tick()
+        assert(not ASXUIEnemyHealth1.visible and p.regions[1].alpha==.6)
+        p.children[1].color={1,0,0};tick();p.visible=false
+        SlashCmdList.ASXUI("plates off");assert(not ASXUIEnemyHealth1.visible and p.regions[1].alpha==.6 and p.children[1].healthTexture.alpha==1)''')
     def test_native_damage_face_is_preserved_by_default(self):
         self.run_lua('assert(DAMAGE_TEXT_FONT=="native.ttf" and ASXUIDB.numbers==false)')
     def test_toggle_restores_native_widgets_and_does_not_toggle_visibility(self):

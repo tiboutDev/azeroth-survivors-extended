@@ -5,7 +5,7 @@ from pathlib import Path,PurePosixPath
 PRODUCT="azeroth-survivors-extended"
 MANIFEST="ASX/manifest.json"
 STATE="ASX/State/install.json"
-ASXUI_FILES=('ASXUI.toc', 'ASXUI.lua', 'Minimap.lua', 'Events.lua', 'Buffs.lua', 'Fonts/ASXUI-Numbers.ttf', 'Fonts/OFL.txt', 'LICENSE', 'README.md')
+ASXUI_FILES=('ASXUI.toc', 'ASXUI.lua', 'Minimap.lua', 'Events.lua', 'Buffs.lua', 'Hud.lua', 'Theme.lua', 'Frames.lua', 'Fonts/ASXUI-Numbers.ttf', 'Fonts/OFL.txt', 'LICENSE', 'README.md')
 ASXUI_SOURCE="ASX/Interface/ASXUI/"
 ASXUI_TARGET="benilla-config/AddOns/ASXUI/"
 def ui_target(name):return name in {ASXUI_TARGET+n for n in ASXUI_FILES}
@@ -109,7 +109,7 @@ def validate(m,reviewed=True):
     required={"start-asx.cmd","README-ASX.txt","ASX/Bin/avrt.dll","ASX/Client/launch.py","ASX/Client/supported-games.json","ASX/Interface/ASX.toc","ASX/Interface/Presentation.lua","ASX/Defaults/channel.json"}
     if not required<=files.keys():raise ValueError("Incomplete ASX distribution")
     ui_files={n for n in files if n.startswith(ASXUI_SOURCE)}
-    if ui_files and ui_files!={ASXUI_SOURCE+n for n in ASXUI_FILES}:raise ValueError("Incomplete or unknown bundled ASXUI inventory")
+    if ui_files and ui_files not in ({ASXUI_SOURCE+n for n in ASXUI_FILES},{ASXUI_SOURCE+n for n in ASXUI_FILES if n not in ("Hud.lua","Theme.lua","Frames.lua")}):raise ValueError("Incomplete or unknown bundled ASXUI inventory")
     return m
 def manifest(root):return validate(get(root,MANIFEST,{}))
 def inspect(root,m=None):

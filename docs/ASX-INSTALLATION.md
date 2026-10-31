@@ -126,3 +126,8 @@ a source change never authorize deployment, upload or publication.
 ASXUI event-layout preferences migrate to a shared top-HUD anchor on next load;
 `/asxui widget anchor reset` restores its centered default. No native client
 settings, visibility bindings or official installation are changed by this layout.
+
+Bundled ASXUI now includes the HUD, persistent frame layout and shared native
+panel theme modules. The validator accepts the exact previous pre-HUD inventory
+for authenticated rollback, as well as the complete current inventory; arbitrary
+partial inventories and preference files remain rejected.

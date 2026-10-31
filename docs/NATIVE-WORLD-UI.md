@@ -10,9 +10,14 @@ and minimap pin rendering. Install it in `benilla-config/AddOns/ASXUI`, outside
 `ASX/`. Plate styling works through the native addon API without the DLL.
 The DLL installs no plate-input, plate-style or damage-size hooks.
 
-ASXUI retains native plate widgets and changes their geometry to 70% by default.
-Friendly rows, health updates, placement, border art and visibility keys remain
-native. Enemy levels/skulls and names are hidden by default. A unique highlighted
+ASXUI retains native plate widgets and scales their width to 70% by default.
+Enemy health uses an eight-pixel capsule with a one-pixel outline and the native
+status-bar texture/colors. A clipped full-width fill preserves rounded ends at
+low HP. Its frames are allocated once per retained plate (bounded to 256), then
+reused; color/geometry writes occur only when changed. Native border/glow and
+health texture are hidden only while the replacement has valid native values,
+and restored on invalid data, friendly reuse or styling disable. Raid markers,
+friendly rows, health updates, placement and visibility keys remain native. Enemy levels/skulls and names are hidden by default. A unique highlighted
 target positively identified as elite/guardian/boss/final keeps its original name
 font and alpha. Missing/ambiguous ranks and untargeted rows remain hidden; the
 addon never infers plate identity from a matching encounter name alone.

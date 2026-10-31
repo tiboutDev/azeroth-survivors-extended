@@ -48,6 +48,10 @@ refresh=function(force)
         if ASX_GetAPIVersion and ASX_GetAPIVersion()==1 and ASX_GetState then cachedState=ASX_GetState(1)end
     end
     local state=cachedState
+    if type(ASXUI_DockAuras)=="function"then
+        restore();lastFrames={};lastFortune=nil;lastCrystal=nil
+        if ASXUI_DockAuras(state)then return end
+    end
     if not state or not state.available or not state.data or not(state.data.fortune or state.data.crystals)then restore();lastFrames={};lastFortune=nil;lastCrystal=nil;return end
     local frames,anchors,indexByFrame={}, {}, {}
     local fortune,crystal

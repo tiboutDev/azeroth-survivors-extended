@@ -23,8 +23,13 @@ addon files and preserves preferences and unknown files.
 - Enemy nameplates use 70% of their original geometry by default. The addon keeps
   the native bar, health updates, world placement and visibility controls.
 - Friendly plates keep their original geometry. Recycled plates are re-evaluated.
-- Level/skull labels are hidden on styled enemy plates. Border and raid marker
-  textures are retained. Names keep their native font size.
+- Level/skull labels are hidden on styled enemy plates. Native border/glow and
+  health art are restored when styling is disabled. Raid markers stay native.
+  Compact capsules use the native health texture and colors, a one-pixel outline
+  and a fixed eight-pixel height (six-pixel fill); width follows the plate scale.
+  Rounded ends are clipped proportionally even at very low HP. Frames are reused
+  across native plate recycling; invalid health data restores the native art.
+  Names keep their native font size.
 - Enemy names are hidden by default, including missing or ambiguous identities.
   Only a uniquely highlighted target positively classified as an elite, guardian,
   boss or final boss keeps its name. `AZS_UnitKind` takes precedence; generic
@@ -121,16 +126,18 @@ rewards, timers or gameplay. Goblin appearance/defeat/escape announcements keep
 their existing native CHAT_MSG channel; they are not these custom panels.
 
 Each widget has independent saved settings in `ASXUIDB.widgets`, applied without
-a client restart. A shared anchor is centered below the native top HUD (UIParent TOP, 0,-85).
-Visible widgets stack in Sayge, Supplies, Fortune, Crystal order, with a 12-unit gap;
+a client restart. A shared anchor is centered below the native top HUD (UIParent TOP, 0,-125).
+Visible widgets stack in Resurrection, Sayge, Supplies, Fortune, Crystal, native rewards order, with a 12-unit gap;
 scaled height is included and hidden/expired panels leave no empty slot.
 Widget position settings are offsets from their automatic stack slot, not world
 coordinates. Scale changes the full widget/text without shifting the shared
 anchor. Defaults are zero widget offsets, scale/opacity 1 and visible.
 Old absolute Y preferences migrate to equivalent offsets from their old defaults.
+The former centered anchor default (0,-85) migrates once to (0,-125), clearing
+the expanded top HUD. Other saved positions remain unchanged.
 
 ```text
-/asxui widget anchor position 0 -85
+/asxui widget anchor position 0 -125
 /asxui widget supplies position 0 0
 /asxui widget fortune scale 1.2
 /asxui widget crystals scale 1.1
@@ -140,7 +147,7 @@ Old absolute Y preferences migrate to equivalent offsets from their old defaults
 /asxui widget fortune reset
 ```
 
-Widget names: `supplies`, `fortune`, `crystals`, `sayge`; `anchor` accepts position/reset. Position bounds are -4096..4096,
+Widget names: `supplies`, `fortune`, `crystals`, `sayge`, `revive`, `loot`, `marks`; `anchor` accepts position/reset. Position bounds are -4096..4096,
 scale 0.5..2 and opacity 0..1. Invalid commands are rejected; malformed saved
 preferences return to safe defaults. Hidden notifications still consume their
 normal presentation lifetime and do not replay when enabled. Choice/pause
@@ -196,3 +203,159 @@ consume consecutive personal snapshots, not a historical event feed.
 
 `/asxui widget crystals position X Y`, `scale 0.5..2`, `opacity 0..1`,
 `show on|off` and `reset` use the same controls as other event widgets.
+
+## Native action-bar extension
+
+The HUD extension is enabled by default. `/asxui hud off` restores the retained
+native artwork, anchors and previous build/tally visibility; `/asxui hud on`
+enables it again. It does not change key bindings, action handlers, native XP
+textures, height, text or update scripts; only XP width/anchors expand with the bar and restore on disable. Existing native gryphons
+remain above the addon panels. Only named native action/art children are moved;
+unrelated frames and later anchor changes from another addon are preserved.
+
+Two adjacent buttons on the right open Combat and Character statistics. Hover
+previews a panel; click pins it, and another click unpins it. The three-column
+drawer uses a fixed-size scroll child sliding through a clipping viewport over
+0.3 seconds. Its content is not stretched. Equipment, health and aura anchors stay fixed;
+the drawer deliberately covers the aura rows while open. The native XP, action
+bar and top counter strip stay stationary.
+
+All 29 native character statistics are supported through `AZS_STATS`, using the
+same units and rounding as the native character pane. Displayed zero bonuses
+are omitted; multiplier 1 therefore hides a +0% bonus but critical damage 100%
+does not disappear. Missing values are unavailable, not fabricated zeros. Row
+membership is chosen when opening a panel and stays stable while its values
+refresh. A newly relevant statistic appears on the next opening.
+
+Native kills, gold and the next cache cost come from `AZS_RUN.kills`, `gold` and
+`chest`. Native crossed-blade, coin and `INV_Box_02` icons replace the three
+labels; hover explains each. The counter strip is centered flush against the screen top, independently of
+the bottom HUD. It replaces the native tally while valid. Below it, ASXUI
+presents native run time and the next-boss countdown through `AZS_GetRunTime`,
+`AZS_GetUpcomingBosses` and `AZS_RUN.nb`. The native clock has no Lua position
+API; its visibility preference is restored when this presentation is disabled
+or time is unavailable. An already hidden clock stays hidden.
+
+Five circular equipment positions consume optional ASX contract 1.5
+`data.equipment` / `texts.equipment`. They preserve native display order, ranks,
+icons and owner-formatted tooltip bodies; empty positions use a native generic
+equipment silhouette. No item category or native tooltip formula is guessed.
+This reuses the already captured local jewelry metadata; local spell builds
+remain excluded from the payload. Missing/stale equipment data hides the row
+and restores the previous native build preference. Stats and counters remain
+usable without ASX. Menus, disabled HUD and new sessions retire the drawer.
+
+The installer owns `Hud.lua` alongside the other bundled ASXUI modules. No
+native image or font is redistributed. Another addon replacing the same bar is
+not a supported simultaneous layout; use `/asxui hud off` before enabling it.
+
+### Persistent health, auras and cooperative context
+
+The HUD places a health-only bar and separate native helpful/harmful aura rows
+above the equipment row, with helpful/harmful auras above health and their
+native durations above their icons. The statistics drawer opens directly above health and covers the auras while
+open; only the drawer slides. Close it to inspect or cancel a buff. Health reads native
+`UnitHealth`/`UnitHealthMax`. The portrait/resources are omitted and the original
+player and target roots are visually hidden with their updates retained.
+Disabling the HUD restores their alpha/mouse state. Native aura buttons retain
+their IDs, cancellation, tooltip and duration handlers and full readable size.
+With the HUD enabled, Fortune and Crystal Resonance have dedicated medallions
+beside health. With the HUD disabled, Fortune leads the native helpful row,
+followed by Crystal Resonance.
+
+Cooperative spell/item children receive a shared native metal/stone panel
+beside each retained party frame. Allied buffs sit outside its right edge,
+wrapping after eight icons (up to two rows); panel width depends only on
+spells/items. Their native identities/tooltips and original anchors are retained. Owner data and tooltip handlers stay owned by
+the existing native presentation, and party admission/health/identity are not
+replaced. Living guardians and an available Sayge trial appear as read-only
+objectives in the upper-left corner. Completed/absent objectives retire automatically.
+Guardians come from active native `AZS_GetLairs` entries, including distant
+guardians, with `AZS_GetGuardians` as a fallback if the lair API is absent.
+Sayge comes from the current ASX
+snapshot, without adding a new transport. Rewards use the same native panel
+theme while preserving ASX text, quality colors, timing and widget preferences.
+
+The approved wide layout keeps native XP artwork/height/text/handlers but widens
+its geometry to match the action bar, reverting it on HUD disable. From bottom
+to top: actions, XP, equipment, health, then debuffs/buffs and the
+title-free statistics drawer while open. The counter strip has extra vertical
+padding for its native icons. Panels use the verified native steel
+`UI-DialogBox-Border`; health uses a capsule silhouette with a 22-unit fill and a centered
+12-unit font, inset from all four edges. Objectives
+occupy the free upper-left corner, with retained cooperative party frames below.
+
+The health bar is centered at two thirds of the bottom HUD width. Native buff
+and debuff rows sit above it, each centered independently (eight icons per row,
+including centered partial rows), without shrinking icons or duration text. Native duration labels move above
+the icons; their values and visibility remain native. The statistics drawer
+opens immediately above health and intentionally covers auras while open.
+The top counter ribbon uses the native dialog-header body/sides and lower
+trim, without the upper rail or top corners. Its content area is 36 units high,
+leaving eight units above and below the 20-unit icons before the lower trim.
+The clock remains below it with a clear gap. Player health has a capsule outline and a 22-unit fill, leaving room around
+its 12-unit text. Native circular masks and the native white texture shape
+the ends; a clipping viewport preserves the silhouette at low HP.
+
+Event pickup panels, objectives and allied build panels use an unmarked area of the native quest-log
+parchment, shaded dark brown to soften the background without introducing new
+assets. Other HUD panels keep their existing darker theme. Pickup panels use a
+340-by-88 default footprint and 32-unit icon, growing for wrapped native text;
+the automatic notification stack uses the resulting height and saved scale.
+
+The warm paper extends beneath the popup/objective/allied-build border rather than leaving
+a black inner gutter. No native texture is redistributed.
+
+## Permanent-effect medallions and native notices
+
+The health capsule keeps the native `UI-StatusBar` fill texture, including its
+shading; native circular masks shape the ends and clipping preserves low-HP
+proportions. Ally spell/item panels are centered vertically on their retained
+party roots; buffs remain outside their right edge.
+
+Crystal Resonance sits to the left of health with four colored collection
+counts. Sayge's Fortune sits on the right with its category and active +X%
+value; a small circular native icon overlaps the orb at its lower-right corner:
+Darkmoon cards for Luck, a book for XP, and a coin for Gold. Category text and
+the original tooltip remain available. XP/Gold use the supplied strongest-party
+value when applicable. Both
+consume the current ASX snapshot, hide on unavailable data, and use the original
+native player-buff tooltip when its current aura can be identified. Missing or
+reused native slots fall back to ASX-provided wording. Native aura IDs, values
+and gameplay are unchanged. A right-click forwards the original native aura
+handler only while its current identity still matches the badge. Converted aura buttons are only visually hidden;
+their alpha/mouse state and native layout restore when the HUD is disabled.
+
+Sayge's Trial uses a compact native casting-bar border/fill without an icon.
+The same style presents `AZS_GetRevive()` progress, either reviving an ally or
+being revived. Resurrection takes display priority over the ritual. Native
+simulation owns progress, interruption and completion; ASXUI does not advance
+the native state. The prior native `revive` visibility preference restores on
+HUD disable or unavailable/invalid API data. `/asxui widget revive ...` uses the
+same scale, opacity, position and visibility controls as other event widgets.
+
+Loot and marks use local native chat receipts, not inventory/wallet comparisons.
+The reviewed English native messages arrive through `CHAT_MSG_SYSTEM` and/or
+`CHAT_MSG_LOOT`; the popup preserves their original text and decimal values.
+After a compatible item receipt, the native loot notice is hidden to avoid a
+second popup; its previous preference restores on HUD disable. Unknown locales
+retain native loot presentation. Ordinary chat messages remain untouched.
+Loot uses a native item texture when `GetItemInfo` resolves it, otherwise a
+generic native box; marks use the native rune icon. These messages queue through
+choices/pauses without replaying past receipts after HUD disable. A new
+ritual arrival reserves six seconds for its native announcement before native
+reward popups continue; queued receipts keep their full display lifetime. Widget names
+`loot` and `marks` accept the same presentation settings. They do not add ASX
+public API fields, a transport, or native hooks.
+
+
+Native HUD visibility originals are recorded in `ASXUIDB.nativeHudVisibility`
+before ASXUI hides a native part. Logout restores native visibility, and addon
+load recovers any recorded originals from a previous session. This prevents
+persistent native CVars from leaving the clock/loot/revive widgets hidden after
+a restart. Originally hidden native parts are not forced on.
+
+With the custom HUD enabled, the native minimap sun/time-of-day ornament and
+upper zone-title/close-button strip are visually hidden and their mouse input
+disabled. The minimap, border ring, zoom controls and markers stay native.
+Disabling the custom HUD restores the original alpha and mouse state.

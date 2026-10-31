@@ -24,7 +24,8 @@ def run_probe(args,gate):
     writer(exe)(save,1,name_override="AsxuiProbe")
     addon=profile/"AddOns/ASXUIProbe";addon.mkdir(parents=True)
     (addon/"ASXUIProbe.toc").write_text("## Interface: 11200\n## Title: ASXUI API probe\nProbe.lua\n")
-    shutil.copyfile(ROOT/"tools/dev/fixtures/asxui-api-probe.lua",addon/"Probe.lua")
+    hud_probe=os.environ.get("ASXUI_PROBE_HUD")=="1"
+    shutil.copyfile(ROOT/("tools/dev/fixtures/asxui-hud-probe.lua" if hud_probe else "tools/dev/fixtures/asxui-api-probe.lua"),addon/"Probe.lua")
     if (ROOT/"addons/ASXUI").is_dir():shutil.copytree(ROOT/"addons/ASXUI",profile/"AddOns/ASXUI")
     clean={k:v for k,v in os.environ.items()if not k.upper().startswith(("ASX","AZCOOP_","COOP_","WOW_","BENILLA_"))}
     env=dict(clean,APPDATA=str(profile/"appdata"),LOCALAPPDATA=str(profile/"localappdata"),BENILLA_HOME=str(profile),WOW_NOSOUND="1",WOW_WIN="1",WOW_ROGUE_UPDATE="0",WOW_ROGUE_UPDATE_AUTO="0",WOW_ROGUE_AUTOPICK="1",WOW_ROGUE_AUTOSTART="1",WOW_ROGUE_AUTOPLAY="4",RUST_LOG="info")
@@ -39,8 +40,8 @@ def run_probe(args,gate):
             try:child.wait(timeout=10)
             except subprocess.TimeoutExpired:child.kill();child.wait(timeout=5)
     text=(output/"native.log").read_text(errors="replace")
-    lines=[line for line in text.splitlines()if "ASXUI_API_PROBE"in line or "ASXUI_ADDON_PROBE"in line]
-    result={"native_sha256":SHA256,"asx_dll_present":(native/"avrt.dll").exists(),"probe_samples":len(lines),"game_clients":1,"seconds":args.seconds,"screenshots":os.environ.get("ASXUI_PROBE_VISUAL")=="1","desktop_input":False,"synthetic_projection_bridge":True,"real_asx_transport_validated":False}
+    lines=[line for line in text.splitlines()if "ASXUI_HUD_PROBE"in line or "ASXUI_API_PROBE"in line or "ASXUI_ADDON_PROBE"in line]
+    result={"native_sha256":SHA256,"asx_dll_present":(native/"avrt.dll").exists(),"probe_samples":len(lines),"game_clients":1,"seconds":args.seconds,"screenshots":os.environ.get("ASXUI_PROBE_VISUAL")=="1","desktop_input":False,"synthetic_projection_bridge":not hud_probe,"real_asx_transport_validated":False}
     (output/"result.json").write_text(json.dumps(result,indent=2)+"\n")
     (output/"api-samples.txt").write_text("\n".join(lines))
     print(json.dumps(result),flush=True)

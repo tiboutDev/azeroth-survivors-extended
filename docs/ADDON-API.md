@@ -1,4 +1,4 @@
-# ASX addon contract 1.4
+# ASX addon contract 1.5
 
 ASX follows Azeroth Survivors' addon conventions: global tables, matching
 `*_UPDATED` timestamps, `ASX_Get...` functions and registered Lua handlers.
@@ -13,7 +13,7 @@ functions may be absent when ASX is disabled or before its Lua has loaded; an
 addon must tolerate that and retry after world entry or with bounded polling.
 ASXUI is a consumer, not the provider: other addons do not need ASXUI installed.
 
-`ASX_GetAPIVersion()` returns `major, minor` (currently `1, 4`). Major 1 is a
+`ASX_GetAPIVersion()` returns `major, minor` (currently `1, 5`). Major 1 is a
 stable contract: incompatible field meanings/types/removals require a new major;
 minor versions may add optional fields. Ignore unknown fields. Tests cover the
 contract; this source change does not update an older installed DLL.
@@ -28,7 +28,7 @@ modifies ASX or snapshots obtained by another consumer.
 
 | Field | Meaning |
 |---|---|
-| `api.major`, `api.minor` | Contract version, currently 1.4 |
+| `api.major`, `api.minor` | Contract version, currently 1.5 |
 | `available` | Boolean; check before accessing run fields |
 | `reason` | When unavailable: `outside_run`, `stale`, or `missing_or_invalid_payload` |
 | `revision` | Monotonic content revision within this Lua environment; not persisted across client reloads |
@@ -194,3 +194,18 @@ Counts decreasing or native run time resetting retire the old baseline/queue.
 ASXUI queues each observed increment for three seconds, capped at 16 notices,
 and defers display through choices/pauses. Coalesced different colors use a stable
 color order; no exact cross-color pickup ordering is promised by snapshots.
+
+## Local equipment (optional, v1.5)
+
+`data.equipment` is an optional 1-based array of at most five records, each with
+`slot` (native display order, 1..5) and `rank` (1..255). The matching
+`texts.equipment[slot]` contains the native `name`, texture `icon` and formatted
+tooltip `text`. These are already captured owner strings, not formulas for an
+addon to recompute. No item-category or persistent inventory ID is promised.
+
+An empty array explicitly means a captured empty local build. An absent array
+means unavailable; do not replace it with fake empty slots or retain old items.
+Copies, session ownership, expiration and revision rules match the rest of v1.
+Malformed, duplicate, foreign or incomplete equipment sequences invalidate the
+private snapshot. Native remote build rendering is separate. Local spell rows
+are still omitted, and this extension adds no native hook or memory reader.

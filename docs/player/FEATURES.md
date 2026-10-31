@@ -329,3 +329,52 @@ control presentation.
 [Report an issue or share a balance observation](https://github.com/tiboutDev/azeroth-survivors-extended/issues).
 Include your game and ASX versions, map, difficulty, classes and player count,
 plus what you expected and what happened.
+
+### Compact ASXUI HUD
+
+ASXUI adds adjacent Combat/Character buttons beside the native action bar.
+Hover to consult stats, click to keep a panel open, and click again to close.
+The drawer shows nonzero native character stats in three columns. A native-icon
+strip centered flush against the screen top displays kills, gold and the next
+cache price, with native run time and the next-boss countdown below it. Native XP and
+foreground gryphons are preserved. Five circular equipment positions use the
+matching ASX bridge and native item descriptions. `/asxui hud off` restores the
+native layout and its previous visibility preferences immediately.
+
+The HUD also presents player health without portrait/resources, native buffs and
+debuffs above health, with native durations above their icons, and hides the old player/target frames.
+Cooperative ally builds use matching native textured panels, with allied buffs
+placed immediately outside their right edge. A list in the upper-left
+tracks living guardians and an available Sayge trial. Event rewards use
+the same metal/stone style. These are presentation changes; native health,
+auras, targeting, rewards and objectives remain authoritative.
+
+The health bar is centered at two thirds of the bottom HUD width. Native buff
+and debuff rows sit above it, each centered independently (eight icons per row,
+including centered partial rows), without shrinking icons or duration text. Native duration labels move above
+the icons; their values and visibility remain native. The statistics drawer
+opens immediately above health and intentionally covers auras while open.
+The top counter ribbon uses the native dialog-header body/sides and lower
+trim, without the upper rail or top corners. Its content area is 36 units high,
+leaving eight units above and below the 20-unit icons before the lower trim.
+The clock remains below it with a clear gap. Player health has a capsule outline and a 22-unit fill, leaving room around
+its 12-unit text. Native circular masks and the native white texture shape
+the ends; a clipping viewport preserves the silhouette at low HP.
+
+Event pickup panels, objectives and allied build panels use an unmarked area of the native quest-log
+parchment, shaded dark brown to soften the background without introducing new
+assets. Other HUD panels keep their existing darker theme. Pickup panels use a
+340-by-88 default footprint and 32-unit icon, growing for wrapped native text;
+the automatic notification stack uses the resulting height and saved scale.
+
+The warm paper extends beneath the popup/objective/allied-build border rather than leaving
+a black inner gutter. No native texture is redistributed.
+
+
+Crystal Resonance and Sayge's Fortune now appear as permanent-effect medallions
+beside health: colored crystal counts on the left, active Fortune on the right,
+with details on hover. The health pill keeps the native shaded bar texture.
+Ally builds are vertically aligned with their player frames and keep buffs on
+the outside right. Sayge's icon-free channel style also shows native resurrection
+progress. Native English loot and marks receipts use the compact reward popup;
+the original chat messages remain. Other locales keep the native loot notice.

@@ -25,7 +25,7 @@ local function discover(plate)
     if not first or not first.GetTexture or first:GetTexture() ~= borderTexture then return end
     local bar = plate:GetChildren()
     if not bar or not bar.GetStatusBarColor then return end
-    local row = {plate=plate,bar=bar,scale=plate:GetScale(),labels={},geometry={}}
+    local row = {plate=plate,bar=bar,index=table.getn(plates)+1,border=regions[1],glow=regions[2],scale=plate:GetScale(),labels={},geometry={}}
     -- Resize retained native geometry, not the world anchor or parent scale.
     -- The accelerated native plate renderer does not consistently inherit SetScale.
     local function geometry(widget)
@@ -49,6 +49,51 @@ local function discover(plate)
     end
     known[plate]=row;table.insert(plates,row)
 end
+local function finite(v)return type(v)=="number"and v==v and v-v==0 end
+local function pill(row,active,r,g,b)
+    local bar=row.bar
+    local texture=bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+    local low,high
+    if bar.GetMinMaxValues then low,high=bar:GetMinMaxValues()end
+    local value=bar:GetValue()
+    active=active and ASXUI_CreatePill and texture and texture.SetAlpha
+        and finite(low)and finite(high)and high>low and finite(value)
+        and finite(r)and finite(g)and finite(b)
+    if active then
+        if not row.pill then
+            local name="ASXUIEnemyHealth"..row.index
+            local root=CreateFrame("Frame",name,row.plate);root:EnableMouse(false)
+            root:SetPoint("CENTER",bar,"CENTER",0,0)
+            local outline=ASXUI_CreatePill(root,name.."Outline",70,8,.36,.34,.29);outline:SetPoint("CENTER",root,"CENTER",0,0)
+            local background=ASXUI_CreatePill(outline,name.."Background",68,6,.045,.045,.035);background:SetPoint("CENTER",outline,"CENTER",0,0)
+            local clip=CreateFrame("ScrollFrame",name.."Clip",background);clip:SetPoint("LEFT",background,"LEFT",0,0);clip:SetHeight(6)
+            local fill=ASXUI_CreatePill(clip,name.."Fill",68,6,r,g,b,"Interface\\TargetingFrame\\UI-StatusBar");clip:SetScrollChild(fill)
+            row.pill={root=root,outline=outline,background=background,clip=clip,fill=fill}
+        end
+        local view=row.pill
+        local width=math.max(10,bar:GetWidth());local inner=width-2
+        if view.width~=width then
+            view.root:SetWidth(width);view.root:SetHeight(8);view.outline:SetWidth(width)
+            view.background:SetWidth(inner);view.fill:SetWidth(inner);view.width=width;view.ratio=nil
+        end
+        local ratio=math.max(0,math.min(1,(value-low)/(high-low)))
+        if view.ratio~=ratio then view.clip:SetWidth(math.max(.001,inner*ratio));view.ratio=ratio end
+        if ratio>0 then view.clip:Show()else view.clip:Hide()end
+        if view.r~=r or view.g~=g or view.b~=b then view.fill:SetPillColor(r,g,b);view.r=r;view.g=g;view.b=b end
+        if not row.hiddenArt then row.hiddenArt={}end
+        -- Only the health texture and decorative border/glow are replaced.
+        -- The retained bar, native name, raid marker and scripts stay authoritative.
+        for _,art in ipairs({texture,row.border,row.glow})do
+            if not row.hiddenArt[art]then row.hiddenArt[art]=art:GetAlpha()end
+            art:SetAlpha(0)
+        end
+        view.root:Show()
+    else
+        if row.pill then row.pill.root:Hide()end
+        for art,alpha in pairs(row.hiddenArt or{})do art:SetAlpha(alpha)end
+        row.hiddenArt=nil
+    end
+end
 local function apply(row,db,targetName,targetCount)
     local r,g,b=row.bar:GetStatusBarColor()
     local enemy=type(r)=="number" and type(b)=="number" and r>0.75 and b<0.25
@@ -59,6 +104,7 @@ local function apply(row,db,targetName,targetCount)
         if math.abs(widget:GetWidth()-width)>0.001 then widget:SetWidth(width)end
         if math.abs(widget:GetHeight()-height)>0.001 then widget:SetHeight(height)end
     end
+    pill(row,active,r,g,b)
     local hideName=active
     -- A plate has no GUID/unit token. Never classify through names in AZS_UNITS.
     -- Only a unique highlighted target can positively identify a special enemy.
@@ -87,7 +133,7 @@ local function refresh()
     end
     local db=settings()
     for _,row in ipairs(plates)do
-        if row.plate:IsVisible() then apply(row,db,targetName,matches)end
+        if row.plate:IsVisible() or not db.plates then apply(row,db,targetName,matches)end
     end
 end
 addon:RegisterEvent("ADDON_LOADED")
@@ -104,7 +150,9 @@ SlashCmdList["ASXUI"]=function(message)
     local db=settings()
     if command=="widget" and ASXUI_ConfigureWidget then
         local _,_,kind,property,a,b=string.find(argument,"^(%S+)%s+(%S+)%s*(%S*)%s*(%S*)$")
-        if not ASXUI_ConfigureWidget(kind,property,a,b)then say("widget anchor|supplies|fortune|crystals|sayge: position X Y; scale 0.5..2; opacity 0..1; show on|off; reset")else say(kind.." widget updated.")end
+        if not ASXUI_ConfigureWidget(kind,property,a,b)then say("widget anchor|supplies|fortune|crystals|sayge|revive|loot|marks: position X Y; scale 0.5..2; opacity 0..1; show on|off; reset")else say(kind.." widget updated.")end
+    elseif command=="hud" and ASXUI_ConfigureHud and ASXUI_ConfigureHud(argument)then
+        say("Native HUD extension "..argument..".")
     elseif command=="pins" and (argument=="on"or argument=="off")then
         db.pins=argument=="on";say("Minimap markers "..argument..".")
     elseif command=="plates" and (argument=="on"or argument=="off")then
@@ -116,13 +164,13 @@ SlashCmdList["ASXUI"]=function(message)
     elseif command=="numbers"and(argument=="on"or argument=="off")then
         db.numbers=argument=="on";say("World number font "..argument..". Applies after restarting the client.")
     else
-        say("/asxui widget supplies|fortune|crystals|sayge ...; /asxui pins on|off; /asxui plates on|off; /asxui scale 0.5..1.5; /asxui numbers on|off")
+        say("/asxui hud on|off; /asxui widget supplies|fortune|crystals|sayge|revive|loot|marks ...; /asxui pins on|off; /asxui plates on|off; /asxui scale 0.5..1.5; /asxui numbers on|off")
     end
 end
 function ASXUI_Readout()
     local result={ready=ready,plates=table.getn(plates),numberFont=DAMAGE_TEXT_FONT,rows={}}
     for _,row in ipairs(plates)do
-        table.insert(result.rows,{name=row.name:GetText(),visible=row.plate:IsVisible(),scale=(row.geometry[1] and row.geometry[1][2]~=0 and row.plate:GetWidth()/row.geometry[1][2] or 1),alpha=row.name:GetAlpha(),health=row.bar:GetValue()})
+        table.insert(result.rows,{name=row.name:GetText(),visible=row.plate:IsVisible(),scale=(row.geometry[1] and row.geometry[1][2]~=0 and row.plate:GetWidth()/row.geometry[1][2] or 1),alpha=row.name:GetAlpha(),pill=row.pill and row.pill.root:IsVisible()or false,pillWidth=row.pill and row.pill.width,pillHeight=row.pill and 8,health=row.bar:GetValue()})
     end
     return result
 end

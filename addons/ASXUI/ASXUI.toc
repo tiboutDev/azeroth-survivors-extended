@@ -5,6 +5,9 @@
 ## Version: 0.1.0
 ## SavedVariables: ASXUIDB
 ASXUI.lua
+Theme.lua
 Minimap.lua
 Events.lua
 Buffs.lua
+Hud.lua
+Frames.lua

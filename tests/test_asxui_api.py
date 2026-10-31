@@ -35,4 +35,22 @@ class APITests(unittest.TestCase):
         self.publish();self.lua.execute('ASX_RegisterStateHandler(function(s)s.data.fortune.amount=999;s.texts.fortune.color[1]=999 end);ASX_RegisterStateHandler(function(s)assert(s.data.fortune.amount==1200 and s.texts.fortune.color[1]==.12);secondObserved=true end);update();assert(secondObserved)')
     def test_subscriptions_are_bounded(self):
         self.lua.execute('for i=1,64 do assert(ASX_RegisterStateHandler(function()end))end;local token,reason=ASX_RegisterStateHandler(function()end);assert(token==nil and reason=="subscriber_limit")')
+    def equipment_wire(self, header='L|11|1', row=None):
+        h=lambda value:value.encode().hex()
+        if row is None:row='E|11|1|2|'+h('Native ring')+'|'+h('INV_Jewelry_Ring_01')+'|'+h('Exact owner text\n+10 damage')
+        text=f"1|7|11|1\nM|11|0|{h('Player')}\n{header}\n{row}\n"
+        self.lua.globals().wire=text.encode().hex()
+        self.lua.execute('AZS_RUN={asx=wire};AZS_RUN_UPDATED=now;now=now+.1')
+    def test_local_equipment_native_text_copy_isolation_and_zero_item_snapshot(self):
+        self.equipment_wire()
+        self.lua.execute('local major,minor=ASX_GetAPIVersion();assert(major==1 and minor==5);local s=ASX_GetState(1);assert(s.available and s.data.equipment[1].slot==1 and s.data.equipment[1].rank==2 and s.data.equipment[1].name==nil);assert(s.texts.equipment[1].name=="Native ring" and s.texts.equipment[1].text=="Exact owner text\\n+10 damage");s.texts.equipment[1].name="Mutated";assert(ASX_GetState(1).texts.equipment[1].name=="Native ring")')
+        self.equipment_wire(header='L|11|0',row='')
+        self.lua.execute('local s=ASX_GetState(1);assert(s.available and table.getn(s.data.equipment)==0 and table.getn(s.texts.equipment)==0)')
+    def test_local_equipment_rejects_missing_duplicate_out_of_order_or_foreign_items(self):
+        h=lambda value:value.encode().hex()
+        row=f"E|11|1|2|{h('Ring')}|{h('INV_Test')}|{h('Native text')}"
+        for header,body in [('L|11|6',row),('L|11|1',''),('L|11|1',row+'\n'+row),('L|11|1',row.replace('E|11|1|','E|11|2|')),('L|11|1',row.replace('E|11|','E|22|')),('L|11|0',row)]:
+            with self.subTest(header=header,body=body):
+                self.equipment_wire(header,body)
+                self.lua.execute('assert(not ASX_GetState(1).available)')
 if __name__=='__main__':unittest.main()

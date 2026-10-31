@@ -23,6 +23,16 @@ fn hex(bytes: &[u8]) -> String {
     }
     out
 }
+// Reuse already captured native item text; never recapture a local spell build.
+fn local_equipment(build: &PartyBuild, own: u64) -> String {
+    if build.items.len() > 5 { return String::new(); }
+    let mut text = format!("L|{own}|{}\n", build.items.len());
+    for (index, icon) in build.items.iter().enumerate() {
+        text.push_str(&format!("E|{own}|{}|{}|{}|{}|{}\n", index + 1, icon.rank,
+            hex(icon.name.as_bytes()), hex(icon.icon.as_bytes()), hex(icon.text.as_bytes())));
+    }
+    text
+}
 fn wire(state: &mut State, own: u64, heartbeat: u64) -> Option<String> {wire_extra(state,own,heartbeat,"")}
 fn wire_extra(state: &mut State, own: u64, heartbeat: u64, extra:&str) -> Option<String> {
     if !state.ids.iter().any(|(_, id)| *id == own) {
@@ -44,8 +54,8 @@ fn wire_extra(state: &mut State, own: u64, heartbeat: u64, extra:&str) -> Option
         if let Some(row)=super::crystals::member_wire((*slot,*id)){text.push_str(&row);}
         let fatigue = fatigue::view(*slot, *id);
         text.push_str(&format!("F|{id}|{}|{}\n", fatigue.stacks, fatigue.remaining.ceil() as u32));
-        // Keep local metadata, but send builds only to other viewers.
-        if *id == own { continue; }
+        // Only the five local items are needed by ASXUI; local spells remain omitted.
+        if *id == own { text.push_str(&local_equipment(build, own)); continue; }
         for (kind, icons) in [("S", &build.spells), ("I", &build.items)] {
             for icon in icons {
                 text.push_str(&format!(
@@ -208,6 +218,7 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
                         s.clock=p.clock;s.epoch
                     }).unwrap_or(0);
                     let mut text=format!("1|{epoch}|{}|{heartbeat}\nM|{}|0|{}\n",actor.guid,actor.guid,hex(b"Player"));
+                    if let Some(items)=STATE.lock().ok().and_then(|state|state.as_ref().and_then(|s|s.builds.get(&actor.guid).map(|b|local_equipment(b,actor.guid)))){text.push_str(&items);}
                     if let Some(row)=super::crystals::wire(game as u64,(0,actor.guid)){text.push_str(&row);}
                     if let Some(b)=blessings::view(0,actor.guid){text.push_str(&format!("B|{}|{}|{}|{}|{}|{}\n",actor.guid,b.boss,b.category,b.rarity,b.amount,b.amount));}
                     if let Some((event,held,inside))=super::rituals::view(game as u64,actor.guid){text.push_str(&format!("R|{}|{event}|{held}|{}|{}\n",actor.guid,u8::from(inside),u8::from(inside)));}
@@ -345,6 +356,18 @@ mod tests {
             assert!(state.encoded[&own].0.starts_with(&format!("1|7|{own}|600\n")));
         }
         assert_eq!(state.builds.len(), 2);
+    }
+    #[test]
+    fn local_equipment_is_bounded_native_text_and_explicitly_empty() {
+        use asx_game::official::PartyIcon;
+        let icon=PartyIcon { id:42, rank:2, name:"Native|Ring".into(), icon:"INV_Test".into(), text:"Native text\n+10 damage".into(), spell_tip:None };
+        let mut build=PartyBuild { spells:vec![icon.clone()], items:vec![icon.clone()] };
+        let text=local_equipment(&build,11);
+        assert!(text.starts_with("L|11|1\nE|11|1|2|"));
+        assert!(text.contains(&hex(icon.text.as_bytes())));
+        assert!(!text.contains("S|"));
+        build.items.clear();assert_eq!(local_equipment(&build,11),"L|11|0\n");
+        build.items=vec![icon;6];assert!(local_equipment(&build,11).is_empty());
     }
     #[test]
     fn wire_uses_actual_owner_and_hex_escapes_all_external_text() {

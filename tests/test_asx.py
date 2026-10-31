@@ -108,6 +108,10 @@ class ASXTests(unittest.TestCase):
   core.apply(self.root,m,data,repair=True,approve=lambda names:True)
   self.assertEqual((self.root/(core.ASXUI_TARGET+"README.md")).read_bytes(),b"my notes")
   core.rollback(self.root);self.assertFalse((self.root/target).exists());self.assert_ui_preferences();self.intact()
+ def test_legacy_bundled_ui_remains_valid_for_signed_rollback(self):
+  m,data=self.bundled_ui(1)
+  for name in ("Hud.lua","Theme.lua","Frames.lua"):del m["files"][core.ASXUI_SOURCE+name]
+  self.assertIs(core.validate(m),m)
  def test_ui_projection_inventory_rejects_preferences_unknown_files_and_partial_bundle(self):
   m,data=self.bundled_ui(1);self.assertIs(core.validate(m),m)
   for suffix in ("SavedVariables.lua","../Other/code.lua","Fonts/unknown.ttf"):

@@ -35,7 +35,7 @@ reader/tool implementations and their exclusive tests are not part of the gate.
 | --- | --- |
 | official | Native 0.130 selection, normalized snapshots, menu ownership, native policy transactions, current source boundaries and evidence assessors |
 | official-party-ui | Retained native children, owner origins, menu projection, world-number packet decoding, marker policy, shared card boundaries and required Lua 5.1 behavior through uv/lupa |
-| asxui | Independent Lua 5.1 plate styling, native-widget restoration and standalone number-font selection |
+| asxui | Independent Lua 5.1 plate/HUD styling, native XP preservation, drawer/counter/equipment behavior, restoration and standalone number-font selection |
 | asx-install | Owned native-folder installation, signatures, transactions, interrupted-client recovery, rollback and publication inventory verification |
 | gems | Retained historical gem formats and selected jewelry helpers |
 | crystals | Personal claims, shared expiry, free draws, native aura preservation, Lua/API totals and tooltip |
@@ -299,3 +299,63 @@ notification frames, verbatim ASX title/effect/note and multiple observed colors
 on each client. Its sparse screenshot cadence is seven seconds; notification
 lifetime remains the production three seconds. Missing frames/texts fail the
 assessor. The fixture never substitutes API data or extends popup duration.
+
+### ASXUI local HUD checks
+
+The `asxui` profile tests preserved native XP artwork/height/scripts and reversible width/anchors, retained action handlers,
+grouped statistics controls, zero filtering/native formatting, stable open rows,
+fixed drawer dimensions while scroll position changes, exact equipment text,
+missing-data fallback and ownership-aware restoration. Public API tests reject
+malformed local equipment sequences and check detached native-text copies.
+`ASXUI_PROBE_HUD=1` selects the explicit standalone native HUD inspection probe
+in `asxui_probe_trial.py`; it installs no synthetic ASX provider and does not
+claim to validate real equipment delivery. End-to-end ASX equipment and visual
+layering still require an exact-artifact private trial, with sparse captures.
+
+`asxui_hud_trial.py --hud-trial 1|2 --seconds 60..150` is the scoped real-ASX
+HUD observer. It requires an exact diagnostic artifact and isolated native
+runtime, uses native profile generation and local-only coop, and keeps normal
+priority/all CPUs. It installs the current addon sources separately from the
+DLL. Its `ASX_TEST_HUD_FIXTURE=1` narrows the existing diagnostic cache fixture
+to five purchases, leaving a visible gameplay window instead of a long choice
+queue; normal builds and the original enchantment suite are unchanged. Sparse
+captures and expected `ASXUI_HUD_LIVE` logger records must be reviewed alongside
+the result, including health, objective and ally/aura coverage limits.
+
+The top counter strip has an independent screen anchor. Tests cover native-clock
+visibility restoration, hidden-clock preferences, fixed compact vitals while the
+drawer slides in front of the upper aura rows, harmful/helpful rows and native-duration anchor restoration, distant held-lair objectives, and migration
+of the former default notification anchor while retaining custom positions.
+The live observer schedules opening/closing relative to HUD readiness, rather
+than application startup, so cooperative world loading cannot skip a panel.
+
+The HUD observer records visible pickup-panel sizes and native text bounds. A
+compact-panel observation requires the 340-unit width, 32-unit icon and note
+inside its frame. Lua tests additionally force multi-line measured labels and
+verify panel growth and scaled stacking without altering ASX semantic text.
+
+
+Permanent-effect tests cover detached ASX counts/active party values, native
+tooltip forwarding, aura-index reuse, missing-slot fallback, stale state and
+restoration. Native resurrection tests cover both progress directions,
+interruption, invalid values and an originally hidden native widget. Native
+reward tests preserve decimal receipt text, reject player-chat/unknown-locale
+input, defer during choices and restore native loot visibility.
+
+The owned HUD observer enables native enemy nameplates with `ShowNameplates()`
+in its disposable profile and records `ASXUI_Readout()` geometry/health for
+compact-capsule visual checks. This does not change product visibility settings.
+
+`--crystal-badges` restricts the HUD trial to one client and uses the existing
+crystal fixture without Supplies/Sayge position fixtures. It requires a real
+native-bound crystal badge and its original tooltip. The separate two-client
+event scenario observes Fortune, icon-free Sayge, allied layout and native
+reward receipts. API snapshots are never fabricated by these observers.
+Actual resurrection must be reported separately from its API/unit coverage;
+an empty native revive snapshot is not evidence of a completed resurrection.
+
+Native-visibility unit tests cover original hidden/shown preferences, recovery
+from persisted originals, logout restoration and events that arrive during
+shutdown. The test harness uses process cleanup; that cleanup alone does not
+prove a real client logout/save cycle. The shared visibility layer is also
+exercised by normal HUD off/on stages in the isolated live trial.
