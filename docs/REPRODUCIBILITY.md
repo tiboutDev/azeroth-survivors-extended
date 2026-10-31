@@ -1,17 +1,18 @@
 # ASX build reproducibility
 
 The [approved local WSL reference](../validation/asx-reproducible-build-xwin.json)
-identifies the previous 0.130.0 normal DLL (1,943,552 bytes):
+identifies the current **0.130.1** normal DLL (1,991,168 bytes):
 
 ```text
-33d8916a64f61d6e8ac2f2d1693f0b2b0cbb877a6c62d4f68695e13951f45f63
+0e5386d0d1bbcbd205976aa626122f200716a417385bce131cae31f6f2801e45
 ```
 
 Two fresh isolated builds produced identical bytes with unchanged source inputs.
 Receipts verify path remapping, disabled diagnostic hooks, PE timestamp 1 and no
 debug directory. The exact DLL passed solo and two-player normal live trials.
-The user approved this reference on 2026-10-30. The historical 0.122.0 reference
-is preserved alongside it; candidates remain separate evidence.
+The user explicitly approved this replacement reference on **2026-10-31**.
+The superseded 0.130.0 reference remains in Git history and preserved private
+evidence. Pending candidates remain separate from the approved reference.
 
 ## Reproduce
 
@@ -32,9 +33,5 @@ on another host or with Windows-native tooling.
 
 `scripts/reproduce.ps1` retains its independent Windows-native reference contract.
 No Windows-native reproducibility claim is made. Source hygiene, signed package
-verification, archive installation and publication are separate gates. This
-release preparation does not test archive installation or authorize publication.
-
-The current source selects 0.130.1. The retained 0.130.0 reference is historical
-and does not establish reproducibility or live acceptance of a 0.130.1 artifact.
-A replacement reproducibility reference requires explicit approval.
+verification, archive installation and publication remain separate gates.
+Reference approval does not authorize pushing, tagging or publishing a release.
