@@ -3,7 +3,7 @@ import argparse,json,os,shutil,subprocess,sys,threading,time,uuid,zipfile
 from contextlib import contextmanager,ExitStack
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
-import core,updates,maintenance
+import core,updates,maintenance,layout
 INPUT_ACTIVE=threading.Event()
 @contextmanager
 def operation(label):
@@ -17,7 +17,7 @@ def operation(label):
 def optional_event_enabled(root,key,label):
     """Optional gameplay settings never prevent the cooperative launcher starting."""
     try:
-        path=core.path(root,"ASX/options.json")
+        path=core.path(root,"ASX/Config/options.json")
         if not path.exists():return True
         if path.stat().st_size>4096:raise ValueError("options file is too large")
         value=core.read_json(path.read_bytes())
@@ -28,6 +28,15 @@ def optional_event_enabled(root,key,label):
     except (ValueError,OSError) as error:
         print("[ ASX ] "+label+" disabled: "+str(error)+". Other ASX features remain enabled.",flush=True)
         return False
+
+def disable_owned_ui(root):
+    """Only disable a verifiably owned TOC; retain user code and SavedVariables."""
+    name=core.ASXUI_TARGET+'ASXUI.toc';p=core.path(root,name)
+    try:owned=core.installed(root)['owned']
+    except (ValueError,OSError,KeyError,TypeError):return
+    if p.is_file()and name in owned and core.sha(p)==owned[name]:
+        target=core.path(root,'ASX/Data/Backups/DisabledUI/'+uuid.uuid4().hex+'/ASXUI.toc')
+        core.atomic(target,p.read_bytes());p.unlink()
 
 def treasure_goblins_enabled(root):
     return optional_event_enabled(root,"treasure_goblins","Treasure Goblins")
@@ -41,11 +50,11 @@ def child_environment(root,env,session):
     return result
 def backup(root,save):
     if not save.is_file():return None
-    target=core.path(root,"ASX/Backups/Progression/"+time.strftime("%Y%m%d-%H%M%S-")+uuid.uuid4().hex[:8]+".txt")
+    target=core.path(root,"ASX/Data/Backups/Progression/"+time.strftime("%Y%m%d-%H%M%S-")+uuid.uuid4().hex[:8]+".txt")
     core.atomic(target,save.read_bytes());return target
 
 def export(root):
-    folder=core.path(root,"ASX/Logs");target=core.path(root,"ASX/Reports/asx-diagnostics-"+time.strftime("%Y%m%d-%H%M%S")+".zip")
+    folder=core.path(root,"ASX/Data/Logs");target=core.path(root,"ASX/Data/Reports/asx-diagnostics-"+time.strftime("%Y%m%d-%H%M%S")+".zip")
     target.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(target,"w",compression=zipfile.ZIP_DEFLATED)as z:
         try:
@@ -57,16 +66,16 @@ def export(root):
             for session in sorted(folder.iterdir(),key=lambda p:p.stat().st_mtime,reverse=True)[:3]:
                 if session.is_dir() and not session.is_symlink():
                     for f in session.iterdir():
-                        if f.is_file()and not f.is_symlink()and f.suffix in(".log",".json")and f.stat().st_size<=16<<20:z.write(core.path(root,"ASX/Logs/"+session.name+"/"+f.name),"Logs/"+session.name+"/"+f.name)
+                        if f.is_file()and not f.is_symlink()and f.suffix in(".log",".json")and f.stat().st_size<=16<<20:z.write(core.path(root,"ASX/Data/Logs/"+session.name+"/"+f.name),"Logs/"+session.name+"/"+f.name)
     print("[ ASX ] Diagnostic report created locally: "+str(target)+". Review it before sharing; nothing was uploaded.",flush=True)
     return target
 
 def pending_recovery(root):
-    folder=core.path(root,"ASX/Updates/Transactions")
+    folder=core.path(root,"ASX/Data/Updates/Transactions")
     if not folder.exists():return False
     for d in folder.iterdir():
         if core.re.fullmatch(r"[0-9a-f]{32}",d.name):
-            if core.get(root,"ASX/Updates/Transactions/"+d.name+"/journal.json",{}).get("phase")=="applying":return True
+            if core.get(root,"ASX/Data/Updates/Transactions/"+d.name+"/journal.json",{}).get("phase")=="applying":return True
     return False
 
 
@@ -83,17 +92,17 @@ def run(root,offline=False,check=False,update_only=False,confirm_update=None,ret
             if core.recover(root):
                 print("[ ASX ] Restarting the recovered launcher...",flush=True)
                 return 75
-        callback=confirm_update or globals()["confirm_update"]
+        callback=None # Compatible signed updates never ask for confirmation.
         if update_only:
             if offline:raise ValueError("Updates need a network connection. Use --repair with a signed local archive for offline repair.")
             try:status=updates.automatic(root,core.inspect(root),confirm=callback,retry=retry,approve=confirm_files)
             except UpdateCancelled:
                 print("[ ASX ] Update cancelled.",flush=True);return 0
             print("[ ASX ] Update result: "+status+".",flush=True)
-            return 75 if status=="installed" else (0 if status in ("current","deferred","disabled","no ASX release published") else 1)
+            return 0 if status=="handoff" else 75 if status=="installed" else (0 if status in ("current","deferred","disabled","no ASX release published") else 1)
         save,home=core.native_paths(root,os.environ)
         if any(os.environ.get(k)for k in("WOW_CAPTURE","WOW_UNATTENDED","WOW_PROBE","WOW_RIG")):
-            raise ValueError("Remove unattended/capture environment overrides before launching ASX.")
+            print("[ WARNING ] Native unattended/capture overrides are active; game startup may differ.",flush=True)
         stack.enter_context(core.profile_lock(save))
         m=core.manifest(root)
         print("[ ASX ] ASX "+m["version"]+" | Supported game: "+m["game"]["version"],flush=True)
@@ -106,23 +115,37 @@ def run(root,offline=False,check=False,update_only=False,confirm_update=None,ret
                     status=updates.automatic(root,actual,confirm=callback,approve=confirm_files)
                 print("[ ASX ] Updates: "+status+".",flush=True)
                 if status=="installed":return 75
+                if status=="handoff":return 0
             except UpdateCancelled:
                 print("[ ASX ] Launch cancelled. No update was installed.",flush=True);return 0
             except Exception as error:
                 print("[ ASX ] Update failed or unavailable: "+str(error)+". Checking the installed version before continuing.",flush=True)
         core.inspect(root,m)
-        with operation("Checking critical ASX files"):data=core.sources(root,m,tolerant=True)
+        with operation("Checking critical ASX files"):data=core.sources(root,m,tolerant=True,launch=True)
+        optional={}
+        for name in m['files']:
+            if name.startswith(core.ASXUI_SOURCE):
+                p=core.path(root,name);spec=m['files'][name]
+                if not p.is_file()or p.stat().st_size!=spec['size']or core.sha(p)!=spec['sha256']:
+                    if core.file_role(name)=='documentation':continue
+                    disable_owned_ui(root);optional={};print('[ WARNING ] ASXUI unavailable; native interface remains enabled.',flush=True);break
+                optional[name]=p.read_bytes()
+        data.update(optional)
         projected=core.projection(data,m)
-        needs_preparation=any(core.file_role(n)=="critical" and
+        needs_preparation=any((core.file_role(n)=="critical"or(core.ui_target(n)and not core.path(root,n).exists())) and
             (not core.path(root,n).is_file() or core.sha(core.path(root,n))!=core.digest(b))
             for n,b in projected.items())
-        if needs_preparation:
+        try:version_changed=core.installed(root).get("version")!=m["version"]
+        except (ValueError,OSError,TypeError,KeyError):version_changed=False
+        if needs_preparation or version_changed:
             core.adopt(root,m,data)
             with operation("Preparing owned ASX files"):core.apply(root,m,data,manual=True,launch=True,approve=lambda names:all(core.ui_target(n)for n in names)and confirm_files(names))
-        report=maintenance.diagnose(root);maintenance.print_report(report)
+        report=maintenance.launch_report(root,m);maintenance.print_report(report)
         if not report["ready"]:raise ValueError("Repair required. Use --repair; --check shows all problems.")
-        with operation("Backing up native progression"):backup(root,save)
-        session=core.path(root,"ASX/Logs/"+time.strftime("%Y%m%d-%H%M%S-")+uuid.uuid4().hex[:8]);session.mkdir(parents=True)
+        try:
+            with operation("Backing up native progression"):backup(root,save)
+        except OSError as error:print("[ WARNING ] Progression backup unavailable: "+str(error),flush=True)
+        session=core.path(root,"ASX/Data/Logs/"+time.strftime("%Y%m%d-%H%M%S-")+uuid.uuid4().hex[:8]);session.mkdir(parents=True)
         core.atomic(session/"session.json",core.encoded({"product":core.PRODUCT,"version":m["version"],"game_sha256":actual,"profile":"native","started":time.strftime("%Y-%m-%dT%H:%M:%S%z")}))
         out=(session/"game-output.log").open("wb")
         child=None
@@ -131,9 +154,9 @@ def run(root,offline=False,check=False,update_only=False,confirm_update=None,ret
                 child=subprocess.Popen([str(root/"AzerothSurvivors.exe")],cwd=root,env=child_environment(root,os.environ,session),stdout=out,stderr=subprocess.STDOUT)
                 metadata=core.read_json((session/"session.json").read_bytes());metadata["game_pid"]=child.pid
                 core.atomic(session/"session.json",core.encoded(metadata))
-                until=time.monotonic()+45
+                until=time.monotonic()+120
                 while time.monotonic()<until:
-                    if child.poll()is not None:raise ValueError("The game closed during startup. See ASX/Logs.")
+                    if child.poll()is not None:raise ValueError("The game closed during startup. See ASX/Data/Logs.")
                     ready=session/"ready.json"
                     if ready.exists():
                         try:ack=core.read_json(ready.read_bytes())
@@ -141,7 +164,7 @@ def run(root,offline=False,check=False,update_only=False,confirm_update=None,ret
                         if ack=={"product":"asx","game_sha256":actual}:break
                         raise ValueError("Unexpected ASX startup acknowledgement")
                     time.sleep(.1)
-                else:raise ValueError("ASX could not activate safely. See ASX/Logs. The owned game process will close.")
+                else:raise ValueError("ASX could not activate safely. See ASX/Data/Logs. The owned game process will close.")
             print("[ ASX ] ASX is active. Progression and settings are shared with the native game.",flush=True)
             code=child.wait();print("[ ASX ] Game closed. Logs: "+str(session),flush=True);return code
         finally:
@@ -166,19 +189,6 @@ def choose(prompt,choices,default=None):
         if not answer and default is not None:return default
         if answer in choices:return answer
         print("Please enter one of: "+", ".join(choices)+".",flush=True)
-
-
-def confirm_update(feed):
-    if not sys.stdin.isatty():
-        print("[ ASX ] Update confirmation requires an interactive console; update deferred.",flush=True)
-        return False
-    version=feed["manifest"]["version"]
-    size=feed["package"]["size"]/(1024*1024)
-    print(f"\nA signed ASX update is available: {version} ({size:.1f} MB).")
-    print("  1. Install now\n  2. Later (continue without updating)\n  0. Cancel")
-    answer=choose("Choose [2]: ",("1","2","0"),"2")
-    if answer in (None,"0"):raise UpdateCancelled()
-    return answer=="1"
 
 
 def confirm_files(names):
@@ -238,7 +248,7 @@ def execute(root,action,offline=False,interactive=False,archive=None,feed=None,s
                 remove.uninstall(root)
         return 0
     return run(root,offline or action=="offline",action=="check",action in ("update-only","retry-update"),
-               confirm_update=confirm_update,retry=action=="retry-update")
+               confirm_update=None,retry=action=="retry-update")
 
 
 def main():
@@ -253,7 +263,12 @@ def main():
     a=parser.parse_args()
     if any((a.archive,a.feed,a.signature)) and (not a.repair or not all((a.archive,a.feed,a.signature))):
         parser.error("Local repair requires --repair --archive --feed --signature together")
-    root=Path(__file__).resolve().parents[2]
+    root=Path(__file__).resolve().parents[3]
+    if not a.check and (root/"AzerothSurvivors.exe").is_file():
+        try:
+            with core.locked(root):layout.migrate(root)
+        except (ValueError,OSError)as error:
+            print('[ ERROR ] ASX migration stopped; verified copies preserved: '+str(error),flush=True);return 1
     interactive=a.menu
     if a.menu and not sys.stdin.isatty():
         print("[ ERROR ] The menu requires an interactive console. Use --play or --check.",flush=True)

@@ -8,14 +8,14 @@ release boundaries.
 ## Owned layout
 
 The archive overlays an existing, closed game folder. It contains `start-asx.cmd`,
-`README-ASX.txt` and `ASX/`: the normal DLL under `Bin/`, launcher/update code under
-`Client/`, the bundled interpreter under `Runtime/`, addon sources under
-`Interface/` and owned settings/state/backups/logs. It does not include the native
+`README-ASX.txt` and three groups under `ASX/`: distributed code in `App/`
+(`Bin`, `Launcher`, `Python`, `AddOns` and `Defaults`), user preferences in
+`Config/`, and mutable state/backups/logs in `Data/`. It does not include the native
 EXE, game archives, saves or unrelated addons.
 
 The archive has no root `avrt.dll`. The launcher checks for conflicting loaders
-before projecting its own DLL and the two owned addon files. Unknown or modified
-files are preserved; they are not silently overwritten. Direct native launch
+before projecting its own DLL and the two owned addon files. Unknown files and foreign loader/addon conflicts are preserved. Verified updates
+back up managed modifications before replacing them. Direct native launch
 without ASX activation remains inert.
 
 Native archive inventory is checked independently of raw container hashes, so
@@ -27,14 +27,14 @@ failed check by modifying official game assets.
 
 | Location | Owner and role |
 | --- | --- |
-| `ASX/Bin`, `ASX/Client`, `ASX/Runtime` | Internal DLL source, launcher and bundled Python |
-| `ASX/Interface` | Internal sources for the gated ASX presentation and bundled standalone ASXUI |
+| `ASX/App/Bin`, `ASX/App/Launcher`, `ASX/App/Python` | Internal DLL source, launcher and bundled Python |
+| `ASX/App/AddOns` | Internal sources for the gated ASX presentation and bundled standalone ASXUI |
 | `benilla-config/AddOns/ASX` | Owned deployment of that gated presentation; not a standalone UI addon |
 | `benilla-config/AddOns/ASXUI` | Bundled native addon, projected and updated by ASX using an exact owned-file list |
-| `ASX/Defaults`, `ASX/Settings` | Packaged defaults and private channel configuration |
-| `ASX/State`, `ASX/Updates` | Ownership, locks, update history, signed caches and transactions |
-| `ASX/Backups`, `ASX/Logs`, `ASX/Reports` | Preserved private data and local diagnostics |
-| `ASX/options.json` | Current launcher event preferences; retained at this path for compatibility |
+| `ASX/App/Defaults`, `ASX/Config` | Packaged defaults and private channel configuration |
+| `ASX/Data/State`, `ASX/Data/Updates` | Ownership, locks, update history, signed caches and transactions |
+| `ASX/Data/Backups`, `ASX/Data/Logs`, `ASX/Data/Reports` | Preserved private data and local diagnostics |
+| `ASX/Config/options.json` | Current launcher event preferences; retained at this path for compatibility |
 
 ASXUI preferences use the native addon's SavedVariables mechanism. They are not
 launcher preferences. ASX installs and updates ASXUI automatically. Its Lua addon remains independent
@@ -45,18 +45,26 @@ owned or removed. Internal sources and their projected addon files are distinct.
 
 ## Launcher interaction and file policy
 
-No-argument startup launches automatically. `--menu` explicitly opens maintenance
-choices. All update paths, including update-only and retry, require confirmation;
-Enter defers, and noninteractive callers cannot authorize installation implicitly.
+No-argument startup launches automatically. `--menu` opens maintenance choices.
+A signed update for the installed native executable installs automatically,
+including `--update-only`, retry and noninteractive use. No update confirmation
+is requested. Invalid signatures, incompatible native hashes, unsafe paths and
+foreign loader conflicts still prevent replacement. Foreign optional addons are
+preserved without blocking the core update; explicit repair may replace them. Modified owned files are
+backed up before a verified update replaces them; unowned addons require explicit
+repair rather than silent takeover. Offline mode skips network discovery.
 
-`core.file_role` is the product-owned classification: `README-ASX.txt` and `ASX/Client/LICENSE` are
-noncritical documentation, `start-asx.cmd` is bootstrap, and
-`ASX/Defaults/channel.json` is update metadata. Other payload files are critical.
-An invalid ownership receipt blocks maintenance writes, not a launch whose
-critical sources and projections are already verified intact. Classification does not come from a filename extension or a
-user-editable role in the local manifest. Unsafe paths remain blocking for every role.
-The manifest, compatibility registry and trust information gate relevant actions.
-Preferences, private state and native data are not release payloads.
+The ordinary launch path checks the exact executable, required native files,
+launcher/DLL/retained presentation sources and activation projections. It no
+longer hashes all bundled Python libraries or runs the exhaustive diagnostic.
+Documentation and update metadata do not block launching an intact compatible
+installation. A missing/incomplete ASXUI source falls back to native UI: only a
+verifiably owned TOC is backed up and disabled; user addon code and SavedVariables
+remain intact. Missing documentation does not disable ASXUI. Optional files can
+be restored by repair. Invalid receipts/history block unsafe maintenance writes,
+not verified existing activation. Backup write failures warn without blocking
+play. The native activation acknowledgement may take up to 120 seconds; wrong
+acknowledgements or failure to activate still close the owned game process.
 
 `--check` is offline and read-only, collects issues rather than stopping at the
 first, and never recovers or prepares the installation. Diagnostics remain
@@ -71,7 +79,7 @@ it. Missing documentation can be restored. Owned critical conflicts require
 consent and backups. Lost receipts allow guided internal ASX reconstruction, never
 implicit adoption of an unknown root loader or projected addon. Invalid channel
 configuration can use the embedded official trust root for approved recovery.
-Runtime replacement under Windows remains a closed-launcher complete-archive step.
+Runtime-changing updates on Windows use a private copied interpreter, wait for the current launcher to close, reverify the signed cached package, acquire the installation lock, apply the transaction and restart the launcher automatically. A damaged interpreter that cannot start still requires complete-archive repair.
 
 Maintenance transactions retain the previous-release rollback pointer. Update
 history records the sequence high-water mark, installed release and attempt
@@ -158,3 +166,29 @@ Use `asx_verify_publication.py --evidence-dir .local/releases/<version>` to read
 publication metadata and write verification receipts there, keeping the prepared
 folder minimal. Structural reorganization never changes signed asset bytes or
 implies validation of new source, reproducibility approval or publication.
+
+## Layout migration and generation boundary
+
+The installed root has three groups: `ASX/App/` for distributed code, Python,
+DLLs, addon sources, defaults and manifest; `ASX/Config/` for user options/channel;
+and `ASX/Data/` for installation state, update transactions/cache, backups, logs
+and reports. Native addons and saves remain in their native locations.
+
+On first start, the new launcher acquires the current lock and a legacy lock,
+rejects symlinks, copies explicitly named old trees into the new layout, verifies
+every byte and records a durable migration plan before removing old copies.
+Conflicting user settings/state are preserved and reported; a newly extracted
+App file wins over differing legacy program content, with the old bytes retained
+under Data/Backups/Layout. Migration is restartable and does not touch native
+archives, progression or unrelated addons. Legacy receipt and journal paths remain
+readable through bounded aliases. Existing settings, caches and diagnostic logs
+are retained.
+
+The first transition from the published .2 layout requires extracting the complete
+new archive beside the closed game: the unchanged .2 launcher cannot understand
+the new payload layout. This does not modify the published .2 archive. Afterwards,
+compatible signed releases update automatically. Historical packages can still be
+authenticated/read, but restoring old launcher code into the new App paths would
+break it; cross-layout installation/rollback requires its complete original archive,
+not reinterpretation of old code. Ordinary rollback remains transactional within
+the new layout generation.

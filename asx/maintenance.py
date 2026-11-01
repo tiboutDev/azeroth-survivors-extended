@@ -32,20 +32,20 @@ def diagnose(root):
         else:core.installed(root)
     except (ValueError,OSError,KeyError,TypeError,AttributeError) as error:issue(core.STATE,"warning","maintenance blocked by invalid ownership receipt: "+str(error))
     try:
-        folder=core.path(root,"ASX/Updates/Transactions")
+        folder=core.path(root,"ASX/Data/Updates/Transactions")
         if folder.exists():
             for d in folder.iterdir():
                 if re.fullmatch(r"[0-9a-f]{32}",d.name):
-                    j=core.get(root,"ASX/Updates/Transactions/"+d.name+"/journal.json",{})
-                    if j.get("phase")=="applying":issue("ASX/Updates/Transactions/"+d.name,"critical","interrupted transaction; use --recover")
-    except (ValueError,OSError,AttributeError) as error:issue("ASX/Updates/Transactions","critical",str(error))
+                    j=core.get(root,"ASX/Data/Updates/Transactions/"+d.name+"/journal.json",{})
+                    if j.get("phase")=="applying":issue("ASX/Data/Updates/Transactions/"+d.name,"critical","interrupted transaction; use --recover")
+    except (ValueError,OSError,AttributeError) as error:issue("ASX/Data/Updates/Transactions","critical",str(error))
     try:updates.update_state(root)
-    except (ValueError,OSError,KeyError,TypeError) as error:issue("ASX/State/updates.json","warning",str(error))
+    except (ValueError,OSError,KeyError,TypeError) as error:issue("ASX/Data/State/updates.json","warning",str(error))
     try:
-        options=core.get(root,"ASX/options.json",{})
+        options=core.get(root,"ASX/Config/options.json",{})
         if not isinstance(options,dict) or any(type(options.get(k,True)) is not bool for k in ("treasure_goblins","lost_supplies","darkmoon_trials")):
             raise ValueError("invalid optional settings; affected events are disabled at launch")
-    except (ValueError,OSError) as error:issue("ASX/options.json","warning",str(error))
+    except (ValueError,OSError) as error:issue("ASX/Config/options.json","warning",str(error))
     return {"ready":not any(i["severity"]=="critical" for i in issues),"issues":issues}
 
 
@@ -78,7 +78,7 @@ def repair(root,confirm,archive=None,feed_path=None,signature_path=None,download
         raw=bounded_read(feed_path,updates.MAX_FEED);sig=bounded_read(signature_path,64)
         data=bounded_read(archive,updates.MAX_ZIP)
     else:
-        base="ASX/Updates/Packages/"+installed+"/" if installed and core.VERSION.fullmatch(installed) else None
+        base="ASX/Data/Updates/Packages/"+installed+"/" if installed and core.VERSION.fullmatch(installed) else None
         if base and core.path(root,base+"feed.json").is_file():
             raw=bounded_read(core.path(root,base+"feed.json"),updates.MAX_FEED)
             sig=bounded_read(core.path(root,base+"feed.sig"),64)
@@ -111,7 +111,7 @@ def repair(root,confirm,archive=None,feed_path=None,signature_path=None,download
         if p.exists() and core.file_role(name)=="documentation":
             changes.append("Preserve modified documentation: "+name);continue
         changes.append(("Back up and replace: " if p.exists() else "Restore: ")+name)
-    if os.name=="nt" and any(name.startswith("ASX/Runtime/") and (not core.path(root,name).is_file() or core.sha(core.path(root,name))!=core.digest(b)) for name,b in new.items()):
+    if os.name=="nt" and any(name.startswith("ASX/App/Python/") and (not core.path(root,name).is_file() or core.sha(core.path(root,name))!=core.digest(b)) for name,b in new.items()):
         raise ValueError("Manual installation required: close ASX and extract the complete verified archive to restore the Python runtime.")
     print("[ ASX ] Repair ASX "+m["version"]+(" (recovering installation identity)" if installed is None else ""),flush=True)
     for line in changes:print("  "+line,flush=True)
@@ -123,13 +123,13 @@ def repair(root,confirm,archive=None,feed_path=None,signature_path=None,download
     if not confirm(changes):return "cancelled"
     updates.cache(root,raw,sig,data,feed)
     if reset_channel:
-        channel=core.path(root,"ASX/Settings/channel.json")
-        if channel.is_file():core.atomic(core.path(root,"ASX/Backups/Files/"+uuid.uuid4().hex+"/channel.json"),channel.read_bytes())
-        core.put(root,"ASX/Settings/channel.json",cfg)
+        channel=core.path(root,"ASX/Config/channel.json")
+        if channel.is_file():core.atomic(core.path(root,"ASX/Data/Backups/Files/"+uuid.uuid4().hex+"/channel.json"),channel.read_bytes())
+        core.put(root,"ASX/Config/channel.json",cfg)
     old_raw=None
     if receipt_bad:
         p=core.path(root,core.STATE);old_raw=p.read_bytes()
-        core.atomic(core.path(root,"ASX/Backups/Files/"+uuid.uuid4().hex+"/install.json"),old_raw)
+        core.atomic(core.path(root,"ASX/Data/Backups/Files/"+uuid.uuid4().hex+"/install.json"),old_raw)
         p.unlink()
     try:
         status=core.apply(root,m,files,trusted=True,approve=lambda names:True,repair=True)
@@ -137,3 +137,13 @@ def repair(root,confirm,archive=None,feed_path=None,signature_path=None,download
     except BaseException:
         if old_raw is not None:core.atomic(core.path(root,core.STATE),old_raw)
         raise
+
+def launch_report(root,m):
+    """Launch checks only; full inventory/history checking remains --check."""
+    issues=[]
+    for target,source in core.projections(m).items():
+        if core.ui_target(target):continue
+        spec=m['files'][source];p=core.path(root,target)
+        if not p.is_file()or p.stat().st_size!=spec['size']or core.sha(p)!=spec['sha256']:
+            issues.append({'file':target,'severity':'critical','message':'missing or modified activation file'})
+    return {'ready':not issues,'issues':issues}

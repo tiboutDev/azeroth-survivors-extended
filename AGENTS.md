@@ -154,8 +154,9 @@ Updates, rollback and uninstall use bounded inventories and ownership hashes,
 preserve unknown/modified files and verify signatures before applying content.
 Recovery that replaces imported client code restarts the launcher before using
 restored files. Keep anti-loop sequence behavior and native profile backups.
-No automatic upload or implicit access to real signing credentials. Runtime
-replacement remains an explicit complete-archive operation with clients closed.
+No automatic upload or implicit access to real signing credentials. Compatible signed runtime updates use the detached copied-interpreter transaction
+with the game and original launcher closed; damaged bootstrap repair remains an
+explicit complete-archive operation.
 
 Validate the exact signed archive at a release milestone. Source-publication
 hygiene and reproducibility remain required safeguards. Reproducibility requires
@@ -172,3 +173,8 @@ UPLOAD/ and the compact README, release notes and publication guide in the
 publication folder. Preserve reports, hashes, references, source metadata and
 verification receipts under ignored `.local/releases/<version>/` in this project.
 Use the publication verifier's explicit evidence directory after finalization.
+
+Current installed layout: ASX/App for payload, ASX/Config for preferences, ASX/Data
+for mutable state and evidence. Compatible signed ASX updates install automatically
+without confirmation; preserve ownership, compatibility, anti-loop and transaction
+gates. The published .2 archive must remain untouched during layout development.

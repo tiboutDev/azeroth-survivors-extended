@@ -27,21 +27,16 @@ class MenuTests(unittest.TestCase):
             self.assertEqual(self.menu([option,"1"]),action)
     def test_end_of_input_exits_without_action(self):
         self.assertIsNone(self.menu([EOFError()]))
-    def test_update_prompt_offers_accept_defer_and_cancel(self):
-        feed={"manifest":{"version":"0.130.0-asx.2"},"package":{"size":1024}}
-        for answer,expected in (("1",True),("",False),("2",False)):
-            with patch.object(launch.sys.stdin,"isatty",return_value=True),patch("builtins.input",return_value=answer):self.assertEqual(launch.confirm_update(feed),expected)
-        with patch.object(launch.sys.stdin,"isatty",return_value=True),patch("builtins.input",return_value="0"),self.assertRaises(launch.UpdateCancelled):launch.confirm_update(feed)
     def test_menu_check_is_offline_and_cannot_launch_game(self):
         with patch.object(launch,"run",return_value=0) as run:
             launch.execute(ROOT,"check",interactive=True)
             self.assertEqual(run.call_args.args[1:4],(False,True,False))
-    def test_direct_and_menu_launch_both_require_update_confirmation(self):
+    def test_direct_and_menu_launch_use_automatic_updates(self):
         with patch.object(launch,"run",return_value=0) as run:
             launch.execute(ROOT,"play",interactive=True)
-            self.assertIs(run.call_args.kwargs["confirm_update"],launch.confirm_update)
+            self.assertIsNone(run.call_args.kwargs["confirm_update"])
             launch.execute(ROOT,"play",interactive=False)
-            self.assertIs(run.call_args.kwargs["confirm_update"],launch.confirm_update)
+            self.assertIsNone(run.call_args.kwargs["confirm_update"])
 
     def test_packaged_readme_uses_selected_game_version(self):
         spec=importlib.util.spec_from_file_location("asx_menu_package",ROOT/"tools/build/asx_package.py")
@@ -71,6 +66,3 @@ class MenuTests(unittest.TestCase):
         with patch.object(launch.sys,"argv",["launch.py"]),patch.object(launch,"menu",side_effect=AssertionError("menu opened")),patch.object(launch,"execute",return_value=0) as execute:
             self.assertEqual(launch.main(),0)
             self.assertEqual(execute.call_args.args[1],"play")
-    def test_noninteractive_update_is_deferred(self):
-        with patch.object(launch.sys.stdin,"isatty",return_value=False),patch("builtins.input",side_effect=AssertionError("input without console")):
-            self.assertFalse(launch.confirm_update({}))

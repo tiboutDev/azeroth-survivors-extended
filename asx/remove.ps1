@@ -16,15 +16,15 @@ try {
     Start-Sleep -Milliseconds 500
     $game = Get-Process -Name AzerothSurvivors -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq (Join-Path $root 'AzerothSurvivors.exe') }
     if ($game) { throw 'The game is running; removal stopped.' }
-    $lockPath = Join-Path $root 'ASX\State\installation.lock'
+    $lockPath = Join-Path $root 'ASX\Data\State\installation.lock'
     $installationLock = [IO.File]::Open($lockPath,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::ReadWrite)
     $installationLock.Lock(0,1)
     $parents = @{}
     foreach ($property in $job.files.PSObject.Properties) {
         $name = [string]$property.Name
-        if ($name -eq 'ASX/State/installation.lock') { continue }
+        if ($name -eq 'ASX/Data/State/installation.lock') { continue }
         if ($name -match '(^|/)(\.\.?|[^/]*[:\\*?"<>|][^/]*)(/|$)' -or $name -match '(^|/)/') { throw 'Unsafe ASX removal path.' }
-        $allowed = $name -in @('start-asx.cmd','README-ASX.txt','avrt.dll','ASX/manifest.json','ASX/State/install.json','ASX/State/installation.lock') -or $name -match '^ASX/(Client|Bin|Runtime|Interface|Defaults)/' -or $name -in @('benilla-config/AddOns/ASX/ASX.toc','benilla-config/AddOns/ASX/Presentation.lua','benilla-config/AddOns/ASXUI/ASXUI.toc','benilla-config/AddOns/ASXUI/ASXUI.lua','benilla-config/AddOns/ASXUI/Minimap.lua','benilla-config/AddOns/ASXUI/Events.lua','benilla-config/AddOns/ASXUI/Buffs.lua','benilla-config/AddOns/ASXUI/Hud.lua','benilla-config/AddOns/ASXUI/Theme.lua','benilla-config/AddOns/ASXUI/Frames.lua','benilla-config/AddOns/ASXUI/Fonts/ASXUI-Numbers.ttf','benilla-config/AddOns/ASXUI/Fonts/OFL.txt','benilla-config/AddOns/ASXUI/LICENSE','benilla-config/AddOns/ASXUI/README.md')
+        $allowed = $name -in @('start-asx.cmd','README-ASX.txt','avrt.dll','ASX/App/manifest.json','ASX/Data/State/install.json','ASX/Data/State/installation.lock') -or $name -match '^ASX/App/(Launcher|Bin|Python|AddOns|Defaults)/' -or $name -in @('benilla-config/AddOns/ASX/ASX.toc','benilla-config/AddOns/ASX/Presentation.lua','benilla-config/AddOns/ASXUI/ASXUI.toc','benilla-config/AddOns/ASXUI/ASXUI.lua','benilla-config/AddOns/ASXUI/Minimap.lua','benilla-config/AddOns/ASXUI/Events.lua','benilla-config/AddOns/ASXUI/Buffs.lua','benilla-config/AddOns/ASXUI/Hud.lua','benilla-config/AddOns/ASXUI/Theme.lua','benilla-config/AddOns/ASXUI/Frames.lua','benilla-config/AddOns/ASXUI/Fonts/ASXUI-Numbers.ttf','benilla-config/AddOns/ASXUI/Fonts/OFL.txt','benilla-config/AddOns/ASXUI/LICENSE','benilla-config/AddOns/ASXUI/README.md')
         if (-not $allowed) { throw 'Removal inventory contains a non-ASX path.' }
         $target = [IO.Path]::GetFullPath((Join-Path $root $name.Replace('/','\')))
         if (-not $target.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)) { throw 'Removal path escaped the game folder.' }

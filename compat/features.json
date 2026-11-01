@@ -3,7 +3,7 @@
   "features": [
     {
       "id": "ASX-01",
-      "contract": "Exact-build activation, required native entry/byte checks and process-local activation of the owned presentation addon. Unsupported builds fail closed.",
+      "contract": "Exact-build activation, required native entry/byte checks and process-local activation of the owned presentation addon. Unsupported builds fail closed. Installed App/Config/Data layout has verified legacy migration; signed native-compatible updates install automatically without confirmation, with detached runtime replacement. Launch checks activation dependencies; optional UI/docs remain nonblocking.",
       "mode": "Both",
       "reference": "[Contract](CLIENT-ADAPTER.md)",
       "native_domains": [

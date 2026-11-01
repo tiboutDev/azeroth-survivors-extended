@@ -75,7 +75,7 @@ class BackgroundTrials(unittest.TestCase):
         mocked = mock.Mock(run=lambda *a, **kw: called.append((a, kw)))
         with mock.patch.dict('sys.modules', {'asx_install_trial': mocked}):
             background.run_child(args, Path('/tmp/test-results/trial/start'))
-        self.assertEqual(called, [((45,), {'game_version': '0.135.1', 'package_path': Path('prepared.zip')})])
+        self.assertEqual(called, [((45,), {'game_version': '0.135.1', 'package_path': Path('prepared.zip'), 'legacy_package': None})])
 
     def test_packaged_coop_uses_native_ready_input_without_restarting_autostart(self):
         import asx_install_trial

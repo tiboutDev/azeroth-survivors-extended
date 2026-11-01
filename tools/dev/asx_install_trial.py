@@ -12,7 +12,7 @@ def native_coop_controls(slot):
             "ASX_LOG_NATIVE_UI": "1", "WOW_ROGUE_ROAM": "1"}
 
 def stop_game(folder):
-    sessions=list((folder/"ASX/Logs").glob("*/session.json"))
+    sessions=list((folder/"ASX/Data/Logs").glob("*/session.json"))
     if not sessions:return
     meta=json.loads(max(sessions,key=lambda p:p.stat().st_mtime).read_text())
     k=ctypes.WinDLL("kernel32",use_last_error=True)
@@ -22,7 +22,7 @@ def stop_game(folder):
     if h:
         try:k.TerminateProcess(h,0)
         finally:k.CloseHandle(h)
-def run(seconds,game_version=VERSION,package_path=None):
+def run(seconds,game_version=VERSION,package_path=None,legacy_package=None):
     if game_version != VERSION:raise ValueError("Only the selected reviewed packaged trial is supported")
     tag=game_version.replace(".","")
     if os.name!="nt":raise RuntimeError("Windows only")
@@ -44,25 +44,39 @@ def run(seconds,game_version=VERSION,package_path=None):
             folder=output/("ASX & native é "+str(slot));folder.mkdir();folders.append(folder)
             shutil.copyfile(exe,folder/exe.name);(folder/"Data").mkdir()
             for asset in sorted((runtime/"Data").glob("*.MPQ")):os.link(asset,folder/"Data"/asset.name)
+            if legacy_package and slot==1:
+                # Read-only approved old archive, extracted only into this disposable copy.
+                old_path=Path(legacy_package);old_proof=json.loads(old_path.with_name('PREPARATION.json').read_text())
+                if sha(old_path)!=old_proof['archive_sha256']:raise ValueError('Legacy fixture archive changed')
+                with zipfile.ZipFile(old_path)as old:
+                    old.extractall(folder);old_m=json.loads(old.read('ASX/manifest.json'));owned={n:spec['sha256']for n,spec in old_m['files'].items()};owned['ASX/manifest.json']=hashlib.sha256(old.read('ASX/manifest.json')).hexdigest()
+                    projection={'avrt.dll':'ASX/Bin/avrt.dll','benilla-config/AddOns/ASX/ASX.toc':'ASX/Interface/ASX.toc','benilla-config/AddOns/ASX/Presentation.lua':'ASX/Interface/Presentation.lua'}
+                    projection.update({'benilla-config/AddOns/ASXUI/'+n.removeprefix('ASX/Interface/ASXUI/'):n for n in old_m['files']if n.startswith('ASX/Interface/ASXUI/')})
+                    for name,source in projection.items():
+                        dest=folder/name;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(old.read(source));owned[name]=old_m['files'][source]['sha256']
+                state=folder/'ASX/State';state.mkdir(parents=True,exist_ok=True)
+                (state/'install.json').write_text(json.dumps({'schema':1,'version':old_m['version'],'owned':owned,'game':old_m['game']}))
+                (folder/'ASX/options.json').write_text('{"lost_supplies":false}')
+                previous=folder/'ASX/Logs/retained/session.log';previous.parent.mkdir(parents=True,exist_ok=True);previous.write_text('retained legacy evidence')
             with zipfile.ZipFile(package)as z:z.extractall(folder)
-            (folder/"shots").mkdir();home=folder/"benilla-config";home.mkdir();app=folder/"profile/appdata";save=app/"wenilla-rogue";save.mkdir(parents=True)
+            (folder/"shots").mkdir();home=folder/"benilla-config";home.mkdir(exist_ok=True);app=folder/"profile/appdata";save=app/"wenilla-rogue";save.mkdir(parents=True)
             prepare(save,slot)
             config='[cvars]\ngxWindow = "1"\ngxResolution = "800x600"\n'+''.join(f'{key} = "0"\n'for key in("MasterVolume","MusicVolume","SoundVolume","AmbienceVolume","EnableMusic","EnableAmbience","MasterSoundEffects"))
             (home/"config.toml").write_text(config)
             env=dict(clean,APPDATA=str(app),LOCALAPPDATA=str(folder/"profile/localappdata"));environments.append(env)
-            python=folder/"ASX/Runtime/python.exe";script=folder/"ASX/Client/launch.py"
+            python=folder/"ASX/App/Python/python.exe";script=folder/"ASX/App/Launcher/launch.py"
             before=(sha(save/"characters.txt"),sha(home/"config.toml"))
             cmd=[str(python),"-I","-B",str(script),"--check","--offline"]
             result=subprocess.run(cmd,cwd=folder,env=env,capture_output=True,timeout=40)
             (output/f"install-{slot}.log").write_bytes(result.stdout+result.stderr)
-            checks[f"install_{slot}"]=result.returncode==1 and before==(sha(save/"characters.txt"),sha(home/"config.toml")) and not(folder/"avrt.dll").exists()
+            checks[f"install_{slot}"]=result.returncode==(0 if legacy_package and slot==1 else 1) and before==(sha(save/"characters.txt"),sha(home/"config.toml")) and ((folder/"avrt.dll").exists()if legacy_package and slot==1 else not(folder/"avrt.dll").exists())
             if not checks[f"install_{slot}"]:raise RuntimeError("Packaged Windows installation failed; see "+str(output))
         # Same native profile, direct EXE: proxy forwards, ASX stays inactive.
         folder=folders[0];env=dict(environments[0],WOW_ROGUE_AUTOPICK="1",WOW_ROGUE_AUTOSTART="1",WOW_ROGUE_AUTOPLAY="3600")
         out=(output/"vanilla.log").open("wb");streams.append(out)
         vanilla=subprocess.Popen([str(folder/"AzerothSurvivors.exe")],cwd=folder,env=env,stdout=out,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW);children.append(vanilla)
         time.sleep(10);checks["direct_native_alive"]=vanilla.poll()is None
-        checks["direct_native_no_activation"]=not list((folder/"ASX/Logs").glob("*/ready.json"))
+        checks["direct_native_no_activation"]=not list((folder/"ASX/Data/Logs").glob("*/ready.json"))
         vanilla.terminate();vanilla.wait(timeout=10)
         with socket.socket()as probe:probe.bind(("127.0.0.1",0));port=probe.getsockname()[1]
         password=uuid.uuid4().hex
@@ -77,7 +91,17 @@ def run(seconds,game_version=VERSION,package_path=None):
             out=(output/f"launcher-{slot}.log").open("wb");streams.append(out)
             # Exercise the exact distributed CMD, including ampersand/unicode paths.
             child=subprocess.Popen([os.environ["ComSpec"],"/d","/c","start-asx.cmd","--offline"],cwd=folder,env=env,stdout=out,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW)
-            children.append(child);time.sleep(4 if slot==1 else 2)
+            children.append(child)
+            if slot==1:
+                # Migration may legitimately take longer than the fresh guest.
+                # Wait for the real native host before the guest's one-shot join.
+                deadline=time.monotonic()+90
+                while time.monotonic()<deadline and child.poll()is None:
+                    logs=list((folder/'ASX/Data/Logs').glob('*/game-output.log'))
+                    if any('"state":"hosting"'in p.read_text(errors='replace')for p in logs):break
+                    time.sleep(.2)
+                else:raise RuntimeError('Native host did not become ready before guest launch')
+            else:time.sleep(2)
         until=time.monotonic()+min(seconds,110)
         while time.monotonic()<until and all(p.poll()is None for p in children[1:]):
             if (ROOT/"test-results/asx-install-stop").exists():break
@@ -85,16 +109,22 @@ def run(seconds,game_version=VERSION,package_path=None):
         native=[]
         from script_diagnostics import assess
         for slot,folder in enumerate(folders,1):
-            logs=list((folder/"ASX/Logs").glob("*/game-output.log"));text=logs[0].read_text(errors="replace")if logs else"";native.append(text)
+            logs=list((folder/"ASX/Data/Logs").glob("*/game-output.log"));text=logs[0].read_text(errors="replace")if logs else"";native.append(text)
             with zipfile.ZipFile(package)as z:
-                bundle={name[len("ASX/Interface/ASXUI/"):]:z.read(name)for name in z.namelist()if name.startswith("ASX/Interface/ASXUI/")}
+                bundle={name[len("ASX/App/AddOns/ASXUI/"):]:z.read(name)for name in z.namelist()if name.startswith("ASX/App/AddOns/ASXUI/")}
+            if legacy_package and slot==1:
+                journal=folder/'ASX/Data/State/layout-migration.json'
+                checks['legacy_migration_complete']=journal.is_file()and json.loads(journal.read_text()).get('phase')=='complete'
+                checks['legacy_preferences_preserved']=(folder/'ASX/Config/options.json').read_text()=='{"lost_supplies":false}'
+                checks['legacy_logs_preserved']=(folder/'ASX/Data/Logs/retained/session.log').read_text()=='retained legacy evidence'
+                checks['legacy_trees_retired']=not(folder/'ASX/Client').exists()and not(folder/'ASX/Runtime').exists()
             checks[f"bundled_ui_{slot}"]=bool(bundle)and all((folder/"benilla-config/AddOns/ASXUI"/name).read_bytes()==data for name,data in bundle.items())
             checks[f"projected_dll_{slot}"]=sha(folder/"avrt.dll")==proof["dll_sha256"]
-            checks[f"active_{slot}"]=bool(list((folder/"ASX/Logs").glob("*/ready.json"))) and "ASX is active"in(output/f"launcher-{slot}.log").read_text(errors="replace")
+            checks[f"active_{slot}"]=bool(list((folder/"ASX/Data/Logs").glob("*/ready.json"))) and "ASX is active"in(output/f"launcher-{slot}.log").read_text(errors="replace")
             checks[f"native_joined_{slot}"]='"state":"joined"'in text
             checks[f"native_profile_{slot}"]=("uiwarrior","uipaladin","uidruid")[slot-1]in text.lower()
             checks[f"scripts_clean_{slot}"]=assess(text)["passed"]
-            checks[f"backup_{slot}"]=bool(list((folder/"ASX/Backups/Progression").glob("*.txt")))
+            checks[f"backup_{slot}"]=bool(list((folder/"ASX/Data/Backups/Progression").glob("*.txt")))
             checks[f"alive_{slot}"]=children[slot].poll()is None
             stop_game(folder)
         for p in children[1:]:p.wait(timeout=20)
@@ -102,11 +132,11 @@ def run(seconds,game_version=VERSION,package_path=None):
         # Real self-uninstall on a disposable installation, preserve user files.
         folder=folders[-1];ui_note=folder/"benilla-config/AddOns/ASXUI/user-note.txt";ui_note.write_text("preserve UI note")
         ui_settings=folder/"benilla-config/SavedVariables/ASXUI.lua";ui_settings.parent.mkdir(parents=True,exist_ok=True);ui_settings.write_text("ASXUIDB = {scale=1.25}")
-        unknown=folder/"ASX/Client/user-note.txt";unknown.write_text("keep")
+        unknown=folder/"ASX/App/Launcher/user-note.txt";unknown.write_text("keep")
         save=folder/"profile/appdata/wenilla-rogue/characters.txt";home=folder/"benilla-config/config.toml";before=(sha(save),sha(home),sha(folder/"AzerothSurvivors.exe"))
-        cmd=[str(folder/"ASX/Runtime/python.exe"),"-I","-B",str(folder/"ASX/Client/launch.py"),"--export-diagnostics"]
+        cmd=[str(folder/"ASX/App/Python/python.exe"),"-I","-B",str(folder/"ASX/App/Launcher/launch.py"),"--export-diagnostics"]
         report=subprocess.run(cmd,cwd=folder,env=environments[-1],capture_output=True,timeout=30);(output/"export.log").write_bytes(report.stdout+report.stderr)
-        checks["export_local"]=report.returncode==0 and bool(list((folder/"ASX/Reports").glob("*.zip")))
+        checks["export_local"]=report.returncode==0 and bool(list((folder/"ASX/Data/Reports").glob("*.zip")))
         cmd[-1]="--uninstall"
         removal=subprocess.run(cmd,cwd=folder,env=environments[-1],capture_output=True,timeout=30);(output/"uninstall.log").write_bytes(removal.stdout+removal.stderr)
         match=re.search(r"Removal report: (.+result.json)",removal.stdout.decode(errors="replace"))
@@ -115,10 +145,10 @@ def run(seconds,game_version=VERSION,package_path=None):
         while not result_path.exists()and time.monotonic()<until:time.sleep(.2)
         outcome=json.loads(result_path.read_text(encoding="utf-8-sig"))if result_path.exists()else{}
         (output/"uninstall-result.json").write_text(json.dumps(outcome,indent=2))
-        checks["uninstall_completed"]=removal.returncode==0 and outcome.get("completed",False) and not(folder/"avrt.dll").exists()and not(folder/"start-asx.cmd").exists()and not(folder/"ASX/Runtime/python.exe").exists()
+        checks["uninstall_completed"]=removal.returncode==0 and outcome.get("completed",False) and not(folder/"avrt.dll").exists()and not(folder/"start-asx.cmd").exists()and not(folder/"ASX/App/Python/python.exe").exists()
         checks["uninstall_ui_removed"]=not(folder/"benilla-config/AddOns/ASXUI/ASXUI.toc").exists()
         checks["uninstall_ui_preferences_preserved"]=ui_note.read_text()=="preserve UI note"and ui_settings.read_text()=="ASXUIDB = {scale=1.25}"
-        checks["uninstall_preserved"]=unknown.read_text()=="keep"and before==(sha(save),sha(home),sha(folder/"AzerothSurvivors.exe"))and bool(list((folder/"ASX/Backups/Progression").glob("*.txt")))
+        checks["uninstall_preserved"]=unknown.read_text()=="keep"and before==(sha(save),sha(home),sha(folder/"AzerothSurvivors.exe"))and bool(list((folder/"ASX/Data/Backups/Progression").glob("*.txt")))
         result=dict(checks=checks,passed=all(checks.values()),archive_sha256=proof["archive_sha256"],dll_sha256=proof["dll_sha256"],players=len(folders),muted=True,desktop_input=False,production_binary=True,transport="official engine loopback fixture; public lobby service not exercised")
         (output/"result.json").write_text(json.dumps(result,indent=2)+"\n");print(json.dumps(result,indent=2),flush=True);print(output,flush=True)
         if not result["passed"]:raise SystemExit(1)

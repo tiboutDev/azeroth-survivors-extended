@@ -9,7 +9,7 @@ def uninstall(root):
         p=core.path(root,name)
         if p.exists():files[name]=core.sha(p)
     for name in files:
-        if name not in(core.STATE,"ASX/State/installation.lock"):core.owned_name(name)
+        if name not in(core.STATE,"ASX/Data/State/installation.lock"):core.owned_name(name)
         core.path(root,name)
     if os.name!="nt":
         preserved=[]

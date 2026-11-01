@@ -4,9 +4,10 @@
     "ASX-01": {
       "profiles": [
         "official",
-        "tooling"
+        "tooling",
+        "asx-install"
       ],
-      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+      "scope_note": "Exact activation plus App/Config/Data packaging, restartable legacy migration, nonblocking optional UI/docs and automatic signed compatible updates. Windows isolated migration/fresh-install coop and detached runtime updater have separate artifact-scoped receipts; this does not claim public-lobby coverage."
     },
     "ASX-02": {
       "profiles": [

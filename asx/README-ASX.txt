@@ -21,15 +21,15 @@ ASXUI is included and installed automatically in benilla-config/AddOns/ASXUI
 when ASX launches. Signed ASX updates also update its managed addon files.
 ASXUI remains a separate Lua addon with native SavedVariables preferences;
 updates and uninstall preserve these settings and unknown files. Existing
-customized ASXUI code requires confirmation and a backup before replacement.
+independently installed addon code is preserved; use explicit repair to replace it.
 No separate ASXUI download is required.
 
 Both launches use your existing native progression and settings. No import or
 save synchronization is needed. Use one game at a time for the same profile.
-A progression backup is kept in ASX/Backups before each ASX launch.
+A progression backup is kept in ASX/Data/Backups before each ASX launch.
 
-Signed ASX updates are checked when playing online. Confirmation is required before installing.
-Use --menu for maintenance choices. Enter postpones an offered update.
+Signed ASX updates compatible with the installed native game install automatically.
+Use --menu for maintenance choices, or --offline to skip update discovery.
 No interactive console means no update installation. Launcher-runtime upgrades may require
 extracting a complete archive while the game is closed. If the official game updates first,
 ASX may need a compatible release. You can keep playing the native game.
@@ -37,7 +37,7 @@ ASX may need a compatible release. You can keep playing the native game.
 Read-only offline diagnosis: start-asx.cmd --check
 Repair the same release (signed package and confirmation required): start-asx.cmd --repair
 Recover an interrupted operation: start-asx.cmd --recover
-Retry a failed update with confirmation: start-asx.cmd --retry-update
+Retry a failed update automatically: start-asx.cmd --retry-update
 Explicit launch: start-asx.cmd --play
 To skip an update check: start-asx.cmd --offline
 Restore the previous mod version: start-asx.cmd --rollback
@@ -46,7 +46,13 @@ Create a local report: start-asx.cmd --export-diagnostics
 Documentation warnings do not block play. Modified documentation is preserved
 during repair and backed up before replacement during updates. Critical files
 require repair. Python/runtime damage may require the complete trusted archive.
-Logs: ASX/Logs. Reports may include player names and run details; review before
+Logs: ASX/Data/Logs. Reports may include player names and run details; review before
 sharing. Nothing is uploaded automatically. Native saves/settings are preserved.
 
 This is an unofficial modification, independent of the original game's author.
+
+ASX/App contains program files; ASX/Config contains options; ASX/Data contains
+state, cache, backups, logs and reports. The new launcher migrates the legacy
+layout after the first complete-archive installation. ASXUI problems and missing
+documentation do not prevent native-interface play. Compatible signed updates
+install automatically without confirmation; offline mode skips discovery.

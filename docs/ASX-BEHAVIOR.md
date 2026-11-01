@@ -72,6 +72,9 @@ Candidate profiles: `official`, `tooling`. [Scenario mappings and limits](../com
 | ASX-01.02 | Direct native launch or unsupported executable | Direct native launch stays inert; unsupported ASX builds fail closed, with no retired engine fallback. |
 | ASX-01.03 | Addon activation | Only the owned file/read buffer is activated in this process; on-disk content and unrelated addon reads stay unchanged. |
 | ASX-01.04 | Optional feature failure | Stop the affected optional event safely without weakening required activation or disabling unrelated core coop. |
+| ASX-01.05 | Installed layout/migration | App/Config/Data separation; byte-verified restartable migration preserves settings, transaction history, backups, logs and unrelated files. Native addon locations remain unchanged. |
+| ASX-01.06 | Compatible signed update | Install automatically without a question, including noninteractive use; exact native match/signature/ownership/anti-loop gates remain. Runtime changes use a detached verified transaction and automatic restart. |
+| ASX-01.07 | Launch versus full check | Launch checks only activation dependencies; missing docs or optional ASXUI do not block native-interface play. Full --check stays offline/read-only. Invalid maintenance metadata cannot force unsafe writes. |
 
 ### ASX-02 — Shared XP and death
 

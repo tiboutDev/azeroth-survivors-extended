@@ -35,6 +35,7 @@ def build_parser():
     modes.add_argument('--immunity-aggro-trial', action='store_true')
     modes.add_argument('--asx-install', action='store_true', help='Run an explicitly selected packaged normal ASX trial')
     parser.add_argument('--extensions-normal', action='store_true', help='Use the reviewed normal 0.129 binary for --extensions-trial')
+    parser.add_argument('--legacy-asx-package',type=Path,help='Read-only previous package for migration validation')
     parser.add_argument('--asx-package', type=Path, help='Prepared package archive for --asx-install')
     parser.add_argument('--child', type=Path, help=argparse.SUPPRESS)
     return parser
@@ -49,6 +50,7 @@ def parse_args(argv=None):
         parser.error('--extensions-normal requires --extensions-trial')
     if args.asx_package and not args.asx_install:
         parser.error('--asx-package requires --asx-install')
+    if args.legacy_asx_package and not args.asx_install:parser.error("--legacy-asx-package requires --asx-install")
     if args.asx_install and not args.asx_package:
         parser.error('--asx-install requires --asx-package')
     game_selected = bool(args.ritual_trial or args.supplies_trial or args.goblins_trial or args.extensions_trial or args.gems_trial or args.enchantments_trial or args.reward_wallet_trial or args.immunity_aggro_trial or args.asx_install)
@@ -72,6 +74,7 @@ def child_flags(args):
             flags.extend(('--' + name.replace('_', '-'), str(value)))
     if args.asx_package:
         flags.extend(('--asx-package', str(args.asx_package)))
+    if getattr(args,"legacy_asx_package",None):flags.extend(("--legacy-asx-package",str(args.legacy_asx_package)))
     return flags
 
 
@@ -96,7 +99,7 @@ def run_child(args, gate):
     sys.path.insert(0, str(ROOT / 'tools/dev'))
     if args.asx_install:
         from asx_install_trial import run
-        run(args.seconds, game_version=VERSION, package_path=args.asx_package)
+        run(args.seconds, game_version=VERSION, package_path=args.asx_package,legacy_package=args.legacy_asx_package)
         return
     from extensions_trial import run
     if args.goblins_trial:

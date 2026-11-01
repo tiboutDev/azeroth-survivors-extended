@@ -20,8 +20,7 @@ check the release notes for the features and exact compatibility of your downloa
 3. Extract the archive into your game folder, beside `AzerothSurvivors.exe`.
 4. Run **`start-asx.cmd`**. The launcher installs the included addons and starts ASX automatically after its checks.
 
-If a signed update is available, the launcher asks before installing it. Pressing
-Enter postpones the update. Use `start-asx.cmd --menu` to open maintenance choices;
+If a signed ASX update matches your installed native executable, it installs automatically without asking. Use `start-asx.cmd --menu` to open maintenance choices;
 `--play` is an explicit direct launch.
 
 Use `start-asx.cmd` whenever you want to play with ASX, in solo or co-op.
@@ -44,7 +43,7 @@ ASXUI remains an independent Lua addon, while its packaged files are installed
 and updated with ASX.
 
 Existing matching ASXUI files can be adopted. Different pre-existing addon code
-requires your confirmation and a backup before replacement. Native SavedVariables
+is preserved until you choose an explicit repair. Modified managed code is backed up before an automatic update replaces it. Native SavedVariables
 preferences and unknown files are preserved. Use the [ASXUI commands](../../addons/ASXUI/README.md)
 to configure its widgets instead of editing managed source files.
 
@@ -62,11 +61,10 @@ styling can still be present when the addon is enabled in the native client.
 
 ## Updates
 
-The launcher checks for signed ASX updates before playing online. Choose to
-install, postpone, or cancel. **Every update requires confirmation**, including
-`--update-only` and `--retry-update`. Without an interactive console, updates are
-deferred. A successful update restarts the launcher before continuing. The
-included ASXUI files are updated too; no separate addon update is needed.
+The launcher checks for signed ASX updates before playing online. Compatible
+updates install automatically, including without an interactive console. Successful
+updates restart the launcher before continuing. ASXUI updates with the mod. Python
+updates finish through an automatic detached helper while the launcher is closed.
 
 To update without starting the game:
 
@@ -75,7 +73,7 @@ start-asx.cmd --update-only
 ```
 
 A failed update is not retried automatically. After resolving its cause, use
-`start-asx.cmd --retry-update`; confirmation is required again. A rollback remains
+`start-asx.cmd --retry-update`; no confirmation is required. A rollback remains
 held at that release sequence, including explicit retry; a newer release can be offered.
 
 After an official game update, check the ASX release notes for compatibility before playing with the mod.
@@ -170,3 +168,16 @@ Open an [issue](https://github.com/tiboutDev/azeroth-survivors-extended/issues) 
 - The step that failed and any displayed error.
 - Whether the game launches directly without ASX.
 - A diagnostic export when useful.
+
+## Program folders and migration
+
+ASX/App contains the program, Python and addon sources. ASX/Config contains your
+options; ASX/Data contains state, cache, backups, logs and reports. The first
+transition from the older .2 layout requires extracting the complete new archive
+with the game closed; startup migrates existing settings and evidence automatically.
+The old published archive remains unchanged. Later compatible updates are automatic.
+
+An unavailable bundled ASXUI or changed README does not block the native interface.
+Use --check for exhaustive read-only diagnostics and --repair for guided repair.
+Installation conflicts are preserved. A failed progression backup warns; it does
+not prevent playing an otherwise intact installation.

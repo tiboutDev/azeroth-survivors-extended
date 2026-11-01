@@ -46,7 +46,7 @@ def unpack(data,feed):
             seen.add(name.lower());total+=item.file_size
             if total>MAX_ZIP or item.file_size>64<<20:raise ValueError("Oversized ASX archive entry")
             b=z.read(item)
-            if name==core.MANIFEST:
+            if core.layout.name(name)==core.MANIFEST:
                 if core.read_json(b)!=m:raise ValueError("ASX archive manifest differs from its signature")
             else:
                 spec=m["files"].get(name)
@@ -55,16 +55,16 @@ def unpack(data,feed):
     if set(files)!=set(m["files"]):raise ValueError("Missing ASX archive files")
     return files
 def configuration(root,persist=True):
-    name="ASX/Settings/channel.json";value=core.get(root,name)
+    name="ASX/Config/channel.json";value=core.get(root,name)
     if value is None:
-        value=core.get(root,"ASX/Defaults/channel.json",DEFAULT_CHANNEL)
+        value=core.get(root,"ASX/App/Defaults/channel.json",DEFAULT_CHANNEL)
         if persist:core.put(root,name,value)
     if not isinstance(value,dict)or value.get("schema")!=1 or not isinstance(value.get("keys"),list)or not 1<=len(value["keys"])<=8:raise ValueError("Invalid ASX update channel configuration")
     https(value["base"])
     if not value["base"].endswith("/"):raise ValueError("ASX update base must end with /")
     return value
 def update_state(root):
-    state=core.get(root,"ASX/State/updates.json",{"sequence":0})
+    state=core.get(root,"ASX/Data/State/updates.json",{"sequence":0})
     if not isinstance(state,dict) or type(state.get("sequence")) is not int or state["sequence"]<0:
         raise ValueError("Invalid update history; run --check before recovery.")
     return state
@@ -85,7 +85,7 @@ def verified_package(data,feed):
     game=feed["manifest"]["game"]
     # A signed future release carries its own registry. This never authorizes
     # the currently installed DLL to activate on a new native executable.
-    registry=core.read_json(files["ASX/Client/supported-games.json"])
+    registry=core.read_json(files.get("ASX/App/Launcher/supported-games.json",files.get("ASX/Client/supported-games.json")))
     selected=registry.get("games",{}).get(game["version"],{})
     if registry.get("schema")!=1 or selected.get("sha256")!=game["sha256"]:
         raise ValueError("Signed package registry does not support its native game")
@@ -93,7 +93,7 @@ def verified_package(data,feed):
 
 
 def cache(root,raw,signature,data,feed):
-    base="ASX/Updates/Packages/"+feed["manifest"]["version"]+"/"
+    base="ASX/Data/Updates/Packages/"+feed["manifest"]["version"]+"/"
     for name,value in (("feed.json",raw),("feed.sig",signature),("package.zip",data)):
         core.atomic(core.path(root,base+name),value)
 
@@ -110,29 +110,35 @@ def automatic(root,game_sha,download=fetch,confirm=None,retry=False,approve=None
     if seq==state["sequence"]:
         if state.get("held_sequence")==seq:return "held after rollback"
         attempt=state.get("attempt",{})
-        if attempt.get("status") in ("failed","applying") and not retry:return "held after failed update; use --retry-update"
+        if attempt.get("status") in ("failed","applying","handoff") and not retry:return "held after failed update; use --retry-update"
         if installed.get("version")==feed["manifest"]["version"]:return "current"
         if not retry:return "held after rollback or failed update"
     if installed.get("version")==feed["manifest"]["version"]:return "current"
+    runtime_changed=False
     if os.name=="nt":
-        runtime={n:spec for n,spec in feed["manifest"]["files"].items() if n.startswith("ASX/Runtime/")}
+        runtime={core.layout.name(n):spec for n,spec in feed["manifest"]["files"].items() if core.layout.name(n).startswith("ASX/App/Python/")}
         changed=any(not core.path(root,n).is_file() or core.path(root,n).stat().st_size!=spec["size"] or core.sha(core.path(root,n))!=spec["sha256"] for n,spec in runtime.items())
-        removed=any(n.startswith("ASX/Runtime/") and n not in runtime for n in installed["owned"])
-        if changed or removed:return "manual installation required for ASX "+feed["manifest"]["version"]+": close ASX and extract the complete archive (Python runtime changes)"
-    if confirm is None:return "confirmation required; use an interactive console"
-    if not confirm(feed):return "deferred"
+        removed=any(n.startswith("ASX/App/Python/") and n not in runtime for n in installed["owned"])
+        runtime_changed=changed or removed
+    # Compatible signed releases install automatically, including noninteractive launch.
+    # Foreign-file replacement still uses the separate ownership/conflict gate.
     state=dict(state,sequence=seq,attempt={"sequence":seq,"status":"downloading"})
-    core.put(root,"ASX/State/updates.json",state)
+    core.put(root,"ASX/Data/State/updates.json",state)
     try:
         data=download(cfg["base"]+urllib.parse.quote(feed["package"]["asset"]),MAX_ZIP)
         files=verified_package(data,feed)
         cache(root,raw,signature,data,feed)
-        state["attempt"]["status"]="applying";core.put(root,"ASX/State/updates.json",state)
-        status=core.apply(root,feed["manifest"],files,trusted=True,approve=approve)
+        if runtime_changed:
+            import update_worker
+            update_worker.spawn(root,feed,cfg['keys'])
+            state['attempt']['status']='handoff';core.put(root,'ASX/Data/State/updates.json',state)
+            return 'handoff'
+        state["attempt"]["status"]="applying";core.put(root,"ASX/Data/State/updates.json",state)
+        status=core.apply(root,feed["manifest"],files,trusted=True,approve=lambda names:all(n in installed["owned"]for n in names))
         state.update(installed={"version":feed["manifest"]["version"],"sequence":seq},attempt={"sequence":seq,"status":"installed"})
         state.pop("held_sequence",None)
-        core.put(root,"ASX/State/updates.json",state)
+        core.put(root,"ASX/Data/State/updates.json",state)
         return status
     except BaseException:
-        state["attempt"]["status"]="failed";core.put(root,"ASX/State/updates.json",state)
+        state["attempt"]["status"]="failed";core.put(root,"ASX/Data/State/updates.json",state)
         raise

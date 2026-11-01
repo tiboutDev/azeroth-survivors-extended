@@ -2,18 +2,19 @@
 from contextlib import contextmanager
 import base64,ctypes,hashlib,json,os,re,shutil,subprocess,tempfile,time,uuid
 from pathlib import Path,PurePosixPath
+import layout
 PRODUCT="azeroth-survivors-extended"
-MANIFEST="ASX/manifest.json"
-STATE="ASX/State/install.json"
+MANIFEST="ASX/App/manifest.json"
+STATE="ASX/Data/State/install.json"
 ASXUI_FILES=('ASXUI.toc', 'ASXUI.lua', 'Minimap.lua', 'Events.lua', 'Buffs.lua', 'Hud.lua', 'Theme.lua', 'Frames.lua', 'Fonts/ASXUI-Numbers.ttf', 'Fonts/OFL.txt', 'LICENSE', 'README.md')
-ASXUI_SOURCE="ASX/Interface/ASXUI/"
+ASXUI_SOURCE="ASX/App/AddOns/ASXUI/"
 ASXUI_TARGET="benilla-config/AddOns/ASXUI/"
 def ui_target(name):return name in {ASXUI_TARGET+n for n in ASXUI_FILES}
 def projections(m):
-    result={"avrt.dll":"ASX/Bin/avrt.dll","benilla-config/AddOns/ASX/ASX.toc":"ASX/Interface/ASX.toc","benilla-config/AddOns/ASX/Presentation.lua":"ASX/Interface/Presentation.lua"}
+    result={"avrt.dll":"ASX/App/Bin/avrt.dll","benilla-config/AddOns/ASX/ASX.toc":"ASX/App/AddOns/ASX.toc","benilla-config/AddOns/ASX/Presentation.lua":"ASX/App/AddOns/Presentation.lua"}
     result.update({ASXUI_TARGET+n:ASXUI_SOURCE+n for n in ASXUI_FILES if ASXUI_SOURCE+n in m["files"]})
     return result
-PRIVATE={"state","logs","backups","updates","settings"}
+PRIVATE={"state","logs","backups","updates","settings","data","config"}
 RESERVED={"con","prn","aux","nul",*(f"com{i}" for i in range(1,10)),*(f"lpt{i}" for i in range(1,10))}
 VERSION=re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
 SHA=re.compile(r"[0-9a-f]{64}\Z")
@@ -33,18 +34,21 @@ def sha(path):
         while b:=f.read(1<<20):h.update(b)
     return h.hexdigest()
 def payload_name(name):
+    original=name
+    if isinstance(name,str):name=layout.name(name)
     if not isinstance(name,str)or len(name)>220 or not name.isascii():raise ValueError("Invalid ASX file path")
     parts=name.split("/")
     if any(not p or p in(".","..")or p[-1]in". "or any(ord(c)<32 or c in '\\:*?"<>|' for c in p)or p.split(".")[0].lower()in RESERVED for p in parts):raise ValueError("Unsafe ASX file path")
     if name not in("start-asx.cmd","README-ASX.txt",MANIFEST):
         if len(parts)<3 or parts[0]!="ASX"or parts[1].lower()in PRIVATE:raise ValueError("File is outside the ASX payload")
-        if parts[1]not in("Client","Bin","Runtime","Interface","Defaults"):raise ValueError("Unknown ASX component")
+        if parts[1]!="App"or parts[2]not in("Launcher","Bin","Python","AddOns","Defaults"):raise ValueError("Unknown ASX component")
     if name.lower().endswith((".mpq",".pem",".key",".log",".jsonl"))or "characters.txt"in name.lower()or "azerothsurvivors.exe"in name.lower():raise ValueError("Native or private files cannot be ASX payloads")
-    return name
+    return original
 def owned_name(name):
     if ui_target(name)or name=="avrt.dll"or name in("benilla-config/AddOns/ASX/ASX.toc","benilla-config/AddOns/ASX/Presentation.lua"):return name
-    return payload_name(name)
-def path(root,name):
+    return payload_name(layout.name(name))
+def path(root,name):return raw_path(root,layout.name(name))
+def raw_path(root,name):
     root=Path(root).resolve();out=root.joinpath(*name.split("/"))
     for p in(out,*out.parents):
         if p==root:break
@@ -89,6 +93,7 @@ def supported_native_games():
         raise ValueError("Missing reviewed native game registry")
     return games
 def validate(m,reviewed=True):
+    original=m;m=layout.manifest(m)
     if not isinstance(m,dict)or m.get("schema")!=1 or m.get("product")!=PRODUCT or not isinstance(m.get("version"),str) or not VERSION.fullmatch(m["version"]):raise ValueError("Not an ASX distribution manifest")
     game=m.get("game",{})
     if not isinstance(game,dict)or not isinstance(game.get("sha256"),str) or not SHA.fullmatch(game["sha256"])or not isinstance(game.get("version"),str):raise ValueError("Missing exact native game compatibility")
@@ -106,12 +111,12 @@ def validate(m,reviewed=True):
         if not isinstance(spec,dict)or type(spec.get("size"))is not int or not 0<=spec["size"]<=64<<20 or not isinstance(spec.get("sha256"),str) or not SHA.fullmatch(spec["sha256"]):raise ValueError("Invalid ASX file size/hash")
         total+=spec["size"]
     if total>256<<20:raise ValueError("ASX payload too large")
-    required={"start-asx.cmd","README-ASX.txt","ASX/Bin/avrt.dll","ASX/Client/launch.py","ASX/Client/supported-games.json","ASX/Interface/ASX.toc","ASX/Interface/Presentation.lua","ASX/Defaults/channel.json"}
+    required={"start-asx.cmd","README-ASX.txt","ASX/App/Bin/avrt.dll","ASX/App/Launcher/launch.py","ASX/App/Launcher/supported-games.json","ASX/App/AddOns/ASX.toc","ASX/App/AddOns/Presentation.lua","ASX/App/Defaults/channel.json"}
     if not required<=files.keys():raise ValueError("Incomplete ASX distribution")
     ui_files={n for n in files if n.startswith(ASXUI_SOURCE)}
     if ui_files and ui_files not in ({ASXUI_SOURCE+n for n in ASXUI_FILES},{ASXUI_SOURCE+n for n in ASXUI_FILES if n not in ("Hud.lua","Theme.lua","Frames.lua")}):raise ValueError("Incomplete or unknown bundled ASXUI inventory")
-    return m
-def manifest(root):return validate(get(root,MANIFEST,{}))
+    return original
+def manifest(root):return layout.manifest(validate(get(root,MANIFEST,{})))
 def inspect(root,m=None):
     exe=path(root,"AzerothSurvivors.exe")
     if not exe.is_file():raise ValueError("Extract ASX beside AzerothSurvivors.exe, then run start-asx.cmd.")
@@ -122,14 +127,19 @@ def inspect(root,m=None):
             if not path(root,name).is_file():raise ValueError("Required native game file missing: "+name)
     return actual
 def file_role(name):
-    if name in ("README-ASX.txt","ASX/Client/LICENSE") or any(name==prefix+suffix for prefix in (ASXUI_SOURCE,ASXUI_TARGET)for suffix in ("README.md","LICENSE","Fonts/OFL.txt")):return "documentation"
-    if name=="ASX/Defaults/channel.json":return "update-metadata"
+    if name in ("README-ASX.txt","ASX/App/Launcher/LICENSE") or any(name==prefix+suffix for prefix in (ASXUI_SOURCE,ASXUI_TARGET)for suffix in ("README.md","LICENSE","Fonts/OFL.txt")):return "documentation"
+    if name.startswith((ASXUI_SOURCE,ASXUI_TARGET)):return "optional-ui"
+    if name=="ASX/App/Defaults/channel.json":return "update-metadata"
     if name=="start-asx.cmd":return "bootstrap"
     return "critical"
 
-def sources(root,m,tolerant=False):
+def launch_required(name):
+    return name=="ASX/App/Bin/avrt.dll"or name in tuple("ASX/App/Launcher/"+n for n in ("launch.py","core.py","updates.py","maintenance.py","layout.py","supported-games.json"))or name in ("ASX/App/AddOns/ASX.toc","ASX/App/AddOns/Presentation.lua")
+
+def sources(root,m,tolerant=False,launch=False):
     out={}
     for name,spec in m["files"].items():
+        if launch and not launch_required(name):continue
         p=path(root,name)
         if not p.is_file()or p.stat().st_size!=spec["size"]or sha(p)!=spec["sha256"]:
             if tolerant and file_role(name)!="critical":continue
@@ -137,6 +147,7 @@ def sources(root,m,tolerant=False):
         out[name]=p.read_bytes()
     return out
 def projection(data,m):
+    m=layout.manifest(m);data={layout.name(n):b for n,b in data.items()}
     out=dict(data);out[MANIFEST]=encoded(m)
     for target,source in projections(m).items():
         if source in data:out[target]=data[source]
@@ -145,6 +156,11 @@ def adopt(root,m,data):
     """Record the explicitly extracted payload without activating an unsupported game."""
     if get(root,STATE)is not None:return
     owned={n:digest(b)for n,b in data.items()};owned[MANIFEST]=sha(path(root,MANIFEST))
+    # One-time adoption of extracted payload, including the interpreter that is
+    # deliberately not rehashed on every ordinary launch.
+    for name,spec in m['files'].items():
+        p=path(root,name)
+        if name not in owned and p.is_file()and p.stat().st_size==spec['size']and sha(p)==spec['sha256']:owned[name]=spec['sha256']
     for name,b in projection(data,m).items():
         target=path(root,name)
         if name not in owned and target.exists():
@@ -156,13 +172,14 @@ def adopt(root,m,data):
 def installed(root):
     s=get(root,STATE,{"schema":1,"owned":{}})
     if s.get("schema")!=1 or not isinstance(s.get("owned"),dict):raise ValueError("Invalid ASX installation receipt")
+    s=dict(s);s["owned"]={layout.name(n):h for n,h in s["owned"].items()}
     for name,h in s["owned"].items():
         owned_name(name)
         if not SHA.fullmatch(h):raise ValueError("Invalid ASX ownership hash")
     return s
 @contextmanager
 def locked(root):
-    p=path(root,"ASX/State/installation.lock");p.parent.mkdir(parents=True,exist_ok=True)
+    p=path(root,"ASX/Data/State/installation.lock");p.parent.mkdir(parents=True,exist_ok=True)
     with p.open("a+b")as f:
         if f.tell()==0:f.write(b"0");f.flush()
         f.seek(0)
@@ -179,8 +196,9 @@ def locked(root):
             else:fcntl.flock(f,fcntl.LOCK_UN)
 def restore(root,tx):
     if not re.fullmatch(r"[0-9a-f]{32}",tx):raise ValueError("Invalid ASX transaction")
-    base="ASX/Updates/Transactions/"+tx
+    base="ASX/Data/Updates/Transactions/"+tx
     j=get(root,base+"/journal.json")
+    if any(layout.name(n)!=n for n in j["before"]):raise ValueError("Legacy-layout recovery requires its complete original archive; files preserved")
     for name,spec in j["before"].items():
         owned_name(name);target=path(root,name)
         if spec is None:target.unlink(missing_ok=True)
@@ -192,58 +210,72 @@ def restore(root,tx):
     else:put(root,STATE,j["state"])
     j["phase"]="restored";put(root,base+"/journal.json",j)
 def recover(root):
-    folder=path(root,"ASX/Updates/Transactions")
+    folder=path(root,"ASX/Data/Updates/Transactions")
     if not folder.exists():return False
     restored=False
     for d in sorted(folder.iterdir()):
         if re.fullmatch(r"[0-9a-f]{32}",d.name):
-            j=get(root,"ASX/Updates/Transactions/"+d.name+"/journal.json",{})
+            j=get(root,"ASX/Data/Updates/Transactions/"+d.name+"/journal.json",{})
             if j.get("phase")=="applying":
                 restore(root,d.name)
                 restored=True
     return restored
-def apply(root,m,data,manual=False,fault=lambda n:None,launch=False,trusted=False,approve=None,repair=False):
-    validate(m,reviewed=not trusted);inspect(root,m)
-    expected_files={n for n in m["files"] if not launch or file_role(n)=="critical"}
+def apply(root,m,data,manual=False,fault=lambda n:None,launch=False,trusted=False,approve=None,repair=False,detached_runtime=False):
+    validate(m,reviewed=not trusted)
+    if layout.manifest(m)!=m:raise ValueError("Legacy-layout release: close ASX and extract its complete archive; existing files preserved")
+    m=layout.manifest(m);data={layout.name(n):b for n,b in data.items()};inspect(root,m)
+    expected_files={n for n in m["files"] if not launch or launch_required(n)}
     if not expected_files<=set(data) or (not launch and set(data)!=set(m["files"])):raise ValueError("ASX package inventory differs")
     for name,b in data.items():
         if len(b)!=m["files"][name]["size"]or digest(b)!=m["files"][name]["sha256"]:raise ValueError("ASX package file failed verification: "+name)
     new=projection(data,m);previous=get(root,STATE);old=installed(root)["owned"]
     if launch:
-        new={n:b for n,b in new.items() if file_role(n)=="critical"or(ui_target(n)and not path(root,n).exists())}
+        new={n:b for n,b in new.items() if file_role(n)=="critical"or n.startswith(ASXUI_SOURCE)or ui_target(n)}
+    if launch:
+        for name,spec in m['files'].items():
+            if name in new or old.get(name)==spec['sha256']:continue
+            p=path(root,name)
+            if p.is_file()and p.stat().st_size==spec['size']and sha(p)==spec['sha256']:new[name]=p.read_bytes()
     preserved={};conflicts=[]
     for name in set(old)|set(new):
+        if launch and name not in new:continue
         target=path(root,owned_name(name))
         if not target.exists():continue
         current=sha(target)
         expected=digest(new[name])if name in new else None
         if name in old:
             if current!=old[name]and not(manual and expected==current):
-                if file_role(name)!="critical":
+                if file_role(name)!="critical"and not(not launch and ui_target(name)and file_role(name)=="optional-ui"):
+                    if launch and ui_target(name):new.pop(name,None)
                     preserved[name]=current
                     if repair and file_role(name)=="documentation":new.pop(name,None)
                     continue
                 if approve is None:raise ValueError("A managed ASX file was changed; preserved: "+name)
                 conflicts.append(name)
         elif expected!=current:
+            if ui_target(name)and (launch or not repair):
+                new.pop(name,None);continue
+            if ui_target(name)and file_role(name)=="optional-ui"and approve is None:
+                raise ValueError("Existing addon preserved; explicit repair required: "+name)
             # Lost receipts can be recovered for internal ASX files with consent,
             # never by adopting an unknown root loader or projected addon.
-            if (repair and name.startswith("ASX/") or ui_target(name)and file_role(name)=="critical") and approve is not None:conflicts.append(name)
+            if (repair and name.startswith("ASX/") or ui_target(name)and file_role(name)in("critical","optional-ui")) and approve is not None:conflicts.append(name)
             elif file_role(name)!="critical":
+                if launch and ui_target(name):new.pop(name,None)
                 preserved[name]=current
                 if repair and file_role(name)=="documentation":new.pop(name,None)
             else:raise ValueError("Existing loader/addon/file belongs to another installation; preserved: "+name)
     if conflicts and not approve(conflicts):raise ValueError("Replacement cancelled; changed files preserved.")
     if launch:
-        preserved.update({n:h for n,h in old.items() if file_role(n)!="critical"})
+        preserved.update({n:h for n,h in old.items() if n not in new})
     for name in set(conflicts)|set(preserved):
         if name in new and path(root,name).exists() and sha(path(root,name))!=digest(new[name]):
-            atomic(path(root,"ASX/Backups/Files/"+uuid.uuid4().hex+"/"+name),path(root,name).read_bytes())
+            atomic(path(root,"ASX/Data/Backups/Files/"+uuid.uuid4().hex+"/"+name),path(root,name).read_bytes())
     changes=[n for n,b in new.items()if not path(root,n).exists()or sha(path(root,n))!=digest(b)]
     removed=sorted(set(old)-set(new)-set(preserved))
-    if os.name=="nt"and any(n.startswith("ASX/Runtime/")for n in changes+removed):raise ValueError("This update changes the launcher runtime. Close ASX and extract the complete archive manually.")
+    if os.name=="nt"and not detached_runtime and any(n.startswith("ASX/App/Python/")for n in changes+removed):raise ValueError("This update changes the launcher runtime. Close ASX and extract the complete archive manually.")
     if not changes and not removed and previous and previous.get("version")==m["version"]:return "current"
-    tx=uuid.uuid4().hex;base="ASX/Updates/Transactions/"+tx;before={}
+    tx=uuid.uuid4().hex;base="ASX/Data/Updates/Transactions/"+tx;before={}
     for name in changes+removed:
         target=path(root,name)
         if target.exists():
@@ -266,17 +298,17 @@ def rollback(root):
         p=path(root,name)
         if p.exists()and sha(p)!=h:
             if file_role(name)=="critical":raise ValueError("Changed file preserved; rollback refused: "+name)
-            atomic(path(root,"ASX/Backups/Files/"+uuid.uuid4().hex+"/"+name),p.read_bytes())
-    j=get(root,"ASX/Updates/Transactions/"+tx+"/journal.json")
+            atomic(path(root,"ASX/Data/Backups/Files/"+uuid.uuid4().hex+"/"+name),p.read_bytes())
+    j=get(root,"ASX/Data/Updates/Transactions/"+tx+"/journal.json")
     if not j.get("state")or j["state"].get("version")==state.get("version"):raise ValueError("There is no previous ASX version to restore.")
     for name,expected in j["before"].items():
         p=path(root,owned_name(name))
         if file_role(name)!="critical" and p.is_file() and sha(p)!=expected:
-            atomic(path(root,"ASX/Backups/Files/"+uuid.uuid4().hex+"/"+name),p.read_bytes())
+            atomic(path(root,"ASX/Data/Backups/Files/"+uuid.uuid4().hex+"/"+name),p.read_bytes())
     restore(root,tx)
-    history=get(root,"ASX/State/updates.json",{"sequence":0})
+    history=get(root,"ASX/Data/State/updates.json",{"sequence":0})
     history["held_sequence"]=history["sequence"]
-    put(root,"ASX/State/updates.json",history)
+    put(root,"ASX/Data/State/updates.json",history)
     return "restored"
 def native_paths(root,env):
     root=Path(root).resolve()
@@ -321,3 +353,17 @@ def game_running(root):
             more=k.Process32NextW(snapshot,ctypes.byref(entry))
     finally:k.CloseHandle(snapshot)
     return False
+
+@contextmanager
+def legacy_locked(root):
+    p=raw_path(root,"ASX/State/installation.lock");p.parent.mkdir(parents=True,exist_ok=True)
+    with p.open("a+b")as f:
+        if os.name=="nt":
+            import msvcrt
+            f.seek(0);f.write(b"0");f.flush();f.seek(0);msvcrt.locking(f.fileno(),msvcrt.LK_NBLCK,1)
+        else:
+            import fcntl
+            fcntl.flock(f.fileno(),fcntl.LOCK_EX|fcntl.LOCK_NB)
+        try:yield
+        finally:
+            if os.name=="nt":f.seek(0);msvcrt.locking(f.fileno(),msvcrt.LK_UNLCK,1)
