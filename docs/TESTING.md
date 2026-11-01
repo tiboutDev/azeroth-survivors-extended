@@ -493,3 +493,12 @@ A yellow crystal has nominal +12% area; require a real guest collection log,
 then native guest `area=1.06` and ASXUI `Area +6%`, with a rendered panel capture.
 This checks reception is not scaled twice. Document missing collection, closed
 panel, skipped commands and mismatches as failures or uncovered cases.
+
+### Cross-version archive migration preflight
+
+The archive runner's initial `--check --offline` is read-only. A legacy owned
+DLL that differs from the new payload correctly reports a pending repair before
+normal startup migrates the layout and projects the new DLL. Verify the exact
+old DLL and unchanged native profiles at this step; require the exact new DLL,
+completed migration and actual native coop gameplay after startup. A same-DLL
+layout migration may already pass the initial readiness diagnostic.

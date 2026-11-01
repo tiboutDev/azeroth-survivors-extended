@@ -4,6 +4,11 @@ from pathlib import Path
 from client_registry import VERSION
 ROOT=Path(__file__).resolve().parents[2]
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def initial_check_passed(code,before,after,projected_hash,old_hash,new_hash):
+    """Read-only check may report the old owned DLL pending replacement."""
+    expected=0 if old_hash is not None and old_hash==new_hash else 1
+    return code==expected and before==after and projected_hash==old_hash
+
 def native_coop_controls(slot):
     """Native-only ready/Move-to-begin input for the fixed private 800x600 scene."""
     if type(slot) is not int or slot not in (1, 2):
@@ -44,6 +49,7 @@ def run(seconds,game_version=VERSION,package_path=None,legacy_package=None):
             folder=output/("ASX & native é "+str(slot));folder.mkdir();folders.append(folder)
             shutil.copyfile(exe,folder/exe.name);(folder/"Data").mkdir()
             for asset in sorted((runtime/"Data").glob("*.MPQ")):os.link(asset,folder/"Data"/asset.name)
+            old_hash=None
             if legacy_package and slot==1:
                 # Read-only approved old archive, extracted only into this disposable copy.
                 old_path=Path(legacy_package);old_proof=json.loads(old_path.with_name('PREPARATION.json').read_text())
@@ -54,6 +60,7 @@ def run(seconds,game_version=VERSION,package_path=None,legacy_package=None):
                     projection.update({'benilla-config/AddOns/ASXUI/'+n.removeprefix('ASX/Interface/ASXUI/'):n for n in old_m['files']if n.startswith('ASX/Interface/ASXUI/')})
                     for name,source in projection.items():
                         dest=folder/name;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(old.read(source));owned[name]=old_m['files'][source]['sha256']
+                old_hash=sha(folder/'avrt.dll')
                 state=folder/'ASX/State';state.mkdir(parents=True,exist_ok=True)
                 (state/'install.json').write_text(json.dumps({'schema':1,'version':old_m['version'],'owned':owned,'game':old_m['game']}))
                 (folder/'ASX/options.json').write_text('{"lost_supplies":false}')
@@ -69,7 +76,7 @@ def run(seconds,game_version=VERSION,package_path=None,legacy_package=None):
             cmd=[str(python),"-I","-B",str(script),"--check","--offline"]
             result=subprocess.run(cmd,cwd=folder,env=env,capture_output=True,timeout=40)
             (output/f"install-{slot}.log").write_bytes(result.stdout+result.stderr)
-            checks[f"install_{slot}"]=result.returncode==(0 if legacy_package and slot==1 else 1) and before==(sha(save/"characters.txt"),sha(home/"config.toml")) and ((folder/"avrt.dll").exists()if legacy_package and slot==1 else not(folder/"avrt.dll").exists())
+            checks[f"install_{slot}"]=initial_check_passed(result.returncode,before,(sha(save/"characters.txt"),sha(home/"config.toml")),sha(folder/"avrt.dll")if(folder/"avrt.dll").is_file()else None,old_hash,proof["dll_sha256"])
             if not checks[f"install_{slot}"]:raise RuntimeError("Packaged Windows installation failed; see "+str(output))
         # Same native profile, direct EXE: proxy forwards, ASX stays inactive.
         folder=folders[0];env=dict(environments[0],WOW_ROGUE_AUTOPICK="1",WOW_ROGUE_AUTOSTART="1",WOW_ROGUE_AUTOPLAY="3600")

@@ -88,6 +88,17 @@ class BackgroundTrials(unittest.TestCase):
             background.run_child(args, Path('/tmp/test-results/trial/start'))
         self.assertEqual(called, [((45,), {'game_version': '0.138.0', 'package_path': Path('prepared.zip'), 'legacy_package': None})])
 
+    def test_archive_preflight_distinguishes_pending_owned_dll_replacement(self):
+        from asx_install_trial import initial_check_passed
+        unchanged=("profile", "settings")
+        for old,new,expected in ((None,"new",1),("same","same",0),("old","new",1)):
+            with self.subTest(old=old,new=new):
+                self.assertTrue(initial_check_passed(expected,unchanged,unchanged,old,old,new))
+                self.assertFalse(initial_check_passed(1-expected,unchanged,unchanged,old,old,new))
+                self.assertFalse(initial_check_passed(expected,unchanged,("changed","settings"),old,old,new))
+                self.assertFalse(initial_check_passed(expected,unchanged,unchanged,"unexpected",old,new))
+                self.assertFalse(initial_check_passed(2,unchanged,unchanged,old,old,new))
+
     def test_packaged_coop_uses_native_ready_input_without_restarting_autostart(self):
         import asx_install_trial
         host = asx_install_trial.native_coop_controls(1)
