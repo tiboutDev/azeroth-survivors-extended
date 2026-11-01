@@ -87,13 +87,14 @@ def descriptor_inventory(path):
  Member offsets, stack slots and byte guards are deliberately not addresses.
  """
  path=Path(path);source=path.read_text();out={}
+ contacts={int(a,16):int(b,16)for a,b in re.findall(r"\(0x([0-9a-f]+),\s*0x([0-9a-f]+),?\)",source)}
  def add(value,label):out.setdefault(int(value,16),[]).append(label)
  for n,line in enumerate(source.splitlines(),1):
   pairs=re.finditer(r"\(0x([0-9a-f]+),\s*0x([0-9a-f]+),?\)",line)
   for pair in pairs:
    baseline,native=pair.groups();add(native,f"{path.name}:{n} baseline={baseline}")
-  named=re.search(r"pub const ([A-Z0-9_]+(?:_RVA|_TABLE|_NATIVE_PAUSE|_CALLER))\s*:\s*u64\s*=\s*0x([0-9a-f]+)",line)
-  if named:add(named[2],f"{path.name}:{n} {named[1]}")
+  named=re.search(r"pub const ([A-Z0-9_]+(?:_RVA|_TABLE|_NATIVE_PAUSE|_CALLER|_RETURN))\s*:\s*u64\s*=\s*0x([0-9a-f]+)",line)
+  if named:add(format(contacts.get(int(named[2],16),int(named[2],16)),"x"),f"{path.name}:{n} {named[1]}")
  for match in re.finditer(r"pub const ([A-Z0-9_]+)\s*:\s*\(u64,\s*&\[u8\]\)\s*=\s*\(\s*0x([0-9a-f]+)",source):
   add(match[2],f"{path.name} {match[1]}")
  for match in re.finditer(r'pub const ([A-Z0-9_]+_CALLERS)\s*:\s*\[u64;\s*\d+\]\s*=\s*\[([^\]]+)\]',source):
@@ -102,6 +103,12 @@ def descriptor_inventory(path):
   match=re.search(r'pub const '+name+r'\s*:.*?=(.*?);',source,re.S)
   if match:
    for value in re.findall(r'\(0x([0-9a-f]+),\s*&\[',match[1]):add(value,f"{path.name} {name}")
+ # Downed-XP detours have both an entry and a resume address, followed by
+ # separate byte guards. Neither guard bytes nor canonical role keys are RVAs.
+ match=re.search(r'pub const DOWNED_XP_GUARDS\s*:.*?=(.*?);',source,re.S)
+ if match:
+  for entry,resume in re.findall(r'\(\s*0x([0-9a-f]+),\s*0x([0-9a-f]+),\s*&\[',match[1]):
+   add(entry,f"{path.name} DOWNED_XP_GUARDS entry");add(resume,f"{path.name} DOWNED_XP_GUARDS resume")
  if not out:raise ValueError("No explicit native address pairs in descriptor")
  return out
 def restore_checkpoint(old,new,needed,previous):

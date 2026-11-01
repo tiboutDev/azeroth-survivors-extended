@@ -9,10 +9,10 @@ class CrystalEvidence(unittest.TestCase):
   sample['crystalBuff']={'visible':True,'tooltip':True,'permanent':True};self.assertTrue(all(assess_crystals([sample]).values()))
   sample['structured']['markers']={'1':{'kind':0}};self.assertFalse(assess_crystals([sample])['no_custom_minimap_pin'])
  def test_stats_require_real_owner_and_values_and_restored_inputs(self):
-  row='crystal native stats: slot=1 owner=22 counts=[1, 2, 1, 1] base=[1, 1, 100, 0, 0, 0, 0, 1] actual=Ok([1.1, 0.9090909, 115, 0, 0, 0, 0, 1.1]) stable=true restored=true refresh=Ok(())'
+  row='crystal native stats: slot=1 owner=22 counts=[1, 2, 1, 1] base=[1, 1, 100, 0, 0, 0, 0, 1] actual=Ok([1.12, 0.87719298, 115, 0, 0, 0, 0, 1.12]) stable=true restored=true refresh=Ok(())'
   self.assertTrue(crystal_stat_checks(row,1)['native_personal_stats']);self.assertFalse(crystal_stat_checks(row,0)['native_personal_stats'])
   self.assertFalse(crystal_stat_checks(row.replace('restored=true','restored=false'),1)['native_personal_stats'])
-  self.assertFalse(crystal_stat_checks(row.replace('1.1, 0.9090909','1.2, 0.9090909'),1)['native_personal_stats'])
+  self.assertFalse(crystal_stat_checks(row.replace('1.12, 0.87719298','1.2, 0.87719298'),1)['native_personal_stats'])
  def test_popup_proof_requires_visible_frames_with_asx_wording(self):
   self.assertFalse(all(crystal_popup_checks([]).values()))
   rows=[{'crystalPopup':{'shown':True,'title':'Red','verbatim':True}},{'crystalPopup':{'shown':True,'title':'Blue','verbatim':True}}]

@@ -27,7 +27,7 @@ fn actor(size: usize, class: u8, race: u8, guid: u64) -> Vec<u8> {
 #[test]
 fn revision_capabilities_do_not_disable_shared_jewelry_ui() {
     let a = SelectedAdapter::select(current::SHA256).unwrap();
-    assert_eq!(a.version(), "0.135.1");
+    assert_eq!(a.version(), "0.138.0");
     assert!(!a.duplicate_loot_enabled());
     assert!(a.native_marks_enabled());
     assert!(a.loot_entries().is_empty());
@@ -37,7 +37,7 @@ fn revision_capabilities_do_not_disable_shared_jewelry_ui() {
     assert_eq!(a.bonus_ui_entries().len(), 5);
     assert_eq!(a.blessing_entries().len(), 3);
     assert!(a.native_difficulty_entries().is_empty());
-    assert!(SelectedAdapter::select("0.135.1").is_err());
+    assert!(SelectedAdapter::select("0.138.0").is_err());
     for retired in [
         "e8ff033544095e81d74087ff400d50286b26af02291e649f4c5e4d76cbcf8863",
         "8829953418a4d996cc5287f0e9fad25407ca30ceb64d105a4f57833caef78016",
@@ -101,13 +101,13 @@ fn wallet_reads_independently_shifted_scalars() {
 #[test]
 fn native_tooltip_frame_and_diagnostic_focus_are_version_selected() {
     let a = SelectedAdapter::select(current::SHA256).unwrap();
-    assert_eq!(a.kept_tooltip_fixture_focus().unwrap().rva, 0x28e6e75);
+    assert_eq!(a.kept_tooltip_fixture_focus().unwrap().rva, 0x2904f55);
     let native = official_native::Adapter::select(current::SHA256).unwrap();
     assert_eq!(native.kept_tooltip_row(0x10000), Some(0xffa0));
 }
 
 #[test]
-fn basic_pursuit_uses_1351_stack_fields_and_restores_them() {
+fn basic_pursuit_uses_138_stack_fields_and_restores_them() {
     use asx_game::official::MutableMemory;
     struct M(std::cell::RefCell<Vec<u8>>);
     impl Mem for M {
@@ -151,7 +151,7 @@ fn basic_pursuit_uses_1351_stack_fields_and_restores_them() {
         a.prepare_basic_target(&m, &frame, [0., 0., 8.]).unwrap(),
         5.
     );
-    assert_eq!(m.read(f + 0x284, 4).unwrap(), 8f32.to_le_bytes());
+    assert_eq!(m.read(f + 0x26c, 4).unwrap(), 8f32.to_le_bytes());
     assert_eq!(m.read(f + 0x70, 8).unwrap(), [0; 8]);
     assert!(a
         .restore_basic_origin(&m, f, 0x18001, [1., 2., 3.])
@@ -272,7 +272,7 @@ fn menu_wire_binds_peer_and_rejects_bad_extents() {
 }
 
 #[test]
-fn owner_spell_formatter_uses_the_selected_1351_game_context() {
+fn owner_spell_formatter_uses_the_selected_138_game_context() {
     let a = SelectedAdapter::select(current::SHA256).unwrap();
     let mut game = vec![0; 0x1000];
     game[0xf46] = 1;
@@ -378,29 +378,29 @@ fn event_gold_call_preserves_game_amount_and_native_return() {
 }
 
 #[test]
-fn completed_encounter_uses_stack_definition_not_the_killed_enemy_guid() {
+fn completed_encounter_uses_r15_definition_and_rejects_changed_game_context() {
     let a = SelectedAdapter::select(current::SHA256).unwrap();
     let (game, frame, base, defs, name) = (0x10000u64, 0x20000u64, 0x10000000u64, 0x40000u64, 0x50000u64);
     let mut root = actor(0x1000, 1, 1, 111);
     root[0xf4b] = 1;
     root[0x358..0x360].copy_from_slice(&name.to_le_bytes());
     root[0x360..0x368].copy_from_slice(&4u64.to_le_bytes());
-    let mut stack = vec![0; 0x920];
-    stack[0x918..0x920].copy_from_slice(&game.to_le_bytes());
-    stack[0x908..0x910].copy_from_slice(&(defs + 104).to_le_bytes());
+    let mut stack = vec![0; 0x930];
+    stack[0x928..0x930].copy_from_slice(&game.to_le_bytes());
+    stack[0x910..0x918].copy_from_slice(&(defs + 104).to_le_bytes());
     let mut map = vec![0; 240];
     map[8..16].copy_from_slice(&name.to_le_bytes());
     map[16..24].copy_from_slice(&4u64.to_le_bytes());
     map[0x88..0x90].copy_from_slice(&defs.to_le_bytes());
     map[0x90..0x98].copy_from_slice(&5u64.to_le_bytes());
-    let mut m = Blocks([(game, root), (frame, stack), (name, b"test".to_vec()), (base + 0x7102c30, map)].into());
-    // R13 is a GUID, never a pointer to the unique boss definition in this build.
-    assert_eq!(a.blessing_event_context(&m, [frame, 0, 999], base).unwrap(), Some((game, 5)));
+    let mut m = Blocks([(game, root), (frame, stack), (name, b"test".to_vec()), (base + 0x7118fc8, map)].into());
+    // R15 is the definition; R13 must match the game saved in the frame.
+    assert_eq!(a.blessing_event_context(&m, [frame, defs + 104, game], base).unwrap(), Some((game, 5)));
     m.0.get_mut(&game).unwrap()[0x934..0x938].copy_from_slice(&1u32.to_le_bytes());
-    assert_eq!(a.blessing_event_context(&m, [frame, 0, defs + 104], base).unwrap(), None);
+    assert_eq!(a.blessing_event_context(&m, [frame, defs + 104, game], base).unwrap(), None);
     m.0.get_mut(&game).unwrap()[0x934..0x938].fill(0);
-    m.0.get_mut(&frame).unwrap()[0x908..0x910].copy_from_slice(&(defs + 1).to_le_bytes());
-    assert!(a.blessing_event_context(&m, [frame, 0, defs + 104], base).is_err());
+    assert!(a.blessing_event_context(&m, [frame, defs + 1, game], base).is_err());
+    assert!(a.blessing_event_context(&m, [frame, defs + 104, 999], base).is_err());
     assert!(a.blessing_event_context(&m, [u64::MAX, 0, 0], base).is_err());
 }
 

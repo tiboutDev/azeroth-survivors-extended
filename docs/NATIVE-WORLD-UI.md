@@ -1,6 +1,6 @@
 # Native world and reward presentation
 
-ASX enriches the reviewed 0.135.1 client without replacing world rendering,
+ASX enriches the reviewed 0.138.0 client without replacing world rendering,
 combat logs, nameplate health updates or the native marker transport.
 
 ## Standalone presentation: ASXUI

@@ -1,12 +1,12 @@
-# Official 0.135.1 client boundary
+# Official 0.138.0 client boundary
 
 The sole source target is the exact Windows x86-64 executable with SHA-256:
 
 ```text
-71e5f1767279db4bd428d1cd9c5d50d37759b72295386a69f9e3f6e70bc59249
+eb5fd1c1b96e6180fcf5f3d685d90a61471af28d22e5f060c02b7b7663fbf79e
 ```
 
-`bindings/official1351.rs` owns current native contacts, complete instruction
+`bindings/official138.rs` owns current native contacts, complete instruction
 guards, field translations and register/frame choices. Version labels and
 similar instruction sequences cannot select another executable. The launcher
 registry and private importer use this same exact identity. Direct native launch
@@ -21,25 +21,26 @@ by party/support observations. Unused owned native context data is not cloned.
 Gold moves independently from adjacent vitals and native earned-gold counters;
 the wallet continues to project its selected gold fields only.
 
-Enemy records use stride `0x200`. The selected schema separates GUID/death/target
+Enemy records use stride `0x208`. The selected schema separates GUID/death/target
 from the moved aura, health, position and vulnerability fields. Every reader,
 writer and retained fixture uses that schema, without changing native ownership,
 crowd-control budgets, spawn rules or target policy for special abilities.
 
 The NPC continuation uses XMM15 for distance. Temporary actor XY is at frame
 `+0x70`; frame `+0x80` belongs to the native iterator and must not be overwritten.
-Encounter handling reads the unique boss definition from `+0x908` and Game from
-the selected `+0x918` frame slot. R13 holds the killed enemy GUID. Other frame origins stay descriptor-owned.
-The basic-action Game pointer is at `+0x3b0`, with origin Z at `+0x284`.
+Encounter handling reads the unique boss definition from R15 and cross-checks
+Game in R13 against the selected `+0x928` frame slot. The old definition slot
+now holds an unrelated log-queue reference and must not be read as a boss.
+The basic-action Game pointer is at `+0x3b0`, with origin Z at `+0x26c`.
 Shield-break callbacks read Game from RBX and the spell from R15. The aura-row
 pointer is at RBP+0x38 at the projection seam; periodic-heal UI payloads start at
-RBP+8. These are callback-local lifetimes, not general stack translations.
+RBP+0x2d8. These are callback-local lifetimes, not general stack translations.
 
 The native compositor uses a 64-byte tagged armor key. The selected adapter
 preserves its four-byte prefix and race byte. Metadata, appearance, entity and
 armor-key frame locations are selected independently.
 
-Fresh damage-number size now uses XMM8; R14 still owns the message. Direct and
+Fresh damage-number size now uses XMM8; RBX owns the message. Direct and
 periodic heal wrappers have separate reviewed frames and event discriminators.
 The native entity resolver is now a query predicate plus a map lookup borrowing
 a pointer to the map reference. Healing/meter calls additionally require a fifth
@@ -100,6 +101,7 @@ claims that every feature has been exercised in a normal running selected client
 | ASX-26 | Preserve optional goblin spawning, fleeing, bounds, equipment, amulet choices and whole native mark rewards. |
 | ASX-27 | Preserve personal supplies, consumable/stat loans, materials, masked minimap pins and discovery UI. |
 | ASX-28 | Preserve persistent Sayge trials, native scenes, group presence, Fortune replacement and progress UI. |
+| ASX-29 | Keep 50% of positive AoE bonuses in coop, preserve base spell sizes and solo, and expose effective values plus native informational aura. |
 
 Native achievements, sets, marks,
 crowd-control rules, caster collision and ability caps remain native. A client
@@ -118,36 +120,50 @@ not validate an installed DLL, a downloaded kit or an unchanged historical build
 reference. No build, deployment, publication or normal-client trial follows
 implicitly from this document.
 
-## 0.135.1 review
+## 0.138.0 review
 
-The adapter is pinned to the exact executable above. Historical 0.133 descriptors
-remain comparison references and cannot activate a client. Static review and
-generated guards do not substitute for portable, Windows ABI and isolated live
-qualification of the actual resulting DLL.
+The exact descriptor retains Game/Actor scalar translations, the 0xb58 actor
+context and 0x858 peer extent. Native enemy rows grow to 0x208; their elite flag
+moves to +0x200. Identity, HP, aura and position offsets remain separate reviewed
+fields. The native constructor and encounter iterator independently confirm the
+row extent; multi-row and compaction fixtures exercise nonzero indices.
 
-Game and Actor translations are composed independently over reviewed native
-spans. Their common actor header grew, mutable scalars moved before the derived
-stats block, and one native stat was inserted. The two complete native swap
-leaves were executed sequentially with independent byte sentinels: all 3,060
-translated Game bytes and 2,341 translated Actor bytes agree. Four bytes of retired
-native padding remain unmapped. Direct native XP,
-gold and health consumers independently identify the corresponding scalar fields.
-The peer-row stride stays 0x858; server role, stream, sink and mark fields move by
-0x88. Private Actor contexts occupy 0xb58 bytes.
+Direct and periodic healing now pass through separate extracted native helpers.
+ASX observes their owning systems, before event destruction, with independent
+copied-event, query, object-map and writer-parameter slots. The shared query and
+GUID lookup ABIs remain unchanged. Damage text retains XMM8 sizing but requires
+RBX for its message category/color. Windows stand-ins exercise that register
+contract and preserve flags and unrelated SIMD lanes.
 
-Enemy rows occupy 0x200 bytes. Their constructor preserves the selected HP,
-position, identity, aura and vulnerability offsets; the elite flag moves to
-0x1f8. Movement uses separately reviewed stack locations. Aura-row output, native
-encounter Game storage and the goblin amulet pool have distinct frame changes.
-The pool's live count is R15; its callback preserves the other native registers.
-Goblin creation and handle rebinding use the same selected 0x200 enemy stride,
-including nonzero array indices and compaction; no legacy 504-byte stride remains.
+Menu class-grid and NPC appearance frames move independently. Goblin reward
+Game storage moves to +0x198 and its pool to +0x1a0; the native count remains R15.
+The same Game slot governs the economy-trinket filter. Downed-XP gates include
+both the host consumers and the separately reviewed guest reward producers.
+Native pause tag 7, input ownership and the reliable queue remain unchanged.
 
-Native item-modifier discriminants 37/38 become 43/44; their coefficients remain
-native. ASX does not overwrite these upstream data or reinstate the removed spell.
+Native common-item modifier tags 43/44 become 47/48. ASX continues to pass their
+native definitions to native formatting/stat routines. This port does not change
+their coefficients. The native balance documents remain the explicitly recorded
+0.135.1 reference; their values were not refreshed by this compatibility task.
 
-Both executable identity and every selected entry guard remain mandatory. All
-eleven native archives match the previously reviewed data set. Native balance,
-encounter schedules, native marks and simulation ownership remain upstream-owned.
-The historical 0.131.0-asx.3 reproducibility approval is unchanged. This port does
-not publish a release or alter an installed player client.
+All feature dispositions above and stable acceptance IDs remain applicable.
+Artifact-scoped tests and live results are retained in ignored compatibility
+evidence. Earlier 0.135.1 validation and the approved reproducibility reference
+are historical evidence, not approval of a 0.138.0 artifact. Prepared .2 and .3
+releases are preserved; this work does not publish or commit a release.
+
+The nine retained pause-UI guards are now included in the selected descriptor
+and verified before installation; presentation no longer duplicates their bytes.
+Offline contact inventory includes both ends of the downed-XP detours and native
+return sites, and resolves historical role keys before comparing images.
+
+The Crystal Resonance core assessor checks the approved 12/7/15/12 nominal
+inputs. Its diagnostic probe observes the inner stat rebuild, before the outer
+coop AoE reduction. Effective native/HUD area values require their separate
+observation; nominal crystal evidence does not establish that display claim.
+
+The ranked-enchantment probe observes the completed outer rebuild: Reach must
+therefore retain its full bonus in solo and exactly half in coop. The runner
+accepts only the exact informational goblin taunt-refusal record as expected
+policy; error-level, malformed and unrelated rejection records remain failures.
+Missing live witnesses remain failed attempts even when a later retry passes.

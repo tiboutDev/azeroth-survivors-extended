@@ -47,6 +47,8 @@ def assess_ranked(host,native,players):
  for (name,tier),(b,a,repeat,restored)in matrices.items():
   if name not in RANK_VALUES or tier not in range(5) or (name,0)not in matrices:valid=False;continue
   valid&=restored and len(a)==8 and all(close(x,y)for x,y in zip(a,repeat));value=RANK_VALUES[name][tier]
+  # This probe observes the completed outer rebuild, including coop area policy.
+  if name=="Reach" and players>1:value*=.5
   if name=="Alacrity":valid&=close(1/a[1]-1/b[1],value)
   elif name=="Fortitude":
    mb,ma,_,_=matrices[(name,0)];valid&=a[2]>b[2]and close((a[2]-b[2])/value,(ma[2]-mb[2])/.05)

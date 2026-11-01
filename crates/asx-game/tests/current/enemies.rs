@@ -7,11 +7,11 @@ use asx_game::{
 };
 
 const GAME: u64 = 0x10000;
-const RECORDS: u64 = 0x20000;
+const RECORDS: u64 = 0x20800;
 fn layout() -> EnemyLayout {
-    // Independent 0.135.1 fixture values, not derived from the descriptor under test.
+    // Independent 0.138.0 fixture values, not derived from the descriptor under test.
     EnemyLayout {
-        stride: 0x200,
+        stride: 0x208,
         guid_offset: 0xf0,
         guid_gap: 60,
         hp_gap: 128,
@@ -39,12 +39,12 @@ impl Mem for Memory {
 
 fn memory() -> Memory {
     let mut game = vec![0; 0x1000];
-    // Reviewed current Game enemy vector and 0.135.1 native clock.
+    // Reviewed current Game enemy vector and 0.138.0 native clock.
     for (at, value) in [(0x640, 2u64), (0x648, RECORDS), (0x650, 2)] {
         game[at..at + 8].copy_from_slice(&value.to_le_bytes());
     }
     game[0xe88..0xe8c].copy_from_slice(&11f32.to_le_bytes());
-    let stride = 0x200;
+    let stride = 0x208;
     let mut records = vec![0; stride * 2];
     records[0xf0..0xf0 + 8].copy_from_slice(&123456u64.to_le_bytes());
     records[0x178 - 4..0x178].copy_from_slice(&f32::NAN.to_le_bytes());
@@ -107,7 +107,7 @@ fn parser_rejects_invalid_layouts_and_partial_current_records() {
     ] {
         assert!(parse_enemies_layout(&[], 0., bad).is_err());
     }
-    assert!(parse_enemies_layout(&vec![0; 0x200 - 1], 0., layout()).is_err());
+    assert!(parse_enemies_layout(&vec![0; 0x208 - 1], 0., layout()).is_err());
 }
 
 #[test]

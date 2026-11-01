@@ -43,6 +43,15 @@ class Evidence(unittest.TestCase):
    with patch.dict(m.RANK_VALUES,{name:old}):h,n=self.ranked_sample()
    self.assertFalse(m.assess_ranked(h,n,1)["checks"]["all_40_native_rank_values"])
 
+ def test_coop_reach_requires_half_bonus_and_rejects_double_scaling(self):
+  from unittest.mock import patch
+  h,n=self.ranked_sample()
+  self.assertFalse(m.assess_ranked(h,n,2)["checks"]["all_40_native_rank_values"])
+  for fraction,expected in [(.5,True),(.25,False)]:
+   with patch.dict(m.RANK_VALUES,{"Reach":[v*fraction for v in [.05,.09,.15,.22,.30]]}):h,n=self.ranked_sample()
+   self.assertEqual(m.assess_ranked(h,n,2)["checks"]["all_40_native_rank_values"],expected)
+   self.assertFalse(m.assess_ranked(h,n,1)["checks"]["all_40_native_rank_values"])
+
  def test_all_rank_values_and_actual_promotions_are_required(self):
   h,n=self.ranked_sample();self.assertTrue(all(m.assess_ranked(h,n,1)["checks"].values()));self.assertFalse(m.assess_ranked(h.replace("tier=4 name=Reach","tier=7 name=Reach"),n,1)["checks"]["all_40_native_rank_values"])
   self.assertFalse(m.assess_ranked(h.replace("rank=14 name=Superior","rank=14 name=Absent"),n,1)["checks"]["all_four_promotions_observed"])

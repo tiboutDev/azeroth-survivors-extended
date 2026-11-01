@@ -1,7 +1,7 @@
 # ASX expected behavior and compatibility acceptance
 
 Maintained acceptance reference for **current main source**, reviewed against
-official **0.135.1**. Covers all ASX-01–ASX-28 features, including disabled and
+official **0.138.0**. Covers all ASX-01–ASX-29 features, including disabled and
 upstream-owned behavior. This is not proof that an installed DLL or published
 archive passes these requirements. Uncommitted source fixes are not automatically
 in a prepared release. Separate event-branch experiments (escort, gadgets, heroes)

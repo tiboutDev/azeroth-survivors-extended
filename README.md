@@ -110,7 +110,7 @@ and ASX-authored text using native-style Lua globals/getters/handlers.
 
 ## Development
 
-Source currently targets official **0.135.1**. Normal-artifact and in-game
+Source currently targets official **0.138.0**. Normal-artifact and in-game
 validation of this port remain separate from source checks; published kits
 declare their own supported game version. See
 [client compatibility](docs/CLIENT-COMPATIBILITY.md).

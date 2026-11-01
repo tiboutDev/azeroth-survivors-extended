@@ -15,6 +15,14 @@ def compatibility_scope(normal=False, enchantments=False, reward_wallet=False, i
  return not diagnostic_probe and not focused_mode and completion in ("","tooltip")
 
 
+def adapter_log_clean(text):
+ # A precisely formatted INFO policy refusal is expected on goblins. Warnings,
+ # malformed messages and all other adapter rejections remain failures.
+ expected=re.compile(r"\[ INFO \]\s+[0-9]+\.[0-9]+s treasure goblin taunt rejected: enemy=[0-9]+ spell=[0-9]+")
+ return all(expected.fullmatch(line) or not any(error in line for error in
+            ("rejected:","[ ERROR ]","Mod HUD update failed")) for line in text.splitlines())
+
+
 def merge_assessor_checks(checks, evidence_checks):
  for name,value in evidence_checks.items():checks[name]=checks.get(name,True) and value
  return checks
@@ -249,7 +257,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
    ui=[]
    for text in logs:
     ui.append([json.loads(x)for x in re.findall(r'AZCOOP_PARTY115 (\{"extensions":true,[^\r\n]+\})',text)])
-   checks=dict(clients_alive=all(p.poll()is None for p in children),started=all('"type":"start"'in t and '"type":"resume"'in t for t in native),clean_scripts=all(assess(t)["passed"]for t in native),clean_adapter=all(not any(s in t for s in("rejected:","[ ERROR ]","Mod HUD update failed"))for t in logs),three_native_encounters=all({boss for s,boss,c in grants if s==slot}>={1,2,3}for slot in range(players)),native_buff_projected=all({int(b)for s,b in re.findall(r"extensions native fortune aura: slot=(\d+) boss=(\d+)",host)if int(s)==slot}>={1,2,3}for slot in range(players)),ui_captures_available=all(len(list((out/f"player-{i}/shots").glob("*.png")))>=2 for i in range(1,players+1)),startup_ack=all((out/f"player-{i}/ready.json").exists()for i in range(1,players+1)))
+   checks=dict(clients_alive=all(p.poll()is None for p in children),started=all('"type":"start"'in t and '"type":"resume"'in t for t in native),clean_scripts=all(assess(t)["passed"]for t in native),clean_adapter=all(adapter_log_clean(t) for t in logs),three_native_encounters=all({boss for s,boss,c in grants if s==slot}>={1,2,3}for slot in range(players)),native_buff_projected=all({int(b)for s,b in re.findall(r"extensions native fortune aura: slot=(\d+) boss=(\d+)",host)if int(s)==slot}>={1,2,3}for slot in range(players)),ui_captures_available=all(len(list((out/f"player-{i}/shots").glob("*.png")))>=2 for i in range(1,players+1)),startup_ack=all((out/f"player-{i}/ready.json").exists()for i in range(1,players+1)))
    if enchantments:
     from enchantment_evidence import assess_ranked as assess_enchantments
     evidence=assess_enchantments(host,native,players)
@@ -381,7 +389,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
    if all_events:
     checks={k:checks[k]for k in("clients_alive","started","clean_scripts","startup_ack","no_coop_session","no_shared_wallet","no_group_pause","coop_joined")if k in checks}
     # Rejected taunts are expected goblin policy decisions, not adapter failures.
-    checks["clean_adapter"]=all(not any(error in line for error in("rejected:","[ ERROR ]","Mod HUD update failed"))for text in logs for line in text.splitlines()if"treasure goblin taunt rejected:"not in line)
+    checks["clean_adapter"]=all(adapter_log_clean(text) for text in logs)
    if coop_events:
     claims=re.findall(r"coop supplies discovered: slot=(\d+) owner=(\d+) event=(\d+) reward=(.*?) gold=(\d+)",host)
     checks=checks if all_events else {k:checks[k]for k in("clients_alive","started","clean_scripts","startup_ack")}

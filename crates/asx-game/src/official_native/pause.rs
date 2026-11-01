@@ -10,6 +10,18 @@ impl PauseLayout {
         Self { addresses }
     }
 
+    /// Guards belong to the exact selected descriptor, alongside the addresses.
+    /// Retained UI must not carry a second copy of a previous client's bytes.
+    pub fn expected(&self, key: usize) -> &'static [u8] {
+        const UI: [usize; 9] = [0x1bf9c, 0x1bfcd, 0x346580, 0x346b4c,
+            0x346d29, 0x346cc9, 0x1bbce, 0x3227b0, 0x31ddd0];
+        const NATIVE: [u64; 9] = [0x19d63c, 0x19d66d, 0x2e23d0, 0x2e299c,
+            0x2e2b79, 0x2e2b19, 0x19d26e, 0x2bc790, 0x2b72f0];
+        let index = UI.iter().position(|v| *v == key).expect("Unreviewed pause guard");
+        crate::current::ENTRIES.iter().find(|(key, _)| *key == NATIVE[index])
+            .expect("Selected pause guard missing").1
+    }
+
     pub fn rva(&self, key: usize) -> usize {
         const KEYS: [usize; 13] = [
             0x1bf9c, 0x1bfcd, 0x346580, 0x346b4c, 0x346d29, 0x346cc9,
@@ -32,6 +44,7 @@ mod tests {
             0x1bbce, 0x3227b0, 0x31ddd0, 0x1bfc1, 0x1b6d4, 0x346ac3, 0x347403,
         ];
         assert_eq!(keys.map(|key| layout.rva(key)), adapter.pause_addresses());
+        for key in &keys[..9] { assert!(layout.expected(*key).len() >= 5); }
     }
 }
 

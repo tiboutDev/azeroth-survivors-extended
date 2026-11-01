@@ -30,9 +30,10 @@ A progression backup is kept in ASX/Data/Backups before each ASX launch.
 
 Signed ASX updates compatible with the installed native game install automatically.
 Use --menu for maintenance choices, or --offline to skip update discovery.
-No interactive console means no update installation. Launcher-runtime upgrades may require
-extracting a complete archive while the game is closed. If the official game updates first,
-ASX may need a compatible release. You can keep playing the native game.
+No update confirmation is needed, including without an interactive console. Runtime
+updates restart the launcher automatically through a private copied interpreter.
+If the official game updates first, ASX may need a compatible release; you can
+keep playing the native game. A damaged interpreter needs complete-archive repair.
 
 Read-only offline diagnosis: start-asx.cmd --check
 Repair the same release (signed package and confirmation required): start-asx.cmd --repair
@@ -53,6 +54,9 @@ This is an unofficial modification, independent of the original game's author.
 
 ASX/App contains program files; ASX/Config contains options; ASX/Data contains
 state, cache, backups, logs and reports. The new launcher migrates the legacy
-layout after the first complete-archive installation. ASXUI problems and missing
-documentation do not prevent native-interface play. Compatible signed updates
+layout after the first complete-archive installation. When migrating from .2,
+close all clients, keep the old ASX folder, and extract the complete new archive
+beside AzerothSurvivors.exe, replacing start-asx.cmd. Do not extract inside ASX.
+The frozen .2 launcher cannot perform this layout transition automatically.
+ASXUI problems and missing documentation do not prevent native-interface play. Compatible signed updates
 install automatically without confirmation; offline mode skips discovery.

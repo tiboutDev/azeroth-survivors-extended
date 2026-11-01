@@ -47,7 +47,7 @@ shared barrier on close.
 ## Guest Escape input boundary
 
 Observe native UI Pause actions before the guest input filter, rather than only
-at the later apply handler. In 0.135.1 the filter consumes Pause (tag 7) for an
+at the later apply handler. In 0.138.0 the filter consumes Pause (tag 7) for an
 active guest and returns true, so the apply handler never sees that action.
 ASX records the validated personal-menu request first and forwards both original
 arguments to the filter. Its boolean return is preserved exactly; native queue

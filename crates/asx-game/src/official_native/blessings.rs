@@ -247,11 +247,14 @@ impl Adapter {
         registers: [u64; 3],
         base: u64,
     ) -> Result<Option<(u64, u64)>> {
-        let [frame, _, _] = registers;
-        // 0.135.1 keeps the killed enemy GUID in R13. Its optional unique-boss
-        // definition is copied from the enemy row into this reviewed frame slot.
-        let definition = q(m, frame.checked_add(crate::current::ENCOUNTER_DEFINITION_FRAME)
-            .ok_or("Encounter definition frame overflow")?)?;
+        let [frame, definition, game] = registers;
+        // The selected completion branch keeps the boss definition in R15,
+        // and the game in R13. The frame slot formerly holding the definition
+        // is now an unrelated native log queue reference.
+        if q(m, frame.checked_add(crate::current::ENCOUNTER_GAME_FRAME)
+            .ok_or("Encounter frame overflow")?)? != game {
+            return Err("Encounter game context changed".into());
+        }
         self.blessing_event(m, frame, definition, base)
     }
 }

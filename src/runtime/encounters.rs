@@ -5,9 +5,9 @@ use std::sync::atomic::AtomicUsize;
 pub(super) static EVENT:AtomicUsize=AtomicUsize::new(0);
 crate::context_stub_rw!(event_entry,0,event,EVENT);
 unsafe extern "system" fn event(c:&mut crate::stub::Context){
- #[cfg(test)]{super::blessings::tests::FRAME.store(c.rbp,Ordering::SeqCst);super::blessings::tests::DEF.store(c.rbx,Ordering::SeqCst);}
+ #[cfg(test)]{super::blessings::tests::FRAME.store(c.rbp,Ordering::SeqCst);super::blessings::tests::DEF.store(c.r15,Ordering::SeqCst);}
  let Some(r)=RUNTIME.get().filter(|r|r.rules)else{return};
- if let Ok(Some((game,count)))=r.adapter.blessing_event_context(&r.local,[c.rbp,c.rbx,c.r13],r.local.base as u64){complete(r,game,count);}
+ if let Ok(Some((game,count)))=r.adapter.blessing_event_context(&r.local,[c.rbp,c.r15,c.r13],r.local.base as u64){complete(r,game,count);}
 }
 pub(super) fn complete(r:&Runtime,game:u64,count:u64){
  super::treasure_goblins::encounter(game,count as u32);super::supplies::encounter(game);super::world_events::coop::encounter(r,game,count);super::rituals::encounter(r,game,count);

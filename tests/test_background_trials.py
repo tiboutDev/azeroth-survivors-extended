@@ -58,6 +58,17 @@ class BackgroundTrials(unittest.TestCase):
                 args = background.parse_args(argv)
                 self.assertEqual(background.child_flags(args), expected)
 
+    def test_only_exact_info_goblin_policy_refusal_is_expected(self):
+        line="[ INFO ]  142.156s treasure goblin taunt rejected: enemy=17379661029583094025 spell=23922"
+        self.assertTrue(extensions.adapter_log_clean(line))
+        for changed in (line.replace("[ INFO ]", "[ ERROR ]"),
+                        line.replace("[ INFO ]", "[ WARN ]"),
+                        line + " unexpected adapter failure",
+                        "[ INFO ]  1.000s Native heal rejected: bad frame",
+                        line + "\n[ ERROR ] Native read failed",
+                        "Mod HUD update failed"):
+            self.assertFalse(extensions.adapter_log_clean(changed))
+
     def test_focused_wallet_assessor_failure_cannot_be_replaced_by_compat_scope(self):
         self.assertFalse(extensions.compatibility_scope(reward_wallet=True))
         self.assertFalse(extensions.compatibility_scope(diagnostic_probe=True))
@@ -75,7 +86,7 @@ class BackgroundTrials(unittest.TestCase):
         mocked = mock.Mock(run=lambda *a, **kw: called.append((a, kw)))
         with mock.patch.dict('sys.modules', {'asx_install_trial': mocked}):
             background.run_child(args, Path('/tmp/test-results/trial/start'))
-        self.assertEqual(called, [((45,), {'game_version': '0.135.1', 'package_path': Path('prepared.zip'), 'legacy_package': None})])
+        self.assertEqual(called, [((45,), {'game_version': '0.138.0', 'package_path': Path('prepared.zip'), 'legacy_package': None})])
 
     def test_packaged_coop_uses_native_ready_input_without_restarting_autostart(self):
         import asx_install_trial

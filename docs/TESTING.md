@@ -3,7 +3,7 @@
 Use the [expected-behavior acceptance reference](ASX-BEHAVIOR.md) to plan and
 record feature-level verification; update affected criteria with semantic changes.
 
-The supported source target is official 0.135.1. Review the
+The supported source target is official 0.138.0. Review the
 [feature inventory](ASX-FEATURES.md) and [adapter boundary](CLIENT-ADAPTER.md)
 when changing native integration. Validation must cover the changed risk and
 state its limits; test counts alone are not a completion criterion.

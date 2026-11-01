@@ -5,16 +5,16 @@ use std::sync::atomic::AtomicUsize;
 pub static DAMAGE_NEXT: AtomicUsize = AtomicUsize::new(0);
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 static THIRD: f32 = 1.0 / 3.0;
-/// The selected renderer keeps the current entry in R14 and its fresh size in
+/// The selected renderer keeps the current entry in RBX and its fresh size in
 /// the descriptor-selected XMM7/XMM8. Preserve every other register and flags.
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 #[unsafe(naked)]
 pub unsafe extern "C" fn damage_entry() {
     core::arch::naked_asm!(
  "pushfq",
- "cmp byte ptr [r14 + 0x38], 0", "je 2f",
- "cmp byte ptr [r14 + 0x38], 2", "jne 3f",
- "2:", "cmp dword ptr [r14 + 0x34], {green}", "je 3f",
+ "cmp byte ptr [rbx + 0x38], 0", "je 2f",
+ "cmp byte ptr [rbx + 0x38], 2", "jne 3f",
+ "2:", "cmp dword ptr [rbx + 0x34], {green}", "je 3f",
  ".if {fresh} == 8", "mulss xmm8, dword ptr [rip + {third}]",
  ".elseif {fresh} == 7", "mulss xmm7, dword ptr [rip + {third}]",
  ".else", ".error \"Unsupported combat-text size register\"", ".endif",
@@ -233,23 +233,23 @@ mod tests {
         #[unsafe(naked)]
         unsafe extern "C" fn end() {
             core::arch::naked_asm!(
-                "pushfq", "pop rax", "mov [r14 + 0x20], rax",
-                "movups [r14 + 0x50], xmm7", "movups [r14 + 0x60], xmm8", "ret"
+                "pushfq", "pop rax", "mov [rbx + 0x20], rax",
+                "movups [rbx + 0x50], xmm7", "movups [rbx + 0x60], xmm8", "ret"
             );
         }
         #[unsafe(naked)]
         unsafe extern "system" fn invoke(_row: *mut u8, _size: f32) {
             core::arch::naked_asm!(
-                "push r14", "sub rsp, 64", "movaps [rsp + 32], xmm7", "movaps [rsp + 48], xmm8",
-                "mov r14, rcx", "movups xmm7, [rcx + 0x50]", "movups xmm8, [rcx + 0x60]",
+                "push rbx", "sub rsp, 64", "movaps [rsp + 32], xmm7", "movaps [rsp + 48], xmm8",
+                "mov rbx, rcx", "movups xmm7, [rcx + 0x50]", "movups xmm8, [rcx + 0x60]",
                 "movss xmm7, xmm1", "movss xmm8, xmm1", "cmp rsp, rsp", "call {entry}",
-                "movaps xmm7, [rsp + 32]", "movaps xmm8, [rsp + 48]", "add rsp, 64", "pop r14", "ret",
+                "movaps xmm7, [rsp + 32]", "movaps xmm8, [rsp + 48]", "add rsp, 64", "pop rbx", "ret",
                 entry=sym damage_entry
             );
         }
         let expected_register = match crate::current::VERSION {
             "0.131.0" => 7,
-            "0.133.0" | "0.135.1" => 8,
+            "0.133.0" | "0.135.1" | "0.138.0" => 8,
             _ => panic!("Fresh-size fixture requires native register review"),
         };
         assert_eq!(crate::current::DAMAGE_TEXT_XMM, expected_register);
@@ -324,11 +324,11 @@ mod tests {
         let mut m = Bytes {
             data: vec![0; 0x1000],
         };
-        put(&mut m, 0x2f8, 0x8000_0000_0000_008e);
-        put(&mut m, 0x300, 11);
-        put(&mut m, 0x308, 22);
-        m.data[0x314..0x318].copy_from_slice(&37u32.to_le_bytes());
-        m.data[0x318] = 1;
+        put(&mut m, 0xc8, 0x8000_0000_0000_008e);
+        put(&mut m, 0xd0, 11);
+        put(&mut m, 0xd8, 22);
+        m.data[0xe4..0xe8].copy_from_slice(&37u32.to_le_bytes());
+        m.data[0xe8] = 1;
         assert_eq!(
             adapter()
                 .native_heal_texts(&m, 0, false, &[11, 22])
@@ -348,7 +348,7 @@ mod tests {
             .native_heal_texts(&m, 0, false, &[22])
             .unwrap()
             .is_empty());
-        put(&mut m, 0x2f8, 0x8000_0000_0000_008d);
+        put(&mut m, 0xc8, 0x8000_0000_0000_008d);
         assert!(adapter().native_heal_texts(&m, 0, false, &[11, 22]).unwrap().is_empty());
     }
     #[test]
@@ -356,12 +356,12 @@ mod tests {
         let mut m = Bytes {
             data: vec![0; 0x1000],
         };
-        put(&mut m, 0x0, 0x8000_0000_0000_008d);
-        put(&mut m, 0x8, 3);
-        put(&mut m, 0x10, 0x700);
-        put(&mut m, 0x18, 3);
-        put(&mut m, 0x20, 11);
-        put(&mut m, 0x28, 22);
+        put(&mut m, 0x2d0, 0x8000_0000_0000_008d);
+        put(&mut m, 0x2d8, 3);
+        put(&mut m, 0x2e0, 0x700);
+        put(&mut m, 0x2e8, 3);
+        put(&mut m, 0x2f0, 11);
+        put(&mut m, 0x2f8, 22);
         for (i, (kind, amount)) in [(0u32, 77u32), (1, 13), (1, 17)].into_iter().enumerate() {
             m.data[0x700 + i * 20..0x708 + i * 20]
                 .copy_from_slice(&[kind.to_le_bytes(), amount.to_le_bytes()].concat());
@@ -374,7 +374,7 @@ mod tests {
         assert!(rows
             .iter()
             .all(|r| r.target == 11 && r.caster == 22 && !r.critical));
-        put(&mut m, 0x18, 33);
+        put(&mut m, 0x2e8, 33);
         assert!(adapter().native_heal_texts(&m, 0, true, &[11, 22]).is_err());
     }
 

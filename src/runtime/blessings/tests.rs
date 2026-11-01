@@ -15,8 +15,8 @@ unsafe extern "C" fn continuation() { core::arch::naked_asm!("ret"); }
 #[unsafe(naked)]
 unsafe extern "system" fn event_probe(_frame: u64, _def: u64) -> u64 {
     core::arch::naked_asm!(
-        "push rbp", "push rbx", "sub rsp,40", "mov rbp,rcx", "mov rbx,rdx",
-        "call {entry}", "mov rax,rbp", "xor rax,rbx", "add rsp,40", "pop rbx", "pop rbp", "ret",
+        "push rbp", "push r15", "sub rsp,40", "mov rbp,rcx", "mov r15,rdx",
+        "call {entry}", "mov rax,rbp", "xor rax,r15", "add rsp,40", "pop r15", "pop rbp", "ret",
         entry = sym event_entry
     );
 }

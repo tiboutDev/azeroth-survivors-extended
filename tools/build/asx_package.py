@@ -54,7 +54,7 @@ def build(output,dll,runtime,version=None,key=None,sequence=1,game_version=None)
     if signing is not None:
         feed={"schema":1,"product":core.PRODUCT,"sequence":sequence,"manifest":m,"package":{"asset":target.name,"size":len(archive),"sha256":core.digest(archive)}}
         raw=core.encoded(feed);(output/"asx-latest.json").write_bytes(raw);(output/"asx-latest.json.sig").write_bytes(signing.sign(raw))
-    (output/"PREPARATION.json").write_bytes(core.encoded({"product":core.PRODUCT,"version":version,"archive":target.name,"archive_sha256":core.digest(archive),"dll_sha256":core.digest(files["ASX/App/Bin/avrt.dll"]),"file_count":len(files),"signed":key is not None,"published":False,"live_validation":False,"runtime_updates":"Runtime replacement requires full archive extraction while closed; mod payload updates require user confirmation."}))
+    (output/"PREPARATION.json").write_bytes(core.encoded({"product":core.PRODUCT,"version":version,"archive":target.name,"archive_sha256":core.digest(archive),"dll_sha256":core.digest(files["ASX/App/Bin/avrt.dll"]),"file_count":len(files),"signed":key is not None,"published":False,"live_validation":False,"runtime_updates":"Compatible signed updates install automatically, including detached runtime replacement. Transition from the .2 layout requires complete archive extraction while closed."}))
     return target
 if __name__=="__main__":
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--output",type=Path,required=True);p.add_argument("--dll",type=Path,required=True);p.add_argument("--runtime",type=Path,required=True);p.add_argument("--version");p.add_argument("--private-key",type=Path);p.add_argument("--sequence",type=int,default=1);p.add_argument("--game-version")

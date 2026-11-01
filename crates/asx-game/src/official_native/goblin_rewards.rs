@@ -243,16 +243,16 @@ mod tests {
         let a = Adapter::select(crate::current::SHA256).unwrap();
         let m = Memory::default();
         let f = 0x10000;
-        for (off, v) in [(0x1a0, 7u64), (0x1a8, 8), (0x1b0, 0x30000), (0x1b8, 5)] {
+        for (off, v) in [(0x198, 7u64), (0x1a0, 8), (0x1a8, 0x30000), (0x1b0, 5)] {
             m.write(f + off, &v.to_le_bytes()).unwrap();
         }
         m.write(0x30000, &[0xa5; 192]).unwrap();
         assert!(a.goblin_amulet_pool(&m, f, 8).is_err());
-        assert_eq!(q(&m, f + 0x1b8).unwrap(), 5);
+        assert_eq!(q(&m, f + 0x1b0).unwrap(), 5);
         a.goblin_amulet_pool(&m, f, 7).unwrap();
-        assert_eq!(q(&m, f + 0x1a8).unwrap(), 8);
-        assert_eq!(q(&m, f + 0x1b0).unwrap(), 0x30000);
-        assert_eq!(q(&m, f + 0x1b8).unwrap(), 3);
+        assert_eq!(q(&m, f + 0x1a0).unwrap(), 8);
+        assert_eq!(q(&m, f + 0x1a8).unwrap(), 0x30000);
+        assert_eq!(q(&m, f + 0x1b0).unwrap(), 3);
         assert_eq!(m.read(0x30048, 120).unwrap(), [0xa5; 120]);
         for i in 0..3 {
             assert_eq!(q(&m, 0x30008 + i * 24).unwrap(), 1);

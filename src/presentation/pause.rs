@@ -211,69 +211,61 @@ pub fn install_selected(base:usize,layout:PauseLayout)->Result<(),String>{
         return Ok(());
     }
     *LAYOUT.lock().unwrap_or_else(|e|e.into_inner())=Some(layout);
-    let sites: [(usize, &[u8], *mut c_void, &AtomicUsize); 9] = [
+    let sites: [(usize, *mut c_void, &AtomicUsize); 9] = [
         (
             0x1bf9c,
-            b"\x41\x80\xbc\x24\xea\x00\x00\x00\x01",
             check_entry as *const () as _,
             &CHECK,
         ),
         (
             0x1bfcd,
-            b"\x48\x8b\x4d\x48\x48\x8b\x5d\x50",
             bool_entry as *const () as _,
             &BOOL,
         ),
         (
             0x346580,
-            b"\x55\x41\x57\x41\x56\x41\x55\x41\x54\x56\x57\x53",
             build_entry as *const () as _,
             &BUILD,
         ),
         (
             0x346b4c,
-            b"\x48\x89\xd3\x48\x85\xd2",
             title_entry as *const () as _,
             &TITLE,
         ),
         (
             0x346d29,
-            b"\x48\x89\xd3\x48\x85\xd2",
             detail_entry as *const () as _,
             &DETAIL,
         ),
         (
             0x346cc9,
-            b"\x4c\x89\xad\x20\x04\x00\x00",
             font_entry as *const () as _,
             &FONT,
         ),
         (
             0x1bbce,
-            b"\x48\x85\xc9\x74\x2f",
             click_entry as *const () as _,
             &CLICK,
         ),
         (
             0x3227b0,
-            b"\x55\x41\x57\x41\x56\x41\x55\x41\x54\x56\x57\x53",
             button_entry as *const () as _,
             &BUTTON,
         ),
         (
             0x31ddd0,
-            b"\x55\x41\x57\x41\x56\x41\x55\x41\x54\x56\x57\x53",
             panel_entry as *const () as _,
             &PANEL,
         ),
     ];
-    for (rva, bytes, _, _) in &sites {
-        if unsafe { std::slice::from_raw_parts((base + self::rva(*rva)) as *const u8, bytes.len()) } != *bytes {
+    for (rva, _, _) in &sites {
+        let bytes = layout.expected(*rva);
+        if unsafe { std::slice::from_raw_parts((base + self::rva(*rva)) as *const u8, bytes.len()) } != bytes {
             return Err(format!("Native pause UI contract changed: {rva:x}"));
         }
     }
     BASE.store(base, Ordering::Release);
-    for (rva, _, detour, slot) in sites {
+    for (rva, detour, slot) in sites {
         let target = (base + self::rva(rva)) as *mut c_void;
         let original = unsafe { minhook::MinHook::create_hook(target, detour) }
             .map_err(|e| format!("Native pause hook: {e:?}"))?;
