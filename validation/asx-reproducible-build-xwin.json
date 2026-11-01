@@ -2,9 +2,9 @@
   "approved": true,
   "artifact": {
     "file": "avrt.dll",
-    "game_version": "0.135.1",
-    "sha256": "5036450830a75030a6a465afc1d371bf4734fa9a21076f90a0409fecd25e3e02",
-    "size_bytes": 1903616,
+    "game_version": "0.138.0",
+    "sha256": "d57c9dd54d96c6d1a224136178b420548fe31747f18eb9ed630b51695aed37ff",
+    "size_bytes": 1905664,
     "target": "x86_64-pc-windows-msvc"
   },
   "build_recipe": {
@@ -41,7 +41,7 @@
       "-Clink-arg=/DEBUG:NONE",
       "-Clink-arg=/TIMESTAMP:1"
     ],
-    "source_fingerprint_sha256": "518dc57601af7f8ad7b6d9f220a961c108b99d5d5c2099342249d964e52325f5",
+    "source_fingerprint_sha256": "1e8276ad564ca42cf91f986ac23c04a19af70c1fea880c6e2d77f1dda67d0bad",
     "test_hooks": "disabled-and-checked-absent",
     "tool_versions": {
       "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
@@ -52,7 +52,7 @@
       "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
     }
   },
-  "build_recipe_sha256": "0e45de97b80bd3c2765736c6cd29000256a3fd0615be24a8e4835e0cd8af0ccb",
+  "build_recipe_sha256": "cd78fca2c929c8e00a21de68151cb42805e59e56ce09a71c0c54709146aab36e",
   "builder": "xwin-msvc",
   "builder_script": "tools/build/asx_release_binary.py",
   "cargo_lock_sha256": "d52b1d4fd2c92c7e50312cf09be54cfd79954d28060c45b85bc455fbe1536bbf",
@@ -78,8 +78,8 @@
       },
       {
         "path": "asx/README-ASX.txt",
-        "sha256": "edec9dbf81a49865af118ba35374167f353e2c12f6f227ea63d6beebab662371",
-        "size_bytes": 3045
+        "sha256": "fb5bc834f32425a999dc9b6bd891998c44598429f0fd2148dc985492feb53659",
+        "size_bytes": 3774
       },
       {
         "path": "asx/channel.json",
@@ -88,43 +88,53 @@
       },
       {
         "path": "asx/core.py",
-        "sha256": "f24f0c3d2c0da50ded7009c2a3dbb0ee0c15c66f8a7e541e4ee5f3c7d7051e7d",
-        "size_bytes": 19734
+        "sha256": "912dc0117d87355586a54a89d86f257c2223a580760a5131b272d4b60b967993",
+        "size_bytes": 22753
       },
       {
         "path": "asx/launch.py",
-        "sha256": "70f13c68ad68efc1fdebeeacf5ac354666c5e0ef13a74e27345ba735e9c45337",
-        "size_bytes": 16736
+        "sha256": "f6c7f8ebaa85d74d17c79ea36057c5a4b913c028e52da5a2a51cfa654cac1612",
+        "size_bytes": 18042
+      },
+      {
+        "path": "asx/layout.py",
+        "sha256": "f30aaf8e25deb622f139fcd51a977a029d4cc8936c05ec866075c7d0093f5e41",
+        "size_bytes": 4652
       },
       {
         "path": "asx/maintenance.py",
-        "sha256": "11ca1709c6a4e24874217875285956a9db0c95766a8e43aede89456f15bec0af",
-        "size_bytes": 8578
+        "sha256": "9f9d6fd5be0912319c77c8e3e8145435e9765132f00df8ae7eb367132e693909",
+        "size_bytes": 9158
       },
       {
         "path": "asx/remove.ps1",
-        "sha256": "108d667bea7ecff8e2c330a14d33293569d3b4566afcd5299475d4b3fb23cc31",
-        "size_bytes": 4402
+        "sha256": "245ed030ba0db00d2883fd1530b72f2b6224af96d81dea507ecd41ea03b250ae",
+        "size_bytes": 4428
       },
       {
         "path": "asx/remove.py",
-        "sha256": "3dc67218b0b9d36b446ce3425b147268225411292ef54764e23a8e8764e0db6c",
-        "size_bytes": 1564
+        "sha256": "4647a68fea0cb0c6a349f73cddec6aa176fc320e552fce9417daff7239f59af2",
+        "size_bytes": 1569
       },
       {
         "path": "asx/start-asx.cmd",
-        "sha256": "dbe3b2b58e3de63df27f15b8025f95b74f1061426e644f177ab8d5e19cd01d80",
-        "size_bytes": 372
+        "sha256": "068a3200331aa504439b7fcbd4326138a5faabc65eadfbc449f4fb737db8eb5d",
+        "size_bytes": 384
       },
       {
         "path": "asx/supported-games.json",
-        "sha256": "ea5eb68c56b699b333672ae5a76c23e716d1d0f2748f602ae1900683e732e35c",
-        "size_bytes": 601
+        "sha256": "1141146b031a5fd0646c63b650339ee897c4ad13a03dbfe9e851daf53ea02a8d",
+        "size_bytes": 600
+      },
+      {
+        "path": "asx/update_worker.py",
+        "sha256": "ba406d1af0513463f9cb0798d770f2c42789c4a4ca9c066ffe19181c8098d196",
+        "size_bytes": 4076
       },
       {
         "path": "asx/updates.py",
-        "sha256": "cac714ae20540a58a005cc8993790aa2c6df5d29679d34fae9d96cd5e3f424d0",
-        "size_bytes": 8306
+        "sha256": "feec4c633ffb0bfe3f09b4ea38398f14923a508d28bb81c771ea39bb0fec3779",
+        "size_bytes": 8692
       },
       {
         "path": "build.rs",
@@ -192,14 +202,19 @@
         "size_bytes": 34504
       },
       {
+        "path": "crates/asx-game/src/bindings/official138.rs",
+        "sha256": "25309880d68523851c58e913fc5444b3e46b38c8e7f1d2adf138d7d7abf29f8b",
+        "size_bytes": 35149
+      },
+      {
         "path": "crates/asx-game/src/enemies.rs",
         "sha256": "3cc048964142f5fa31518fbe91276c51f519db962679ecdddd4811614106e82d",
         "size_bytes": 3386
       },
       {
         "path": "crates/asx-game/src/lib.rs",
-        "sha256": "cd50584b755676d2c326e2a796b186e1b6aed346cb516ccedfeef8dbc95f4c70",
-        "size_bytes": 2161
+        "sha256": "deb1eb98677959b77e7dbbb8589acd7b52e688e026645badee4741d87107e84f",
+        "size_bytes": 2334
       },
       {
         "path": "crates/asx-game/src/memory.rs",
@@ -213,13 +228,13 @@
       },
       {
         "path": "crates/asx-game/src/official_native.rs",
-        "sha256": "94ce4b2273baa841be18793c138806f792ba9dfbe531454dc8271bf14ec8d530",
-        "size_bytes": 33915
+        "sha256": "8b7fa23e535e447a30f95344706b747086e5a895fb8c80c11504ae044aa2ad32",
+        "size_bytes": 33911
       },
       {
         "path": "crates/asx-game/src/official_native/blessings.rs",
-        "sha256": "def96fc3f2bbf0eaea6ebcc0223622c9806a3fddc150b2947e1a1dfe7b936325",
-        "size_bytes": 9621
+        "sha256": "c62205abe09287ff5cc635d6778883fc2be6e4eda4db8f0aa224dd45cf397d62",
+        "size_bytes": 9738
       },
       {
         "path": "crates/asx-game/src/official_native/bonus_tooltip.rs",
@@ -238,8 +253,8 @@
       },
       {
         "path": "crates/asx-game/src/official_native/combat_text.rs",
-        "sha256": "1ae2751a39dcdda82be6349df86b5fb1ce431daf2daf43ca7cbf923e140ea328",
-        "size_bytes": 19522
+        "sha256": "45add2846bb8b156f41142fd3fa5ced9ea99a53b6132c6016c160cbdabb56f35",
+        "size_bytes": 19536
       },
       {
         "path": "crates/asx-game/src/official_native/difficulty.rs",
@@ -278,7 +293,7 @@
       },
       {
         "path": "crates/asx-game/src/official_native/goblin_rewards.rs",
-        "sha256": "376b68497ed1cd525595c66a384812f8e3c5cd1e7965755611f4ff2939274810",
+        "sha256": "d1eb0e8b763033aaa051e77dbcdf13ea34e2ac0c676a8d56b5bf35f55c54488e",
         "size_bytes": 10334
       },
       {
@@ -303,8 +318,8 @@
       },
       {
         "path": "crates/asx-game/src/official_native/pause.rs",
-        "sha256": "718e2916b82aa3adf4c25cb9735268f4295697cbe0a2a26dc65dd538dd1554c5",
-        "size_bytes": 4394
+        "sha256": "308f5993b688dec929d9738aa9a94b81b866513a0e324417e49278c56cdfa909",
+        "size_bytes": 5185
       },
       {
         "path": "crates/asx-game/src/official_native/presentation.rs",
@@ -343,7 +358,7 @@
       },
       {
         "path": "crates/asx-game/src/official_native/treasure_goblins.rs",
-        "sha256": "77e404e239d0e3626e2b99c803407495c3c01746304cd6922391aeb989ff6e78",
+        "sha256": "5ddf5e6a3b5df61193d256931009867911fba6b277237fc00368cb48fca1d10b",
         "size_bytes": 32166
       },
       {
@@ -583,8 +598,8 @@
       },
       {
         "path": "src/presentation/pause.rs",
-        "sha256": "06952e7a4facf9be018009b3147dcf84927f3f50e92b1d0e4427a6197174d822",
-        "size_bytes": 15832
+        "sha256": "2e52bca0f92cbc8dfea1620a923f81b43e7e2dd136179b25d6798e558e7e6407",
+        "size_bytes": 15396
       },
       {
         "path": "src/proc.rs",
@@ -618,7 +633,7 @@
       },
       {
         "path": "src/runtime/blessings/tests.rs",
-        "sha256": "b53562fc7c39c589dd15a470c7c0093ea0580d08edb560a4e68ae307cb23345a",
+        "sha256": "c71e3b06c37a9b3c92c6b5e85571c37b50641526e5b18f7709b38286a73f1e63",
         "size_bytes": 2439
       },
       {
@@ -688,7 +703,7 @@
       },
       {
         "path": "src/runtime/encounters.rs",
-        "sha256": "ab393dd356c4ac36ff57a7a97ddb5de4c80b97f3d4b11b755d4080019a24e573",
+        "sha256": "89d5feeceaa63e6257049f104fb19981ca255699a4e626b78dbec22b9ce85f0a",
         "size_bytes": 1535
       },
       {
@@ -933,13 +948,18 @@
       },
       {
         "path": "tools/build/asx_package.py",
-        "sha256": "ea0d1b35b5c0f1a20cce87f6b34e11adecacb014e1e655ebe5f6d3985b740ff0",
-        "size_bytes": 5995
+        "sha256": "f330c43cff3b3efc88dd48c482fe00cdddc792028c452ee7d0c1fe7f80ad87ee",
+        "size_bytes": 6120
       },
       {
         "path": "tools/build/asx_release_binary.py",
         "sha256": "6164b69186ada6590699904154a7a4f1a540cae7a42dd1db69b4ed76ec8754c3",
         "size_bytes": 4300
+      },
+      {
+        "path": "tools/build/asx_release_layout.py",
+        "sha256": "184b2ebb1ba95530e8b28bd3a4e025046d93dfdaeece5f4e25943d051163cd71",
+        "size_bytes": 5323
       },
       {
         "path": "tools/build/asx_reproducibility.py",
@@ -948,8 +968,8 @@
       },
       {
         "path": "tools/build/asx_verify_publication.py",
-        "sha256": "c30bfae1427bfb6a3656fe64230be996d54e898411f8fbdc03a532f5f50328c5",
-        "size_bytes": 3176
+        "sha256": "ac9466b251478167f583c4eaa12c8b47146d16fc816bdbd18feddfe78b6f7b52",
+        "size_bytes": 3394
       },
       {
         "path": "tools/build/asxui_font.py",
@@ -972,18 +992,18 @@
         "size_bytes": 2003
       }
     ],
-    "sha256": "518dc57601af7f8ad7b6d9f220a961c108b99d5d5c2099342249d964e52325f5"
+    "sha256": "1e8276ad564ca42cf91f986ac23c04a19af70c1fea880c6e2d77f1dda67d0bad"
   },
   "status": "technically-reviewed-local-reference",
   "technical_review": {
-    "human_approval": "Explicit user approval of this exact SHA-256 for 0.135.1-asx.2 on 2026-11-01",
+    "human_approval": "Explicit user approval of this exact SHA-256 for 0.138.0-asx.1 in the release preparation conversation on 2026-11-01",
     "not_established": [
       "Cross-host reproduction",
       "Windows-native reproduction",
       "Publication authorization"
     ],
-    "result": "Two independent identical normal builds; full portable gate and Lua 5.1, 176 executed Windows tests, normal solo and two-client coop, all 26 signed-archive checks passed. Three Linux-host Windows-only test skips are not passes.",
-    "scope": "Same local WSL/xwin environment"
+    "result": "Two independent identical normal distribution builds; full portable gate, hygiene and history privacy review; exact normal DLL solo and two-player coop; all 30 signed archive installation/migration/coop/export/uninstall checks passed.",
+    "scope": "Same reviewed local WSL/xwin environment"
   },
   "tool_versions": {
     "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
