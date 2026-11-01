@@ -150,8 +150,16 @@ end
 
 function ASXUI_DockAuras(state)
  local a=ASXUI_GetHudAnchors and ASXUI_GetHudAnchors()
- if not a or not auraRoot then restore(auraOwned);restore(timerOwned);updateMedallions(nil);return false end
+ if not a or not auraRoot then
+  restore(auraOwned);restore(timerOwned);updateMedallions(nil)
+  if ASX_SetCooperativeRulesDocked then ASX_SetCooperativeRulesDocked("ASXUI",false)end
+  return false
+ end
  local helpful,harmful,order={},{},{}
+ if ASX_SetCooperativeRulesDocked then
+  local info=ASX_SetCooperativeRulesDocked("ASXUI",true)
+  if info then table.insert(order,info)end
+ end
  local fortune,crystal;local fortuneCount,crystalCount=0,0
  for i=0,31 do
   local f=getglobal("BuffButton"..i)
@@ -334,7 +342,7 @@ controller:SetScript("OnUpdate",function()
   auraRoot:ClearAllPoints();auraRoot:SetPoint("BOTTOM",vitals,"TOP",0,8)
   rootVisibility(true)
  else
-  if vitals then vitals:Hide()end;restore(auraOwned);restore(timerOwned);updateMedallions(nil);rootVisibility(false)
+  if vitals then vitals:Hide()end;restore(auraOwned);restore(timerOwned);updateMedallions(nil);if ASX_SetCooperativeRulesDocked then ASX_SetCooperativeRulesDocked("ASXUI",false)end;rootVisibility(false)
  end
  local state=ASX_GetState and ASX_GetState(1)
  updateObjectives(a~=nil,state);updateAllies(a~=nil);updateEncounters(a~=nil)

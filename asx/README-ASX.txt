@@ -10,7 +10,6 @@ official game separately before installing ASX.
 
 ASX FEATURES
 - Shared co-op progression and gold, allied support and party spell tooltips.
-- Spell glyphs are disabled on this client pending review of native set interactions.
 - Ring enchantments at ring ranks 2 / 4 / 7 / 10 / 14.
 - Personal colored world crystals replace amulet gems; Crystal Resonance tracks run-long bonuses.
 - Sayge's Trials grant Dark Fortunes: Luck, Experience or Gold.

@@ -37,6 +37,12 @@ class Evidence(unittest.TestCase):
   for r,t in [(4,"Lesser"),(7,""),(10,"Greater"),(14,"Superior")]:h+=f"\nenchantment promoted: slot=0 guid=11 ring=0 rank={r} name={t+" "if t else""}Might"
   n[0]+='\nrogue: '+json.dumps(dict(choices=[dict(lines="Enchantment: Lesser Might\n+15% damage → +20% damage\nImproves enchantment")]),ensure_ascii=False)
   return h,n
+ def test_previous_balance_values_fail_current_ranked_evidence(self):
+  from unittest.mock import patch
+  for name,old in [("Alacrity",[.02,.04,.07,.10,.14]),("Renewal",[.3,.6,1.2,2.,3.])]:
+   with patch.dict(m.RANK_VALUES,{name:old}):h,n=self.ranked_sample()
+   self.assertFalse(m.assess_ranked(h,n,1)["checks"]["all_40_native_rank_values"])
+
  def test_all_rank_values_and_actual_promotions_are_required(self):
   h,n=self.ranked_sample();self.assertTrue(all(m.assess_ranked(h,n,1)["checks"].values()));self.assertFalse(m.assess_ranked(h.replace("tier=4 name=Reach","tier=7 name=Reach"),n,1)["checks"]["all_40_native_rank_values"])
   self.assertFalse(m.assess_ranked(h.replace("rank=14 name=Superior","rank=14 name=Absent"),n,1)["checks"]["all_four_promotions_observed"])

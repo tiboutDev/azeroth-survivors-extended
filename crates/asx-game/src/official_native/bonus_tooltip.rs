@@ -51,20 +51,20 @@ impl Adapter{
  }
  pub fn kept_tooltip_title(self,m:&dyn MutableMemory,bundle:u64)->Result<()> {
   if !self.supports_bonus_tooltips(){return Ok(())}
-  if m.read(bundle+crate::current::GLYPH_STATUS_COLOR,4)?!=0u32.to_le_bytes(){return Err("Unexpected native tooltip title color".into())}
-  m.write(bundle+crate::current::GLYPH_STATUS_COLOR+4,&[1f32,0.82,0.,1.].into_iter().flat_map(f32::to_le_bytes).collect::<Vec<_>>())
+  if m.read(bundle+crate::current::BONUS_STATUS_COLOR,4)?!=0u32.to_le_bytes(){return Err("Unexpected native tooltip title color".into())}
+  m.write(bundle+crate::current::BONUS_STATUS_COLOR+4,&[1f32,0.82,0.,1.].into_iter().flat_map(f32::to_le_bytes).collect::<Vec<_>>())
  }
  pub fn bonus_compact_size(self,m:&dyn crate::official::MutableMemory,caller:u64,bundle:u64)->Result<()>{
-  if !self.supports_bonus_tooltips()||caller!=self.contact117(crate::current::GLYPH_UI_HEADER_CALLER){return Ok(())}
-  let v=crate::current::GLYPH_UI_HEADER_NODE;
-  m.write(bundle+v+crate::current::GLYPH_UI_HEADER_HEIGHT,&[1u32.to_le_bytes(),40f32.to_le_bytes()].concat())?;
-  m.write(bundle+v+crate::current::GLYPH_UI_HEADER_MARGIN_TOP,&[1u32.to_le_bytes(),0f32.to_le_bytes()].concat())
+  if !self.supports_bonus_tooltips()||caller!=self.contact117(crate::current::BONUS_UI_HEADER_CALLER){return Ok(())}
+  let v=crate::current::BONUS_UI_HEADER_NODE;
+  m.write(bundle+v+crate::current::BONUS_UI_HEADER_HEIGHT,&[1u32.to_le_bytes(),40f32.to_le_bytes()].concat())?;
+  m.write(bundle+v+crate::current::BONUS_UI_HEADER_MARGIN_TOP,&[1u32.to_le_bytes(),0f32.to_le_bytes()].concat())
  }
  pub fn bonus_compact_style(self,m:&dyn crate::official::MutableMemory,bundle:u64)->Result<()>{
   if !self.supports_bonus_tooltips(){return Ok(())}
-  let at=bundle+crate::current::GLYPH_STATUS_FONT_SIZE;let raw=m.read(at,4)?;if raw!=12f32.to_le_bytes()&&raw!=15f32.to_le_bytes(){return Ok(())}
-  if m.read(bundle+crate::current::GLYPH_STATUS_COLOR,4)?!=0u32.to_le_bytes(){return Ok(())}
-  m.write(at,&12f32.to_le_bytes())?;m.write(bundle+crate::current::GLYPH_STATUS_COLOR+4,&[0.65f32,0.65,0.65,1.].into_iter().flat_map(f32::to_le_bytes).collect::<Vec<_>>())
+  let at=bundle+crate::current::BONUS_STATUS_FONT_SIZE;let raw=m.read(at,4)?;if raw!=12f32.to_le_bytes()&&raw!=15f32.to_le_bytes(){return Ok(())}
+  if m.read(bundle+crate::current::BONUS_STATUS_COLOR,4)?!=0u32.to_le_bytes(){return Ok(())}
+  m.write(at,&12f32.to_le_bytes())?;m.write(bundle+crate::current::BONUS_STATUS_COLOR+4,&[0.65f32,0.65,0.65,1.].into_iter().flat_map(f32::to_le_bytes).collect::<Vec<_>>())
  }
 }
 

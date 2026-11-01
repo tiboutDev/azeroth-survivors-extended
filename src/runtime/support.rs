@@ -209,8 +209,6 @@ pub(super) unsafe extern "system" fn cast(game: u64, ability: u64) -> bool {
     }
     let previous = CAST.with(|v| v.replace(selection));
     let success = original(game, ability);
-    #[cfg(feature="test-hooks")]
-    glyphs::fixture_cast(runtime,game,ability,success);
     let completed = CAST.with(|v| v.replace(previous));
     if let (Some(spell), Some(before), Some(caster)) = (spell, before, caster) {
         let target = completed
@@ -332,13 +330,8 @@ unsafe extern "system" fn heal(c: &mut crate::stub::Context) {
     if c.skip == 0 {
         if let Some(runtime) = RUNTIME.get().filter(|r| r.rules) {
             let amount = f32::from_bits(c.xmm[1] as u32);
-            let spell=c.r8 as u32;
-            let solo=runtime.solo.lock().ok().is_some_and(|p|p.is_some());
-            let glyph=if spell==15237 || solo && spell==25912 {glyphs::healing_multiplier(runtime,c.rcx,spell)}else{1.};
-            let factor=fatigue::healing_multiplier(runtime,c.rcx)*glyph;
+            let factor=fatigue::healing_multiplier(runtime,c.rcx);
             let scaled = amount * factor;
-            #[cfg(feature="test-hooks")]
-            if c.r8 as u32==15237&&glyph!=1.{glyphs::fixture_nova_heal(runtime,c.rcx,amount,scaled,factor);}
             #[cfg(feature="test-hooks")]
             fatigue::fixture_trace(runtime,c.rcx,1,amount,scaled);
             c.xmm[1] = (c.xmm[1] & !0xffff_ffffu128) | scaled.to_bits() as u128;
@@ -419,12 +412,11 @@ unsafe extern "system" fn apply(game: u64, descriptor: u64) {
             // destroyed in the same world pass. No descriptor pointer escapes the call.
             #[cfg(feature="test-hooks")]
             let raw=delivery.amount;
-            let glyph_factor=glyphs::healing_for_source(runtime,game,delivery.caster,delivery.guid,delivery.spell);
-            let factor=fatigue::for_source(game,delivery.caster,delivery.guid)*glyph_factor;
+            let factor=fatigue::for_source(game,delivery.caster,delivery.guid);
             let Ok(scaled)=runtime.adapter.scale_direct_heal_delivery(&mut delivery,factor) else {return;};
             fatigue::with_source(game, delivery.caster, delivery.guid, || {
                 #[cfg(feature="test-hooks")]
-                if scaled {fatigue::fixture_trace(runtime,game,1,raw,delivery.amount);glyphs::fixture_heal(runtime,game,delivery.spell,raw,delivery.amount,factor,true);}
+                if scaled {fatigue::fixture_trace(runtime,game,1,raw,delivery.amount);}
                 fatigue::with_scaled_heal(game,scaled,||original(game, delivery.row.as_ptr() as u64));
             });
             let Ok(after) = runtime.adapter.support_caster(&runtime.local, game) else {
@@ -1017,19 +1009,13 @@ pub(super) fn with_recipient<T>(game: u64, guid: u64, f: impl FnOnce() -> T) -> 
     result
 }
 
-/// Native hybrid self-heal payload; independent of optional glyph interception.
+/// Native hybrid self-heal payload with resurrection fatigue.
 pub(super) unsafe fn scale_native_hit_heal(original:unsafe extern "system" fn(u64,u64,u64,f32,u32),game:u64,enemy:u64,effect:u64,damage:f32,spell:u32)->bool{
  if matches!(spell,25912|15237) {
   if let Some(r)=RUNTIME.get().filter(|r|r.rules){
-   let factor=glyphs::healing_multiplier(r,game,spell)*fatigue::healing_multiplier(r,game);
+   let factor=fatigue::healing_multiplier(r,game);
    if factor!=1. {if let Ok(Some((bytes,_before,_after)))=r.adapter.scaled_heal_effect(&r.local,effect,factor){
-    #[cfg(feature="test-hooks")]
-    {glyphs::fixture_heal(r,game,spell,_before,_after,factor,false);}
-    #[cfg(feature="test-hooks")]
-    let observed=if glyphs::fixture_enabled(){static SAMPLES:AtomicUsize=AtomicUsize::new(0);if SAMPLES.fetch_add(1,Ordering::Relaxed)<32{r.adapter.support_caster(&r.local,game).ok()}else{None}}else{None};
     original(game,enemy,bytes.as_ptr() as u64,damage,spell);
-    #[cfg(feature="test-hooks")]
-    if let Some(before)=observed{if let Ok(after)=r.adapter.support_caster(&r.local,game){r.log.info(&format!("glyph fixture self heal applied: spell={spell} before_hp={} after_hp={} maximum={} fraction={_after}",before.hp,after.hp,before.maximum));}}
     return true;
    }}
   }
@@ -1040,7 +1026,6 @@ pub(super) unsafe fn scale_native_hit_heal(original:unsafe extern "system" fn(u6
 static EFFECT_HIT:AtomicUsize=AtomicUsize::new(0);
 unsafe extern "system" fn effect_hit(game:u64,enemy:u64,effect:u64,damage:f32,spell:u32){
  let original:unsafe extern "system" fn(u64,u64,u64,f32,u32)=std::mem::transmute(EFFECT_HIT.load(Ordering::Acquire));
- if glyphs::intercept_hit(original,game,enemy,effect,damage,spell){return}
  if scale_native_hit_heal(original,game,enemy,effect,damage,spell){return}
  original(game,enemy,effect,damage,spell)
 }

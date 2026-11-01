@@ -263,25 +263,6 @@ fn canonical_wallet_rejects_overspend_and_reward_conversion_discards_fractions()
 }
 
 #[test]
-fn deferred_xp_keeps_normalized_integers_and_is_consumed_once_per_life() {
-    let mut bank = DeferredExperience::default();
-    assert_eq!(bank.credit(3, 77, 5).unwrap(), 5);
-    assert_eq!(bank.credit(3, 77, 7).unwrap(), 12);
-    assert_eq!(bank.credit(1, 88, 6).unwrap(), 6);
-    assert_eq!(bank.take(3, 77), 12);
-    assert_eq!(bank.take(3, 77), 0);
-    bank.credit(3, 77, 8).unwrap();
-    bank.retain(&[(1, 88), (3, 99)]);
-    assert_eq!(bank.take(3, 77), 0);
-    assert_eq!(bank.take(1, 88), 6);
-    assert!(bank.credit(0, 1, 5).is_err());
-    assert!(bank.credit(1, 0, 5).is_err());
-    bank.credit(2, 22, u32::MAX).unwrap();
-    assert!(bank.credit(2, 22, 1).is_err());
-    assert_eq!(bank.take(2, 22), u32::MAX);
-}
-
-#[test]
 fn five_native_participants_do_not_hit_historical_product_limit() {
     assert!(Session::new(1, 1, 1..=5, 20).is_ok());
     assert!((shared_xp_multiplier(vec![(1.1, 0.1); 5]).unwrap() - 1.1).abs() < 1e-6);
@@ -289,9 +270,6 @@ fn five_native_participants_do_not_hit_historical_product_limit() {
         shared_gold_award(11, 1.0, 0., 0., 5, Award::ConvertedReward).unwrap(),
         2
     );
-    let mut b = DeferredExperience::default();
-    b.credit(5, 55, 7).unwrap();
-    assert_eq!(b.take(5, 55), 7);
 }
 
 #[test]
@@ -350,16 +328,15 @@ fn identical_baseline_characters_do_not_create_a_party_size_xp_multiplier(){
 }
 
 #[test]
-fn voluntarily_skipped_rewards_credit_full_gold_for_any_party_size(){
-    for members in 1..=5 {
+fn skipped_rewards_are_divided_then_rounded_once_for_the_current_party(){
+    for (members,expected)in[(1,12),(2,6),(3,4),(4,3),(5,2)] {
         let amount=shared_gold_award(10,1.2,0.2,0.2,members,Award::SkippedReward).unwrap();
-        assert_eq!(amount,12);
-        let wallet=SharedWallet{gold:100,earned:100}.credit(amount).unwrap();
-        assert_eq!(wallet,SharedWallet{gold:112,earned:112});
-        // Ordinary converted rewards retain their previous policy.
+        assert_eq!(amount,expected);
         assert_eq!(shared_gold_award(10,1.2,0.2,0.2,members,Award::ConvertedReward).unwrap(),12/members as u32);
+        assert_eq!(shared_gold_award(10,1.2,0.2,0.2,members,Award::World).unwrap(),12);
     }
-    assert_eq!(shared_gold_award(1,1.5,0.,0.,2,Award::SkippedReward).unwrap(),2);
-    assert_eq!(shared_gold_award(10,1.,0.,0.2,2,Award::SkippedReward).unwrap(),12);
+    assert_eq!(shared_gold_award(7,1.,0.,0.,2,Award::SkippedReward).unwrap(),4);
+    assert_eq!(shared_gold_award(1,2.99,0.,0.,2,Award::SkippedReward).unwrap(),1);
+    assert_eq!(shared_gold_award(1,1.,0.,0.,5,Award::SkippedReward).unwrap(),0);
     assert!(shared_gold_award(10,1.,0.,0.,0,Award::SkippedReward).is_err());
 }

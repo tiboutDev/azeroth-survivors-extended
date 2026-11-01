@@ -1,10 +1,9 @@
 //! Runtime binding for the local XP hook boundary, not a global native-free API.
-use super::super::{blessings, experience, io, Runtime, RUNTIME};
+use super::super::{blessings, io, Runtime, RUNTIME};
 use asx_game::official::ExperienceAward;
 
 pub(super) trait Services {
     fn shared_input(&self, request: u64, game: u64) -> Result<u32, String>;
-    fn capture_shared(&self, game: u64, sum: u32);
     fn multiplier(&self) -> Option<f32>;
     fn return_site(&self, stack: u64) -> Option<u64>;
     fn normalize(&self, game: u64, site: u64, registers: [u64; 3], multiplier: f32, shared: Option<u32>)
@@ -20,9 +19,6 @@ pub(super) fn active() -> Option<&'static dyn Services> {
 impl Services for Runtime {
     fn shared_input(&self, request: u64, game: u64) -> Result<u32, String> {
         self.adapter.shared_xp_input(&self.local, request, game)
-    }
-    fn capture_shared(&self, game: u64, sum: u32) {
-        experience::capture(self, game, sum);
     }
     fn multiplier(&self) -> Option<f32> {
         effective_multiplier(self)

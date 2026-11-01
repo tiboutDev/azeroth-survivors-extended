@@ -51,7 +51,7 @@ unsafe extern "system" fn title(out:u64,commands:u64,bundle:u64)->u64{
  }}
  original(out,commands,bundle)
 }
-pub(super) fn status_line(text:&str)->bool{text=="Sets your gem for this run"||text=="Gem retained"||text=="Applies enchantment"||text=="Improves enchantment"||text=="Applies glyph"||text=="Keeps glyph"||text.starts_with("Replaces ")||text.starts_with("Removes ")&&!text.starts_with("Removes glyph bonuses")&&!text.starts_with("Removes bonuses")}
+pub(super) fn status_line(text:&str)->bool{text=="Sets your gem for this run"||text=="Gem retained"||text=="Applies enchantment"||text=="Improves enchantment"}
 struct DrawbackScope(bool);
 impl Drop for DrawbackScope{fn drop(&mut self){DRAWBACK.with(|v|v.set(self.0));}}
 struct StatusScope(Option<bool>);
@@ -65,7 +65,7 @@ impl Drop for HeaderScope{fn drop(&mut self){HEADER.with(|v|v.set(self.0));}}
 unsafe extern "system" fn ui(parent:u64,closure:u64)->u64{
  let context=RUNTIME.get().filter(|r|r.rules).and_then(|r|r.adapter.bonus_ui_context(&r.local,closure).ok());
  #[cfg(feature="test-hooks")]
- if bonus_catalog::diagnostics(){static ONCE:AtomicBool=AtomicBool::new(false);if !ONCE.swap(true,Ordering::Relaxed){if let Some(r)=RUNTIME.get(){r.log.info(&format!("glyph fixture native UI context: {}",context.is_some()));}}}
+ if bonus_catalog::diagnostics(){static ONCE:AtomicBool=AtomicBool::new(false);if !ONCE.swap(true,Ordering::Relaxed){if let Some(r)=RUNTIME.get(){r.log.info(&format!("bonus fixture native UI context: {}",context.is_some()));}}}
  let _scope=UiScope(UI_CONTEXT.with(|v|v.replace(context)),SUPPRESS.with(|v|v.replace(false)),SEPARATOR_STYLE.with(|v|v.replace(None)),CAPTION.with(|v|v.replace(None)));
  let original:unsafe extern "system" fn(u64,u64)->u64=std::mem::transmute(UI.load(Ordering::Acquire));original(parent,closure)
 }
@@ -125,7 +125,7 @@ unsafe extern "system" fn line(parent:u64,font:u64,text:u64,len:u64){
    if let Some(style)=separator{let result=r.adapter.bonus_separator_draw(&r.local,r.local.base,parent,style);if let Err(error)=result{r.log.warn(&format!("Native bonus separator draw rejected: {error}"));}}
    let _header=HeaderScope(HEADER.with(|v|v.replace(true)));
    if block.retained&&r.adapter.supports_bonus_tooltips()&&kept_row(r,parent,font,u,block.bonus){return}
-   let title=if block.removed{"Unglyphed".into()}else{block.bonus.name()};
+   let title=block.bonus.name();
    let status=block.status.as_deref().unwrap_or("");
    let(result,stacked)=with_column(font,status,block.retained,||r.adapter.bonus_header_draw(r.local.base,parent,font,u,&title,block.bonus.icon()));
    if result.is_ok(){
@@ -163,7 +163,7 @@ pub fn ui_hooks(adapter:Adapter)->Vec<crate::install::HookSpec>{
  static ARGS:std::sync::Mutex<Vec<u64>>=std::sync::Mutex::new(Vec::new());
  unsafe extern "system" fn native_ui(p:u64,c:u64)->u64{*ARGS.lock().unwrap()=vec![p,c];p^c}
  unsafe extern "system" fn native_line(p:u64,f:u64,t:u64,n:u64){*ARGS.lock().unwrap()=vec![p,f,t,n];}
- #[test]fn native_glyph_ui_wrappers_preserve_abi_and_scope(){UI.store(native_ui as *const () as usize,Ordering::SeqCst);LINE.store(native_line as *const () as usize,Ordering::SeqCst);let a=0x1122334455667788;let b=0x8877665544332211;unsafe{assert_eq!(ui(a,b),a^b);assert_eq!(*ARGS.lock().unwrap(),vec![a,b]);line(a,b,88,9);assert_eq!(*ARGS.lock().unwrap(),vec![a,b,88,9]);}assert!(UI_CONTEXT.with(|v|v.get()).is_none());assert!(!HEADER.with(|v|v.get()));{let _a=HeaderScope(HEADER.with(|v|v.replace(true)));assert!(HEADER.with(|v|v.get()));}assert!(!HEADER.with(|v|v.get()));}
+ #[test]fn native_bonus_ui_wrappers_preserve_abi_and_scope(){UI.store(native_ui as *const () as usize,Ordering::SeqCst);LINE.store(native_line as *const () as usize,Ordering::SeqCst);let a=0x1122334455667788;let b=0x8877665544332211;unsafe{assert_eq!(ui(a,b),a^b);assert_eq!(*ARGS.lock().unwrap(),vec![a,b]);line(a,b,88,9);assert_eq!(*ARGS.lock().unwrap(),vec![a,b,88,9]);}assert!(UI_CONTEXT.with(|v|v.get()).is_none());assert!(!HEADER.with(|v|v.get()));{let _a=HeaderScope(HEADER.with(|v|v.replace(true)));assert!(HEADER.with(|v|v.get()));}assert!(!HEADER.with(|v|v.get()));}
 }
 
 
@@ -178,7 +178,7 @@ unsafe extern "system" fn no_action(c:&mut crate::stub::Context){
  use super::*;
  #[unsafe(naked)]unsafe extern "C" fn continuation(){core::arch::naked_asm!("ret");}
  #[unsafe(naked)]unsafe extern "system" fn probe()->u64{core::arch::naked_asm!("sub rsp,40","xor eax,eax","cmp eax,eax","stc","call {entry}","pushfq","pop rax","add rsp,40","ret",entry=sym no_action_entry);}
- #[test]fn glyph_decoration_preserves_flags_except_the_reviewed_action_branch(){NO_ACTION.store(continuation as *const () as usize,Ordering::SeqCst);assert_eq!(unsafe{probe()}&0x41,0x41);{let _scope=HeaderScope(HEADER.with(|v|v.replace(true)));assert_eq!(unsafe{probe()}&0x41,1);}assert_eq!(unsafe{probe()}&0x41,0x41);}
+ #[test]fn bonus_decoration_preserves_flags_except_the_reviewed_action_branch(){NO_ACTION.store(continuation as *const () as usize,Ordering::SeqCst);assert_eq!(unsafe{probe()}&0x41,0x41);{let _scope=HeaderScope(HEADER.with(|v|v.replace(true)));assert_eq!(unsafe{probe()}&0x41,1);}assert_eq!(unsafe{probe()}&0x41,0x41);}
 }
 
 #[cfg(test)]mod status_tests{use super::*;

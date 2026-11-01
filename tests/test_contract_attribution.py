@@ -20,7 +20,7 @@ class ContractAttributionTests(unittest.TestCase):
         return contract_attribution.validate_policy(policy or self.policy,validation or self.validation,self.features,self.suites)
 
     def test_other_feature_families_have_explicit_reviewed_links(self):
-        examples={'official_native.experience.replay_experience':'ASX-02',
+        examples={'official_native.experience.downed_xp_continuation':'ASX-02',
                   'official_native.fatigue.project_fatigue_aura':'ASX-12',
                   'official_native.enchantments.ring_stats':'ASX-16',
                   'official_native.gems.gem_stats':'ASX-22',
@@ -36,7 +36,7 @@ class ContractAttributionTests(unittest.TestCase):
             self.assertTrue(contract['validation_profiles'])
 
     def test_shared_reward_hooks_preserve_goblin_and_jewelry_owners(self):
-        self.assertTrue({'ASX-15','ASX-16','ASX-18','ASX-22','ASX-26'} <= set(self.by_id['official_native.bonus_ui.reward_entries']['features']))
+        self.assertTrue({'ASX-16','ASX-18','ASX-22','ASX-26'} <= set(self.by_id['official_native.bonus_ui.reward_entries']['features']))
         self.assertTrue({'ASX-22','ASX-26'} <= set(self.by_id['official_native.gems.amulet_selected']['features']))
         self.assertTrue({'ASX-03','ASX-21'} <= set(self.by_id['official_native.duplicate_loot.loot_actor_gold']['features']))
 

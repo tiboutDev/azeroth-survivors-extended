@@ -102,3 +102,37 @@ fn amulet_memory()->Memory{
  assert!(a.presented_ring(&m,GAME,0,222,"INV_Ring_0",1,BASE).is_err());
  m.write(BASE+v::RING_TABLE+0x28,&161u64.to_le_bytes()).unwrap();assert!(a.presented_ring(&m,GAME,0,111,"INV_Ring_0",1,BASE).is_err());
 }
+
+#[test]
+fn defense_consumables_borrow_only_reduction_and_restore_existing_inputs(){
+ use asx_gameplay::supplies::{Consumable,Family};
+ let m=memory();let a=adapter();let original=a.ring_input_header(&m,GAME).unwrap();
+ for tier in 1..=3 {
+  let defense=Consumable::new(Family::Defense,tier).unwrap();
+  let loan=a.consumable_stats(&m,GAME,&[defense]).unwrap().unwrap();
+  let header=a.ring_input_header(&m,GAME).unwrap();let ptr=u64::from_le_bytes(header[8..16].try_into().unwrap());
+  assert_eq!(u64::from_le_bytes(header[16..24].try_into().unwrap()),2);
+  assert_eq!(m.read(ptr,8).unwrap(),[9u32.to_le_bytes(),0.3f32.to_le_bytes()].concat());
+  // One generic reduction entry, no health input or compensating subtraction.
+  assert_eq!(m.read(ptr+8,8).unwrap(),[5u32.to_le_bytes(),defense.value().to_le_bytes()].concat());
+  a.restore_ring_stats(&m,loan).unwrap();assert_eq!(a.ring_input_header(&m,GAME).unwrap(),original);
+ }
+ assert_eq!(m.allocs.get(),m.frees.get());
+}
+
+#[test]fn cooperative_area_rebuild_preserves_base_solo_guest_and_other_stats(){
+ let m=memory();let a=adapter();let at=GAME+0x5f4;
+ m.write(at,&2f32.to_le_bytes()).unwrap();a.apply_coop_area(&m,GAME).unwrap();assert_eq!(m.read(at,4).unwrap(),2f32.to_le_bytes());
+ m.write(GAME+RUN_MODE,&[1]).unwrap();
+ for slot in 0..5u64{
+  m.write(GAME+0xe40,&slot.to_le_bytes()).unwrap();
+  for native in [0.8f32,1.,1.4,2.]{
+   for _ in 0..3{m.write(at,&native.to_le_bytes()).unwrap();let before=m.read(GAME,0x2000).unwrap();a.apply_coop_area(&m,GAME).unwrap();
+    let expected=if native>1.{1.+(native-1.)*0.5}else{native};assert_eq!(m.read(at,4).unwrap(),expected.to_le_bytes());
+    let mut after=m.read(GAME,0x2000).unwrap();after[0x5f4..0x5f8].copy_from_slice(&before[0x5f4..0x5f8]);assert_eq!(after,before);
+   }
+  }
+ }
+ m.write(GAME,&2u32.to_le_bytes()).unwrap();m.write(at,&2f32.to_le_bytes()).unwrap();a.apply_coop_area(&m,GAME).unwrap();assert_eq!(m.read(at,4).unwrap(),2f32.to_le_bytes());
+ m.write(GAME,&0u32.to_le_bytes()).unwrap();m.write(at,&f32::NAN.to_le_bytes()).unwrap();assert!(a.apply_coop_area(&m,GAME).is_err());
+}

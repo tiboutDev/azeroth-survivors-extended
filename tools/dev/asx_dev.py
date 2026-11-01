@@ -115,6 +115,8 @@ def validation_inputs(suite_name,root=ROOT,python_files=None):
  suite=scenario_suites.load_suites(root)['suites'][suite_name]
  data=['tools/dev/fixtures/party-talents115.json','tools/dev/fixtures/asx-extensions-audit.lua']
  env=suite['environment']
+ if env.get('ASX_TEST_COOP_UI')=='1':data.append('tools/dev/fixtures/asx-coop-ui-actions.lua')
+ if env.get('ASX_TEST_PROGRESSION')=='1':data.append('tools/dev/fixtures/asx-progression-audit.lua')
  if env.get('ASX_TEST_LUA_DIAGNOSTICS')=='1':data.append('tools/dev/diagnostics/observer.lua')
  if env.get('ASX_TEST_ALL_EVENTS')=='1'and suite['players']==1:data.append('tools/dev/fixtures/asx-supplies-audit.lua')
  if env.get('ASX_TEST_COMPLETION121')=='support':data.extend(['tools/dev/fixtures/asx-fatigue-audit.lua','tools/dev/fixtures/asx-tooltip121-audit.lua'])

@@ -58,16 +58,12 @@ use std::cell::{Cell, RefCell};
 struct Probe {
     mode: Cell<u8>,
     seen: RefCell<Vec<(u64, u64, [u64; 3], f32, Option<u32>)>>,
-    captures: RefCell<Vec<(u64, u32, Option<(u64, u32)>)>>,
     warnings: Cell<usize>,
 }
 impl Services for Probe {
     fn shared_input(&self, request: u64, game: u64) -> Result<u32, String> {
         assert_eq!((request, game), (17, 42));
         if self.mode.get() == 1 { Err("invalid request".into()) } else { Ok(73) }
-    }
-    fn capture_shared(&self, game: u64, sum: u32) {
-        self.captures.borrow_mut().push((game, sum, SHARED_XP_INPUT.with(|input| input.get())));
     }
     fn multiplier(&self) -> Option<f32> { (self.mode.get() != 4).then_some(1.25) }
     fn return_site(&self, stack: u64) -> Option<u64> {
@@ -133,14 +129,12 @@ fn detached_award_rejections_and_panics_preserve_native_fallback() {
 }
 
 #[test]
-fn detached_shared_capture_precedes_tls_replacement_and_rejects_invalid_input() {
+fn detached_shared_input_preserves_outer_tls_and_rejects_invalid_input() {
     let _guard = TEST_LOCK.lock().unwrap();
     let prior = SHARED_XP_INPUT.with(|input| input.replace(Some((9, 8))));
     let services = Probe::default();
     assert_eq!(capture_input(&services, 17, 42), Some((42, 73)));
-    assert_eq!(*services.captures.borrow(), [(42, 73, Some((9, 8)))]);
     services.mode.set(1);
     assert_eq!(capture_input(&services, 17, 42), None);
-    assert_eq!(services.captures.borrow().len(), 1);
     assert_eq!(SHARED_XP_INPUT.with(|input| input.replace(prior)), Some((9, 8)));
 }

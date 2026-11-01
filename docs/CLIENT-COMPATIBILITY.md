@@ -86,7 +86,7 @@ claims that every feature has been exercised in a normal running selected client
 | ASX-12 | Preserve fatigue stacks and simulation-clock recovery with native aura presentation. |
 | ASX-13 | Preserve Fortune rules and native aura/stat presentation; Sayge trials provide rewards when enabled, with encounter grants retained only as the disabled-trial fallback. |
 | ASX-14 | Preserve the three economy-item exclusions; the pickup-radius trinket remains available. |
-| ASX-15 | Keep glyph gameplay disabled and retain all nine catalogs. |
+| ASX-15 | Reserved removed ID; no native dependencies. |
 | ASX-16 | Preserve per-ring enchantment identity/ranks and scoped native stat loans. |
 | ASX-17 | Enrich retained native party children and native owner-correct tooltips. |
 | ASX-18 | Preserve native menu/card roots, assets, flags and participant ownership. |
@@ -101,8 +101,7 @@ claims that every feature has been exercised in a normal running selected client
 | ASX-27 | Preserve personal supplies, consumable/stat loans, materials, masked minimap pins and discovery UI. |
 | ASX-28 | Preserve persistent Sayge trials, native scenes, group presence, Fortune replacement and progress UI. |
 
-Warrior, Paladin, Hunter, Rogue, Priest, Shaman, Mage, Warlock and Druid glyph
-catalogs all remain retained and inactive. Native achievements, sets, marks,
+Native achievements, sets, marks,
 crowd-control rules, caster collision and ability caps remain native. A client
 update does not authorize replacing those upstream mechanics with ASX rules.
 
@@ -144,10 +143,6 @@ The pool's live count is R15; its callback preserves the other native registers.
 Goblin creation and handle rebinding use the same selected 0x200 enemy stride,
 including nonzero array indices and compaction; no legacy 504-byte stride remains.
 
-The native spell catalog now has 103 rows: Stormstrike (17364) and Rockbiter
-(8017) replace Call of Flame (16038). The retired symbol is absent from the
-selected address map; each new spell has its own explicit native symbol. The
-nine historical glyph rule catalogs remain retained with glyph gameplay disabled.
 Native item-modifier discriminants 37/38 become 43/44; their coefficients remain
 native. ASX does not overwrite these upstream data or reinstate the removed spell.
 

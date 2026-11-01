@@ -17,7 +17,7 @@ def writer(executable):
   if path.exists():raise ValueError("Never replace existing progression")
   cls,race,name=((1,1,"UiWarrior"),(2,1,"UiPaladin"),(11,4,"UiDruid"))[slot-1]
   if class_override is not None:
-   if class_override not in (3,4,5,7,8,9,11):raise ValueError("Only reviewed glyph Hunter/Rogue/Priest/Shaman/Mage/Warlock/Druid overrides is supported")
+   if class_override not in (3,4,5,7,8,9,11):raise ValueError("Only reviewed Hunter/Rogue/Priest/Shaman/Mage/Warlock/Druid overrides is supported")
    cls,race=class_override,4 if class_override==11 else 3 if class_override==3 else 2 if class_override==7 else 1
   if name_override is not None:
    if not name_override.isascii() or not name_override.isalpha():raise ValueError("Invalid fixture name")

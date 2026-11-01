@@ -1,0 +1,829 @@
+{
+  "schema_version": 2,
+  "native_version": "0.135.1",
+  "executable_sha256": "71e5f1767279db4bd428d1cd9c5d50d37759b72295386a69f9e3f6e70bc59249",
+  "stats": [
+    {
+      "key": "hp",
+      "name": "Health",
+      "display_expression": "string.format(\"%.0f\", s.hp)",
+      "description": "The most health you can have."
+    },
+    {
+      "key": "dmg",
+      "name": "Damage",
+      "display_expression": "AZS_Pct(s.dmg - 1)",
+      "description": "Every spell you cast deals this much more damage. It grows with your level, gear, talents, jewelry and buffs."
+    },
+    {
+      "key": "cd",
+      "name": "Haste",
+      "display_expression": "AZS_Pct(1 - s.cd)",
+      "description": "Your spells come back this much sooner."
+    },
+    {
+      "key": "crit",
+      "name": "Crit",
+      "display_expression": "string.format(\"%.1f%%\", s.crit * 100)",
+      "description": "The chance a spell strikes critically. Past 100%, the rest adds to your critical damage."
+    },
+    {
+      "key": "cm",
+      "name": "Crit Dmg",
+      "display_expression": "string.format(\"%.0f%%\", s.cm * 100)",
+      "description": "A critical strike deals this much of a spell's damage."
+    },
+    {
+      "key": "arm",
+      "name": "Armor",
+      "display_expression": "string.format(\"%.0f%%\", s.arm * 100)",
+      "description": "Damage you take is reduced by this much (60% at most)."
+    },
+    {
+      "key": "area",
+      "name": "Area",
+      "display_expression": "AZS_Pct(s.area - 1)",
+      "description": "Your spells' areas and ranges are this much larger."
+    },
+    {
+      "key": "cnt",
+      "name": "Targets",
+      "display_expression": "string.format(\"+%d\", s.cnt)",
+      "description": "Every spell that picks its targets picks this many more."
+    },
+    {
+      "key": "echo",
+      "name": "Echo",
+      "display_expression": "string.format(\"%.0f%%\", s.echo * 100)",
+      "description": "The chance a spell strikes twice. Past 100%, every spell strikes twice and the rest is the chance of a third."
+    },
+    {
+      "key": "spd",
+      "name": "Speed",
+      "display_expression": "AZS_Pct(s.spd - 1)",
+      "description": "You run this much faster."
+    },
+    {
+      "key": "reg",
+      "name": "Regen",
+      "display_expression": "string.format(\"%.1f\", s.reg)",
+      "description": "Health you regain every second."
+    },
+    {
+      "key": "pick",
+      "name": "Pickup",
+      "display_expression": "string.format(\"%.0f yd\", s.pick)",
+      "description": "Experience and gold fly to you from this far."
+    },
+    {
+      "key": "lch",
+      "name": "Lifesteal",
+      "display_expression": "string.format(\"%.1f%%\", s.lch * 100)",
+      "description": "Heals you for this much of all the damage you deal."
+    },
+    {
+      "key": "heal",
+      "name": "Kill Heal",
+      "display_expression": "string.format(\"%.0f\", s.heal)",
+      "description": "Every kill heals you for this much."
+    },
+    {
+      "key": "thn",
+      "name": "Thorns",
+      "display_expression": "string.format(\"%.0f%%\", s.thn * 100)",
+      "description": "This much of the melee damage you take is dealt back to the attacker."
+    },
+    {
+      "key": "liv",
+      "name": "Lives",
+      "display_expression": "string.format(\"%d\", s.liv)",
+      "description": "Times you rise again instead of dying."
+    },
+    {
+      "key": "xp",
+      "name": "Experience",
+      "display_expression": "AZS_Pct(s.xp - 1)",
+      "description": "You gain this much more experience."
+    },
+    {
+      "key": "gold",
+      "name": "Gold",
+      "display_expression": "AZS_Pct(s.gold - 1)",
+      "description": "You find this much more gold."
+    },
+    {
+      "key": "luck",
+      "name": "Luck",
+      "display_expression": "AZS_Pct(s.luck)",
+      "description": "Better odds of rarer upgrades when you level up."
+    },
+    {
+      "key": "bp",
+      "name": "Buff Power",
+      "display_expression": "AZS_Pct(s.bp)",
+      "description": "Your damage, haste, shield and thorns buffs are this much stronger."
+    },
+    {
+      "key": "dots",
+      "name": "DoT Stacks",
+      "display_expression": "string.format(\"%d\", s.dots)",
+      "description": "How many of each of your damage-over-time effects one enemy carries at once."
+    },
+    {
+      "key": "doth",
+      "name": "DoT Haste",
+      "display_expression": "AZS_Pct(s.doth)",
+      "description": "Your damage-over-time effects tick this much faster."
+    },
+    {
+      "key": "big",
+      "name": "Vs Elites",
+      "display_expression": "AZS_Pct(s.big)",
+      "description": "More damage to elites and bosses."
+    },
+    {
+      "key": "exe",
+      "name": "Execute",
+      "display_expression": "AZS_Pct(s.exe)",
+      "description": "More damage to enemies below 30% health."
+    },
+    {
+      "key": "cc",
+      "name": "Vs Controlled",
+      "display_expression": "AZS_Pct(s.cc)",
+      "description": "More damage to rooted, stunned, slowed or fleeing enemies."
+    },
+    {
+      "key": "dotd",
+      "name": "Vs Afflicted",
+      "display_expression": "AZS_Pct(s.dotd)",
+      "description": "More damage to enemies carrying one of your damage-over-time effects."
+    },
+    {
+      "key": "shd",
+      "name": "Shielded",
+      "display_expression": "AZS_Pct(s.shd)",
+      "description": "More damage while you hold an absorb shield."
+    },
+    {
+      "key": "auto",
+      "name": "Melee",
+      "display_expression": "AZS_Pct(s.auto)",
+      "description": "Your melee swings deal this much more damage."
+    },
+    {
+      "key": "pet",
+      "name": "Pet Damage",
+      "display_expression": "AZS_Pct(s.pet)",
+      "description": "Your pets deal this much more damage."
+    }
+  ],
+  "jewelry": [
+    {
+      "key": "accuria",
+      "name": "Band of Accuria",
+      "icon": "INV_Jewelry_Ring_15",
+      "description_template": "+{v}% damage",
+      "coefficient": 0.17000000178813934,
+      "stat_kind": 0,
+      "slot": "Ring",
+      "rva": "0x747c720"
+    },
+    {
+      "key": "quick_strike",
+      "name": "Quick Strike Ring",
+      "icon": "INV_Jewelry_Ring_07",
+      "description_template": "-{v}% cooldowns",
+      "coefficient": 0.09000000357627869,
+      "stat_kind": 1,
+      "slot": "Ring",
+      "rva": "0x747c768"
+    },
+    {
+      "key": "dark_iron",
+      "name": "Heavy Dark Iron Ring",
+      "icon": "INV_Jewelry_Ring_14",
+      "description_template": "+{v}% max health",
+      "coefficient": 0.20000000298023224,
+      "stat_kind": 2,
+      "slot": "Ring",
+      "rva": "0x747c7b0"
+    },
+    {
+      "key": "dragonslayer",
+      "name": "Master Dragonslayer's Ring",
+      "icon": "INV_Jewelry_Ring_41",
+      "description_template": "+{v}% critical strike chance",
+      "coefficient": 0.03999999910593033,
+      "stat_kind": 3,
+      "slot": "Ring",
+      "rva": "0x747c7f8"
+    },
+    {
+      "key": "archimtiros",
+      "name": "Archimtiros' Ring of Reckoning",
+      "icon": "INV_Jewelry_Ring_40",
+      "description_template": "+{v}% damage reduction{max}, +{h}% max health",
+      "coefficient": 0.03500000014901161,
+      "stat_kind": 5,
+      "slot": "Ring",
+      "rva": "0x747c840"
+    },
+    {
+      "key": "devoured",
+      "name": "Ring of the Devoured",
+      "icon": "INV_Jewelry_Ring_AhnQiraj_05",
+      "description_template": "+{v} health per second",
+      "coefficient": 1.5,
+      "stat_kind": 7,
+      "slot": "Ring",
+      "rva": "0x747c888"
+    },
+    {
+      "key": "spell_power",
+      "name": "Ring of Spell Power",
+      "icon": "INV_Jewelry_Ring_38",
+      "description_template": "+{v}% area of effect",
+      "coefficient": 0.14000000059604645,
+      "stat_kind": 8,
+      "slot": "Ring",
+      "rva": "0x747c8d0"
+    },
+    {
+      "key": "seal_damned",
+      "name": "Seal of the Damned",
+      "icon": "INV_Jewelry_Ring_51Naxxramas",
+      "description_template": "Your damage over time spells tick {v}% faster",
+      "coefficient": 0.10000000149011612,
+      "stat_kind": 19,
+      "slot": "Ring",
+      "rva": "0x747c918"
+    },
+    {
+      "key": "blooddrinker",
+      "name": "Blooddrinker's Band",
+      "icon": "INV_Jewelry_Ring_49Naxxramas",
+      "description_template": "{v}% of all damage dealt heals you",
+      "coefficient": 0.009999999776482582,
+      "stat_kind": 18,
+      "slot": "Ring",
+      "rva": "0x747c960"
+    },
+    {
+      "key": "earthstrike",
+      "name": "Earthstrike",
+      "icon": "Spell_Nature_AbolishMagic",
+      "description_template": "+{v}% damage",
+      "coefficient": 0.12999999523162842,
+      "stat_kind": 0,
+      "slot": "Trinket",
+      "rva": "0x747c9a8"
+    },
+    {
+      "key": "tep",
+      "name": "Talisman of Ephemeral Power",
+      "icon": "INV_Misc_StoneTablet_11",
+      "description_template": "-{v}% cooldowns",
+      "coefficient": 0.07000000029802322,
+      "stat_kind": 1,
+      "slot": "Trinket",
+      "rva": "0x747c9f0"
+    },
+    {
+      "key": "lifegiving",
+      "name": "Lifegiving Gem",
+      "icon": "INV_Misc_Gem_Pearl_05",
+      "description_template": "+{v}% max health",
+      "coefficient": 0.1599999964237213,
+      "stat_kind": 2,
+      "slot": "Trinket",
+      "rva": "0x747ca38"
+    },
+    {
+      "key": "hoj",
+      "name": "Hand of Justice",
+      "icon": "INV_Jewelry_Talisman_01",
+      "description_template": "{v}% chance for a spell to cast twice",
+      "coefficient": 0.05999999865889549,
+      "stat_kind": 9,
+      "slot": "Trinket",
+      "rva": "0x747ca80"
+    },
+    {
+      "key": "blackhand",
+      "name": "Blackhand's Breadth",
+      "icon": "INV_Misc_ArmorKit_09",
+      "description_template": "+{v}% critical strike damage",
+      "coefficient": 0.19499999284744263,
+      "stat_kind": 4,
+      "slot": "Trinket",
+      "rva": "0x747cac8"
+    },
+    {
+      "key": "carrot",
+      "name": "Carrot on a Stick",
+      "icon": "INV_Misc_Food_54",
+      "description_template": "+{v}% movement speed",
+      "coefficient": 0.07999999821186066,
+      "stat_kind": 10,
+      "slot": "Trinket",
+      "rva": "0x747cb10"
+    },
+    {
+      "key": "remote",
+      "name": "Gnomish Universal Remote",
+      "icon": "INV_Misc_PocketWatch_01",
+      "description_template": "+{v}% pickup range",
+      "coefficient": 0.3499999940395355,
+      "stat_kind": 11,
+      "slot": "Trinket",
+      "rva": "0x747cb58"
+    },
+    {
+      "key": "insignia",
+      "name": "Insignia of the Horde",
+      "icon": "INV_Jewelry_TrinketPVP_02",
+      "description_template": "+{v}% experience",
+      "coefficient": 0.11999999731779099,
+      "stat_kind": 12,
+      "slot": "Trinket",
+      "rva": "0x747cba0"
+    },
+    {
+      "key": "eldre_thalas",
+      "name": "Royal Seal of Eldre'Thalas",
+      "icon": "INV_Jewelry_Talisman_10",
+      "description_template": "+{v}% gold",
+      "coefficient": 0.25,
+      "stat_kind": 13,
+      "slot": "Trinket",
+      "rva": "0x747cbe8"
+    },
+    {
+      "key": "chosen",
+      "name": "Mark of the Chosen",
+      "icon": "INV_Jewelry_Talisman_08",
+      "description_template": "+{v}% luck",
+      "coefficient": 0.15000000596046448,
+      "stat_kind": 14,
+      "slot": "Trinket",
+      "rva": "0x747cc30"
+    },
+    {
+      "key": "onyxia_blood",
+      "name": "Onyxia Blood Talisman",
+      "icon": "Spell_Shadow_LifeDrain",
+      "description_template": "Each kill heals {v} health",
+      "coefficient": 2.0,
+      "stat_kind": 15,
+      "slot": "Trinket",
+      "rva": "0x747cc78"
+    },
+    {
+      "key": "war_horn",
+      "name": "Horn of the Warchief",
+      "icon": "INV_Misc_Horn_01",
+      "description_template": "Your buffs are {v}% stronger",
+      "coefficient": 0.15000000596046448,
+      "stat_kind": 17,
+      "slot": "Trinket",
+      "rva": "0x747ccc0"
+    },
+    {
+      "key": "soulstone",
+      "name": "Major Soulstone",
+      "icon": "INV_Misc_Orb_04",
+      "description_template": "+{v} return to life at half health (2 at most)",
+      "coefficient": 1.0,
+      "stat_kind": 16,
+      "slot": "Trinket",
+      "rva": "0x747cd08"
+    },
+    {
+      "key": "star_of_mystaria",
+      "name": "Star of Mystaria",
+      "icon": "INV_Enchant_EssenceMagicLarge",
+      "description_template": "+{v}% max health, +{h}% damage reduction{max}",
+      "coefficient": 0.1666666716337204,
+      "stat_kind": 6,
+      "slot": "Trinket",
+      "rva": "0x747cd50"
+    }
+  ],
+  "amulets": [
+    {
+      "key": "mark_of_fordring",
+      "name": "Mark of Fordring",
+      "icon": "INV_Jewelry_Talisman_07",
+      "effects": [
+        {
+          "tag": 43,
+          "raw_hex": "2b0000009a99193e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 0,
+          "stat": "Damage",
+          "coefficient": 0.15000000596046448,
+          "rva": "0x747cdf0"
+        }
+      ],
+      "rarity": 0,
+      "rva": "0x747d980"
+    },
+    {
+      "key": "talvash",
+      "name": "Talvash's Enhancing Necklace",
+      "icon": "INV_Jewelry_Necklace_02",
+      "effects": [
+        {
+          "tag": 43,
+          "raw_hex": "2b000000cdcccc3d0100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 1,
+          "stat": "Cooldown reduction",
+          "coefficient": 0.10000000149011612,
+          "rva": "0x747ce70"
+        }
+      ],
+      "rarity": 0,
+      "rva": "0x747d9d0"
+    },
+    {
+      "key": "south_seas_kelp",
+      "name": "Pristine Enchanted South Seas Kelp",
+      "icon": "INV_Jewelry_Necklace_26",
+      "effects": [
+        {
+          "tag": 43,
+          "raw_hex": "2b0000009a99993e0c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 12,
+          "stat": "Luck",
+          "coefficient": 0.30000001192092896,
+          "rva": "0x747cef8"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b0000000000803e0b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 11,
+          "stat": "Gold",
+          "coefficient": 0.25,
+          "rva": "0x747cf38"
+        }
+      ],
+      "rarity": 0,
+      "rva": "0x747da20"
+    },
+    {
+      "key": "prestor",
+      "name": "Prestor's Talisman of Connivery",
+      "icon": "INV_Jewelry_Necklace_17",
+      "effects": [
+        {
+          "tag": 43,
+          "raw_hex": "2b0000000ad7233e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 0,
+          "stat": "Damage",
+          "coefficient": 0.1599999964237213,
+          "rva": "0x747cfb8"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b0000000ad7233d0300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 3,
+          "stat": "Critical chance",
+          "coefficient": 0.03999999910593033,
+          "rva": "0x747cff8"
+        }
+      ],
+      "rarity": 1,
+      "rva": "0x747da70"
+    },
+    {
+      "key": "animated_chain",
+      "name": "Animated Chain Necklace",
+      "icon": "INV_Jewelry_Necklace_01",
+      "effects": [
+        {
+          "tag": 43,
+          "raw_hex": "2b0000000000803e0200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 2,
+          "stat": "Maximum health",
+          "coefficient": 0.25,
+          "rva": "0x747d078"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b0000000ad7a33d0500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 5,
+          "stat": "Damage reduction",
+          "coefficient": 0.07999999821186066,
+          "rva": "0x747d0b8"
+        }
+      ],
+      "rarity": 1,
+      "rva": "0x747dac0"
+    },
+    {
+      "key": "woven_ivy",
+      "name": "Woven Ivy Necklace",
+      "icon": "INV_Misc_Herb_15",
+      "effects": [
+        {
+          "tag": 43,
+          "raw_hex": "2b0000000000c0400600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 6,
+          "stat": "Health per second",
+          "coefficient": 6.0,
+          "rva": "0x747d128"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b0000008fc2f53d0200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 2,
+          "stat": "Maximum health",
+          "coefficient": 0.11999999731779099,
+          "rva": "0x747d168"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b0000008fc2f53d0700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 7,
+          "stat": "Movement speed",
+          "coefficient": 0.11999999731779099,
+          "rva": "0x747d1a8"
+        }
+      ],
+      "rarity": 1,
+      "rva": "0x747db10"
+    },
+    {
+      "key": "darkmoon",
+      "name": "Amulet of the Darkmoon",
+      "icon": "INV_Jewelry_Necklace_14",
+      "effects": [
+        {
+          "tag": 43,
+          "raw_hex": "2b0000008fc2f53d0100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 1,
+          "stat": "Cooldown reduction",
+          "coefficient": 0.11999999731779099,
+          "rva": "0x747d220"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b0000000ad7a33d0700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 7,
+          "stat": "Movement speed",
+          "coefficient": 0.07999999821186066,
+          "rva": "0x747d260"
+        }
+      ],
+      "rarity": 1,
+      "rva": "0x747db60"
+    },
+    {
+      "key": "jeklik",
+      "name": "Jeklik's Opaline Talisman",
+      "icon": "INV_Jewelry_Necklace_03",
+      "effects": [
+        {
+          "tag": 43,
+          "raw_hex": "2b0000008fc2f53c0e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 14,
+          "stat": "Lifesteal",
+          "coefficient": 0.029999999329447746,
+          "rva": "0x747d2d8"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b0000000000803f0f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 15,
+          "stat": "Heal per kill",
+          "coefficient": 1.0,
+          "rva": "0x747d318"
+        }
+      ],
+      "rarity": 2,
+      "rva": "0x747dbb0"
+    },
+    {
+      "key": "eye_of_hakkar",
+      "name": "The Eye of Hakkar",
+      "icon": "INV_Jewelry_Necklace_22",
+      "effects": [
+        {
+          "tag": 43,
+          "raw_hex": "2b000000a69b443d0300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 3,
+          "stat": "Critical chance",
+          "coefficient": 0.04800000041723251,
+          "rva": "0x747d390"
+        },
+        {
+          "tag": 9,
+          "raw_hex": "090000006e310000cdcc4c3f00008040020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Reviewed common special effect; see reference and native_balance_math",
+          "rva": "0x747d3d0"
+        }
+      ],
+      "rarity": 2,
+      "rva": "0x747dc00"
+    },
+    {
+      "key": "steadfast_might",
+      "name": "Medallion of Steadfast Might",
+      "icon": "INV_Jewelry_Amulet_03",
+      "effects": [
+        {
+          "tag": 43,
+          "raw_hex": "2b000000cdcccc3d0500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 5,
+          "stat": "Damage reduction",
+          "coefficient": 0.10000000149011612,
+          "rva": "0x747d450"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b0000009a99193e0200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 2,
+          "stat": "Maximum health",
+          "coefficient": 0.15000000596046448,
+          "rva": "0x747d490"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b0000000000803f1600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 22,
+          "stat": "Thorns",
+          "coefficient": 1.0,
+          "rva": "0x747d4d0"
+        }
+      ],
+      "rarity": 2,
+      "rva": "0x747dc50"
+    },
+    {
+      "key": "enlightenment",
+      "name": "Choker of Enlightenment",
+      "icon": "INV_Jewelry_Necklace_10",
+      "effects": [
+        {
+          "tag": 6,
+          "raw_hex": "06000000010000009a99993e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Reviewed common special effect; see reference and native_balance_math",
+          "rva": "0x747d550"
+        }
+      ],
+      "rarity": 2,
+      "rva": "0x747dca0"
+    },
+    {
+      "key": "vek_nilash",
+      "name": "Amulet of Vek'nilash",
+      "icon": "INV_Jewelry_Necklace_AhnQiraj_01",
+      "effects": [
+        {
+          "tag": 44,
+          "raw_hex": "2c000000000000000000000000000000000000000000000000000000000000000000803f02000000000000000000000000000000000000000000000000000000",
+          "status": "Reviewed common special effect; see reference and native_balance_math",
+          "rva": "0x747d5d0"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b000000cdcc4c3d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 0,
+          "stat": "Damage",
+          "coefficient": 0.05000000074505806,
+          "rva": "0x747d610"
+        }
+      ],
+      "rarity": 3,
+      "rva": "0x747dcf0"
+    },
+    {
+      "key": "fallen_dragon",
+      "name": "Pendant of the Fallen Dragon",
+      "icon": "INV_Jewelry_Necklace_12",
+      "effects": [
+        {
+          "tag": 19,
+          "raw_hex": "13000000000070420000003f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Reviewed common special effect; see reference and native_balance_math",
+          "rva": "0x747d690"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b000000cdcc4c3e0200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 2,
+          "stat": "Maximum health",
+          "coefficient": 0.20000000298023224,
+          "rva": "0x747d6d0"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b0000000000a0400600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 6,
+          "stat": "Health per second",
+          "coefficient": 5.0,
+          "rva": "0x747d710"
+        }
+      ],
+      "rarity": 3,
+      "rva": "0x747dd40"
+    },
+    {
+      "key": "malice_stone",
+      "name": "Malice Stone Pendant",
+      "icon": "INV_Jewelry_Necklace_29Naxxramas",
+      "effects": [
+        {
+          "tag": 43,
+          "raw_hex": "2b000000cdcc4c3e0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 13,
+          "stat": "Echo",
+          "coefficient": 0.20000000298023224,
+          "rva": "0x747d790"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b0000000ad7a33d0100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 1,
+          "stat": "Cooldown reduction",
+          "coefficient": 0.07999999821186066,
+          "rva": "0x747d7d0"
+        }
+      ],
+      "rarity": 3,
+      "rva": "0x747dd90"
+    },
+    {
+      "key": "onyxia_tooth",
+      "name": "Onyxia Tooth Pendant",
+      "icon": "INV_Jewelry_Necklace_09",
+      "effects": [
+        {
+          "tag": 43,
+          "raw_hex": "2b0000000ad7233d0300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 3,
+          "stat": "Critical chance",
+          "coefficient": 0.03999999910593033,
+          "rva": "0x747d848"
+        },
+        {
+          "tag": 43,
+          "raw_hex": "2b00000014ae473e0400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Base stat coefficient; multiplied by amulet empowerment factor",
+          "stat_id": 4,
+          "stat": "Critical damage",
+          "coefficient": 0.19499999284744263,
+          "rva": "0x747d888"
+        },
+        {
+          "tag": 4,
+          "raw_hex": "040000009a99993e0000a04000000000000000000600000002000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Reviewed common special effect; see reference and native_balance_math",
+          "rva": "0x747d8c8"
+        }
+      ],
+      "rarity": 3,
+      "rva": "0x747dde0"
+    },
+    {
+      "key": "fire_lord",
+      "name": "Choker of the Fire Lord",
+      "icon": "INV_Jewelry_Amulet_05",
+      "effects": [
+        {
+          "tag": 11,
+          "raw_hex": "0b0000009a99193e0000c040692b0000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "status": "Reviewed common special effect; see reference and native_balance_math",
+          "rva": "0x747d940"
+        }
+      ],
+      "rarity": 3,
+      "rva": "0x747de30"
+    }
+  ]
+}

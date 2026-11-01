@@ -768,106 +768,10 @@ impl Adapter {
         Ok(Some(slots))
     }
     /// Clear only this source's own support aura for a bounded coefficient probe.
-    pub fn glyph_fixture_support_clear(
-        self,
-        mem: &dyn MutableMemory,
-        game: u64,
-        spell: u32,
-    ) -> Result<AuraState> {
-        if !self.supports_extensions()
-            || !matches!(spell, 17 | 139 | 324 | 11426 | 18708 | 774 | 467)
-        {
-            return Err("Unsupported glyph support probe".into());
-        }
-        let saved = self.capture_aura(mem, game, spell)?;
-        if matches!(spell, 17 | 11426) {
-            self.prepare_foreign_shield(mem, game, &saved)?;
-        } else {
-            let (pointer, rows) = self.aura_rows(mem, game)?;
-            let rows = rows
-                .into_iter()
-                .filter(|r| u32at(r, 12) != spell)
-                .collect::<Vec<_>>();
-            if !rows.is_empty() {
-                self.write_aura_rows(mem, pointer, &rows)?;
-            }
-            mem.write(
-                game + self.game_field(0x3a8),
-                &(rows.len() as u64).to_le_bytes(),
-            )?;
-        }
-        Ok(saved)
-    }
-    pub fn glyph_fixture_support_value(
-        self,
-        mem: &dyn Mem,
-        game: u64,
-        spell: u32,
-    ) -> Result<(f32, f32)> {
-        if !self.supports_extensions() {
-            return Err("Unsupported glyph support probe".into());
-        }
-        if matches!(spell, 17 | 11426) {
-            let power = f32at(&mem.read(game + self.game_field(0x484), 4)?, 0);
-            if !power.is_finite() || power < 0. {
-                return Err("Invalid glyph shield power".into());
-            }
-            let duration = if spell == 11426 {
-                let clock = f32at(&mem.read(game + self.game_field(0xb9c), 4)?, 0);
-                let (_, rows) = self.aura_rows(mem, game)?;
-                let row = rows
-                    .iter()
-                    .find(|r| u32at(*r, 12) == spell)
-                    .ok_or("Missing Ice Barrier aura")?;
-                f32at(row, 16) - clock
-            } else {
-                0.
-            };
-            return Ok((power, duration));
-        }
-        if !matches!(spell, 139 | 774) {
-            return Err("Unsupported glyph support value".into());
-        }
-        let clock = f32at(&mem.read(game + self.game_field(0xb9c), 4)?, 0);
-        let (_, rows) = self.aura_rows(mem, game)?;
-        let row = rows
-            .iter()
-            .find(|r| u32at(*r, 0) == 6 && u32at(*r, 12) == spell)
-            .ok_or("Missing native periodic heal")?;
-        let power = f32at(row, 20);
-        let duration = f32at(row, 16) - clock;
-        if !power.is_finite() || power < 0. || !duration.is_finite() || duration <= 0. {
-            return Err("Invalid glyph Renew budget".into());
-        }
-        Ok((power, duration))
-    }
-    /// Bounded glyph diagnostic readback; do not broaden retaliation decoding.
-    pub fn glyph_fixture_buff(self, mem: &dyn Mem, game: u64, spell: u32) -> Result<NativeEffect> {
-        let kind = match spell {
-            13750 => 9,
-            5171 => 8,
-            18708 => 10,
-            _ => return Err("Unsupported glyph buff probe".into()),
-        };
-        if !self.supports_extensions() {
-            return Err("Glyph buff probe requires reviewed client".into());
-        }
-        let clock = f32at(&mem.read(game + self.game_field(0xb9c), 4)?, 0);
-        let (_, rows) = self.aura_rows(mem, game)?;
-        let row = rows
-            .iter()
-            .find(|r| u32at(*r, 12) == spell && u32at(*r, 0) == kind)
-            .ok_or("Missing native glyph buff")?;
-        let duration = f32at(row, 16) - clock;
-        if !duration.is_finite() || !(0.0..=600.).contains(&duration) || !f32at(row, 4).is_finite()
-        {
-            return Err("Invalid native glyph buff".into());
-        }
-        Ok(NativeEffect {
-            data: row[..12].try_into().unwrap(),
-            duration,
-        })
-    }
+
+
+    /// Bounded bonus diagnostic readback; do not broaden retaliation decoding.
+
     pub fn capture_aura(self, mem: &dyn Mem, game: u64, spell: u32) -> Result<AuraState> {
         let (_, all) = self.aura_rows(mem, game)?;
         let mut shield = [0; 12];
@@ -1120,28 +1024,28 @@ impl Adapter {
             return Ok(None);
         }
         if !factor.is_finite() || !(0.0..=2.).contains(&factor) {
-            return Err("Invalid glyph effect healing factor".into());
+            return Err("Invalid bonus effect healing factor".into());
         }
         let mut bytes: [u8; 12] = m
             .read(effect, 12)?
             .try_into()
-            .map_err(|_| "Truncated glyph healing effect")?;
+            .map_err(|_| "Truncated bonus healing effect")?;
         if u32::from_le_bytes(bytes[..4].try_into().unwrap()) != 6 {
             return Ok(None);
         }
         let before = f32::from_le_bytes(bytes[4..8].try_into().unwrap());
         let fraction = before * factor;
         if !fraction.is_finite() || !(0.0..=1.).contains(&fraction) {
-            return Err("Invalid glyph on-hit healing".into());
+            return Err("Invalid bonus on-hit healing".into());
         }
         bytes[4..8].copy_from_slice(&fraction.to_le_bytes());
         Ok(Some((bytes, before, fraction)))
     }
     pub fn native_hit_effect_entry(self) -> Entry {
-        let v = crate::current::GLYPH_ON_HIT_RVA;
+        let v = crate::current::SPELL_ON_HIT_RVA;
         Entry {
             rva: self.contact117(v),
-            bytes: self.extension_bytes117(0x5bbf7b0, crate::current::GLYPH_ON_HIT_BYTES),
+            bytes: self.extension_bytes117(0x5bbf7b0, crate::current::SPELL_ON_HIT_BYTES),
         }
     }
 }

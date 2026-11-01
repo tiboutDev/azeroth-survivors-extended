@@ -6,33 +6,7 @@
 
 ASX continues to explore new build choices as Azeroth Survivors evolves.
 
-This page describes features that are temporarily disabled or still being explored. It is not a release schedule, and these ideas have no promised release date.
-
-## 🌀 Spell Glyphs
-
-**Status: Temporarily disabled · Design under review**
-
-Glyphs are not available in the current source. Their intended role is to reshape
-individual spells through meaningful benefits and drawbacks, offered on spell
-upgrade cards.
-
-The goal is to create different ways to use a spell while preserving its identity: a choice that changes your playstyle, rather than another automatic upgrade.
-
-### Why revisit them?
-
-The native game includes equipment set bonuses that transform spells.
-
-Glyphs are disabled on the supported native client while we examine how these transformations interact and how the combined choices can remain understandable, useful and balanced.
-
-### What we want to preserve
-
-- Benefits accompanied by meaningful drawbacks.
-- Variants that preserve each spell’s identity.
-- Choices introduced after the early stages of a run.
-- Clear upgrade cards and accessible descriptions.
-- The ability to return a spell to its unglyphed behavior.
-
-The final design may change as this work progresses.
+This page describes ideas still being explored. It is not a release schedule, and these ideas have no promised release date.
 
 ## 🔬 How we approach new features
 

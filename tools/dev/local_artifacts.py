@@ -41,7 +41,11 @@ def sha256_file(path: Path) -> str:
 
 
 def _is_target_artifact(path: Path) -> bool:
-    return path.name == RECEIPT_NAME or path.suffix.lower() in TARGET_SUFFIXES
+    return (
+        path.name == RECEIPT_NAME
+        or path.name.lower().endswith(".artifact.json")
+        or path.suffix.lower() in TARGET_SUFFIXES
+    )
 
 
 def _root_paths(root: Path) -> dict[str, Path]:

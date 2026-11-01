@@ -22,7 +22,7 @@ impl RankedEnchantment{
  pub fn name(self)->String{if self.rank==Rank::Regular{self.kind.name().to_owned()}else{format!("{} {}",self.rank.name(),self.kind.name())}}
  pub fn icon(self)->&'static str{self.rank.icon()}
  pub fn value(self)->f32{let values=match self.kind{
-  Enchantment::Might|Enchantment::Reach=>[0.05,0.09,0.15,0.22,0.30],Enchantment::Alacrity=>[0.02,0.04,0.07,0.10,0.14],Enchantment::Fortitude=>[0.05,0.10,0.17,0.25,0.35],Enchantment::Precision=>[0.01,0.02,0.04,0.07,0.10],Enchantment::Ferocity=>[0.10,0.20,0.32,0.48,0.65],Enchantment::Warding=>[0.01,0.02,0.035,0.05,0.07],Enchantment::Renewal=>[0.3,0.6,1.2,2.0,3.0]};values[self.rank as usize]}
+  Enchantment::Might|Enchantment::Reach=>[0.05,0.09,0.15,0.22,0.30],Enchantment::Alacrity=>[0.03,0.05,0.08,0.11,0.15],Enchantment::Fortitude=>[0.05,0.10,0.17,0.25,0.35],Enchantment::Precision=>[0.01,0.02,0.04,0.07,0.10],Enchantment::Ferocity=>[0.10,0.20,0.32,0.48,0.65],Enchantment::Warding=>[0.01,0.02,0.035,0.05,0.07],Enchantment::Renewal=>[0.5,1.0,1.5,2.0,3.0]};values[self.rank as usize]}
  pub fn text(self)->String{
   let (value,suffix)=if self.kind==Enchantment::Renewal{(self.value()," health per second")}else{(self.value()*100.,match self.kind{Enchantment::Might=>"% damage",Enchantment::Alacrity=>"% cooldown recovery",Enchantment::Fortitude=>"% maximum health",Enchantment::Precision=>"% critical strike chance",Enchantment::Ferocity=>"% critical strike damage",Enchantment::Warding=>"% damage reduction",Enchantment::Reach=>"% area of effect",_=>unreachable!()})};
   let number=format!("{value:.1}");format!("+{}{suffix}",number.trim_end_matches(".0"))
@@ -47,6 +47,15 @@ impl Enchantments {
 }
 #[cfg(test)]mod tests{
  use super::*;
+ #[test]fn balanced_recovery_and_regeneration_text_follows_total_tier_values(){
+  for (ring_rank,recovery,renewal) in [(2,"+3% cooldown recovery","+0.5 health per second"),(4,"+5% cooldown recovery","+1 health per second"),(7,"+8% cooldown recovery","+1.5 health per second"),(10,"+11% cooldown recovery","+2 health per second"),(14,"+15% cooldown recovery","+3 health per second")]{
+   assert_eq!(Enchantment::Alacrity.at_ring_rank(ring_rank).unwrap().text(),recovery);
+   assert_eq!(Enchantment::Renewal.at_ring_rank(ring_rank).unwrap().text(),renewal);
+  }
+  let mut s=Enchantments::default();assert!(s.accept(0,10,0,1,2,Enchantment::Alacrity));assert!(s.accept(0,10,1,1,2,Enchantment::Alacrity));
+  let total=s.bonuses(0,10).iter().map(|(_,e)|e.at_ring_rank(14).unwrap().value()).sum::<f32>();assert!((total-0.30).abs()<1e-6);
+ }
+
  #[test]fn thresholds_cap_and_preview_status(){
   for (rank, first, last) in [(Rank::Minor,2,3),(Rank::Lesser,4,6),(Rank::Regular,7,9),(Rank::Greater,10,13),(Rank::Superior,14,20)] {for n in first..=last {assert_eq!(Rank::from_ring_rank(n),Some(rank));}}
   assert_eq!(Rank::from_ring_rank(0),None);assert_eq!(Rank::from_ring_rank(1),None);
@@ -64,7 +73,7 @@ impl Enchantments {
   s.retain(&[(0,20)]);assert!(s.bonuses(0,10).is_empty());
  }
  #[test]fn all_values_and_rank_icons(){
-  let wanted=[[0.05,0.09,0.15,0.22,0.30],[0.02,0.04,0.07,0.10,0.14],[0.05,0.10,0.17,0.25,0.35],[0.01,0.02,0.04,0.07,0.10],[0.10,0.20,0.32,0.48,0.65],[0.01,0.02,0.035,0.05,0.07],[0.3,0.6,1.2,2.,3.],[0.05,0.09,0.15,0.22,0.30]];
+  let wanted=[[0.05,0.09,0.15,0.22,0.30],[0.03,0.05,0.08,0.11,0.15],[0.05,0.10,0.17,0.25,0.35],[0.01,0.02,0.04,0.07,0.10],[0.10,0.20,0.32,0.48,0.65],[0.01,0.02,0.035,0.05,0.07],[0.5,1.0,1.5,2.,3.],[0.05,0.09,0.15,0.22,0.30]];
   for(e,values)in Enchantment::ALL.into_iter().zip(wanted){for(rank,value)in Rank::ALL.into_iter().zip(values){let e=RankedEnchantment{kind:e,rank};assert_eq!(e.value(),value);assert!(e.icon().contains("Enchant"));assert!(e.name().starts_with(rank.name()));}}
  }
 }

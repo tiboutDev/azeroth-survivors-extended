@@ -10,18 +10,19 @@ fn actor(slot: u32, guid: u64) -> ActorObservation {
         hp: 1.0, maximum: 1.0, position: [0.0; 3] }
 }
 struct Fake {
-    role: Cell<Role>, party: RefCell<PartyObservation>, wire: Cell<(u64, bool)>,
+    action: Cell<Option<bool>>, role: Cell<Role>, party: RefCell<PartyObservation>, wire: Cell<(u64, bool)>,
     sends: RefCell<Vec<Vec<u8>>>, fail_send: Cell<bool>, warnings: Cell<usize>, peers: Cell<usize>,
 }
 impl Fake {
     fn new(role: Role) -> Self {
-        Self { role: Cell::new(role), party: RefCell::new(PartyObservation { clock: 1.0,
+        Self { action:Cell::new(None), role: Cell::new(role), party: RefCell::new(PartyObservation { clock: 1.0,
             actors: vec![actor(0, 100), actor(1, 200)] }), wire: Cell::new((0, true)),
             sends: RefCell::new(vec![]), fail_send: Cell::new(false), warnings: Cell::new(0), peers: Cell::new(0) }
     }
 }
 impl Services for Fake {
     fn key_target(&self) -> Option<usize> { None }
+    fn escape_queue_source(&self)->u64{0x12340}
     fn has_menu(&self) -> bool { true }
     fn role(&self, _: u64) -> Result<Role, String> { Ok(self.role.get()) }
     fn cached_party(&self) -> Option<PartyObservation> { Some(self.party.borrow().clone()) }
@@ -34,7 +35,7 @@ impl Services for Fake {
         self.sends.borrow_mut().push(bytes.to_vec());
         if self.fail_send.get() { Err("transport rejected".into()) } else { Ok(()) }
     }
-    fn request(&self, _: u64) -> Result<Option<bool>, String> { Ok(None) }
+    fn request(&self, _: u64) -> Result<Option<bool>, String> { Ok(self.action.get()) }
     fn opcode(&self) -> Option<u16> { Some(0xabc) }
     fn peer(&self, _: u64, _: u64) -> Result<u32, String> { self.peers.set(self.peers.get()+1); Ok(1) }
     fn wire(&self, _: u64) -> Result<(u64, bool), String> { Ok(self.wire.get()) }
@@ -86,4 +87,16 @@ fn peer_menu_requires_native_origin_current_epoch_and_live_owner() {
     assert!(command(&fake,&mut c));let _=reason(&fake,10,&fake.party.borrow());assert!(!local_menu(1,200));
     let warnings=fake.warnings.get();c.r9=0xff;
     assert!(!command(&fake,&mut c));assert_eq!(fake.warnings.get(),warnings);clear();
+}
+
+#[test]
+fn inspection_windows_do_not_acquire_or_release_cooperative_pause(){
+ let _guard=TEST_LOCK.lock().unwrap();clear();let fake=Fake::new(Role::Host);observe_role(Role::Host);
+ let mut caller=0x99990u64;let mut c:crate::stub::Context=unsafe{std::mem::zeroed()};c.rsp_entry=&mut caller as *mut u64 as u64;c.rcx=111;c.rdx=222;
+ for open in [true,false]{fake.action.set(Some(open));filter_queue(&fake,&mut c);assert_eq!(c.skip,1);assert_eq!((c.rcx,c.rdx),(111,222));assert!(!LOCAL_OPEN.load(Ordering::Acquire));c.skip=0;}
+ caller=0x12340;filter_queue(&fake,&mut c);assert_eq!(c.skip,0,"Real Escape still reaches the native queue");
+ caller=0x99990;request(&fake,1,true).unwrap();filter_queue(&fake,&mut c);assert_eq!(c.skip,0,"Native Back/Options/Resume still own their flow");request(&fake,1,false).unwrap();
+ fake.action.set(None);filter_queue(&fake,&mut c);assert_eq!(c.skip,0,"Other actions stay native");
+ fake.action.set(Some(true));observe_role(Role::Inactive);filter_queue(&fake,&mut c);assert_eq!(c.skip,0,"Solo/inactive UI stays native");
+ observe_role(Role::Host);for a in &mut fake.party.borrow_mut().actors{a.phase=Phase::Inactive;}filter_queue(&fake,&mut c);assert_eq!(c.skip,0,"Lobby input stays native");clear();
 }

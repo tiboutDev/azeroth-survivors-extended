@@ -1,7 +1,7 @@
 //! Bounded native and feature operations used by session callback policy.
 use std::sync::atomic::{AtomicU64, Ordering};
 use super::super::{
-    blessings, combat, duplicate_loot, elites, enchantments, experience, fatigue, gems, glyphs, io,
+    blessings, combat, duplicate_loot, elites, enchantments, fatigue, gems, io,
     menu_pause, party_ui, support, wallet, Runtime, RUNTIME,
 };
 use asx_game::official::Observation;
@@ -25,7 +25,6 @@ pub(super) trait WorldServices: WorldControl {
     fn observe_role(&self, server: u64) -> Result<Observation, String>;
     fn begin_duplicates(&self, server: u64);
     fn refresh_host(&self, server: u64);
-    fn finish_experience(&self, server: u64);
     #[cfg(feature = "test-hooks")]
     fn fixture_before_update(&self, server: u64);
     #[cfg(feature = "test-hooks")]
@@ -82,7 +81,7 @@ impl WorldControl for Runtime {
         let party = self.adapter.world_party(&self.local, game)?;
         fatigue::observe(game, party.as_ref());
         blessings::observe(game, party.as_ref());
-        glyphs::observe(game, party.as_ref());
+
         enchantments::observe(game, party.as_ref());
         gems::observe(game, party.as_ref());
         if let Err(error) = wallet::boundary(self, game, party.as_ref()) {
@@ -129,7 +128,7 @@ impl WorldServices for Runtime {
         let snapshot = self.adapter.party(&self.local, server).ok().flatten();
         fatigue::observe(game, snapshot.as_ref());
         blessings::observe(game, snapshot.as_ref());
-        glyphs::observe(game, snapshot.as_ref());
+
         enchantments::observe(game, snapshot.as_ref());
         gems::observe(game, snapshot.as_ref());
         if let Err(error) = wallet::boundary(self, game, snapshot.as_ref()) {
@@ -142,13 +141,8 @@ impl WorldServices for Runtime {
         super::set_host_pause(self,game,&reason);
         if let Ok(mut cached) = self.party.lock() { *cached = snapshot; }
     }
-    fn finish_experience(&self, server: u64) {
-        if let Ok(game) = self.adapter.game_address(server) {
-            experience::finish(self, game);
-        }
-    }
     #[cfg(feature = "test-hooks")]
-    fn fixture_before_update(&self, server: u64) { menu_pause::fixture(self, server); }
+    fn fixture_before_update(&self, server: u64) { menu_pause::fixture(self, server); party_ui::fixture_economy(self,server); }
     #[cfg(feature = "test-hooks")]
     fn fixture_after_update(&self, server: u64) {
         if !super::super::performance::enabled() { super::super::fixture::tick(self, server); }

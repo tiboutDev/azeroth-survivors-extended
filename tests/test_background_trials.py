@@ -60,12 +60,13 @@ class BackgroundTrials(unittest.TestCase):
 
     def test_focused_wallet_assessor_failure_cannot_be_replaced_by_compat_scope(self):
         self.assertFalse(extensions.compatibility_scope(reward_wallet=True))
+        self.assertFalse(extensions.compatibility_scope(diagnostic_probe=True))
         checks = {'started': True}
         extensions.merge_assessor_checks(checks, {'wallet_native_readback': False})
         self.assertFalse(all(checks.values()))
         extensions.merge_assessor_checks(checks, {'wallet_native_readback': True})
         self.assertFalse(checks['wallet_native_readback'])
-        for focused in ('gems', 'enchantments', 'glyph_retention', 'goblins', 'supplies', 'ritual'):
+        for focused in ('gems', 'enchantments', 'goblins', 'supplies', 'ritual'):
             with self.subTest(mode=focused):
                 self.assertFalse(extensions.compatibility_scope(**{focused: True}))
     def test_child_dispatch_is_mocked_and_preserves_current_selection(self):

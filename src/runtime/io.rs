@@ -112,9 +112,9 @@ impl asx_game::official::SupportCalls for Access<'_> {
         unsafe{call(game,1,1)};Ok(())
     }
 
-    fn resolve_glyph_modifiers(&self,output:u64,perks:u64,definition:u64)->Result<(),String>{
+    fn resolve_spell_modifiers(&self,output:u64,perks:u64,definition:u64)->Result<(),String>{
         type Resolve=unsafe extern "system" fn(u64,u64,u64)->u64;
-        let entry=self.adapter.glyph_entries().get(2).copied().ok_or("Glyph calls unavailable")?;
+        let entry=self.adapter.spell_modifiers_entry();
         let call:Resolve=unsafe{std::mem::transmute(self.local.base+entry.rva as usize)};
         unsafe{call(output,perks,definition)};Ok(())
     }
@@ -127,13 +127,7 @@ impl asx_game::official::SupportCalls for Access<'_> {
         Ok(unsafe { call(game, index) })
     }
 
-    fn award_experience(&self, game: u64, amount: u32) -> Result<(), String> {
-        type Award = unsafe extern "system" fn(u64, u32);
-        let call: Award =
-            unsafe { std::mem::transmute(self.local.base + self.adapter.award_xp().rva as usize) };
-        unsafe { call(game, amount) };
-        Ok(())
-    }
+
     fn emit_support_effect(
         &self,
         game: u64,

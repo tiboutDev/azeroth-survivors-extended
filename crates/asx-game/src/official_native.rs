@@ -864,8 +864,6 @@ impl Adapter {
 
 mod blessings;
 
-mod glyphs;
-pub use glyphs::{GlyphChoice, GlyphOwner};
 mod bonus_ui;
 pub use bonus_ui::{BonusHeaderColumn, BonusSeparator, BonusUi};
 
@@ -898,9 +896,7 @@ pub use gems::AmuletChoice;
 mod bonus_tooltip;
 
 impl Adapter {
-    pub fn glyphs_enabled(self) -> bool {
-        false
-    }
+
     pub fn duplicate_loot_enabled(self) -> bool {
         false
     }

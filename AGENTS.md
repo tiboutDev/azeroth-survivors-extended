@@ -35,7 +35,12 @@ never restore it as a fallback or run it beside official simulation.
 
 Read [CLIENT-ADAPTER.md](docs/CLIENT-ADAPTER.md) before native-integration changes
 and [ASX-FEATURES.md](docs/ASX-FEATURES.md) before feature or compatibility changes.
-Update the stable feature inventory and affected references for semantic changes.
+Read [ASX-BEHAVIOR.md](docs/ASX-BEHAVIOR.md), the criterion-by-criterion acceptance
+reference. Update affected stable acceptance IDs in the same change as any new
+feature, semantic fix, retirement or integration, together with the feature
+catalog and detailed/player references. Every compatibility review must account
+for all sections, record artifact-scoped results and retain untested/blocked
+cases explicitly; matching hook bytes never establish behavioral parity.
 Do not infer current source, normal-runtime or published-kit parity from each other.
 
 ## Native correctness
@@ -71,11 +76,11 @@ bounds; do not alter lobby admission or native vector capacities. Private suppor
 route tags reserve the low three bits for target slots and bit3 for hybrid group
 delivery; validate producers/consumers and reject invalid sixth-slot targets.
 
-Current glyph gameplay is disabled and native marks replace duplicate-loot gold
-compensation. Retained shared bonus representations/helpers are not proof of
-installed glyph gameplay. Preserve ring/crystal identity, reward-card ordering and
-native stat reconstruction. The known post-death XP desynchronization remains
-open; this cleanup does not authorize resuming its paused investigation.
+Native marks replace duplicate-loot gold compensation. Preserve ring/crystal
+identity, shared bonus presentation, reward-card ordering and
+native stat reconstruction. Dead participants receive native shared XP and levels immediately; retain their
+dead phase and pending native choices until revival. Do not restore an XP bank
+or replay already-granted shared receipts.
 
 ## Native presentation and activation
 

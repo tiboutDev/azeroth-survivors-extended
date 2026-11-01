@@ -33,7 +33,7 @@ def assess(host,native,players):
   annotated.append(any("Applies enchantment"in c["lines"]for c in cards)and any("Applies enchantment"not in c["lines"]for c in cards))
  return dict(checks=dict(all_eight_native_bonuses=native_values,one_lock_per_ring=bool(counts)and all(n==1 for n in counts.values()),two_rings_per_player=all(sum(1 for s,g,r in counts if s==slot)==2 for slot in range(players)),applied_on_first_upgrade=bool(locks)and all(rank==2 for s,g,r,rank,name in locks),later_upgrades_preserve_enchantment=later,first_and_later_card_text=all(annotated),rebuilds_do_not_accumulate="enchantment fixture rebuild: stable=true restored=true"in host and "stable=false"not in host and "restored=false"not in host),locks=locks,retained=[dict(slot=s,guid=g,ring=r,name=n,rank=rank)for(s,g,r),(n,rank)in retained.items()],matrices=matrices)
 
-RANK_VALUES={"Might":[.05,.09,.15,.22,.30],"Alacrity":[.02,.04,.07,.10,.14],"Fortitude":[.05,.10,.17,.25,.35],"Precision":[.01,.02,.04,.07,.10],"Ferocity":[.10,.20,.32,.48,.65],"Warding":[.01,.02,.035,.05,.07],"Renewal":[.3,.6,1.2,2.,3.],"Reach":[.05,.09,.15,.22,.30]}
+RANK_VALUES={"Might":[.05,.09,.15,.22,.30],"Alacrity":[.03,.05,.08,.11,.15],"Fortitude":[.05,.10,.17,.25,.35],"Precision":[.01,.02,.04,.07,.10],"Ferocity":[.10,.20,.32,.48,.65],"Warding":[.01,.02,.035,.05,.07],"Renewal":[.5,1.,1.5,2.,3.],"Reach":[.05,.09,.15,.22,.30]}
 def assess_ranked(host,native,players):
  # Preserve historical unranked evidence and its assessor; reuse its conservation
  # checks with the new Minor input observations, then require the full matrix.

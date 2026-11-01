@@ -497,3 +497,16 @@ Fortune notifications consume stable award receipts; choices defer pending
 notifications but cannot re-arm an already started toast. Contiguous native mark
 receipts within three seconds share one popup with summed gains and the newest
 native total, preserving decimals and unrelated item order.
+
+## Cooperative Rules information
+
+During a cooperative run, a permanent **Cooperative Rules** information icon is
+shown first in the helpful-buff row. Its tooltip explains the 50% effectiveness
+of area/range bonuses. A separated gray note clarifies that the stats panel shows
+effective values while item/reward descriptions may show base bonuses.
+
+This icon grants no effect, has no countdown, cannot be cancelled, and remains
+present while dead or paused. It disappears in solo and outside the run. ASXUI
+places it in its HUD; the ASX presentation bridge also displays it beside native
+buffs when ASXUI is absent or its HUD is disabled. The ASX addon API exposes its
+values and texts for other addons. No additional assets are required.

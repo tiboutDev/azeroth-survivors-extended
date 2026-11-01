@@ -177,10 +177,7 @@ unsafe extern "system" fn damage(
     let Some(r) = RUNTIME.get().filter(|r| r.rules) else {
         return original(game, enemy, amount, spell, school, flag, extra);
     };
-    let explosion=glyphs::explosion_multiplier(r,game,spell);
-    #[cfg(feature="test-hooks")]
-    {glyphs::fixture_warlock_hit(r,game,spell,amount);glyphs::fixture_shaman_hit(r,game,spell,amount);glyphs::fixture_explosion(r,game,spell,amount,amount*explosion,explosion);if spell==14186{glyphs::fixture_seal_hit(r,game,enemy,amount);}if spell==724{glyphs::fixture_lightwell_hit(r,game,amount);}}
-    let scaled = amount * explosion * fatigue::multiplier(r, game);
+    let scaled = amount * fatigue::multiplier(r, game);
     #[cfg(feature="test-hooks")]
     fatigue::fixture_trace(r,game,0,amount,scaled);
     let amount = scaled;

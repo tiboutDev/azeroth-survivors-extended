@@ -37,7 +37,7 @@ pub fn hooks(adapter:Adapter)->Vec<crate::install::HookSpec>{let e=adapter.bonus
  #[cfg(feature="test-hooks")]if fixture_enabled(){if let Some(e)=adapter.kept_tooltip_fixture_focus(){hooks.push(crate::install::HookSpec{name:"fixture-kept-native-hit",target:local_base()+e.rva as usize,detour:focus_entry as *const ()as usize,trampoline:&FOCUS_ORIGINAL});}}
  hooks
 }
-#[cfg(test)]mod tests{use super::*;#[test]fn nested_native_rows_restore_the_outer_context_without_holding_a_borrow(){let g=KeptBonus::Glyph(asx_gameplay::glyphs::Glyph::SweepingCleave);let gem=KeptBonus::Gem(asx_gameplay::gems::Gem::Ruby);struct Mem;impl asx_game::memory::Mem for Mem{fn read(&self,a:u64,n:usize)->Result<Vec<u8>,String>{match(a,n){(0x10060,8)=>Ok(0x20000u64.to_le_bytes().to_vec()),(0x10058,8)=>Ok(0x30000u64.to_le_bytes().to_vec()),(0x30000,20)=>Ok(vec![0;20]),_=>Err("Unexpected test read".into())}}}
+#[cfg(test)]mod tests{use super::*;#[test]fn nested_native_rows_restore_the_outer_context_without_holding_a_borrow(){let g=KeptBonus::Gem(asx_gameplay::gems::Gem::Sapphire);let gem=KeptBonus::Gem(asx_gameplay::gems::Gem::Ruby);struct Mem;impl asx_game::memory::Mem for Mem{fn read(&self,a:u64,n:usize)->Result<Vec<u8>,String>{match(a,n){(0x10060,8)=>Ok(0x20000u64.to_le_bytes().to_vec()),(0x10058,8)=>Ok(0x30000u64.to_le_bytes().to_vec()),(0x30000,20)=>Ok(vec![0;20]),_=>Err("Unexpected test read".into())}}}
  let ui=asx_game::official::SelectedAdapter::select(asx_game::current::SHA256).unwrap().bonus_ui_context(&Mem,0x10000).unwrap();let(value,attached)=with_row(10,ui,g,||{assert_eq!(ROW.with(|v|v.get().unwrap().bonus),g);ATTACHED.with(|v|v.set(true));let(_,inner)=with_row(30,ui,gem,||{assert_eq!(ROW.with(|v|v.get().unwrap().bonus),gem);});assert!(!inner);assert_eq!(ROW.with(|v|v.get().unwrap().bonus),g);7});assert_eq!(value,7);assert!(attached);assert!(ROW.with(|v|v.get()).is_none());assert!(!ATTACHED.with(|v|v.get()));}}
 
 #[cfg(feature="test-hooks")]struct Target{entity:u64,bonus:KeptBonus,at:std::time::Instant,entered:bool,left:bool}
@@ -53,5 +53,5 @@ pub fn hooks(adapter:Adapter)->Vec<crate::install::HookSpec>{let e=adapter.bonus
 
 #[cfg(feature="test-hooks")]
 pub fn fixture_enabled()->bool {
- std::env::var("AZCOOP_TEST_BONUS_TOOLTIP").as_deref()==Ok("1") || std::env::var("AZCOOP_TEST_GLYPH_RETENTION").as_deref()==Ok("1")
+ std::env::var("AZCOOP_TEST_BONUS_TOOLTIP").as_deref()==Ok("1")
 }

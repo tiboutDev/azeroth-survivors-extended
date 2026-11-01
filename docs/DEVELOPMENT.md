@@ -1,5 +1,8 @@
 # ASX development
 
+Use the [expected-behavior acceptance reference](ASX-BEHAVIOR.md) to plan and
+record feature-level verification; update affected criteria with semantic changes.
+
 ASX extends the official native 0.135.1 engine. Player documentation starts at the
 [project home](../README.md). For engineering work, read the [testing policy](TESTING.md),
 [feature inventory](ASX-FEATURES.md) and [adapter boundary](CLIENT-ADAPTER.md).
@@ -50,7 +53,7 @@ Official orchestration has these internal owners:
 | --- | --- |
 | `bootstrap.rs` | Exact-build verification and ordered installation; XP, UI and session entries remain in their original single batch |
 | `xp_hooks.rs` | Shared-XP wrapper, thread-local input and award-entry stub; bounded services bind multiplier/native translation |
-| `experience.rs` | Deferred credits, identity retirement, take-before-replay and safe rejection; bounded services bind native observations/replay |
+| `experience.rs` | Guarded native XP and whole-level receipt admission while dead, without deferred bank/replay; native pending choices wait for revival |
 | `pause.rs` | Pause authority flags, native UI notices and event/HUD callbacks; bounded services bind native reads and lifecycle/diagnostic dispatch |
 | `session.rs` | Commands, world/HUD passes and server updates through callback-specific ports; native ordering and observation-only behavior remain intact |
 | `menu_pause.rs` | Participant menu ownership and epoch checks through bounded native/cache services; controlled fixtures retain separate integration access |

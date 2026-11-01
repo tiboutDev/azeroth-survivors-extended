@@ -178,7 +178,6 @@ pub mod resurrection_fatigue;
 
 pub mod blessings;
 
-pub mod glyphs;
 
 pub mod enchantments;
 
@@ -205,3 +204,5 @@ pub mod world_events;
 pub mod healing_text;
 
 pub mod crystals;
+
+pub mod area;

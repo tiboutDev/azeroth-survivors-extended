@@ -75,6 +75,28 @@ class LocalArtifactsTests(unittest.TestCase):
         self.assertEqual(restored["target/asx/release/build-receipt.json"], b'{"sha256":"abc"}\n')
         self.assertFalse(cache.exists())
 
+    def test_modern_receipts_are_preserved_with_binaries_and_without_a_binary(self):
+        binary = self.write("target/normal/release/avrt.dll", b"validated normal binary")
+        receipt_bytes = json.dumps({"schema": 2, "kind": "normal", "dll_sha256": local_artifacts.sha256_file(binary)}).encode()
+        receipt = self.write("target/normal/release/avrt.artifact.json", receipt_bytes)
+        orphan = self.write("target/failed/diagnostic.artifact.json", b'{"kind":"diagnostic","incomplete":true}')
+        self.write("target/debug/unrelated.json", b'{"cache":true}')
+        stamp = 1234567890123456789
+        os.utime(receipt, ns=(stamp, stamp))
+        expected = {p.relative_to(self.root).as_posix(): p.read_bytes() for p in (binary, receipt, orphan)}
+        dry = local_artifacts.summary(self.root)
+        self.assertEqual(set(dry["target_artifacts_to_archive"]), set(expected))
+        self.assertFalse((self.root / ".local").exists())
+        result = local_artifacts.apply(self.root)
+        archive, index = self.archive_paths(result)
+        entries = {entry["path"]: entry for entry in json.loads(index.read_text())["entries"]}
+        with tarfile.open(archive, "r:gz") as tar:
+            restored = {member.name: tar.extractfile(member).read() for member in tar if member.isfile()}
+        self.assertEqual(restored, expected)
+        self.assertEqual(entries["target/normal/release/avrt.artifact.json"]["mtime_ns"], stamp)
+        self.assertEqual(entries["target/normal/release/avrt.artifact.json"]["sha256"], local_artifacts.hashlib.sha256(receipt_bytes).hexdigest())
+        self.assertFalse((self.root / "target").exists())
+
     def test_preserves_original_evidence_time_and_records_archive_checksum(self):
         report = self.write("test-results/old-proof.txt", b"old proof")
         stamp = 1234567890123456789
@@ -130,12 +152,14 @@ class LocalArtifactsTests(unittest.TestCase):
         target.mkdir()
         (target / "cache-link").symlink_to(external)
         self.write("target/release/game.exe", b"binary")
+        (target / "avrt.artifact.json").symlink_to(external)
         try:
             result = local_artifacts.apply(self.root)
             archive, _ = self.archive_paths(result)
             with tarfile.open(archive, "r:gz") as tar:
                 links = {member.name: member.linkname for member in tar if member.issym()}
             self.assertEqual(links["test-results/external-link"], str(external))
+            self.assertEqual(links["target/avrt.artifact.json"], str(external))
             self.assertEqual(external.read_bytes(), b"outside")
         finally:
             external.unlink(missing_ok=True)

@@ -16,13 +16,12 @@ fn delay() -> Option<Duration> {
         .ok()?
         .parse::<u64>()
         .ok()
-        .filter(|n| (2..=if glyphs::retention_fixture(){40}else{20}).contains(n))
+        .filter(|n| (2..=20).contains(n))
         .map(Duration::from_secs)
 }
 pub fn event(runtime: &Runtime, c: &crate::stub::Context, value: &serde_json::Value) {
     if compat121()&&!value["choices"].as_array().is_some_and(|a|a.iter().any(|c|c["lines"].as_str().is_some_and(|s|s.contains("Gem:")||s.contains("Enchantment:")))){return;}
     if pause_enabled(){pause_event(runtime,c,value);return;}
-    if glyphs::retention_fixture()&&!value["choices"].as_array().is_some_and(|a|a.iter().any(|c|c["lines"].as_str().is_some_and(|s|s.contains("Keeps glyph:")))){return;}
     if !compat121() && gems::fixture_enabled() && !value["choices"].as_array().is_some_and(|a|a.iter().any(|c|c["lines"].as_str().is_some_and(|s|s.contains("Gem:")))){return;}
     if !compat121() && enchantments::fixture_enabled() && !value["choices"].as_array().is_some_and(|a|a.iter().any(|c|c["lines"].as_str().is_some_and(|s|s.contains("Enchantment:")))){return;}
     if std::env::var("ASX_TEST_COVERAGE").as_deref()==Ok("1") && value["type"]=="choices" {
@@ -30,7 +29,6 @@ pub fn event(runtime: &Runtime, c: &crate::stub::Context, value: &serde_json::Va
     }
     economy_event(runtime, c, value);
     let Some(delay) = delay() else { return };
-    if !glyphs::retention_fixture() && std::env::var("AZCOOP_TEST_GLYPHS").as_deref()==Ok("1") && !value["choices"].as_array().is_some_and(|a|a.iter().any(|c|c["lines"].as_str().is_some_and(|s|s.contains("Glyph:")))) {return;}
     if value["type"] != "choices" {
         return;
     }
@@ -56,12 +54,11 @@ pub fn tick(runtime: &Runtime, server: u64) {
     if compat121(){marks121_tick(runtime,server);release_pending(runtime,server);if let Ok(game)=runtime.adapter.game_address(server){blessing_tick(runtime,server);gems::fixture_tick(runtime,game);enchantments::fixture_tick(runtime,game);}return;}
     if combat::immunity_fixture_enabled(){combat::immunity_fixture_tick(runtime,server);return;}
     if wallet::fixture_enabled(){wallet::fixture_tick(runtime,server);return;}
-    if glyphs::retention_fixture(){release_pending(runtime,server);glyphs::retention_tick(runtime,server);return;}
     if gems::fixture_enabled(){release_pending(runtime,server);if let Ok(game)=runtime.adapter.game_address(server){gems::fixture_tick(runtime,game);}return;}
     if enchantments::fixture_enabled(){release_pending(runtime,server);if let Ok(game)=runtime.adapter.game_address(server){enchantments::fixture_tick(runtime,game);}return;}
 
     if std::env::var("AZCOOP_TEST_EXTENSIONS").as_deref()==Ok("1") {
-        glyphs::fixture_tick(runtime,server);blessing_tick(runtime,server);return;
+        blessing_tick(runtime,server);return;
     }
     if xp_death_enabled(){xp_death_tick(runtime,server);return;}
     if pause_enabled(){pause_tick(runtime,server);return;}
@@ -69,7 +66,6 @@ pub fn tick(runtime: &Runtime, server: u64) {
     regression_tick(runtime, server);
     fatigue_tick(runtime, server);
     blessing_tick(runtime, server);
-    glyphs::fixture_tick(runtime, server);
     economy_tick(runtime, server);
     support_tick(runtime, server);
     combat_tick(runtime, server);
@@ -1146,40 +1142,55 @@ fn pause_tick(r:&Runtime,server:u64){
  if open{if let Ok(game)=r.adapter.game_address(server){type Gold=unsafe extern "system" fn(u64,u32)->usize;type Chest=unsafe extern "system" fn(u64)->bool;let gold:Gold=unsafe{std::mem::transmute(r.local.base+r.adapter.gold_entry().rva as usize)};let chest:Chest=unsafe{std::mem::transmute(r.local.base+r.adapter.chest_entry().rva as usize)};let result=unsafe{gold(game,101);chest(game)};r.log.info(&format!("pause fixture native cache: {result}"));}}
 }
 
-fn xp_death_enabled()->bool{std::env::var("AZCOOP_TEST_XP_DEATH").as_deref()==Ok("1")}
-struct XpDeath {stage:u32,began:f32,sampled:Option<Instant>}
-static XP_DEATH:std::sync::Mutex<XpDeath>=std::sync::Mutex::new(XpDeath{stage:0,began:0.,sampled:None});
+fn xp_death_enabled()->bool{std::env::var("ASX_TEST_PROGRESSION").as_deref()==Ok("1")}
+struct XpDeath {stage:u32,began:f32,level:u32,sampled:Option<Instant>}
+static XP_DEATH:std::sync::Mutex<XpDeath>=std::sync::Mutex::new(XpDeath{stage:0,began:0.,level:0,sampled:None});
 fn xp_death_tick(r:&Runtime,server:u64){
- {let Ok(mut s)=XP_DEATH.lock()else{return};if s.sampled.is_some_and(|t|t.elapsed()<Duration::from_secs(2)){return}s.sampled=Some(Instant::now());}
+ if r.adapter.observe(&r.local,server).ok().is_none_or(|s|s.role!=asx_game::official::Role::Host){return}
+ {let Ok(mut s)=XP_DEATH.lock()else{return};if s.sampled.is_some_and(|t|t.elapsed()<Duration::from_millis(250)){return}s.sampled=Some(Instant::now());}
  let Ok(Some(party))=r.adapter.party(&r.local,server)else{return};if party.actors.len()!=2{return}
  let Ok(game)=r.adapter.game_address(server)else{return};
- let (stage,began)={let Ok(s)=XP_DEATH.lock()else{return};(s.stage,s.began)};
- r.log.info(&format!("XP death state: stage={stage} clock={} actors={:?}",party.clock,party.actors.iter().map(|a|(a.slot,a.guid,a.phase,a.level,a.xp)).collect::<Vec<_>>()));
- let target=if stage<3{0}else{1};let victim=&party.actors[target];
- let advance=|next|{if let Ok(mut s)=XP_DEATH.lock(){s.stage=next;s.began=party.clock;}};
+ let (stage,began,level)={let Ok(s)=XP_DEATH.lock()else{return};(s.stage,s.began,s.level)};
+ r.log.info(&format!("XP progression state: {}",serde_json::json!({"stage":stage,"clock":party.clock,"actors":party.actors.iter().map(|a|serde_json::json!({"slot":a.slot,"guid":a.guid,"phase":format!("{:?}",a.phase),"level":a.level,"xp":a.xp,"hp":a.hp})).collect::<Vec<_>>()})));
+ let target=if stage<4{0}else{1};let victim=&party.actors[target];let alive=&party.actors[1-target];
+ let advance=|next|{if let Ok(mut s)=XP_DEATH.lock(){s.stage=next;s.began=party.clock;s.level=victim.level;}};
+ let io=io::Access{local:&r.local,adapter:r.adapter};
  match stage {
-  0 if party.clock>=10. && party.actors.iter().all(|a|a.phase==asx_gameplay::Phase::Playing)=>{request_death(r,game,0,victim.guid,party.clock);advance(1);},
-  1|4 if victim.phase==asx_gameplay::Phase::Downed=>{r.log.info(&format!("XP death confirmed: slot={target} guid={}",victim.guid));advance(stage+1);},
-  1|4 if victim.phase==asx_gameplay::Phase::Playing=>request_death(r,game,target as u32,victim.guid,party.clock),
-  2|5 if victim.phase==asx_gameplay::Phase::Downed=>{
-   let alive=&party.actors[1-target];if alive.phase!=asx_gameplay::Phase::Playing{return}
-   let io=io::Access{local:&r.local,adapter:r.adapter};
-   if stage==2 {
-       static GUARDIAN:AtomicBool=AtomicBool::new(false);
-       if !GUARDIAN.load(Ordering::Acquire){
-           let target=r.adapter.fixture_guardian_target(&io,game);
-           r.log.info(&format!("XP death guardian target: {target:?}"));
-           if let Ok(Some((guid,hp)))=target {
-               let result=r.adapter.attack_actor(&io,game,alive.slot,guid,75,hp*100.+1e6);
-               r.log.info(&format!("XP death guardian hit during host death: guid={guid} result={result:?}"));
-               if result.is_ok(){GUARDIAN.store(true,Ordering::Release);}
-           }
-       }
+  0|4 if party.clock>=if stage==0{8.}else{began+3.} && party.actors.iter().all(|a|a.phase==asx_gameplay::Phase::Playing)=>{advance(stage+1);request_death(r,game,target as u32,victim.guid,party.clock);},
+  1|5 if victim.phase==asx_gameplay::Phase::Downed=>{r.log.info(&format!("XP progression dead: slot={target} level={}",victim.level));advance(stage+1);},
+  1|5 if victim.phase==asx_gameplay::Phase::Playing=>request_death(r,game,target as u32,victim.guid,party.clock),
+  2|6 if victim.phase==asx_gameplay::Phase::Downed=>{
+   if stage==6 {
+    static GUARDIAN:AtomicBool=AtomicBool::new(false);
+    if !GUARDIAN.load(Ordering::Acquire) {
+     if let Ok(Some((guid,hp)))=r.adapter.fixture_guardian_target(&io,game) {
+      let result=r.adapter.attack_actor(&io,game,alive.slot,guid,845,hp*100.+1e6);
+      if result.is_ok(){GUARDIAN.store(true,Ordering::Release);r.log.info("XP progression native guardian reward while guest dead");}
+     }
+    }
    }
-   if let Ok(enemies)=r.adapter.support_enemies(&r.local,game){if let Some(e)=enemies.iter().find(|e|e.hp>0. && e.position.iter().zip(alive.position).map(|(x,y)|(*x-f64::from(y)).powi(2)).sum::<f64>()<49.){let result=r.adapter.attack_actor(&io,game,alive.slot,e.guid,845,1e6);r.log.info(&format!("XP death native kill: owner={} result={result:?}",alive.slot));}}
+   if victim.level>level && party.clock>began+8. {r.log.info(&format!("XP progression advanced while dead: slot={target} before={level} after={}",victim.level));advance(stage+1);return}
+   if alive.phase!=asx_gameplay::Phase::Playing||pause::active(){return}
+   // Kill real native enemies and let the survivor collect their native drops.
+   // No direct XP/level writes or award calls; this exercises both shared guards.
+   if let Ok(enemies)=r.adapter.support_enemies(&r.local,game){
+    if let Some(e)=enemies.iter().filter(|e|e.hp>0.).min_by(|a,b|{
+     let da=a.position.iter().zip(alive.position).map(|(x,y)|(*x-f64::from(y)).powi(2)).sum::<f64>();
+     let db=b.position.iter().zip(alive.position).map(|(x,y)|(*x-f64::from(y)).powi(2)).sum::<f64>();da.total_cmp(&db)
+    }){
+     let pose=r.adapter.fixture_event_pose(&io,game,alive.slot,alive.guid,e.position.map(|x|x as f32));
+     if pose.is_ok(){let result=r.adapter.attack_actor(&io,game,alive.slot,e.guid,845,1e6);r.log.info(&format!("XP progression native kill: owner={} result={result:?}",alive.slot));}
+    }
+   }
   },
-  2|5 if victim.phase==asx_gameplay::Phase::Playing=>{r.log.info(&format!("XP death revived: slot={target} guid={}",victim.guid));advance(stage+1);},
-  3 if party.clock>began+5. && party.actors.iter().all(|a|a.phase==asx_gameplay::Phase::Playing)=>{request_death(r,game,1,victim.guid,party.clock);advance(4);},
+  3|7 if victim.phase==asx_gameplay::Phase::Downed && alive.phase==asx_gameplay::Phase::Playing && !pause::active()=>{
+   // Native proximity/channel resurrection; keep the owned survivor in range.
+   if let Err(e)=r.adapter.fixture_event_pose(&io,game,alive.slot,alive.guid,victim.position){r.log.warn(&format!("XP progression rescue pose rejected: {e}"));}
+  },
+  3|7 if victim.phase==asx_gameplay::Phase::Playing=>{r.log.info(&format!("XP progression revived: slot={target} level={}",victim.level));advance(stage+1);},
+  8 if party.clock>began+3. && party.actors.iter().all(|a|a.phase==asx_gameplay::Phase::Playing)=>{
+   r.log.info("XP progression complete: both native death/XP/revival paths observed");advance(9);
+  },
   _=>{}
  }
 }

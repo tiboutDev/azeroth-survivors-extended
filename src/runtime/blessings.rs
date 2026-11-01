@@ -175,6 +175,11 @@ unsafe extern "system" fn pool(c: &mut crate::stub::Context) {
         return;
     };
     if let Ok(index) = r.pool_index(c.rbp, c.r14) {
+        #[cfg(feature="test-hooks")]
+        if index!=c.r14&&std::env::var("ASX_TEST_COOP_UI").as_deref()==Ok("1"){
+            static SAMPLES:AtomicUsize=AtomicUsize::new(0);
+            if SAMPLES.fetch_add(1,Ordering::Relaxed)<8{r.info(&format!("native economy pool excluded: input={} output={index}",c.r14));}
+        }
         c.r14 = index;
     }
 }

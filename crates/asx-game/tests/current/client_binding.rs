@@ -28,7 +28,6 @@ fn actor(size: usize, class: u8, race: u8, guid: u64) -> Vec<u8> {
 fn revision_capabilities_do_not_disable_shared_jewelry_ui() {
     let a = SelectedAdapter::select(current::SHA256).unwrap();
     assert_eq!(a.version(), "0.135.1");
-    assert!(!a.glyphs_enabled());
     assert!(!a.duplicate_loot_enabled());
     assert!(a.native_marks_enabled());
     assert!(a.loot_entries().is_empty());
@@ -403,4 +402,40 @@ fn completed_encounter_uses_stack_definition_not_the_killed_enemy_guid() {
     m.0.get_mut(&frame).unwrap()[0x908..0x910].copy_from_slice(&(defs + 1).to_le_bytes());
     assert!(a.blessing_event_context(&m, [frame, 0, defs + 104], base).is_err());
     assert!(a.blessing_event_context(&m, [u64::MAX, 0, 0], base).is_err());
+}
+
+#[test]
+fn dead_shared_xp_uses_the_current_native_actor_without_reading_the_borrowed_vector() {
+    let a=SelectedAdapter::select(current::SHA256).unwrap();
+    let game=0x10010u64;
+    let fixture=|role:u32,coop:u8,phase:u8,slot:u64,guid:u64| {
+        let mut server=vec![0;0x2100];
+        server[0xf60..0xf64].copy_from_slice(&role.to_le_bytes());
+        server[0xfa0..0xfa8].copy_from_slice(&1u64.to_le_bytes());
+        let root=&mut server[0x10..];root[0xf46]=coop;root[0xf4b]=phase;
+        root[0xe40..0xe48].copy_from_slice(&slot.to_le_bytes());
+        root[0x538..0x540].copy_from_slice(&guid.to_le_bytes());
+        root[0xea8..0xeac].copy_from_slice(&17u32.to_le_bytes());
+        // No actor-vector memory is supplied: its ownership is lent out here.
+        let mut stack=vec![0;0x1700];stack[0x1688..0x168c].copy_from_slice(&17u32.to_le_bytes());
+        let mut request=vec![0;16];request[8..16].copy_from_slice(&0x50000u64.to_le_bytes());
+        Blocks([(0x10000,server),(0x30000,stack),(0x40000,request),(0x50000,17u32.to_le_bytes().to_vec())].into())
+    };
+    for kind in 0..7 {
+        for slot in 0..5 {
+            let m=fixture(3,1,4,slot,111+slot);
+            let (game_index,amount_index)=match kind{0|2|5=>(0,2),1=>(1,2),3=>(2,3),4|6=>(2,4),_=>unreachable!()};
+            let mut regs=[17;6];regs[game_index]=game;regs[5]=0x30000;if kind==6{regs[4]=0x40000;}
+            assert_eq!(a.downed_xp_continuation(&m,kind,regs).unwrap(),Some(current::DOWNED_XP_GUARDS[kind].1));
+            if kind<5{regs[amount_index]=0;assert_eq!(a.downed_xp_continuation(&m,kind,regs).unwrap(),None); }
+        }
+        for (role,coop,phase) in [(0,1,4),(1,1,4),(2,1,4),(3,0,4),(3,1,1),(3,1,2),(3,1,5)] {
+            let m=fixture(role,coop,phase,0,111);let mut regs=[game;6];regs[4]=0x40000;regs[5]=0x30000;
+            assert_eq!(a.downed_xp_continuation(&m,kind,regs).unwrap(),None);
+        }
+        for (slot,guid) in [(5,111),(0,0)] {
+            assert!(a.downed_xp_continuation(&fixture(3,1,4,slot,guid),kind,[game;6]).is_err());
+        }
+    }
+    assert!(a.downed_xp_continuation(&fixture(3,1,4,0,111),7,[game;6]).is_err());
 }

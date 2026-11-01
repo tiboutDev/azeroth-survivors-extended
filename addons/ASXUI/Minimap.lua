@@ -107,12 +107,23 @@ end
 -- Their inverse gives the live center without waiting for a metadata refresh.
 -- Native hero position/facing and native arrow texture; no second world marker
 -- source or memory access. The original native arrow remains the fallback.
-local function playerArrow(parent,cx,cy,radius,halfW,halfH)
+local function renderedPlayer()
+    if type(AZS_GetPlayerPosition)=="function"then
+        local ok,p=pcall(AZS_GetPlayerPosition)
+        if not ok or type(p)~="table"or p.apiVersion~=1 or not finite(p.x)or not finite(p.y)or not finite(p.facing)then return nil end
+        if AZS_ZONE and(AZS_ZONE.map~=p.mapId or(type(AZS_ZONE.run)=="string"and p.runId~=AZS_ZONE.run))then return nil end
+        return p.x,p.y,p.facing
+    end
+    -- Older standalone addon hosts retain their native snapshot fallback.
     local run=AZS_RUN
-    if not run or not finite(run.px)or not finite(run.py)or not finite(run.pf)then
+    if run and finite(run.px)and finite(run.py)and finite(run.pf)then return run.px,run.py,run.pf end
+end
+local function playerArrow(parent,cx,cy,radius,halfW,halfH)
+    local px,py,facing=renderedPlayer()
+    if not px then
         if playerPin then setShown(playerPin,false)end;return
     end
-    local x,y=-(run.py-cy)/radius,(run.px-cx)/radius
+    local x,y=-(py-cy)/radius,(px-cx)/radius
     if x*x+y*y>1 then if playerPin then setShown(playerPin,false)end;return end
     if not playerPin then
         playerPin=CreateFrame("Frame","ASXUIPlayerMinimapArrow",parent);playerPin:SetWidth(24);playerPin:SetHeight(24);playerPin:EnableMouse(false)
@@ -120,7 +131,7 @@ local function playerArrow(parent,cx,cy,radius,halfW,halfH)
     end
     playerPin:SetFrameLevel((parent.GetFrameLevel and parent:GetFrameLevel()or 0)+12)
     playerPin:ClearAllPoints();playerPin:SetPoint("CENTER",parent,"CENTER",x*halfW,y*halfH)
-    local c,s=math.cos(run.pf),math.sin(run.pf)
+    local c,s=math.cos(facing),math.sin(facing)
     local function uv(u,v)return .5+c*u-s*v,.5+s*u+c*v end
     local ul,vl=uv(-.5,-.5);local ll,lv=uv(-.5,.5);local ur,vr=uv(.5,-.5);local lr,rv=uv(.5,.5)
     playerPin.icon:SetTexCoord(ul,vl,ll,lv,ur,vr,lr,rv);setShown(playerPin,true)

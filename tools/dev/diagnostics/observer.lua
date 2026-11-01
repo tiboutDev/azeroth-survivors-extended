@@ -64,6 +64,13 @@ observer:SetScript('OnUpdate',function()
  local now=GetTime()
  if now-started>=duration or sequence>=maximum-1 then emit('observer.stopped',{reason=sequence>=maximum-1 and'budget'or'duration'});observer:SetScript('OnUpdate',nil);return end
  if now-last<0.5 then return end;last=now
+ if cfg.coop_ui then
+  local state=ASX_GetState and ASX_GetState(1)
+  local hud=ASXUI_HudReadout and ASXUI_HudReadout()
+  local rows={};if hud then for _,row in ipairs(hud.rows or{})do rows[row.key]=row.value end end
+  sample('ui.coop_hud',{area=AZS_STATS and AZS_STATS.area,info=frame('ASXCooperativeRulesBuff'),phase=AZS_GetPhase and AZS_GetPhase(),native={xp=AZS_STATS and AZS_STATS.xp,gold=AZS_STATS and AZS_STATS.gold},economy=state and state.data and state.data.economy,sharedEconomy=state and state.data and state.data.sharedEconomy,available=state and state.available,hud=rows,pinned=hud and hud.pinned,uiActions=ASXCoopUIActions,character=frame('CharacterFrame'),paperdoll=frame('PaperDollFrame'),talents=frame('TalentFrame'),talentFunction=type(ToggleTalentFrame)})
+ end
+ if cfg.progression then sample('ui.progression',ASXProgressionAudit or{missing=true})end
  sample('ui.supply_toast',frame('ASXSupplyDiscoveryToast'))
  sample('ui.sayge_progress',frame('ASXSaygeTrialProgress'))
  local buffs={available=type(GetPlayerBuff)=='function'and type(GetPlayerBuffTexture)=='function',slots={}}

@@ -431,6 +431,214 @@
       "settle_seconds": 2,
       "readiness": [],
       "solo_prerequisite": "solo-core"
+    },
+    "coop-native-escape": {
+      "phase": "coop",
+      "kind": "normal",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2",
+        "--extensions-normal"
+      ],
+      "environment": {
+        "ASX_TEST_NATIVE_ESCAPE": "1"
+      },
+      "features": [
+        "ASX-06"
+      ],
+      "seconds": 75,
+      "settle_seconds": 15,
+      "readiness": [
+        {
+          "source": "player-2/azeroth-coop-native.log",
+          "contains": "official menu request: open=true role=Guest",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "official peer menu: slot=1 open=true",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": "solo-normal"
+    },
+    "coop-native-escape-visual": {
+      "phase": "coop",
+      "kind": "normal",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2",
+        "--extensions-normal"
+      ],
+      "environment": {
+        "ASX_TEST_NATIVE_ESCAPE": "1",
+        "ASX_TEST_VISUAL": "1"
+      },
+      "features": [
+        "ASX-06"
+      ],
+      "seconds": 75,
+      "settle_seconds": 15,
+      "readiness": [
+        {
+          "source": "player-2/azeroth-coop-native.log",
+          "contains": "official menu request: open=true role=Guest",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "official peer menu: slot=1 open=true",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": "solo-normal"
+    },
+    "solo-coop-ui-probe": {
+      "phase": "solo",
+      "kind": "diagnostic",
+      "players": 1,
+      "args": [
+        "--extensions-trial",
+        "1"
+      ],
+      "environment": {
+        "ASX_TEST_DIAGNOSTIC_PROBE": "1",
+        "ASX_TEST_LUA_DIAGNOSTICS": "1",
+        "ASX_TEST_COOP_UI": "1"
+      },
+      "features": [
+        "ASX-06",
+        "ASX-14",
+        "ASX-23"
+      ],
+      "seconds": 60,
+      "settle_seconds": 2,
+      "readiness": [
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "\"kind\":\"ui.coop_hud\"",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/native-output.log",
+          "contains": "\"type\":\"resume\"",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": null
+    },
+    "coop-ui-probe": {
+      "phase": "coop",
+      "kind": "diagnostic",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2"
+      ],
+      "environment": {
+        "ASX_TEST_DIAGNOSTIC_PROBE": "1",
+        "ASX_TEST_LUA_DIAGNOSTICS": "1",
+        "ASX_TEST_COOP_UI": "1",
+        "ASX_TEST_VISUAL": "1"
+      },
+      "features": [
+        "ASX-06",
+        "ASX-14",
+        "ASX-23"
+      ],
+      "seconds": 75,
+      "settle_seconds": 2,
+      "readiness": [],
+      "solo_prerequisite": "solo-coop-ui-probe"
+    },
+    "coop-ui-normal": {
+      "phase": "coop",
+      "kind": "normal",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2",
+        "--extensions-normal"
+      ],
+      "environment": {
+        "ASX_TEST_NATIVE_ESCAPE": "1",
+        "ASX_TEST_VISUAL": "1",
+        "ASX_TEST_NATIVE_INSPECTION": "1"
+      },
+      "features": [
+        "ASX-06",
+        "ASX-14",
+        "ASX-23"
+      ],
+      "seconds": 90,
+      "settle_seconds": 15,
+      "readiness": [
+        {
+          "source": "player-2/azeroth-coop-native.log",
+          "contains": "official menu request: open=true role=Guest",
+          "minimum": 1
+        },
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "official peer menu: slot=1 open=true",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": "solo-normal"
+    },
+    "solo-progression-probe": {
+      "phase": "solo",
+      "kind": "diagnostic",
+      "players": 1,
+      "args": [
+        "--extensions-trial",
+        "1"
+      ],
+      "environment": {
+        "ASX_TEST_DIAGNOSTIC_PROBE": "1",
+        "ASX_TEST_LUA_DIAGNOSTICS": "1",
+        "ASX_TEST_PROGRESSION": "1"
+      },
+      "features": [
+        "ASX-02",
+        "ASX-03",
+        "ASX-23"
+      ],
+      "seconds": 50,
+      "settle_seconds": 2,
+      "readiness": [],
+      "solo_prerequisite": null
+    },
+    "coop-progression-probe": {
+      "phase": "coop",
+      "kind": "diagnostic",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2"
+      ],
+      "environment": {
+        "ASX_TEST_DIAGNOSTIC_PROBE": "1",
+        "ASX_TEST_LUA_DIAGNOSTICS": "1",
+        "ASX_TEST_PROGRESSION": "1"
+      },
+      "features": [
+        "ASX-02",
+        "ASX-03",
+        "ASX-23"
+      ],
+      "seconds": 140,
+      "settle_seconds": 4,
+      "readiness": [
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "XP progression complete:",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": "solo-progression-probe"
     }
   },
   "plans": {

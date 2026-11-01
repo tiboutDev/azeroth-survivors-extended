@@ -12,6 +12,59 @@ class APITests(unittest.TestCase):
         h=lambda value:value.encode().hex()
         text=f"1|{epoch}|{own}|{heartbeat}\nM|{own}|0|{h('Player')}\nB|{own}|1|1|0|1200|1200\nF|{own}|2|45\nD|{own}|1|1|33|{h('Elixir')}|{h('INV_Potion_10')}|{h('Description')}\nR|{own}|1|{held}|1\nA|{own}|1000|2000|100000000|80000000|60000000|40000000|20000000|10000000|0|0\n"
         self.lua.globals().wire=text.encode().hex();self.lua.execute('AZS_RUN={asx=wire};AZS_RUN_UPDATED=now;now=now+.1')
+    def cooperative_wire(self,coop=True):
+        text="1|1|11|1\nM|11|0|506c61796572\n"+("O|11|-|-\n" if coop else "")
+        self.lua.globals().wire=text.encode().hex()
+        self.lua.execute('AZS_RUN={asx=wire};AZS_RUN_UPDATED=now;now=now+.1;update()')
+
+    def test_cooperative_information_is_independent_detached_and_lifecycle_bound(self):
+        self.cooperative_wire()
+        self.lua.execute('''local s=ASX_GetState(1);assert(s.api.minor==9 and s.data.cooperativeRules.permanent and s.data.cooperativeRules.priority==1 and s.data.cooperativeRules.areaBonusShare==.5)
+assert(s.texts.cooperativeRules.rule=="Area and range bonuses are 50% effective.")
+s.data.cooperativeRules.areaBonusShare=99;s.texts.cooperativeRules.notes[1]="changed"
+assert(ASX_GetState().data.cooperativeRules.areaBonusShare==.5 and ASX_GetState().texts.cooperativeRules.notes[1]=="The stats panel shows effective values.")
+assert(objects.ASXCooperativeRulesBuff:IsShown() and not objects.ASXUIFramesController)
+for _,p in ipairs({"dead","paused","choosing","playing"})do phase=p;update();assert(objects.ASXCooperativeRulesBuff:IsShown())end
+local before=allocations;now=now+.1;AZS_RUN_UPDATED=now;update();assert(allocations==before)
+now=now+5;update();assert(not objects.ASXCooperativeRulesBuff:IsShown() and not ASX_GetState().available)''')
+        self.cooperative_wire(False)
+        self.lua.execute('assert(ASX_GetState().available and not ASX_GetState().data.cooperativeRules and not objects.ASXCooperativeRulesBuff:IsShown())')
+        self.cooperative_wire()
+        self.lua.execute('phase="ready";update();assert(not objects.ASXCooperativeRulesBuff:IsShown())')
+
+    def test_cooperative_tooltip_separates_gray_notes_and_cannot_cancel(self):
+        self.cooperative_wire()
+        self.lua.execute('''function GameTooltip:ClearLines()self.lines={}end
+function GameTooltip:AddLine(text,r,g,b,wrap)table.insert(self.lines,{text,r,g,b,wrap})end
+enter("ASXCooperativeRulesBuff");assert(GameTooltip.lines[1][1]=="Cooperative Rules" and GameTooltip.lines[2][1]=="Area and range bonuses are 50% effective.")
+assert(table.getn(GameTooltip.lines)==5 and GameTooltip.lines[3][1]==" " and GameTooltip.lines[4][2]==.65 and GameTooltip.lines[5][2]==.65)
+assert(GameTooltip.lines[5][1]=="Item and reward descriptions may show base bonuses.")
+assert(objects.ASXCooperativeRulesBuff.scripts.OnClick==nil and objects.ASXCooperativeRulesBuff.buffIndex==nil)
+phase="ready";update();assert(GameTooltip.hidden)''')
+
+    def test_native_fallback_anchor_and_explicit_docking_ownership(self):
+        self.lua.execute('''local f=CreateFrame("Button","BuffButton0",UIParent);f:SetPoint("TOPRIGHT",UIParent,"TOPRIGHT",-205,-13)
+function f:GetPoint()return unpack(self.anchor or{})end
+function f:GetNumPoints()return self.anchor and 1 or 0 end''')
+        self.cooperative_wire()
+        self.lua.execute('''local f=objects.BuffButton0;local info=objects.ASXCooperativeRulesBuff
+assert(f.anchor[2]==info and info.anchor[2]==UIParent)
+assert(ASX_SetCooperativeRulesDocked("addon",true)==info and f.anchor[2]==UIParent)
+assert(ASX_SetCooperativeRulesDocked("other",true)==nil)
+ASX_SetCooperativeRulesDocked("other",false);assert(f.anchor[2]==UIParent)
+ASX_SetCooperativeRulesDocked("addon",false);assert(f.anchor[2]==info)
+phase="ready";update();assert(f.anchor[2]==UIParent and f.anchor[4]==-205)''')
+
+    def test_native_fallback_follows_reordered_buff_chain_without_cycle(self):
+        self.lua.execute('''for i=0,1 do local f=CreateFrame("Button","BuffButton"..i,UIParent);function f:GetPoint()return unpack(self.anchor or{})end;function f:GetNumPoints()return self.anchor and 1 or 0 end end
+objects.BuffButton1:SetPoint("TOPRIGHT",UIParent,"TOPRIGHT",-205,-13)
+objects.BuffButton0:SetPoint("TOPRIGHT",objects.BuffButton1,"TOPLEFT",-5,0)''')
+        self.cooperative_wire()
+        self.lua.execute('''local b=objects.ASXCooperativeRulesBuff
+assert(objects.BuffButton1.anchor[2]==b and objects.BuffButton0.anchor[2]==objects.BuffButton1 and b.anchor[2]==UIParent)
+now=now+.2;update();assert(b.anchor[2]==UIParent)
+phase="ready";update();assert(objects.BuffButton1.anchor[2]==UIParent)''')
+
     def test_version_and_unavailable_state_are_explicit(self):
         self.lua.execute('local value,reason=ASX_GetState(2);assert(value==nil and reason=="unsupported_version");local s=ASX_GetState(1);assert(ASX_GetAPIVersion()==1 and s.api.major==1 and not s.available and s.reason=="missing_or_invalid_payload" and next(s.data)==nil);local token,error=ASX_RegisterStateHandler("bad");assert(token==nil and error=="invalid_callback");assert(not ASX_UnregisterStateHandler(999))')
     def test_structured_values_and_texts_are_separate_and_guid_is_exact(self):
@@ -49,7 +102,7 @@ class APITests(unittest.TestCase):
         self.lua.execute('AZS_RUN={asx=wire};AZS_RUN_UPDATED=now;now=now+.1')
     def test_local_equipment_native_text_copy_isolation_and_zero_item_snapshot(self):
         self.equipment_wire()
-        self.lua.execute('local major,minor=ASX_GetAPIVersion();assert(major==1 and minor==7);local s=ASX_GetState(1);assert(s.available and s.data.equipment[1].slot==1 and s.data.equipment[1].rank==2 and s.data.equipment[1].name==nil);assert(s.texts.equipment[1].name=="Native ring" and s.texts.equipment[1].text=="Exact owner text\\n+10 damage");s.texts.equipment[1].name="Mutated";assert(ASX_GetState(1).texts.equipment[1].name=="Native ring")')
+        self.lua.execute('local major,minor=ASX_GetAPIVersion();assert(major==1 and minor==9);local s=ASX_GetState(1);assert(s.available and s.data.equipment[1].slot==1 and s.data.equipment[1].rank==2 and s.data.equipment[1].name==nil);assert(s.texts.equipment[1].name=="Native ring" and s.texts.equipment[1].text=="Exact owner text\\n+10 damage");s.texts.equipment[1].name="Mutated";assert(ASX_GetState(1).texts.equipment[1].name=="Native ring")')
         self.equipment_wire(header='L|11|0',row='')
         self.lua.execute('local s=ASX_GetState(1);assert(s.available and table.getn(s.data.equipment)==0 and table.getn(s.texts.equipment)==0)')
     def test_equipment_retains_native_category_and_rejects_unknown_category(self):

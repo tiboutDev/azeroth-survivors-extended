@@ -12,7 +12,11 @@
       "profiles": [
         "official"
       ],
-      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+      "scope_note": "Native shared XP and whole-level receipts while dead, both roles and revival, on an exact staged diagnostic artifact. Equal-XP assertion uses identical fixture profiles; it is not a production XP overwrite policy.",
+      "live_suites": [
+        "solo-progression-probe",
+        "coop-progression-probe"
+      ]
     },
     "ASX-03": {
       "profiles": [
@@ -124,9 +128,9 @@
     },
     "ASX-15": {
       "profiles": [
-        "glyphs"
+        "tooling"
       ],
-      "scope_note": "Retained glyph rule/catalog checks only; gameplay remains disabled on the selected client."
+      "scope_note": "Removed feature ID remains reserved; no runtime or live scenario coverage is required."
     },
     "ASX-16": {
       "profiles": [
@@ -192,7 +196,7 @@
         "profile": "asxui",
         "trigger": "Compare ordinary and special-rank native nameplates while health changes.",
         "expected": "Enemy scale changes and restores; native health updates continue; friendly/unknown-name handling remains conservative.",
-        "limit": "Native placement and glyph appearance require explicit sparse visual review of the exact addon.",
+        "limit": "Native placement and font-character appearance require explicit sparse visual review of the exact addon.",
         "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
       },
       "live_suites": []
@@ -207,7 +211,7 @@
       "targeted_scenario": {
         "profile": "official-party-ui",
         "trigger": "Produce direct and periodic ally healing and an enemy damage number.",
-        "expected": "Recipient identity and native animation retained; ASXUI font loaded without a DLL; glyph scale verified separately.",
+        "expected": "Recipient identity and native animation retained; ASXUI font loaded without a DLL; font-character scale verified separately.",
         "limit": "Portable presentation checks do not prove rendered world text positioning.",
         "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
       },
@@ -244,6 +248,15 @@
         "official-party-ui"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+    },
+    "ASX-29": {
+      "profiles": [
+        "rules",
+        "enchantments",
+        "asxui",
+        "official-party-ui"
+      ],
+      "scope_note": "Portable rule and selected-adapter fixtures cover solo/host/guest and all five actor slots. Windows runtime scope tests cover reentrancy and unwind cleanup. These are not live spell-radius evidence. Lua 5.1 covers informational-aura lifecycle, detached API, tooltip notes, first placement, ownership and native fallback. Visual placement still requires rendered review."
     }
   }
 }

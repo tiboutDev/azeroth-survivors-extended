@@ -410,7 +410,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
             let stage = s.ritual.take().ok_or("Missing completed ritual")?.encounter;
             completed_scene = s.scene.take();
             for id in &ids {
-                let category = s.draw(asx_gameplay::blessings::CATEGORY_COUNT);
+                let category = asx_gameplay::blessings::roll_category(ids.len(), |n| s.draw(n));
                 let power = s.draw(100000);
                 let person = s.people.get_mut(id).ok_or("Missing ritual recipient")?;
                 let next = asx_gameplay::rituals::roll(stage, person.fortune, category, power);

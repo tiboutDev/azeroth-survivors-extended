@@ -11,6 +11,12 @@ impl Adapter {
     pub fn menu_key_target(self) -> Option<u64> {
         Some(crate::current::MENU_KEY_NATIVE_PAUSE)
     }
+    /// UI input prefilter: guests consume Pause before native apply dispatch.
+    /// The hook must preserve its bool result as well as both borrowed inputs.
+    pub fn menu_queue_entry(self) -> Entry {
+        Entry { rva: crate::current::MENU_UI_QUEUE.0, bytes: crate::current::MENU_UI_QUEUE.1 }
+    }
+    pub fn menu_escape_queue_return(self) -> u64 { crate::current::MENU_ESCAPE_QUEUE_RETURN }
     pub fn menu_entry(self) -> Option<Entry> {
         Some(Entry {
             rva: crate::current::MENU_INPUT.0,
@@ -63,9 +69,7 @@ impl Adapter {
         Ok(slot as u32)
     }
     pub unsafe fn menu_send(self, m: &dyn Mem, base: u64, server: u64, bytes: &[u8]) -> Result<()> {
-        if bytes.len() != 9
-            || self.observe(m, server)?.role != Role::Guest
-        {
+        if bytes.len() != 9 || self.observe(m, server)?.role != Role::Guest {
             return Err("Invalid menu transport owner".into());
         }
         let (at, expected) = crate::current::MENU_SEND;
@@ -84,7 +88,7 @@ impl Adapter {
         Ok(())
     }
     pub fn menu_wire(self, m: &dyn Mem, stack: u64) -> Result<(u64, bool)> {
-                let args = m.read(stack + 40, 16)?;
+        let args = m.read(stack + 40, 16)?;
         let ptr = u64::from_le_bytes(args[..8].try_into().unwrap());
         let len = u64::from_le_bytes(args[8..].try_into().unwrap());
         if ptr < 0x10000 || len != 9 {
@@ -99,5 +103,24 @@ impl Adapter {
     }
     pub fn menu_opcode(self) -> Option<u16> {
         Some(crate::current::MENU_OPCODE)
+    }
+}
+
+#[cfg(feature = "test-hooks")]
+impl Adapter {
+    pub unsafe fn fixture_menu_apply(
+        self,
+        m: &dyn Mem,
+        base: u64,
+        server: u64,
+        action: u64,
+    ) -> Result<()> {
+        let (rva, bytes) = crate::current::MENU_INPUT_APPLY;
+        if m.read(base + rva, bytes.len())? != bytes {
+            return Err("Native menu apply changed".into());
+        }
+        let call: unsafe extern "system" fn(u64, u64) = std::mem::transmute((base + rva) as usize);
+        call(server, action);
+        Ok(())
     }
 }

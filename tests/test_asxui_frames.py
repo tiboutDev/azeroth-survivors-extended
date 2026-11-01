@@ -24,6 +24,15 @@ for i=0,3 do local f=CreateFrame("Button","BuffButton"..i,UIParent);f.buffFilter
         self.lua.execute((ROOT/'addons/ASXUI/Theme.lua').read_text())
         self.lua.execute((ROOT/'addons/ASXUI/Frames.lua').read_text())
         self.lua.execute('arg1=.1;ASXUIFramesController.scripts.OnUpdate();ASXUI_DockAuras(view);arg1=.1;ASXUIFramesController.scripts.OnUpdate()')
+    def test_cooperative_information_is_first_and_returns_to_native_fallback(self):
+        self.lua.execute((ROOT/'native-ui/official-party.lua').read_text().replace('local asxNativeActive = 0 -- ASX_LOCAL_UI_GATE','local asxNativeActive = 1 -- ASX_LOCAL_UI_GATE',1))
+        self.lua.globals().wire="1|1|11|1\nM|11|0|506c61796572\nO|11|-|-\n".encode().hex()
+        self.lua.execute('''AZS_RUN={asx=wire,lvl=1};AZS_RUN_UPDATED=now;update();local info=ASX_SetCooperativeRulesDocked("ASXUI",true)
+ASXUI_DockAuras(ASX_GetState());assert(info.anchor[2]==ASXUIHudAuras and info.anchor[4]>BuffButton0.anchor[4])
+assert(BuffButton0.scripts.OnClick==BuffButton0.nativeClick and info:GetWidth()==32)
+ASXUI_ConfigureHud("off");ASXUI_DockAuras(ASX_GetState());assert(info:IsShown() and info.anchor[2]==UIParent and BuffButton0.anchor[2]==info)
+phase="ready";update();assert(not info:IsShown() and BuffButton0.anchor[2]==UIParent)''')
+
     def test_character_level_uses_native_run_value_and_clears_invalid_data(self):
         self.lua.execute('AZS_RUN.lvl=42;arg1=.2;ASXUIFramesController.scripts.OnUpdate();assert(ASXUI_FramesReadout().level=="Lv 42");AZS_RUN.lvl=0/0;arg1=.2;ASXUIFramesController.scripts.OnUpdate();assert(ASXUI_FramesReadout().level=="")')
     def test_hp_only_native_values_and_root_restoration(self):

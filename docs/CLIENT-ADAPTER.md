@@ -55,8 +55,14 @@ including fallback to the original actor, preserve both words. Generated support
 hits use an explicit source kind and spell zero. The support-call interface
 requires the tagged implementation so an adapter cannot silently discard them.
 A Windows stand-in verifies independent nonzero values for both stack words.
-This contract correction does not approve a new executable or resume the separate
-post-death XP investigation.
+Dead-actor progression uses seven separately guarded native phase checks: two
+shared-XP consumers, two whole-level receipt producers and three queued
+whole-level reward consumers. The selected adapter owns their
+registers and continuations. Only an authoritative coop host with a bounded
+current slot and nonzero GUID may rejoin native scaling/award after the dead
+check. No actor-vector traversal occurs while it is lent out. Native award
+updates XP, levels and pending choices without changing the dead phase; native
+Playing eligibility still controls opening choices. No deferred bank is replayed.
 
 The reviewed 0.133 healing/meter consumer additionally reads a fifth argument:
 a borrowed native source descriptor. `call_native_heal` supplies the native
@@ -118,3 +124,14 @@ that recorded patch only at its registered address, with the reviewed original
 prefix and an unchanged remaining guard. It still calls the hooked entry so
 optional goblin reward scopes retain their native forwarding behavior. Unknown
 patches or changes to the guard tail fail closed; uninstall clears ownership.
+
+Native queued whole-level rewards are also consumed while dead. Their native
+threshold-deficit calculation runs at receipt time; only the resulting choices
+wait for revival. The three native consumers retain separate Playing-only choice
+gates. These level-fill awards never enter the shared-XP multiplier/receipt path.
+
+The two whole-level producers originally discarded receipts when the current
+native actor was dead. Their guarded continuations preserve just the native
+level counter addition; item, gold and other reward eligibility is not widened.
+The adapter validates the bounded host stack or remote receipt payload before
+rejoining, without writing phase/HP, inventing XP or retrying uncertain awards.

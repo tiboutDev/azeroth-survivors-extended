@@ -38,7 +38,7 @@ impl Adapter {
         }
         let (_, rows) = self.aura_rows(m, row)?;
         // Native hurt rejects precisely unexpired effect 12, independent of spell,
-        // talent, race, rank and glyph-adjusted duration. Absorption is effect 7.
+        // talent, race and rank-adjusted duration. Absorption is effect 7.
         Ok(rows
             .iter()
             .any(|r| u32::from_le_bytes(r[..4].try_into().unwrap()) == 12 && f(r, 16) > clock))

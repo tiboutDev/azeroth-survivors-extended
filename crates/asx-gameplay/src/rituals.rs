@@ -37,6 +37,17 @@ pub fn roll(encounter:u32,previous:Option<(u32,Blessing)>,category_draw:u32,powe
 fn amount(category:u8,power:u32)->u32{(([1500,1200,2500][category as usize]*power/10+50)/100)*100}
 #[cfg(test)]mod tests{
  use super::*;
+ #[test]fn weighted_categories_leave_ritual_power_and_replacement_unchanged(){
+  for participants in 1..=5{for ticket in 0..participants+2{
+   let category=crate::blessings::roll_category(participants,|_|ticket as u32);
+   let expected=if ticket<participants{0}else if ticket==participants{1}else{2};
+   for stage in 1..=5{let previous=Some(roll(stage,None,expected,0));
+    let actual=roll(stage,previous,category,12345);assert_eq!(actual,roll(stage,previous,expected,12345));
+    assert_eq!(actual.1.category,expected as u8);assert!(actual.0>=previous.unwrap().0);
+   }
+  }}
+ }
+
  #[test]fn group_presence_requires_every_live_identity_and_keeps_partial_progress(){let mut r=Ritual::new(1,0.,[0.;3]).unwrap();r.advance_presence(0.,true);r.advance_presence(0.5,true);let before=r.held;r.advance_presence(1.,false);r.advance_presence(1.5,true);assert_eq!(r.held,before);r.advance_presence(2.,true);assert_eq!(r.held,before+0.5);}
  #[test]fn partial_presence_pause_and_one_success_only(){
   let mut r=Ritual::new(1,0.,[0.;3]).unwrap();for i in 0..=20{assert_eq!(r.advance(i as f32/2.,[0.;3],true),Outcome::Pending);}

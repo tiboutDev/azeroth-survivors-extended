@@ -3,7 +3,7 @@
 use super::presentation;
 use super::{
     addon_activation, blessings, bonus_tooltip, bonus_ui, combat, combat_text, duplicate_loot,
-    elites, experience, fatigue, glyphs, local_base, menu_pause, menu_ui, party_ui,
+    elites, experience, fatigue, local_base, menu_pause, menu_ui, party_ui,
     pause, reward_cards, run_stats, session, support, wallet, xp_hooks, Adapter, Runtime, RUNTIME,
 };
 use crate::{log::Log, proc::Local};
@@ -11,8 +11,7 @@ use crate::{log::Log, proc::Local};
 pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
     let adapter = Adapter::select(sha)?;
     log.info(&format!(
-        "ASX capabilities: glyphs={} duplicate-gold={} native-marks={}",
-        adapter.glyphs_enabled(),
+        "ASX capabilities: duplicate-gold={} native-marks={}",
         adapter.duplicate_loot_enabled(),
         adapter.native_marks_enabled()
     ));
@@ -128,24 +127,17 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         .reward_entries()
         .into_iter()
         .chain([adapter.native_hit_effect_entry()])
-        .chain(if adapter.glyphs_enabled() {
-            adapter.glyph_entries()
-        } else {
-            vec![]
-        })
+        .chain([adapter.spell_modifiers_entry()])
     {
         if r.local.read(local_base() + e.rva as usize, e.bytes.len())? != e.bytes {
             return Err("Native reward/effect boundary changed".into());
         }
     }
     crate::install::install(&reward_cards::hooks(adapter))?;
-    if adapter.glyphs_enabled() {
-        crate::install::install(&glyphs::hooks(adapter))?;
-    }
     for e in adapter.bonus_tooltip_entries() {
         if r.local.read(local_base() + e.rva as usize, e.bytes.len())? != e.bytes {
             return Err(format!(
-                "Native glyph hover boundary changed at {:#x}",
+                "Native bonus hover boundary changed at {:#x}",
                 e.rva
             ));
         }
@@ -165,7 +157,7 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         .chain(adapter.bonus_separator_entries())
     {
         if r.local.read(local_base() + e.rva as usize, e.bytes.len())? != e.bytes {
-            return Err("Native glyph UI boundary changed".into());
+            return Err("Native bonus UI boundary changed".into());
         }
     }
     crate::install::install(&bonus_ui::ui_hooks(adapter))?;
@@ -203,7 +195,7 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         }
         crate::install::install(&[presentation::hook(adapter)])?;
     }
-    crate::install::install(&[experience::hook(adapter)])?;
+    crate::install::install(&experience::hooks(adapter))?;
     if let Some(runtime) = RUNTIME.get().filter(|r| r.rules) {
         combat::install_descriptions(runtime)?;
     }
@@ -220,7 +212,7 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
     if rules {
         if let Some(e) = adapter.menu_entry() {
             let r = RUNTIME.get().ok_or("Missing runtime")?;
-            for entry in [Some(e), adapter.menu_key_entry()].into_iter().flatten() {
+            for entry in [Some(e), adapter.menu_key_entry(), Some(adapter.menu_queue_entry())].into_iter().flatten() {
                 if r.local
                     .read(local_base() + entry.rva as usize, entry.bytes.len())?
                     != entry.bytes

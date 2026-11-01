@@ -25,6 +25,8 @@ impl Adapter {
  }
  pub fn consumable_stats(self,m:&dyn MutableMemory,game:u64,buffs:&[asx_gameplay::supplies::Consumable])->Result<Option<StatInputLoan>>{
   let mut seen=std::collections::BTreeSet::new();if buffs.len()>asx_gameplay::supplies::Family::ALL.len()||buffs.iter().any(|c|!(1..=3).contains(&c.tier)||!seen.insert(c.family)){return Err("Invalid consumable families".into())}
+  // These are generic stat inputs, not jewelry definition kinds. Input 5
+  // adds reduction only; Archimtiros health comes from its separate item path.
   let entries=buffs.iter().filter_map(|c|c.family.stat().map(|kind|(kind,c.value()))).collect::<Vec<_>>();self.temporary_stat_input(m,game,&entries)
  }
  pub fn apply_consumable_speed(self,m:&dyn MutableMemory,game:u64,value:f32)->Result<()>{
@@ -41,5 +43,19 @@ impl Adapter{
  pub fn crystal_stats(self,m:&dyn MutableMemory,game:u64,totals:asx_gameplay::crystals::Totals)->Result<Option<StatInputLoan>>{
   if totals.0.iter().any(|n|*n>1_000_000){return Err("Invalid crystal total".into())}
   self.temporary_stat_input(m,game,&totals.inputs())
+ }
+}
+
+impl Adapter {
+ /// Apply once after a complete authoritative native rebuild. Received guest
+ /// snapshots are already effective values and must never be scaled again.
+ pub fn apply_coop_area(self,m:&dyn MutableMemory,game:u64)->Result<()> {
+  if m.read(game,4)?==2u32.to_le_bytes(){return Ok(())}
+  if self.effect_source(m,game)?.is_none(){return Ok(())}
+  let at=game+self.field1201(v::RING_STAT_OUTPUTS[7]);
+  let native=f32::from_le_bytes(m.read(at,4)?.try_into().map_err(|_|"Truncated area factor")?);
+  let effective=asx_gameplay::area::cooperative_factor(native)?;
+  if effective!=native {m.write(at,&effective.to_le_bytes())?;}
+  Ok(())
  }
 }

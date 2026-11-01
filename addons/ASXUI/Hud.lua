@@ -82,7 +82,9 @@ end
 local function statsView()
  local stats={};for key,value in pairs(AZS_STATS or{})do stats[key]=value end
  local view=ASX_GetState and ASX_GetState(1)
- local common=view and view.available and view.data and view.data.economy
+ local common=view and view.available and view.data and(view.data.sharedEconomy or view.data.economy)
+ local count=GetNumPartyMembers and GetNumPartyMembers()
+ if common or(finite(count)and count>0 and count<5)then stats.xp=nil;stats.gold=nil end
  if common then for _,key in ipairs({"xp","gold"})do if finite(common[key])and common[key]>=0 then stats[key]=common[key]end end end
  return stats
 end
@@ -120,7 +122,9 @@ local function claimCharacterToggle()
  if type(ToggleCharacter)~="function"or ToggleCharacter==ownedCharacterToggle then return end
  local original=ToggleCharacter
  local replacement=function(tab)
-  if enabled and tab=="PaperDollFrame"then open("stats",true);return end
+  if enabled and tab=="PaperDollFrame"then open("stats",true)end
+  -- The client may render its native character sheet outside Classic frames.
+  -- Always retain its own command, rather than guessing that backend's state.
   return original(tab)
  end
  originalCharacterToggle,ownedCharacterToggle=original,replacement;ToggleCharacter=replacement
@@ -195,7 +199,7 @@ local function build()
   local b=CreateFrame("CheckButton","ASXUIHudStats",root);b:SetWidth(36);b:SetHeight(36);b:SetPoint("BOTTOMLEFT",root,"BOTTOMLEFT",403,4)
   b.icon=b:CreateTexture(nil,"ARTWORK");b.icon:SetAllPoints(b);b.icon:SetTexture("Interface\\Icons\\".."INV_Misc_Book_09")
   b:SetCheckedTexture("Interface\\Buttons\\CheckButtonHilight");b:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress");b:SetNormalTexture("Interface\\Buttons\\UI-Quickslot2");b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-  b.asxHudKind=kind;b:SetScript("OnEnter",function()open(this.asxHudKind,false)end);b:SetScript("OnLeave",function()if not pinned then leaveAt=GetTime()+.2 end end);b:SetScript("OnClick",function()open(this.asxHudKind,true)end);buttons[kind]=b
+  b.asxHudKind=kind;b:SetScript("OnEnter",function()open(this.asxHudKind,false)end);b:SetScript("OnLeave",function()if not pinned then leaveAt=GetTime()+.2 end end);b:SetScript("OnClick",function()ToggleCharacter("PaperDollFrame")end);buttons[kind]=b
  end
  root:Hide();return true
 end

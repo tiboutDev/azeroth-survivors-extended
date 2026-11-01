@@ -202,69 +202,60 @@ pub const BLESSING_ENDLESS_RVA:u64=0x5b853e0;
 pub const BLESSING_ENDLESS_BYTES:&[u8]=&[0x55,0x41,0x57,0x41,0x56,0x56,0x57,0x53,0x48,0x81,0xec,0xb8,0,0,0,0x48,0x8d,0xac,0x24];
 pub const BLESSING_GROUP_PHASE:u64=0xc8b;
 
-// Glyph integration: reviewed 0.117 native choice, accept and derived modifier boundaries.
-pub const GLYPH_CARD_RVA:u64=0x5c007f0;
-pub const GLYPH_CARD_BYTES:&[u8]=&[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 232, 2, 0, 0];
-pub const GLYPH_ACCEPT_RVA:u64=0x5c05be0;
-pub const GLYPH_ACCEPT_BYTES:&[u8]=&[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 168, 3, 0, 0];
-pub const GLYPH_MODIFIERS_RVA:u64=0x5ab3360;
-pub const GLYPH_MODIFIERS_BYTES:&[u8]=&[65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 85, 83, 72, 129, 236, 184, 0, 0, 0];
-pub const GLYPH_ABILITIES:[u64;2]=[0x350,0x358];
-pub const GLYPH_ABILITY_STRIDE:u64=0x58;
-pub const GLYPH_DERIVED:u64=0x38;
-pub const GLYPH_PERKS:u64=0x810;
-pub const GLYPH_CHOICES:[u64;2]=[0x678,0x680];
-pub const GLYPH_CHOICE_STRIDE:u64=0xa0;
-pub const GLYPH_CHOICE_PAYLOAD:u64=0x78;
-pub const GLYPH_CHOICE_RARITY:u64=0x98;
-pub const GLYPH_CHOOSING:u64=0xc8a;
-pub const GLYPH_CHOICE_KIND:u64=0xc88;
-pub const GLYPH_DEFINITIONS:[(u64,u32);102]=[(0x729e888,845),(0x729e900,1680),(0x729e978,6343),(0x729e9f0,12294),(0x729ea68,5308),(0x729eae0,1160),(0x729eb58,6673),(0x729ebd0,23881),(0x729ec48,772),(0x729ecc0,23922),(0x729ed38,2687),(0x729edb0,26573),(0x729ee28,879),(0x729eea0,24275),(0x729ef18,25912),(0x729ef90,2812),(0x729f008,20271),(0x729f080,853),(0x729f0f8,635),(0x729f170,642),(0x729f1e8,20925),(0x729f260,7328),(0x729f2d8,75),(0x729f350,3044),(0x729f3c8,2643),(0x729f440,1978),(0x729f4b8,1510),(0x729f530,13812),(0x729f5a8,5116),(0x729f620,19434),(0x729f698,13797),(0x729f710,13810),(0x729f788,1130),(0x729f800,1752),(0x729f878,2098),(0x729f8f0,13877),(0x729f968,1943),(0x729f9e0,408),(0x729fa58,1776),(0x729fad0,14278),(0x729fb48,13750),(0x729fbc0,53),(0x729fc38,5171),(0x729fcb0,14186),(0x729fd28,585),(0x729fda0,589),(0x729fe18,8092),(0x729fe90,15237),(0x729ff08,17),(0x729ff80,139),(0x729fff8,14914),(0x72a0070,15407),(0x72a00e8,8122),(0x72a0160,2944),(0x72a01d8,724),(0x72a0250,403),(0x72a02c8,421),(0x72a0340,8042),(0x72a03b8,8050),(0x72a0430,8056),(0x72a04a8,324),(0x72a0520,8190),(0x72a0598,3599),(0x72a0610,1535),(0x72a0688,331),(0x72a0700,16038),(0x72a0778,133),(0x72a07f0,116),(0x72a0868,7269),(0x72a08e0,122),(0x72a0958,1449),(0x72a09d0,10),(0x72a0a48,2120),(0x72a0ac0,2136),(0x72a0b38,120),(0x72a0bb0,11113),(0x72a0c28,11366),(0x72a0ca0,11426),(0x72a0d18,118),(0x72a0d90,686),(0x72a0e08,172),(0x72a0e80,348),(0x72a0ef8,980),(0x72a0f70,5740),(0x72a1060,6789),(0x72a10d8,5676),(0x72a1150,689),(0x72a11c8,5782),(0x72a1240,6353),(0x72a12b8,18708),(0x72a1330,5176),(0x72a13a8,8921),(0x72a1420,2912),(0x72a1498,16914),(0x72a1510,5570),(0x72a1588,339),(0x72a1600,774),(0x72a1678,8936),(0x72a16f0,467),(0x72a1768,779),(0x72a17e0,5221),(0x72a1858,770)];
+// Shared native reward presentation and spell modifier boundaries.
+pub const REWARD_CARD_RVA:u64=0x5c007f0;
+pub const REWARD_CARD_BYTES:&[u8]=&[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 232, 2, 0, 0];
+pub const REWARD_ACCEPT_RVA:u64=0x5c05be0;
+pub const REWARD_ACCEPT_BYTES:&[u8]=&[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 168, 3, 0, 0];
+pub const SPELL_MODIFIERS_RVA:u64=0x5ab3360;
+pub const SPELL_MODIFIERS_BYTES:&[u8]=&[65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 85, 83, 72, 129, 236, 184, 0, 0, 0];
+
+
+
+pub const SPELL_PERKS:u64=0x810;
+
 
 // Retained native card child renderer, rich line builder and cached icon loader.
-pub const GLYPH_UI_RVA:u64=0x2f6f70;
-pub const GLYPH_UI_BYTES:&[u8]=&[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 168, 9, 0, 0];
-pub const GLYPH_LINE_RVA:u64=0x1070a0;
-pub const GLYPH_LINE_BYTES:&[u8]=&[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 120, 4, 0, 0];
-pub const GLYPH_ICON_RVA:u64=0x2365e0;
-pub const GLYPH_ICON_BYTES:&[u8]=&[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 152, 0, 0, 0];
-pub const GLYPH_UI_ASSETS:u64=0x60;
-pub const GLYPH_UI_COLOR:u64=0x58;
-pub const GLYPH_UI_HEADER_CALLER:u64=0x13c0c2;
-pub const GLYPH_UI_HEADER_NODE:u64=8;
-pub const GLYPH_UI_HEADER_WIDTH:u64=0x88;
-pub const GLYPH_UI_HEADER_HEIGHT:u64=0x90;
+pub const BONUS_UI_RVA:u64=0x2f6f70;
+pub const BONUS_UI_BYTES:&[u8]=&[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 168, 9, 0, 0];
+pub const BONUS_LINE_RVA:u64=0x1070a0;
+pub const BONUS_LINE_BYTES:&[u8]=&[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 120, 4, 0, 0];
+pub const BONUS_ICON_RVA:u64=0x2365e0;
+pub const BONUS_ICON_BYTES:&[u8]=&[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 152, 0, 0, 0];
+pub const BONUS_UI_ASSETS:u64=0x60;
+pub const BONUS_UI_COLOR:u64=0x58;
+pub const BONUS_UI_HEADER_CALLER:u64=0x13c0c2;
+pub const BONUS_UI_HEADER_NODE:u64=8;
+pub const BONUS_UI_HEADER_WIDTH:u64=0x88;
+pub const BONUS_UI_HEADER_HEIGHT:u64=0x90;
 
 // Diagnostic-only native reroll entry (normal reward generation remains unchanged).
-pub const GLYPH_REROLL_RVA:u64=0x5c09350;
-pub const GLYPH_REROLL_BYTES:&[u8]=&[0x56,0x53,0x48,0x83,0xec,0x28,0x80,0xb9,0x8a,0x0c,0,0,2];
-pub const GLYPH_REROLLS:u64=0x568;
+pub const REWARD_REROLL_RVA:u64=0x5c09350;
+pub const REWARD_REROLL_BYTES:&[u8]=&[0x56,0x53,0x48,0x83,0xec,0x28,0x80,0xb9,0x8a,0x0c,0,0,2];
+pub const REWARD_REROLLS:u64=0x568;
 
 // Node::field("flex_direction") returns +0x176; width/height getters agree
 // with the reviewed card layout. Post-visual interaction guard follows.
-pub const GLYPH_UI_HEADER_DIRECTION:u64=0x176;
-pub const GLYPH_UI_ACTION_RVA:u64=0x329159;
-pub const GLYPH_UI_ACTION_BYTES:&[u8]=&[0x0f,0x85,0x52,1,0,0];
+pub const BONUS_UI_HEADER_DIRECTION:u64=0x176;
+pub const BONUS_UI_ACTION_RVA:u64=0x329159;
+pub const BONUS_UI_ACTION_BYTES:&[u8]=&[0x0f,0x85,0x52,1,0,0];
 
 // Node::field("justify_content") returns +0x17d. JustifyContent::Center = 5.
-pub const GLYPH_UI_HEADER_JUSTIFY:u64=0x17d;
-pub const GLYPH_UI_CENTER:u8=5;
+pub const BONUS_UI_HEADER_JUSTIFY:u64=0x17d;
+pub const BONUS_UI_CENTER:u8=5;
 
 // Rich-line span builder (0x301517) submits the reviewed TextSpan bundle at r8.
-pub const GLYPH_TEXT_NODE_RVA:u64=0x2be1d0;
-pub const GLYPH_TEXT_NODE_BYTES:&[u8]=&[0x55,0x41,0x57,0x41,0x56,0x41,0x55,0x41,0x54,0x56,0x57,0x53,0x48,0x81,0xec,0xc8,0,0,0];
-pub const GLYPH_STATUS_FONT_SIZE:u64=0x50;
-pub const GLYPH_STATUS_COLOR:u64=0x58;
+pub const BONUS_TEXT_NODE_RVA:u64=0x2be1d0;
+pub const BONUS_TEXT_NODE_BYTES:&[u8]=&[0x55,0x41,0x57,0x41,0x56,0x41,0x55,0x41,0x54,0x56,0x57,0x53,0x48,0x81,0xec,0xc8,0,0,0];
+pub const BONUS_STATUS_FONT_SIZE:u64=0x50;
+pub const BONUS_STATUS_COLOR:u64=0x58;
 
 // Node::field("margin") => +0xb8; UiRect "top" => +0x10 (reviewed getters).
-pub const GLYPH_UI_HEADER_MARGIN_TOP:u64=0xc8;
+pub const BONUS_UI_HEADER_MARGIN_TOP:u64=0xc8;
 
 // Game on-hit effect dispatcher: (Game*, enemy GUID, borrowed Effect[12], damage, spell).
 // Effect 6 applies coefficient * maximum HP inline at 0x5bbf87f..0x5bbf8b8.
-pub const GLYPH_ON_HIT_RVA:u64=0x5bbf7b0;
-pub const GLYPH_ON_HIT_BYTES:&[u8]=&[0x55,0x41,0x57,0x41,0x56,0x56,0x57,0x53,0x48,0x81,0xec,0xd8,0,0,0];
+pub const SPELL_ON_HIT_RVA:u64=0x5bbf7b0;
+pub const SPELL_ON_HIT_BYTES:&[u8]=&[0x55,0x41,0x57,0x41,0x56,0x56,0x57,0x53,0x48,0x81,0xec,0xd8,0,0,0];
 
 // After native count comparison: JA consumes only CF/ZF. RCX is the source Game.
-pub const GLYPH_SHEEP_GATE_RVA:u64=0x5bf0520;
-pub const GLYPH_SHEEP_GATE_BYTES:&[u8]=&[15,135,53,3,0,0,243,15,16,177,220,11,0,0];
-pub const GLYPH_SHEEP_COUNT:u64=0x8f8;

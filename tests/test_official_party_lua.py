@@ -110,11 +110,21 @@ function enter(button)this=objects[button];this.scripts.OnEnter();this=nil end
 class NativePartyLua(unittest.TestCase):
  def setUp(self):
   self.lua=LuaRuntime();self.lua.execute(STUB);self.lua.execute((ROOT/"native-ui/official-party.lua").read_text().replace("local asxNativeActive = 0 -- ASX_LOCAL_UI_GATE","local asxNativeActive = 1 -- ASX_LOCAL_UI_GATE",1));self.lua.execute((ROOT/"addons/ASXUI/Theme.lua").read_text());self.lua.execute((ROOT/"addons/ASXUI/Minimap.lua").read_text());self.lua.execute((ROOT/"addons/ASXUI/Events.lua").read_text());self.lua.execute("update();now=now+0.3;update()")
+ def test_partial_shared_economy_keeps_independent_values_and_legacy_complete_pair(self):
+  base="1|1|11|1\nM|11|0|506c61796572\n"
+  self.publish((base+"O|11|1350000|-\n").encode().hex())
+  self.lua.execute('local s=ASX_GetState(1);assert(s.available and s.api.minor>=8 and s.data.sharedEconomy.xp==1.35 and s.data.sharedEconomy.gold==nil and s.data.economy==nil);s.data.sharedEconomy.xp=9;assert(ASX_GetState(1).data.sharedEconomy.xp==1.35)')
+  self.publish((base+"O|11|1350000|1600000\n").encode().hex())
+  self.lua.execute('local s=ASX_GetState(1);assert(s.data.economy.xp==1.35 and s.data.economy.gold==1.6 and s.data.sharedEconomy.gold==1.6)')
+  self.publish((base+"O|11|-|-\n").encode().hex())
+  self.lua.execute('local s=ASX_GetState(1);assert(s.available and s.data.sharedEconomy and s.data.sharedEconomy.xp==nil and s.data.sharedEconomy.gold==nil and s.data.economy==nil)')
+  for cells in ["invalid|-","-|invalid","1350000|NaN"]:
+   self.publish((base+"O|11|"+cells+"\n").encode().hex());self.lua.execute('assert(not ASX_GetState(1).available)')
  def test_native_drop_api_keeps_icon_receipt_and_recipient_identity(self):
   h=lambda text:text.encode().hex()
   row=f"Q|11|1|0|1|{h('Recruit Helm')}|{h('INV_Helmet_02')}\n"
   self.publish(("1|1|11|1\nM|11|0|506c61796572\n"+row).encode().hex())
-  self.lua.execute('local s=ASX_GetState(1);assert(s.api.minor==7 and s.data.loot[1].event==1 and s.data.loot[1].isNew and s.texts.loot[1].icon=="INV_Helmet_02");s.texts.loot[1].icon="mutated";assert(ASX_GetState(1).texts.loot[1].icon=="INV_Helmet_02")')
+  self.lua.execute('local s=ASX_GetState(1);assert(s.api.minor==9 and s.data.loot[1].event==1 and s.data.loot[1].isNew and s.texts.loot[1].icon=="INV_Helmet_02");s.texts.loot[1].icon="mutated";assert(ASX_GetState(1).texts.loot[1].icon=="INV_Helmet_02")')
   self.publish(("1|1|11|1\nM|11|0|506c61796572\n"+row.replace("Q|11|","Q|22|")).encode().hex())
   self.lua.execute('assert(not ASX_GetState(1).available)')
  def test_native_drop_duplicate_sequence_and_invalid_texture_fail_closed(self):

@@ -4,6 +4,7 @@ use asx_game::official::{PartyObservation, Role};
 
 pub(in crate::runtime) trait Services {
     fn key_target(&self) -> Option<usize>;
+    fn escape_queue_source(&self) -> u64;
     fn has_menu(&self) -> bool;
     fn role(&self, server: u64) -> Result<Role, String>;
     fn cached_party(&self) -> Option<PartyObservation>;
@@ -23,6 +24,7 @@ pub(super) fn active() -> Option<&'static dyn Services> {
 }
 
 impl Services for Runtime {
+    fn escape_queue_source(&self)->u64{self.local.base as u64+self.adapter.menu_escape_queue_return()}
     fn key_target(&self) -> Option<usize> {
         self.adapter.menu_key_target().map(|at| self.local.base + at as usize)
     }

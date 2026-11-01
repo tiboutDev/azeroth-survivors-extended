@@ -1,6 +1,6 @@
 # Active feature rules
 
-This summarizes the current 0.125 policy. The portable implementations in
+This summarizes the current supported source policy. The portable implementations in
 `crates/asx-gameplay/src/` are the precise reference for calculations; selected
 native translation belongs in `asx-game`. Stable feature identities live in
 [ASX-FEATURES.md](ASX-FEATURES.md), and player explanations in
@@ -9,16 +9,25 @@ native translation belongs in `asx-game`. Stable feature identities live in
 ## Shared rewards
 
 Coop uses a host-owned wallet with native actor balances as projections.
-Purchased caches debit once and deliver personal native choices. Voluntary full
-skips and automatic conversions keep their distinct existing caller/rounding
-rules. Strongest racial/fortune contributions and permanent armory-Gold rules
+Purchased caches debit once and deliver personal native choices. Voluntary
+skip gold is divided by the current participant count, then rounded to the
+nearest integer (halves up), before crediting the shared wallet once. Divide
+before rounding: 7 gold / 2 becomes 4, and 2.99 / 2 becomes 1. Solo is unchanged.
+Dead participants remain participants; departed identities do not. Automatic
+conversions keep their existing floor rule. Strongest racial/fortune contributions and permanent armory-Gold rules
 must not be replaced by summing every participant's equipment.
+
+Dead participants continue receiving the same normalized shared XP as survivors.
+Their native level and pending choices advance while they remain dead; choices
+open through native flow after revival. There is no catch-up bank or replay.
+Native personal modifiers can still differ; this does not force every actor to
+the same absolute level or overwrite existing XP.
 
 Never duplicate a native personal reward or retry an uncertain native commit.
 Take pending work before native callbacks and preserve successful per-actor
 acknowledgements. Current guardian rewards and personal collection marks are
 native; supplemental guardian items and duplicate-loot gold compensation are not
-installed by the selected 0.125 path.
+installed by the selected native path.
 
 ## Jewelry
 
@@ -26,8 +35,8 @@ Amulets now retain their native rewards without an ASX gem assignment or card
 annotation. Crystal Resonance replaces the old immutable amulet gem.
 
 Four native UnGoro crystal colors provide personal additive gains per pickup:
-Red +10% damage, Blue +5% cooldown recovery, Green +15% maximum health,
-Yellow +10% area of effect. Color draws are independent and equally likely;
+Red +12% damage, Blue +7% cooldown recovery, Green +15% maximum health,
+Yellow +12% area of effect. Color draws are independent and equally likely;
 repeated colors are allowed. No rarity, pity rotation or ordering against other
 events is applied. All collected bonuses reset at the next run, not on death.
 
@@ -55,7 +64,7 @@ created. ASX addon API 1.3 exposes counts/bonus values independently of text.
 
 Ring enchantment kind locks on the first accepted upgrade. Five total-value
 tiers begin at native ring ranks **2/4/7/10/14**: Minor, Lesser, unprefixed,
-Greater and Superior. Kind and rank remain per ring. Native additive-stat inputs
+Greater and Superior. Alacrity totals are +3/+5/+8/+11/+15% cooldown recovery input; Renewal totals are +0.5/+1/+1.5/+2/+3 health per second. These are total tier values, not extra increments. Kind and rank remain per ring. Native additive-stat inputs
 are temporarily borrowed and restored; repeated rebuilds must not accumulate
 bonuses. Preview/apply/improve text must reflect the accepted native rank.
 Native capped rings can remain unenchantable or low-tier. Declined previews retire
@@ -66,14 +75,13 @@ still randomly repeat an enchantment.
 Rules: `crystals.rs`, `enchantments.rs`; scene/stat coordination uses bounded
 event/reward services. Retained old gem formats are compatibility/test helpers,
 not active amulet bonuses.
-Shared retained-tooltip/card representations do not enable disabled glyphs.
 
 ## Fortunes
 
 Sayge's Dark Fortunes grant one personal replacement per completed native boss
 encounter, including endless encounters. One active fortune per player persists
 until replaced or the run ends. Luck, XP and Gold
-are equally likely; rarity weights are 60/25/10/4/1 and do not use player Luck.
+use personal category weights N:1:1 for Luck:XP:Gold, where N is the eligible participant count snapshotted at reward completion (one to five). Solo remains equal. Both the enabled ritual and the automatic boss fallback use this policy. Joining/leaving alone never rerolls a retained fortune. Fallback rarity weights remain 60/25/10/4/1 and do not use player Luck.
 Strength progression caps at five completed encounters; later encounters still
 replace fortunes. Final percentages are rounded once and used consistently for
 application, tooltip and notification.
@@ -203,12 +211,15 @@ still-active stronger effect. Tiers follow completed native encounters:
 
 | Family | Tier I | Tier II | Tier III |
 | --- | --- | --- | --- |
-| Cooldown recovery | +6% | +10% | +14% |
+| Cooldown recovery | +8% | +12% | +16% |
 | Critical strike chance | +4 points | +7 points | +10 points |
 | Damage reduction | +3 points | +5 points | +7 points |
-| Maximum health | +10% | +20% | +30% |
+| Maximum health | +20% | +30% | +40% |
 | Critical strike damage | +20% | +35% | +50% |
 | Area of effect | +15% | +25% | +35% |
+| Movement speed | +10% | +15% | +20% |
+
+Defense uses generic native stat input 5: damage reduction only, with no maximum-health contribution. This input is distinct from jewelry kind 5 (Archimtiros), whose item-specific conversion also grants health. No compensating negative-health input is applied.
 
 Classic elixirs, flasks and wizard oils provide the names/icons. Their effects
 are ASX adaptations. Giant Growth retains its real name across tiers rather
@@ -232,7 +243,7 @@ Discoveries queue as brief retained notifications, with no selection or pause.
 Each active family gets its own cosmetic native positive-aura slot, icon,
 frozen simulation countdown and tooltip showing actual values and tier. Only
 owned placeholder slots are decorated; native buffs continue through their
-original APIs. Cooperative personal claims/visibility remain a later pass.
+original APIs. Cooperative personal claims and visibility follow the identity-bound rules below.
 
 ## Support and targeting
 
@@ -400,9 +411,23 @@ an obsolete 60-second literal.
 
 ### Native spending receipts
 
-The selected 0.131 client inlines coin-map writes for cache purchases and paid
+The selected native client inlines coin-map writes for cache purchases and paid
 rerolls. ASX observes their completed native handlers in addition to the generic
 currency setter. It commits only native decreases to the shared wallet and leaves
 earned-gold totals unchanged. Seeing the same balance through both paths is
 idempotent. A concurrent/nested wallet change cannot be overwritten by a stale
 observation. Free and rejected rerolls retain native costs and availability.
+
+Native queued whole-level rewards are also consumed while dead. Their native
+threshold-deficit calculation runs at receipt time; only the resulting choices
+wait for revival. The three native consumers retain separate Playing-only choice
+gates. These level-fill awards never enter the shared-XP multiplier/receipt path.
+
+## Cooperative area bonuses
+
+In coop, positive bonuses to the global spell area/range stat retain **50%**
+of their nominal value: +40% becomes +20%, and +100% becomes +50%.
+This covers all contributions to that global stat. Base spell radii, separate
+spell-specific radius mechanics, reductions and solo play remain unchanged.
+The effective stats panel shows the adjusted total; individual item descriptions
+continue to describe nominal bonuses. This rule does not change enemy scaling.

@@ -3,6 +3,15 @@ use std::collections::BTreeMap;
 /// ASX progression stops after the fifth completed encounter, on every map.
 pub const PROGRESSION_BOSS_CAP:u32=5;
 pub const CATEGORY_COUNT:u32=3;
+/// One personal draw with Luck:XP:Gold weights N:1:1. Call with the fixed
+/// eligible recipient count at completion, never on membership-only changes.
+/// Clamp defensively to the supported one-to-five-player range.
+pub fn roll_category(participants:usize,mut roll:impl FnMut(u32)->u32)->u32{
+    let luck=participants.clamp(1,5) as u32;
+    let draw=roll(luck+2)%(luck+2);
+    if draw<luck{0}else if draw==luck{1}else{2}
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Blessing {
     pub category: u8,
@@ -59,7 +68,7 @@ impl Blessings {
         let boss = self.awards;
         for id in ids {
             self.actors
-                .insert(*id, Blessing::roll(boss, roll(CATEGORY_COUNT), roll(100)));
+                .insert(*id, Blessing::roll(boss, roll_category(ids.len(), &mut roll), roll(100)));
         }
         true
     }
@@ -76,6 +85,38 @@ impl Blessings {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn participant_weights_are_exact_and_solo_preserves_categories(){
+        for n in 1..=5 {
+            let mut counts=[0;3];
+            for ticket in 0..n+2 {
+                let category=roll_category(n,|bound|{assert_eq!(bound,n as u32+2);ticket as u32});
+                counts[category as usize]+=1;
+                if n==1{assert_eq!(category,ticket as u32);}
+            }
+            assert_eq!(counts,[n,1,1]);
+        }
+    }
+    #[test]
+    fn completion_snapshots_membership_without_rerolling_retained_fortunes(){
+        let ids=[(0,10),(1,20),(2,30),(3,40),(4,50)];
+        let mut s=Blessings::default();
+        // Every ticket range has exactly N Luck outcomes and one XP/Gold each.
+        for n in 1..=5 {
+            for ticket in 0..n+2 {
+                let event=(n*100+ticket)as u64;
+                assert!(s.complete(event,&ids[..n],|bound|if bound==100{99}else{assert_eq!(bound,n as u32+2);ticket as u32}));
+                let expected=if ticket<n{0}else if ticket==n{1}else{2};
+                assert!(ids[..n].iter().all(|id|s.actors[id].category==expected));
+                let saved=s.actors.clone();
+                assert!(!s.complete(event,&ids[..n],|_|panic!("replayed completion")));
+                assert_eq!(s.actors,saved);
+            }
+        }
+        let saved=s.actors[&ids[0]];s.retain(&ids[..1]);assert_eq!(s.actors[&ids[0]],saved);
+        assert!(s.complete(1000,&ids[..1],|bound|if bound==3{1}else{0}));
+        assert_eq!(s.actors[&ids[0]].category,1);
+    }
     #[test]
     fn fixed_weights_progression_and_caps() {
         let mut counts = [0; 5];
@@ -114,8 +155,8 @@ mod tests {
     #[test]
     fn replacement_clears_personal_luck_and_does_not_add_party_economy() {
         let mut s=Blessings::default();let ids=[(0,10),(1,20)];
-        assert!(s.complete(1,&ids,|n|if n==CATEGORY_COUNT{0}else{99}));assert_eq!(s.actors[&ids[0]].category,0);assert_eq!(s.strongest(1),0.);assert_eq!(s.strongest(2),0.);
-        assert!(s.complete(2,&ids,|n|if n==CATEGORY_COUNT{1}else{0}));assert!(s.actors.values().all(|b|b.category==1));assert_eq!(s.strongest(0),0.);assert_eq!(s.strongest(1),0.14);
+        assert!(s.complete(1,&ids,|n|if n==4{0}else{99}));assert_eq!(s.actors[&ids[0]].category,0);assert_eq!(s.strongest(1),0.);assert_eq!(s.strongest(2),0.);
+        assert!(s.complete(2,&ids,|n|if n==4{2}else{0}));assert!(s.actors.values().all(|b|b.category==1));assert_eq!(s.strongest(0),0.);assert_eq!(s.strongest(1),0.14);
     }
     #[test]
     fn endless_rewards_continue_with_fixed_map_cap() {
@@ -136,7 +177,7 @@ mod tests {
     fn duplicate_event_replacement_disconnect_and_group_max() {
         let mut s = Blessings::default();
         let ids = [(0, 10), (1, 20)];
-        assert!(s.complete(7, &ids, |n| if n == CATEGORY_COUNT { 1 } else { 99 }));
+        assert!(s.complete(7, &ids, |n| if n == 4 { 2 } else { 99 }));
         assert!(!s.complete(7, &ids, |_| panic!("duplicate must not roll")));
         assert_eq!(s.strongest(1), 0.38);
         assert!(s.complete(8, &ids, |_| 0));

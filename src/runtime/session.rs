@@ -132,7 +132,6 @@ fn update_pass(runtime: Option<&dyn WorldServices>, server_address: u64, native:
     if let Some(runtime) = runtime.filter(|runtime| runtime.rules_enabled()) {
         if runtime.observe_role(server_address).is_ok_and(|state| state.role == asx_game::official::Role::Host) {
             runtime.refresh_host(server_address);
-            runtime.finish_experience(server_address);
         }
     }
     if let Some(runtime) = runtime.filter(|runtime| runtime.rules_enabled() && runtime.duplicate_enabled()) {

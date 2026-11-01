@@ -217,7 +217,6 @@ impl WorldServices for UpdateFake {
     }
     fn begin_duplicates(&self,_:u64){self.events.borrow_mut().push("dup-begin");}
     fn refresh_host(&self,_:u64){self.events.borrow_mut().push("refresh");}
-    fn finish_experience(&self,_:u64){self.events.borrow_mut().push("xp");}
     #[cfg(feature="test-hooks")]
     fn fixture_before_update(&self,_:u64){}
     #[cfg(feature="test-hooks")]
@@ -236,7 +235,7 @@ fn update_observes_role_again_after_native_before_host_work() {
         assert!(!pause::host_authority());
         fake.events.borrow_mut().push("native");fake.role.set(Host);
     });
-    assert_eq!(*fake.events.borrow(),["role","dup-begin","native","role","refresh","xp","dup-finish","diagnostic"]);
+    assert_eq!(*fake.events.borrow(),["role","dup-begin","native","role","refresh","dup-finish","diagnostic"]);
     fake.events.borrow_mut().clear();
     update_pass(Some(&fake),10,||{
         assert!(pause::host_authority());

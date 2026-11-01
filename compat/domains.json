@@ -62,9 +62,7 @@
       "crates/asx-game/src/official_native/event_placement.rs",
       "crates/asx-game/src/official_native/scene_units.rs"
     ],
-    "spells": [
-      "crates/asx-game/src/official_native/glyphs.rs"
-    ],
+    "spells": [],
     "ui": [
       "crates/asx-game/src/official_native/*ui*.rs",
       "crates/asx-game/src/official_native/*tooltip*.rs",

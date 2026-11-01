@@ -1,5 +1,8 @@
 # Targeted ASX validation
 
+Use the [expected-behavior acceptance reference](ASX-BEHAVIOR.md) to plan and
+record feature-level verification; update affected criteria with semantic changes.
+
 The supported source target is official 0.135.1. Review the
 [feature inventory](ASX-FEATURES.md) and [adapter boundary](CLIENT-ADAPTER.md)
 when changing native integration. Validation must cover the changed risk and
@@ -28,7 +31,7 @@ are written under ignored `test-results/targeted/` directories.
 `official-party-ui` separately so its explicit Lua 5.1 check is not replaced by
 generic Python discovery, where that optional dependency can be skipped.
 
-`full` tests the current 0.133 Rust graph, Python suite and Clippy. Retired
+`full` tests the current supported Rust graph, Python suite and Clippy. Retired
 reader/tool implementations and their exclusive tests are not part of the gate.
 
 | Profile | Current risk covered |
@@ -40,7 +43,6 @@ reader/tool implementations and their exclusive tests are not part of the gate.
 | gems | Retained historical gem formats and selected jewelry helpers |
 | crystals | Personal claims, shared expiry, free draws, native aura preservation, Lua/API totals and tooltip |
 | enchantments | Ring identity/ranks, selected jewelry transactions and evidence rejection |
-| glyphs | Retained rule catalogs and shared bonus representation; glyph gameplay remains disabled on the current client |
 | fatigue | Resurrection penalties, recovery policy and selected native integration |
 | rules | All independent gameplay policy and contract tests |
 | combat | Marks, taunts and immunity policy plus selected native fixtures |
@@ -437,3 +439,57 @@ enchantment text rendered in GameTooltip. Its bounded `ASX_TEST_HUD_OWNERS`
 observer writes local diagnostic logs only; it does not enable the retired native
 CVar diagnostic channel. A shorter run may stop before the real trial completes;
 that missing Fortune witness remains a failure, not a waived check.
+
+## Dead-player progression
+
+Use `solo-progression-probe` before `coop-progression-probe` on the exact staged
+diagnostic artifact. The bounded two-client scene uses native lethal damage,
+kills and XP pickups, a native guardian reward while the guest is dead, and
+proximity resurrection for both roles. It never writes XP or levels. Acceptance
+requires levels to advance during death, equal XP/levels for the identical test
+profiles after both revivals, both shared-XP guard paths, and a native whole-level
+receipt plus its consumption while dead. Reaching a similar level alone is not
+a pass. Native personal modifiers need not produce identical levels in arbitrary
+real parties; do not overwrite progression to force equality.
+
+A passive Lua audit confirms public `AZS_GetPlayerPosition` samples between
+`AZS_RUN` snapshots and the retained foreground arrow's visibility. No screenshots
+or desktop input are enabled. Gold-skip division/rounding is covered by portable
+policy tests; this scene does not force a skip. The original failed attempts and
+their criteria remain evidence, even when a later stricter review supersedes them.
+
+### Native world reference arithmetic
+
+`tests/test_native_world_balance.py` checks saved table/render consistency and
+balancing examples. With the reviewed image in `ASX_REVIEWED_IMAGE_1351`, run:
+
+```sh
+uv run --with pefile --with unicorn python3 -m unittest tests.test_native_world_balance
+```
+
+The emulator executes original health polynomials and cache-price arithmetic,
+without starting or modifying a game. Missing image/dependencies skip the oracle;
+such a skip is not native arithmetic validation. Full spawn constructors, boss
+mechanics and live combat are outside this arithmetic receipt.
+
+### Cooperative positive-area display fixture
+
+For an explicitly requested two-client diagnostic UI trial, combine the existing
+cooperative UI probe with `ASX_TEST_CRYSTAL_UI_ONLY=1`. The runner requires two
+players and diagnostic-probe mode, enables native crystal encounters and retries
+placement of identity-checked living guests near unclaimed crystals. Claims,
+stat reconstruction, transport and displayed values remain real. Both clients
+must load ASXUI when testing both stats panels. The observer records native
+`area`, the informational button and effective HUD cells.
+
+This mode omits the crystal arithmetic fixture's nested baseline/repeat rebuilds.
+Those intrusive probes compose poorly with cooperative Fortune reconstruction
+and can introduce temporary XP/gold changes; do not use the combined probes to
+claim a normal-runtime regression or suppress their mismatches. Keep their
+failed evidence. The UI-only mode retains the standard economic, native talent
+pause and four-stage character/stats-command assertions unchanged.
+
+A yellow crystal has nominal +12% area; require a real guest collection log,
+then native guest `area=1.06` and ASXUI `Area +6%`, with a rendered panel capture.
+This checks reception is not scaled twice. Document missing collection, closed
+panel, skipped commands and mismatches as failures or uncovered cases.

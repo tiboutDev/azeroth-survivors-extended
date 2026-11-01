@@ -136,8 +136,7 @@ column through the existing native Node/ChildOf builder and borrows the native
 commands only within the synchronous card build. When native formatting delivers
 the status as a later line, only the column entity is retained until the end of
 that card build; the caption reborrows the current callback's command queue.
-Original `Sets...`, `Applies...` and `Improves...` wording is preserved. Glyph gameplay stays disabled;
-these shared helpers also serve enchantments and amulet gems.
+Original `Sets...`, `Applies...` and `Improves...` wording is preserved; these shared helpers serve enchantments and retained gem representations.
 
 ## Cooperative markers
 
@@ -228,11 +227,18 @@ minimap anchor; one Guardians quest contains live names/counts and upcoming
 arrivals, alongside a separate Sayge quest. Rows size to their text. All active
 lairs receive pins, with explicit retained-frame levels: Sayge, live guardians,
 Supplies, caches, then soon-returning guardians. No coordinate jitter or
-replacement native ping logic is added.
+replacement native ping logic is added. The foreground player arrow reads
+`AZS_GetPlayerPosition()` each frame, validates its map/run identity, and follows
+rendered movement/facing between `AZS_RUN` snapshots. Invalid/unavailable live
+samples hide the ASX proxy and preserve the native fallback; no new memory
+reader or hook is needed.
 
 Encounter names are centered, without percentages. Player HP displays only its
-current amount. The character-sheet command toggles stats while the HUD is
-active, preserving configured bindings, other tabs and native fallback.
+current amount. The character-sheet command and stats-button click open/close the native character
+sheet and ASX stats together while the HUD is active. Hover remains a compact
+stats-only preview. Configured bindings, other tabs and native fallback remain
+unchanged. API 1.8 projects XP and gold independently; unavailable shared values
+are hidden instead of being replaced with personal native values.
 Native goblin creation no longer reads the raid table or invokes its command to
 assign skull; no automatic unmarking is performed. The diagnostic raid-table observer is host-only; solo trials explicitly skip
 that raw-table observation rather than counting it as a pass. Existing participant marker policy remains

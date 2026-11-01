@@ -6,14 +6,18 @@ validation. Source behavior, a built DLL and a distributed archive are different
 evidence scopes. Follow [testing](TESTING.md) for evidence requirements and limits.
 
 Do not delete or reuse an ID when a feature is disabled or absorbed by upstream;
-record its current disposition. Glyph gameplay is disabled and native personal
-marks replace duplicate-loot gold compensation.
+record its current disposition. Native personal marks replace duplicate-loot
+gold compensation. Reserved removed IDs are not reassigned.
 
 {{FEATURE_TABLE}}
 ## Review requirements
 
-A native compatibility change must account for ASX-01 through ASX-28 and all nine
-glyph catalogs, including disabled and upstream-native behavior. Record the
+[ASX-BEHAVIOR.md](ASX-BEHAVIOR.md) expands every stable feature into individually
+identified acceptance criteria, regression cases and evidence requirements. Keep
+those current with semantic changes; this generated table remains the index.
+
+A native compatibility change must account for ASX-01 through ASX-28, including
+reserved removed IDs and upstream-native behavior. Record the
 native boundary, exact source/artifact identity, checks and limitations. Preserve
 producer/recipient GUIDs, host/private layouts, native ownership, reset and
 reentry semantics. Matching hook prologues do not establish complete parity.

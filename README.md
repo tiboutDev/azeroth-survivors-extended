@@ -72,13 +72,13 @@ For multiplayer, use the official **Co-op** menu. All participants should use th
 
 ## In the workshop
 
-**Spell Glyphs are temporarily disabled for 0.135.1** while we revisit their interaction with the new equipment set bonuses.
+Experimental ideas are kept separate from the features available in current releases.
 
 [See what we’re exploring →](docs/player/WORKSHOP.md)
 
-## Known issue
+## Co-op progression
 
-In co-op, XP may remain desynchronized after a player dies and is resurrected. This issue remains open.
+In current source, dead co-op participants continue gaining shared XP and native whole-level rewards immediately. Level-up choices remain pending until revival. Prepared archives validate only the source recorded in their release notes.
 
 ## Help improve ASX
 
@@ -116,7 +116,9 @@ declare their own supported game version. See
 [client compatibility](docs/CLIENT-COMPATIBILITY.md).
 
 For source organization and engineering practices, see
-[Development](docs/DEVELOPMENT.md).
+[Development](docs/DEVELOPMENT.md). The maintained
+[behavior and compatibility checklist](docs/ASX-BEHAVIOR.md) defines expected
+outcomes for every ASX feature, including disabled and native-owned behavior.
 
 ## License
 
@@ -128,3 +130,9 @@ ASX is distributed without any warranty; see the license for details.
 The original game, its assets and third-party dependencies retain their own licenses.
 
 Developer workflow: [compatibility and diagnostic tooling](docs/COMPATIBILITY-WORKFLOW.md).
+
+## Native balance data
+
+The [native balance reference](docs/native-balance/NATIVE-BALANCE.md) records common native statistics and jewelry with rank/rarity formulas, an offline calculator, reproducible extraction and source provenance.
+
+The native-only [enemy reference](docs/native-balance/ENEMIES.md) covers map definitions, guardians, bosses and spawn scaling; [economy](docs/native-balance/ECONOMY.md) covers kill rewards, gold credits, cache prices and rerolls. Recorded versions indicate provenance; refresh values only on explicit request.

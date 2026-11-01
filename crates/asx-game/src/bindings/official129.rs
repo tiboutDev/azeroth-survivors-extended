@@ -1,4 +1,4 @@
-//! Exact 0.129.0 binding. Glyphs disabled; duplicate rewards use native marks.
+//! Exact 0.129.0 binding. duplicate rewards use native marks.
 pub const SHA256: &str = "b6dbd788835ad80929fc6113f99c0fe4867dda2fe36ac3afb5810127b0a8b709";
 pub const VERSION: &str = "0.129.0";
 pub const ADDRESSES: &[(u64, u64)] = &[
@@ -113,115 +113,14 @@ pub const EXTENSION_ADDRESSES: &[(u64, u64)] = &[
     (0x5bbf7b0, 0x5c91100),
     (0x5bd2d40, 0x5c6d400),
     (0x5bd7960, 0x5c5d20e),
-    (0x5bf0520, 0x5cab59c),
     (0x5c007f0, 0x5cbbbb0),
     (0x5c03b20, 0x5cbef00),
     (0x5c05be0, 0x5cc1250),
     (0x5c09350, 0x5cc5030),
     (0x729b010, 0x707ec28),
-    (0x729e888, 0x70824d8),
-    (0x729e900, 0x7082550),
-    (0x729e978, 0x70825c8),
-    (0x729e9f0, 0x7082640),
-    (0x729ea68, 0x70826b8),
-    (0x729eae0, 0x7082730),
-    (0x729eb58, 0x70827a8),
-    (0x729ebd0, 0x7082820),
-    (0x729ec48, 0x7082898),
-    (0x729ecc0, 0x7082910),
-    (0x729ed38, 0x7082988),
-    (0x729edb0, 0x7082a00),
-    (0x729ee28, 0x7082a78),
-    (0x729eea0, 0x7082af0),
-    (0x729ef18, 0x7082b68),
-    (0x729ef90, 0x7082be0),
-    (0x729f008, 0x7082c58),
-    (0x729f080, 0x7082cd0),
-    (0x729f0f8, 0x7082d48),
-    (0x729f170, 0x7082dc0),
-    (0x729f1e8, 0x7082e38),
-    (0x729f260, 0x7082eb0),
-    (0x729f2d8, 0x7082f28),
-    (0x729f350, 0x7082fa0),
-    (0x729f3c8, 0x7083018),
-    (0x729f440, 0x7083090),
-    (0x729f4b8, 0x7083108),
-    (0x729f530, 0x7083180),
-    (0x729f5a8, 0x70831f8),
-    (0x729f620, 0x7083270),
-    (0x729f698, 0x70832e8),
-    (0x729f710, 0x7083360),
-    (0x729f788, 0x70833d8),
-    (0x729f800, 0x7083450),
-    (0x729f878, 0x70834c8),
-    (0x729f8f0, 0x7083540),
-    (0x729f968, 0x70835b8),
-    (0x729f9e0, 0x7083630),
-    (0x729fa58, 0x70836a8),
-    (0x729fad0, 0x7083720),
-    (0x729fb48, 0x7083798),
-    (0x729fbc0, 0x7083810),
-    (0x729fc38, 0x7083888),
-    (0x729fcb0, 0x7083900),
-    (0x729fd28, 0x7083978),
-    (0x729fda0, 0x70839f0),
-    (0x729fe18, 0x7083a68),
-    (0x729fe90, 0x7083ae0),
-    (0x729ff08, 0x7083b58),
-    (0x729ff80, 0x7083bd0),
-    (0x729fff8, 0x7083c48),
-    (0x72a0070, 0x7083cc0),
-    (0x72a00e8, 0x7083d38),
-    (0x72a0160, 0x7083db0),
-    (0x72a01d8, 0x7083e28),
-    (0x72a0250, 0x7083ea0),
-    (0x72a02c8, 0x7083f18),
-    (0x72a0340, 0x7083f90),
-    (0x72a03b8, 0x7084008),
-    (0x72a0430, 0x7084080),
-    (0x72a04a8, 0x70840f8),
-    (0x72a0520, 0x7084170),
-    (0x72a0598, 0x70841e8),
-    (0x72a0610, 0x7084260),
-    (0x72a0688, 0x70842d8),
     (0x72a0700, 0x7084350),
-    (0x72a0778, 0x70843c8),
-    (0x72a07f0, 0x7084440),
-    (0x72a0868, 0x70844b8),
-    (0x72a08e0, 0x7084530),
-    (0x72a0958, 0x70845a8),
-    (0x72a09d0, 0x7084620),
-    (0x72a0a48, 0x7084698),
-    (0x72a0ac0, 0x7084710),
-    (0x72a0b38, 0x7084788),
-    (0x72a0bb0, 0x7084800),
-    (0x72a0c28, 0x7084878),
     (0x72a0ca0, 0x70848f0),
-    (0x72a0d18, 0x7084968),
-    (0x72a0d90, 0x70849e0),
-    (0x72a0e08, 0x7084a58),
-    (0x72a0e80, 0x7084ad0),
-    (0x72a0ef8, 0x7084b48),
-    (0x72a0f70, 0x7084bc0),
-    (0x72a1060, 0x7084cb0),
-    (0x72a10d8, 0x7084d28),
-    (0x72a1150, 0x7084da0),
-    (0x72a11c8, 0x7084e18),
-    (0x72a1240, 0x7084e90),
-    (0x72a12b8, 0x7084f08),
-    (0x72a1330, 0x7084f80),
-    (0x72a13a8, 0x7084ff8),
-    (0x72a1420, 0x7085070),
-    (0x72a1498, 0x70850e8),
-    (0x72a1510, 0x7085160),
-    (0x72a1588, 0x70851d8),
-    (0x72a1600, 0x7085250),
-    (0x72a1678, 0x70852c8),
-    (0x72a16f0, 0x7085340),
-    (0x72a1768, 0x70853b8),
-    (0x72a17e0, 0x7085430),
-    (0x72a1858, 0x70854a8),
-];
+    ];
 pub const ENTRIES: &[(u64, &[u8])] = &[
     (0x21c0, &[0xe9, 0x4b, 0xa6, 0x4, 0x6]),
     (0x21d0, &[0xe9, 0x9b, 0xa6, 0x4, 0x6]),
@@ -1180,53 +1079,47 @@ pub const BLESSING_STATS_RVA: u64 = 0x5b94210;
 pub const BLESSING_STAT_FIELDS: [u64;5] = [0x4cc,0x4bc,0x4d0,0x4b8,0x4b4];
 pub const FATIGUE_AURA_BYTES: &[u8] = &[0x48,0x83,0xbe,0xf0,0x07,0,0,0x30,0x75,0x0d,0x44,0x0f,0xb6,0xa6,0x79,0x0c,0,0];
 pub const FATIGUE_AURA_RVA: u64 = 0x5b8c646;
-pub const GLYPH_ABILITIES: [u64;2] = [0x350,0x358];
-pub const GLYPH_ABILITY_STRIDE: u64 = 0x58;
-pub const GLYPH_ACCEPT_BYTES: &[u8] = &[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 168, 3, 0, 0];
-pub const GLYPH_ACCEPT_RVA: u64 = 0x5c05be0;
-pub const GLYPH_CARD_BYTES: &[u8] = &[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 232, 2, 0, 0];
-pub const GLYPH_CARD_RVA: u64 = 0x5c007f0;
-pub const GLYPH_CHOICES: [u64;2] = [0x678,0x680];
-pub const GLYPH_CHOICE_KIND: u64 = 0xc88;
-pub const GLYPH_CHOICE_PAYLOAD: u64 = 0x78;
-pub const GLYPH_CHOICE_RARITY: u64 = 0x98;
-pub const GLYPH_CHOICE_STRIDE: u64 = 0xa0;
-pub const GLYPH_CHOOSING: u64 = 0xc8a;
-pub const GLYPH_DEFINITIONS: [(u64,u32);102] = [(0x729e888,845),(0x729e900,1680),(0x729e978,6343),(0x729e9f0,12294),(0x729ea68,5308),(0x729eae0,1160),(0x729eb58,6673),(0x729ebd0,23881),(0x729ec48,772),(0x729ecc0,23922),(0x729ed38,2687),(0x729edb0,26573),(0x729ee28,879),(0x729eea0,24275),(0x729ef18,25912),(0x729ef90,2812),(0x729f008,20271),(0x729f080,853),(0x729f0f8,635),(0x729f170,642),(0x729f1e8,20925),(0x729f260,7328),(0x729f2d8,75),(0x729f350,3044),(0x729f3c8,2643),(0x729f440,1978),(0x729f4b8,1510),(0x729f530,13812),(0x729f5a8,5116),(0x729f620,19434),(0x729f698,13797),(0x729f710,13810),(0x729f788,1130),(0x729f800,1752),(0x729f878,2098),(0x729f8f0,13877),(0x729f968,1943),(0x729f9e0,408),(0x729fa58,1776),(0x729fad0,14278),(0x729fb48,13750),(0x729fbc0,53),(0x729fc38,5171),(0x729fcb0,14186),(0x729fd28,585),(0x729fda0,589),(0x729fe18,8092),(0x729fe90,15237),(0x729ff08,17),(0x729ff80,139),(0x729fff8,14914),(0x72a0070,15407),(0x72a00e8,8122),(0x72a0160,2944),(0x72a01d8,724),(0x72a0250,403),(0x72a02c8,421),(0x72a0340,8042),(0x72a03b8,8050),(0x72a0430,8056),(0x72a04a8,324),(0x72a0520,8190),(0x72a0598,3599),(0x72a0610,1535),(0x72a0688,331),(0x72a0700,16038),(0x72a0778,133),(0x72a07f0,116),(0x72a0868,7269),(0x72a08e0,122),(0x72a0958,1449),(0x72a09d0,10),(0x72a0a48,2120),(0x72a0ac0,2136),(0x72a0b38,120),(0x72a0bb0,11113),(0x72a0c28,11366),(0x72a0ca0,11426),(0x72a0d18,118),(0x72a0d90,686),(0x72a0e08,172),(0x72a0e80,348),(0x72a0ef8,980),(0x72a0f70,5740),(0x72a1060,6789),(0x72a10d8,5676),(0x72a1150,689),(0x72a11c8,5782),(0x72a1240,6353),(0x72a12b8,18708),(0x72a1330,5176),(0x72a13a8,8921),(0x72a1420,2912),(0x72a1498,16914),(0x72a1510,5570),(0x72a1588,339),(0x72a1600,774),(0x72a1678,8936),(0x72a16f0,467),(0x72a1768,779),(0x72a17e0,5221),(0x72a1858,770)];
-pub const GLYPH_DERIVED: u64 = 0x38;
-pub const GLYPH_ICON_BYTES: &[u8] = &[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 152, 0, 0, 0];
-pub const GLYPH_ICON_RVA: u64 = 0x2365e0;
-pub const GLYPH_LINE_BYTES: &[u8] = &[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 120, 4, 0, 0];
-pub const GLYPH_LINE_RVA: u64 = 0x1070a0;
-pub const GLYPH_MODIFIERS_BYTES: &[u8] = &[65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 85, 83, 72, 129, 236, 184, 0, 0, 0];
-pub const GLYPH_MODIFIERS_RVA: u64 = 0x5ab3360;
-pub const GLYPH_ON_HIT_BYTES: &[u8] = &[0x55,0x41,0x57,0x41,0x56,0x56,0x57,0x53,0x48,0x81,0xec,0xd8,0,0,0];
-pub const GLYPH_ON_HIT_RVA: u64 = 0x5bbf7b0;
-pub const GLYPH_PERKS: u64 = 0x810;
-pub const GLYPH_REROLLS: u64 = 0x568;
-pub const GLYPH_REROLL_BYTES: &[u8] = &[0x56,0x53,0x48,0x83,0xec,0x28,0x80,0xb9,0x8a,0x0c,0,0,2];
-pub const GLYPH_REROLL_RVA: u64 = 0x5c09350;
-pub const GLYPH_SHEEP_COUNT: u64 = 0x8f8;
-pub const GLYPH_SHEEP_GATE_BYTES: &[u8] = &[15,135,53,3,0,0,243,15,16,177,220,11,0,0];
-pub const GLYPH_SHEEP_GATE_RVA: u64 = 0x5bf0520;
-pub const GLYPH_STATUS_COLOR: u64 = 0x58;
-pub const GLYPH_STATUS_FONT_SIZE: u64 = 0x50;
-pub const GLYPH_TEXT_NODE_BYTES: &[u8] = &[0x55,0x41,0x57,0x41,0x56,0x41,0x55,0x41,0x54,0x56,0x57,0x53,0x48,0x81,0xec,0xc8,0,0,0];
-pub const GLYPH_TEXT_NODE_RVA: u64 = 0x2be1d0;
-pub const GLYPH_UI_ACTION_BYTES: &[u8] = &[0x0f,0x85,0x52,1,0,0];
-pub const GLYPH_UI_ACTION_RVA: u64 = 0x329159;
-pub const GLYPH_UI_ASSETS: u64 = 0x60;
-pub const GLYPH_UI_BYTES: &[u8] = &[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 168, 9, 0, 0];
-pub const GLYPH_UI_CENTER: u8 = 5;
-pub const GLYPH_UI_COLOR: u64 = 0x58;
-pub const GLYPH_UI_HEADER_CALLER: u64 = 0x13c0c2;
-pub const GLYPH_UI_HEADER_DIRECTION: u64 = 0x176;
-pub const GLYPH_UI_HEADER_HEIGHT: u64 = 0x90;
-pub const GLYPH_UI_HEADER_JUSTIFY: u64 = 0x17d;
-pub const GLYPH_UI_HEADER_MARGIN_TOP: u64 = 0xc8;
-pub const GLYPH_UI_HEADER_NODE: u64 = 8;
-pub const GLYPH_UI_HEADER_WIDTH: u64 = 0x88;
-pub const GLYPH_UI_RVA: u64 = 0x2f6f70;
+
+
+pub const REWARD_ACCEPT_BYTES: &[u8] = &[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 168, 3, 0, 0];
+pub const REWARD_ACCEPT_RVA: u64 = 0x5c05be0;
+pub const REWARD_CARD_BYTES: &[u8] = &[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 232, 2, 0, 0];
+pub const REWARD_CARD_RVA: u64 = 0x5c007f0;
+
+
+pub const BONUS_ICON_BYTES: &[u8] = &[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 152, 0, 0, 0];
+pub const BONUS_ICON_RVA: u64 = 0x2365e0;
+pub const BONUS_LINE_BYTES: &[u8] = &[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 120, 4, 0, 0];
+pub const BONUS_LINE_RVA: u64 = 0x1070a0;
+pub const SPELL_MODIFIERS_BYTES: &[u8] = &[65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 85, 83, 72, 129, 236, 184, 0, 0, 0];
+pub const SPELL_MODIFIERS_RVA: u64 = 0x5ab3360;
+pub const SPELL_ON_HIT_BYTES: &[u8] = &[0x55,0x41,0x57,0x41,0x56,0x56,0x57,0x53,0x48,0x81,0xec,0xd8,0,0,0];
+pub const SPELL_ON_HIT_RVA: u64 = 0x5bbf7b0;
+pub const SPELL_PERKS: u64 = 0x810;
+pub const REWARD_REROLLS: u64 = 0x568;
+pub const REWARD_REROLL_BYTES: &[u8] = &[0x56,0x53,0x48,0x83,0xec,0x28,0x80,0xb9,0x8a,0x0c,0,0,2];
+pub const REWARD_REROLL_RVA: u64 = 0x5c09350;
+
+
+
+pub const BONUS_STATUS_COLOR: u64 = 0x58;
+pub const BONUS_STATUS_FONT_SIZE: u64 = 0x50;
+pub const BONUS_TEXT_NODE_BYTES: &[u8] = &[0x55,0x41,0x57,0x41,0x56,0x41,0x55,0x41,0x54,0x56,0x57,0x53,0x48,0x81,0xec,0xc8,0,0,0];
+pub const BONUS_TEXT_NODE_RVA: u64 = 0x2be1d0;
+pub const BONUS_UI_ACTION_BYTES: &[u8] = &[0x0f,0x85,0x52,1,0,0];
+pub const BONUS_UI_ACTION_RVA: u64 = 0x329159;
+pub const BONUS_UI_ASSETS: u64 = 0x60;
+pub const BONUS_UI_BYTES: &[u8] = &[85, 65, 87, 65, 86, 65, 85, 65, 84, 86, 87, 83, 72, 129, 236, 168, 9, 0, 0];
+pub const BONUS_UI_CENTER: u8 = 5;
+pub const BONUS_UI_COLOR: u64 = 0x58;
+pub const BONUS_UI_HEADER_CALLER: u64 = 0x13c0c2;
+pub const BONUS_UI_HEADER_DIRECTION: u64 = 0x176;
+pub const BONUS_UI_HEADER_HEIGHT: u64 = 0x90;
+pub const BONUS_UI_HEADER_JUSTIFY: u64 = 0x17d;
+pub const BONUS_UI_HEADER_MARGIN_TOP: u64 = 0xc8;
+pub const BONUS_UI_HEADER_NODE: u64 = 8;
+pub const BONUS_UI_HEADER_WIDTH: u64 = 0x88;
+pub const BONUS_UI_RVA: u64 = 0x2f6f70;
 pub const AGGRO_CANDIDATES: u64 = 0xa00;
 pub const AMULET_CHOICE_TAG: u64 = 0x8000000000000003;
 pub const AMULET_KEYS: [&str;16] = ["mark_of_fordring","talvash","south_seas_kelp","prestor","animated_chain","woven_ivy","darkmoon","jeklik","eye_of_hakkar","steadfast_might","enlightenment","vek_nilash","fallen_dragon","malice_stone","onyxia_tooth","fire_lord"];

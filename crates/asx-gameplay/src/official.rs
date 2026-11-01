@@ -12,7 +12,7 @@ pub enum MemberState {
 pub enum Award {
     World,
     ConvertedReward,
-    /// A player voluntarily skips one reward; credit its full gold to the group.
+    /// A player skips one reward; normalize its gold per participant, rounding halves up.
     SkippedReward,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -116,7 +116,8 @@ impl Session {
         match event {
             Event::Gold { amount, source } => {
                 let amount = match source {
-                    Award::World | Award::SkippedReward => amount,
+                    Award::World => amount,
+                    Award::SkippedReward => rounded_party_gold(amount, next.members.len())?,
                     Award::ConvertedReward => amount / (next.members.len() as u32),
                 };
                 next.gold = next
@@ -413,6 +414,12 @@ pub fn shared_gold_equipment_multiplier(
     Ok(result)
 }
 
+/// Integer receipt normalization used by the portable ledger; no overflow or floats.
+fn rounded_party_gold(amount:u32,members:usize)->Result<u32>{
+    if !(1..=64).contains(&members){return Err("Invalid skip membership".into())}
+    Ok(((u64::from(amount)+members as u64/2)/members as u64)as u32)
+}
+
 pub fn shared_gold_award(
     raw: u32,
     collector: f32,
@@ -434,38 +441,15 @@ pub fn shared_gold_award(
     if !amount.is_finite() || f64::from(amount) > f64::from(u32::MAX) {
         return Err("Shared gold award overflow".into());
     }
+    // Divide the scaled value before the only rounding step. Rounding first can
+    // over-credit a half share (for example 2.99 / 2 must yield 1, not 2).
+    if source==Award::SkippedReward{return Ok((amount / members as f32).round()as u32)}
     let amount = amount.round() as u32;
     Ok(if source == Award::ConvertedReward {
         amount / (members as u32)
     } else {
         amount
     })
-}
-
-/// Already normalized shared XP withheld only while an actor is downed.
-/// Keys include actor life identity; the native adapter owns all context binding.
-#[derive(Default)]
-pub struct DeferredExperience {
-    pending: BTreeMap<(PlayerId, u64), u32>,
-}
-impl DeferredExperience {
-    pub fn credit(&mut self, player: PlayerId, life: u64, amount: u32) -> Result<u32> {
-        if !(1..=64).contains(&player) || life == 0 {
-            return Err("Invalid deferred XP identity".into());
-        }
-        let current = self.pending.get(&(player, life)).copied().unwrap_or(0);
-        let next = current.checked_add(amount).ok_or("Deferred XP overflow")?;
-        if next > 0 {
-            self.pending.insert((player, life), next);
-        }
-        Ok(next)
-    }
-    pub fn retain(&mut self, roster: &[(PlayerId, u64)]) {
-        self.pending.retain(|key, _| roster.contains(key));
-    }
-    pub fn take(&mut self, player: PlayerId, life: u64) -> u32 {
-        self.pending.remove(&(player, life)).unwrap_or(0)
-    }
 }
 
 /// Participant-scoped menu ownership, separate from native reward phases.

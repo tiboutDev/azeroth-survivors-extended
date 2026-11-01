@@ -1,6 +1,6 @@
 //! Shared-XP capture and award interception, separate from session callbacks.
-//! Native translation stays in the selected adapter; deferred award bookkeeping
-//! remains in experience. Preserve TLS nesting around the native shared wrapper.
+//! Native translation stays in the selected adapter. Preserve TLS nesting around
+//! the native shared wrapper; downed actors use the same award path immediately.
 use super::Adapter;
 use services::Services;
 pub(super) mod services;
@@ -33,7 +33,6 @@ unsafe extern "system" fn xp_award(context: &mut crate::stub::Context) {
 
 fn capture_input(services: &dyn Services, request: u64, game: u64) -> Option<(u64, u32)> {
     let sum = services.shared_input(request, game).ok()?;
-    services.capture_shared(game, sum);
     Some((game, sum))
 }
 

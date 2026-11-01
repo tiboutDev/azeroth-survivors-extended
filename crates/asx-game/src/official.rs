@@ -31,11 +31,11 @@ pub trait SupportCalls: CurrencyMemory {
     fn open_item_choice(&self, _game: u64) -> Result<()> {
         Err("Native item presentation unavailable".into())
     }
-    fn resolve_glyph_modifiers(&self, _output: u64, _perks: u64, _definition: u64) -> Result<()> {
-        Err("Glyph calls unavailable".into())
+    fn resolve_spell_modifiers(&self, _output: u64, _perks: u64, _definition: u64) -> Result<()> {
+        Err("Spell modifier calls unavailable".into())
     }
     fn native_boss_health(&self, game: u64, index: u64) -> Result<f32>;
-    fn award_experience(&self, game: u64, amount: u32) -> Result<()>;
+
     fn emit_support_effect(
         &self,
         game: u64,
@@ -381,22 +381,11 @@ impl SelectedAdapter {
         }
         Ok(())
     }
-    pub fn deferred_xp_entry(self) -> Entry {
-        self.native.deferred_xp_entry()
+    pub fn downed_xp_entries(self) -> Vec<Entry> { self.native.downed_xp_entries() }
+    pub fn downed_xp_continuation(self, mem: &dyn Mem, kind: usize, registers: [u64; 6]) -> Result<Option<u64>> {
+        self.native.downed_xp_continuation(mem, kind, registers)
     }
-    pub fn deferred_xp_actor(self, mem: &dyn Mem, game: u64) -> Result<Option<(u32, u64)>> {
-        self.native.deferred_xp_actor(mem, game)
-    }
-    pub fn replay_experience(
-        self,
-        io: &dyn SupportCalls,
-        game: u64,
-        slot: u32,
-        guid: u64,
-        amount: u32,
-    ) -> Result<bool> {
-        self.native.replay_experience(io, game, slot, guid, amount)
-    }
+
     pub fn combat_descriptions(self, m: &dyn Mem, b: u64) -> Result<Vec<(u64, String)>> {
         self.native.combat_descriptions(m, b)
     }
@@ -826,8 +815,12 @@ impl SelectedAdapter {
             return Err("Native scaling helper mismatch".into());
         }
         self.verify_native_difficulty(mem, base)?;
+        for entry in self.downed_xp_entries() {
+            if mem.read(base + entry.rva, entry.bytes.len())? != entry.bytes {
+                return Err("Native downed XP guard/continuation mismatch".into());
+            }
+        }
         for entry in [
-            self.deferred_xp_entry(),
             self.combat_entries()[0],
             self.combat_entries()[1],
             self.combat_entries()[2],
@@ -1018,79 +1011,24 @@ impl SelectedAdapter {
     }
 }
 
-pub use crate::official_native::{BonusUi, GlyphChoice, GlyphOwner};
+pub use crate::official_native::{BonusUi};
 impl SelectedAdapter {
-    pub fn glyph_entries(self) -> Vec<Entry> {
-        self.native.glyph_entries()
-    }
-    pub fn glyph_owner(self, m: &dyn Mem, b: u64, p: u64, d: u64) -> Result<Option<GlyphOwner>> {
-        self.native.glyph_owner(m, b, p, d)
-    }
-    pub fn glyph_card(self, m: &dyn Mem, b: u64, g: u64, o: u64) -> Result<Option<GlyphChoice>> {
-        self.native.glyph_card(m, b, g, o)
-    }
-    pub fn glyph_selected(
-        self,
-        m: &dyn Mem,
-        b: u64,
-        g: u64,
-        i: u64,
-    ) -> Result<Option<GlyphChoice>> {
-        self.native.glyph_selected(m, b, g, i)
-    }
-    pub fn glyph_rank(self, m: &dyn Mem, b: u64, c: &GlyphChoice) -> Result<Option<u32>> {
-        self.native.glyph_rank(m, b, c)
-    }
-    pub fn refresh_glyph(self, m: &dyn SupportCalls, b: u64, c: &GlyphChoice) -> Result<()> {
-        self.native.refresh_glyph(m, b, c)
-    }
-    pub fn apply_glyph(
-        self,
-        m: &dyn MutableMemory,
-        o: u64,
-        g: asx_gameplay::glyphs::Glyph,
-    ) -> Result<()> {
-        self.native.apply_glyph(m, o, g)
-    }
+
+
+
+
+
+
+
     pub fn reward_card_note(self, m: &dyn MutableMemory, o: u64, n: &str) -> Result<()> {
         self.native.reward_card_note(m, o, n)
     }
-    pub fn glyph_text(self, m: &dyn MutableMemory, h: u64, n: &str) -> Result<()> {
-        self.native.append_reward_note(m, h, n)
-    }
+
 }
 
-impl SelectedAdapter {
-    pub fn glyph_fixture_pick(
-        self,
-        m: &dyn Mem,
-        b: u64,
-        g: u64,
-        s: &[String],
-        n: &[u32],
-        p: u32,
-    ) -> Result<Option<(u64, bool)>> {
-        self.native.glyph_fixture_pick(m, b, g, s, n, p)
-    }
-    pub fn glyph_fixture_ability(
-        self,
-        m: &dyn Mem,
-        b: u64,
-        g: u64,
-        a: u64,
-    ) -> Result<Option<(GlyphOwner, u32, Vec<f32>)>> {
-        self.native.glyph_fixture_ability(m, b, g, a)
-    }
-    pub fn glyph_fixture_modifiers(self, m: &dyn Mem, o: u64) -> Result<Vec<f32>> {
-        self.native.glyph_fixture_modifiers(m, o)
-    }
-}
 
-impl SelectedAdapter {
-    pub fn glyph_fixture_card_probe(self, m: &dyn Mem, b: u64, g: u64, o: u64) -> Result<String> {
-        self.native.glyph_fixture_card_probe(m, b, g, o)
-    }
-}
+
+
 
 impl SelectedAdapter {
     pub fn bonus_ui_entries(self) -> Vec<Entry> {
@@ -1110,91 +1048,26 @@ impl SelectedAdapter {
     ) -> Result<Option<([u8; 12], f32, f32)>> {
         self.native.scaled_heal_effect(m, e, f)
     }
-    pub fn glyph_extra_healing(self, g: asx_gameplay::glyphs::Glyph) -> f32 {
-        self.native.glyph_extra_healing(g)
-    }
-    pub unsafe fn glyph_special_presentation(
-        self,
-        m: &dyn Mem,
-        o: usize,
-        a: [u64; 5],
-        f: f32,
-    ) -> Result<u64> {
-        self.native.glyph_special_presentation(m, o, a, f)
-    }
-    pub fn glyph_fixture_resolve(
-        self,
-        m: &dyn SupportCalls,
-        b: u64,
-        o: GlyphOwner,
-    ) -> Result<Vec<f32>> {
-        self.native.glyph_fixture_resolve(m, b, o)
-    }
-    pub fn glyph_fixture_support_clear(
-        self,
-        m: &dyn MutableMemory,
-        g: u64,
-        s: u32,
-    ) -> Result<AuraState> {
-        self.native.glyph_fixture_support_clear(m, g, s)
-    }
-    pub fn glyph_fixture_support_value(self, m: &dyn Mem, g: u64, s: u32) -> Result<(f32, f32)> {
-        self.native.glyph_fixture_support_value(m, g, s)
-    }
-    pub fn glyph_fixture_buff(self, m: &dyn Mem, g: u64, s: u32) -> Result<NativeEffect> {
-        self.native.glyph_fixture_buff(m, g, s)
-    }
-    pub fn glyph_fixture_cast_choice(
-        self,
-        m: &dyn SupportCalls,
-        b: u64,
-        c: &GlyphChoice,
-    ) -> Result<bool> {
-        self.native.glyph_fixture_cast_choice(m, b, c)
-    }
-    pub fn glyph_fixture_mark_target(self, m: &dyn Mem, g: u64, s: u32) -> Result<Option<u64>> {
-        self.native.glyph_fixture_mark_target(m, g, s)
-    }
-    pub fn glyph_fixture_refresh_ability(
-        self,
-        m: &dyn SupportCalls,
-        b: u64,
-        g: u64,
-        a: u64,
-    ) -> Result<()> {
-        self.native.glyph_fixture_refresh_ability(m, b, g, a)
-    }
-    pub fn glyph_fixture_current(self, m: &dyn Mem, b: u64, c: &GlyphChoice) -> Result<Vec<f32>> {
-        self.native.glyph_fixture_current(m, b, c)
-    }
+
+
+
+
+
+
+
+
+
+
     pub fn bonus_ui_drawback(self, m: &dyn MutableMemory, b: u64) -> Result<()> {
         self.native.bonus_ui_drawback(m, b)
     }
     pub fn bonus_ui_status(self, m: &dyn MutableMemory, b: u64, k: bool) -> Result<()> {
         self.native.bonus_ui_status(m, b, k)
     }
-    pub unsafe fn glyph_ui_draw(
-        self,
-        b: usize,
-        p: u64,
-        f: u64,
-        u: BonusUi,
-        g: Option<asx_gameplay::glyphs::Glyph>,
-    ) -> Result<()> {
-        self.native.glyph_ui_draw(b, p, f, u, g)
-    }
+
 }
 
-impl SelectedAdapter {
-    pub unsafe fn glyph_fixture_reroll(
-        self,
-        m: &dyn MutableMemory,
-        b: usize,
-        g: u64,
-    ) -> Result<()> {
-        self.native.glyph_fixture_reroll(m, b, g)
-    }
-}
+
 
 impl SelectedAdapter {
     pub fn bonus_ui_no_action(self, f: u64) -> u64 {
@@ -1202,57 +1075,15 @@ impl SelectedAdapter {
     }
 }
 
-impl SelectedAdapter {
-    pub fn glyph_sheep_count(self, m: &dyn Mem, g: u64) -> Result<u64> {
-        self.native.glyph_sheep_count(m, g)
-    }
-    pub fn glyph_sheep_flags(self, n: u64, l: u32, f: u64) -> u64 {
-        self.native.glyph_sheep_flags(n, l, f)
-    }
-    pub fn glyph_polymorph_description(self, t: &str, f: f32, l: u32) -> Result<String> {
-        self.native.glyph_polymorph_description(t, f, l)
-    }
-    pub fn glyph_polymorph_text(self, m: &dyn MutableMemory, h: u64, f: f32, l: u32) -> Result<()> {
-        self.native.glyph_polymorph_text(m, h, f, l)
-    }
-}
 
-impl SelectedAdapter {
-    pub fn glyph_fixture_presentation(
-        self,
-        m: &dyn MutableMemory,
-        b: u64,
-        o: GlyphOwner,
-    ) -> Result<Vec<(u32, String)>> {
-        self.native.glyph_fixture_presentation(m, b, o)
-    }
-}
 
-impl SelectedAdapter {
-    pub fn glyph_fear_effect(
-        self,
-        m: &dyn Mem,
-        e: u64,
-        f: f32,
-    ) -> Result<Option<([u8; 12], f32, f32)>> {
-        self.native.glyph_fear_effect(m, e, f)
-    }
-}
 
-impl SelectedAdapter {
-    pub fn glyph_fixture_leech_fraction(self, m: &dyn Mem, e: u64) -> Result<Option<f32>> {
-        self.native.glyph_fixture_leech_fraction(m, e)
-    }
-}
 
-impl SelectedAdapter {
-    pub fn glyph_faerie_text(self, m: &dyn MutableMemory, h: u64, f: f32) -> Result<()> {
-        self.native.glyph_faerie_text(m, h, f)
-    }
-    pub fn glyph_faerie_description(self, t: &str, f: f32) -> Result<String> {
-        self.native.glyph_faerie_description(t, f)
-    }
-}
+
+
+
+
+
 
 impl SelectedAdapter {
     pub fn rejuvenation_source_slots(
@@ -1533,16 +1364,10 @@ impl SelectedAdapter {
     }
 }
 
-impl SelectedAdapter {
-    pub fn glyph_retention_pick(self, m: &dyn Mem, b: u64, g: u64) -> Result<Option<u64>> {
-        self.native.glyph_retention_pick(m, b, g)
-    }
-}
+
 
 impl SelectedAdapter {
-    pub fn glyphs_enabled(self) -> bool {
-        self.native.glyphs_enabled()
-    }
+
     pub fn native_marks_enabled(self) -> bool {
         self.native.native_marks_enabled()
     }
@@ -1926,6 +1751,7 @@ impl SelectedAdapter {
 
 pub use crate::official_native::StatInputLoan;
 impl SelectedAdapter {
+    pub fn apply_coop_area(self,m:&dyn MutableMemory,game:u64)->Result<()>{self.native.apply_coop_area(m,game)}
     pub fn apply_consumable_speed(self,m:&dyn MutableMemory,game:u64,value:f32)->Result<()>{self.native.apply_consumable_speed(m,game,value)}
     pub fn consumable_stats(
         self,
@@ -2172,3 +1998,15 @@ impl SelectedAdapter {
         self.native.hurt_actor_tagged(io,game,slot,guid,amount,enemy,melee,native_kind,native_spell)
     }
 }
+
+#[cfg(feature="test-hooks")]
+impl SelectedAdapter {
+    pub unsafe fn fixture_menu_apply(self,m:&dyn Mem,base:u64,server:u64,action:u64)->Result<()>{self.native.fixture_menu_apply(m,base,server,action)}
+}
+
+impl SelectedAdapter {
+ pub fn menu_queue_entry(self)->Entry{self.native.menu_queue_entry()}
+ pub fn menu_escape_queue_return(self)->u64{self.native.menu_escape_queue_return()}
+}
+
+impl SelectedAdapter { pub fn spell_modifiers_entry(self)->Entry { self.native.spell_modifiers_entry() } }

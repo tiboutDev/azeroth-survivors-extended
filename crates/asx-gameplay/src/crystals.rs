@@ -9,7 +9,7 @@ pub enum Color{Red,Blue,Green,Yellow}
 impl Color{
  pub const ALL:[Self;4]=[Self::Red,Self::Blue,Self::Green,Self::Yellow];
  pub fn roll(draw:u32)->Self{Self::ALL[(draw%4)as usize]}
- pub fn percent(self)->u32{[10,5,15,10][self as usize]}
+ pub fn percent(self)->u32{[12,7,15,12][self as usize]}
  pub fn stat(self)->u32{[0,1,2,8][self as usize]}
  pub fn name(self)->&'static str{["Red Crystal","Blue Crystal","Green Crystal","Yellow Crystal"][self as usize]}
 }
@@ -52,9 +52,14 @@ impl Director{
 }
 #[cfg(test)]mod tests{
  use super::*;
+ #[test]fn mixed_collection_uses_balanced_native_inputs(){
+  let mut totals=Totals::default();for color in Color::ALL{assert!(totals.add(color));}assert!(totals.add(Color::Blue));
+  assert_eq!(totals.count(),5);assert_eq!(totals.inputs(),vec![(0,0.12),(1,0.14),(2,0.15),(8,0.12)]);
+ }
+
  #[test]fn personal_claims_start_one_shared_deadline_and_keep_model_until_complete(){let ids=[(0,11),(1,22)];let mut c=Crystal::new(1,Color::Red,[0.;3],&ids).unwrap();assert!(!c.done(1000.));assert!(c.claim(1000.,ids[0],[0.;3],true));assert_eq!(c.deadline,Some(1060.));assert!(!c.done(1001.));assert!(!c.claim(1001.,ids[0],[0.;3],true));assert!(c.claim(1059.,ids[1],[0.;3],true));assert_eq!(c.deadline,Some(1060.));assert!(c.done(1059.));}
  #[test]fn deadline_range_pause_death_departure_and_reused_slots(){let mut c=Crystal::new(1,Color::Blue,[0.;3],&[(0,11),(1,22)]).unwrap();assert!(!c.claim(1.,(0,11),[2.,0.,0.],true));assert!(!c.claim(1.,(0,11),[0.;3],false));assert!(c.claim(5.,(0,11),[0.;3],true));assert!(!c.claim(6.,(1,33),[0.;3],true));for _ in 0..100{assert!(!c.done(5.));}assert!(!c.claim(65.,(1,22),[0.;3],true));assert!(c.done(65.));c.retain(&[(0,11),(1,33)]);assert!(c.done(6.));}
- #[test]fn additive_totals_are_individual_and_retire_departed_identity(){let mut c=Collection::default();c.grant((0,11),Color::Red);c.grant((0,11),Color::Red);c.grant((1,22),Color::Green);assert_eq!(c.people[&(0,11)].inputs(),vec![(0,0.2)]);assert_eq!(c.people[&(1,22)].inputs(),vec![(2,0.15)]);c.retain(&[(0,33),(1,22)]);assert!(!c.people.contains_key(&(0,11)));}
+ #[test]fn additive_totals_are_individual_and_retire_departed_identity(){let mut c=Collection::default();c.grant((0,11),Color::Red);c.grant((0,11),Color::Red);c.grant((1,22),Color::Green);assert_eq!(c.people[&(0,11)].inputs(),vec![(0,0.24)]);assert_eq!(c.people[&(1,22)].inputs(),vec![(2,0.15)]);c.retain(&[(0,33),(1,22)]);assert!(!c.people.contains_key(&(0,11)));}
  #[test]fn free_draws_and_nonperiodic_budget_allow_repetitions(){let mut counts=[0;4];let mut repeated=false;for seed in 0..1000{let mut d=Director::new(seed);assert!((4..=6).contains(&d.times.len()));assert!(d.times.iter().all(|v|(30.0..=870.0).contains(v)));let a=d.draw(4);let b=d.draw(4);repeated|=a==b;counts[a as usize]+=1;let old=d.cursor;assert!(!d.due(899.,false,2));assert_eq!(d.cursor,old);}assert!(repeated);assert!(counts.iter().all(|n|*n>150));}
  #[test]fn solo_completes_immediately_and_no_unbounded_appearance_backlog(){let mut c=Crystal::new(1,Color::Yellow,[0.;3],&[(0,1)]).unwrap();assert!(c.claim(2.,(0,1),[0.;3],true));assert!(c.done(2.));let mut d=Director::new(1);assert!(!d.due(901.,false,0));assert!(!d.due(901.,true,0));assert!(!d.due(901.,true,0));assert!(d.due(1200.,true,0));}
 }

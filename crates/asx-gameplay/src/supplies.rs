@@ -9,7 +9,7 @@ impl Family{pub const ALL:[Self;7]=[Self::Recovery,Self::Critical,Self::Defense,
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]pub struct Consumable{pub family:Family,pub tier:u8}
 impl Consumable{
  pub fn new(family:Family,tier:u8)->Option<Self>{(1..=3).contains(&tier).then_some(Self{family,tier})}
- pub fn value(self)->f32{[[0.06,0.10,0.14],[0.04,0.07,0.10],[0.03,0.05,0.07],[0.10,0.20,0.30],[0.20,0.35,0.50],[0.15,0.25,0.35],[0.10,0.15,0.20]][self.family as usize][self.tier as usize-1]}
+ pub fn value(self)->f32{[[0.08,0.12,0.16],[0.04,0.07,0.10],[0.03,0.05,0.07],[0.20,0.30,0.40],[0.20,0.35,0.50],[0.15,0.25,0.35],[0.10,0.15,0.20]][self.family as usize][self.tier as usize-1]}
  pub fn name(self)->&'static str{[
   ["Elixir of Wisdom","Elixir of Greater Intellect","Flask of Distilled Wisdom"],
   ["Elixir of Lesser Agility","Elixir of Greater Agility","Elixir of the Mongoose"],
@@ -88,6 +88,16 @@ impl Buffs{
 }
 #[cfg(test)]mod tests{
  use super::*;
+ #[test]fn balance_tiers_refresh_and_expiry_keep_exact_bonus_budget(){
+  for (family,values) in [(Family::Recovery,[0.08,0.12,0.16]),(Family::Vitality,[0.20,0.30,0.40]),(Family::Defense,[0.03,0.05,0.07])]{
+   let mut buffs=Buffs::default();
+   for tier in 1..=3 {let c=Consumable::new(family,tier).unwrap();buffs.accept(tier as f32,Reward::Buff(c));assert_eq!(buffs.values().len(),1);assert_eq!(buffs.values()[0].consumable.value(),values[tier as usize-1]);}
+   buffs.accept(10.,Reward::Buff(Consumable::new(family,1).unwrap()));
+   assert_eq!(buffs.values()[0].consumable.value(),values[2]);assert_eq!(buffs.values()[0].expires,70.);
+   assert!(!buffs.expire(69.));assert!(buffs.expire(70.));assert!(buffs.is_empty());
+  }
+ }
+
  fn buff(f:Family,t:u8)->Reward{Reward::Buff(Consumable::new(f,t).unwrap())}
  #[test]fn speed_and_cosmetic_quality_are_independent_of_gameplay_tiers(){
   for tier in 1..=3{let c=Consumable::new(Family::Swiftness,tier).unwrap();assert_eq!(c.name(),"Swiftness Potion");assert_eq!(c.value(),[0.10,0.15,0.20][tier as usize-1]);assert_eq!(Reward::Buff(c).quality(),1);assert_eq!(c.family.stat(),None);}

@@ -30,6 +30,12 @@ These features are available in **solo and co-op**.
 
 A ring’s first eligible upgrade offers an enchantment alongside its ordinary improvements.
 
+Alacrity grants **3 / 5 / 8 / 11 / 15% cooldown recovery** and Renewal grants
+**0.5 / 1 / 1.5 / 2 / 3 health per second** at ring ranks **2 / 4 / 7 / 10 / 14**.
+Each new tier replaces the previous total; the five values are not added together.
+Recovery feeds the native cooldown formula rather than directly shortening delays
+by the listed percentage.
+
 - Each ring has its own enchantment.
 - Accepting an enchanted upgrade locks that ring’s enchantment for the run.
 - Later upgrades preserve its type.
@@ -60,10 +66,10 @@ are freely drawn, so the same color can appear several times.
 
 | Crystal | Permanent gain per pickup |
 | --- | --- |
-| Red | +10% damage |
-| Blue | +5% cooldown recovery |
+| Red | +12% damage |
+| Blue | +7% cooldown recovery |
 | Green | +15% maximum health |
-| Yellow | +10% area of effect |
+| Yellow | +12% area of effect |
 
 Each player present when a crystal appears can collect it once by passing close
 while alive. Your pickup does not take another player's reward. It also leaves
@@ -108,7 +114,20 @@ Hold the circle for **20 cumulative seconds** to receive a personal Fortune:
 - Native pauses freeze progress. An unfinished trial stays in place until completed or the run ends.
 - Later bosses improve the reward stage without replacing an unfinished trial or resetting its progress.
 
-Fortunes roll one of **three equally likely categories: Luck, Experience or Gold**.
+Fortunes roll **Luck, Experience or Gold**. Solo gives each category an equal chance.
+In co-op, the personal category weights are **Luck = number of participants,
+Experience = 1, Gold = 1**, using the eligible group at completion:
+
+| Participants | Luck | Experience | Gold |
+| --- | --- | --- | --- |
+| 1 | 33.33% | 33.33% | 33.33% |
+| 2 | 50% | 25% | 25% |
+| 3 | 60% | 20% | 20% |
+| 4 | 66.67% | 16.67% | 16.67% |
+| 5 | 71.43% | 14.29% | 14.29% |
+
+This applies to both trials and automatic boss Fortunes when trials are disabled.
+Membership changes alone do not reroll your existing Fortune.
 Luck does not influence the category or power roll. Only one Fortune is active
 per player: a new one replaces the previous one. It survives death until
 replaced or the run ends.
@@ -150,11 +169,11 @@ ASX adapts resource and reward handling for a shared adventure.
 - **Shared gold** gives the party one common wallet.
 - Purchased chests provide personal reward choices for eligible participants.
 - Paid spell and item rerolls spend shared gold.
-- Voluntary reward skips contribute their full gold award, without dividing it by player count.
+- Voluntary reward skips contribute gold divided by the current party size, rounded to the nearest whole gold (halves up). For example, a 7-gold skip contributes 4 gold with two participants.
 
 Eligible racial bonuses and Experience/Gold fortunes use their strongest contribution rather than stacking duplicate bonuses across participants. Permanent armory gold bonuses likewise use the strongest participant contribution. Luck remains personal.
 
-**Known issue:** XP may remain desynchronized after a cooperative death and resurrection. This issue remains open.
+Dead participants continue gaining shared XP and levels. Their level-up choices remain pending until they revive; resurrection does not award the same XP a second time.
 
 ### ✨ Allied support and team synergy
 
@@ -256,13 +275,18 @@ once everyone eligible has collected it; otherwise its shared lifetime continues
 
 Seven consumable families grant temporary bonuses:
 
-- Cooldown recovery.
-- Critical strike chance.
-- Damage reduction.
-- Maximum health.
-- Critical strike damage.
-- Area of effect.
-- Movement speed: **Swiftness Potion gives +10% / +15% / +20%**, depending on tier.
+| Bonus | Tier I | Tier II | Tier III |
+| --- | --- | --- | --- |
+| Cooldown recovery | +8% | +12% | +16% |
+| Critical strike chance | +4 points | +7 points | +10 points |
+| Damage reduction, without extra health | +3 points | +5 points | +7 points |
+| Maximum health | +20% | +30% | +40% |
+| Critical strike damage | +20 points | +35 points | +50 points |
+| Area of effect | +15% | +25% | +35% |
+| Movement speed (Swiftness Potion) | +10% | +15% | +20% |
+
+Cooldown recovery feeds the native cooldown formula; it is not a direct reduction
+of the same percentage. Maximum-health bonuses do not heal you on pickup.
 
 Buffs last **60 seconds of game time**. Different families coexist. Another
 consumable of the same family refreshes the duration without stacking power or
@@ -334,9 +358,10 @@ plus what you expected and what happened.
 ### Compact ASXUI HUD
 
 ASXUI adds one statistics button beside the native action bar. Hover to consult
-stats, click to keep the panel open, and click again to close. The character-sheet
-keybind also toggles this panel while the ASXUI HUD is enabled. All nonzero native
-stats fit into four columns, with short labels and complete terms on hover.
+stats without opening the character sheet. Clicking the button or pressing the
+configured character-sheet key opens the native character sheet and ASX stats
+together; a second click/press closes both. All nonzero native stats fit into
+four columns, with short labels and complete terms on hover.
 Visible rows refresh while the panel is open. In coop, XP and gold show the
 effective ASX shared-award bonuses instead of only personal native values.
 The panel opens immediately in front of equipment, beneath the native XP artwork
@@ -385,3 +410,25 @@ the bar; the same style also displays native resurrection progress.
 These changes use existing client assets. Health, targeting, auras, progression,
 rewards and native game authority remain unchanged. No native textures are shipped
 in ASX.
+
+## Cooperative area bonuses
+
+In coop, positive bonuses to the global spell area/range stat retain **50%**
+of their nominal value: +40% becomes +20%, and +100% becomes +50%.
+This covers all contributions to that global stat. Base spell radii, separate
+spell-specific radius mechanics, reductions and solo play remain unchanged.
+The effective stats panel shows the adjusted total; individual item descriptions
+continue to describe nominal bonuses. This rule does not change enemy scaling.
+
+## Cooperative Rules information
+
+During a cooperative run, a permanent **Cooperative Rules** information icon is
+shown first in the helpful-buff row. Its tooltip explains the 50% effectiveness
+of area/range bonuses. A separated gray note clarifies that the stats panel shows
+effective values while item/reward descriptions may show base bonuses.
+
+This icon grants no effect, has no countdown, cannot be cancelled, and remains
+present while dead or paused. It disappears in solo and outside the run. ASXUI
+places it in its HUD; the ASX presentation bridge also displays it beside native
+buffs when ASXUI is absent or its HUD is disabled. The ASX addon API exposes its
+values and texts for other addons. No additional assets are required.

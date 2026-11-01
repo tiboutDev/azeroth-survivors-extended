@@ -1,4 +1,4 @@
-# ASX addon contract 1.7
+# ASX addon contract 1.9
 
 ASX follows Azeroth Survivors' addon conventions: global tables, matching
 `*_UPDATED` timestamps, `ASX_Get...` functions and registered Lua handlers.
@@ -13,7 +13,7 @@ functions may be absent when ASX is disabled or before its Lua has loaded; an
 addon must tolerate that and retry after world entry or with bounded polling.
 ASXUI is a consumer, not the provider: other addons do not need ASXUI installed.
 
-`ASX_GetAPIVersion()` returns `major, minor` (currently `1, 7`). Major 1 is a
+`ASX_GetAPIVersion()` returns `major, minor` (currently `1, 9`). Major 1 is a
 stable contract: incompatible field meanings/types/removals require a new major;
 minor versions may add optional fields. Ignore unknown fields. Tests cover the
 contract; this source change does not update an older installed DLL.
@@ -28,7 +28,7 @@ modifies ASX or snapshots obtained by another consumer.
 
 | Field | Meaning |
 |---|---|
-| `api.major`, `api.minor` | Contract version, currently 1.7 |
+| `api.major`, `api.minor` | Contract version, currently 1.9 |
 | `available` | Boolean; check before accessing run fields |
 | `reason` | When unavailable: `outside_run`, `stale`, or `missing_or_invalid_payload` |
 | `revision` | Monotonic content revision within this Lua environment; not persisted across client reloads |
@@ -61,6 +61,7 @@ of this contract. Cache coordinates remain in native `AZS_CHESTS`.
 |---|---|
 | `data.fortune` | `boss`: encounter progression stage, not a unique reward ID; optional v1.7 `event`: actual award receipt, stable through heartbeat, party-generation and ritual-arrival changes; `category`: active rolls 0..2 (Luck/XP/Gold); legacy 3/4 retain pickup/speed meanings but are no longer produced; `rarity` 0..4; `amount`, `best`: hundredths of a percentage point (1200 means 12%) |
 | `data.economy` | Optional v1.7 cooperative `xp` and `gold` effective multipliers (1.35 means +35%), projected from the actual ASX award policies for the local recipient. Gold retains collector-specific native effects; values need not match across different builds. Missing means unavailable, not zero. These replace the personal `AZS_STATS` values for display; never add them to those values. |
+| `data.sharedEconomy` | v1.8 cooperative projection with independently optional `xp` and `gold` multipliers. An empty/partial table explicitly marks unavailable shared values; hide those cells instead of falling back to personal `AZS_STATS`. Solo omits this record. The legacy `data.economy` complete-pair guarantee remains unchanged. Values use the same award policies and replace, never add to, native personal values. |
 | `data.fatigue` | `stacks` 0..3; `seconds`: remaining alive-game-time seconds, rounded upward; not a wall-clock deadline |
 | `data.consumables[family]` | Dictionary keyed 0..6, **not** a 1-based list: `family`, `tier` 1..3, `remaining` whole game-time seconds, `index` native aura slot 0..31 |
 | `data.discovery` | `event`: recipient/session-scoped receipt ID; `rarity` 0..3: legacy gameplay reward bucket, not name color; optional v1.2 `quality` 1..2: Classic Common/Uncommon cosmetic quality; `gold`: actual whole-gold sale receipt (0 for a consumable discovery). No native item ID is promised |
@@ -250,3 +251,49 @@ Marks still use actual native English receipts. Contiguous receipts within a
 three-second burst add their gains into one popup and retain the latest native
 collection total. Repeated/stale totals are ignored within that burst. Item
 ordering and gaps in observed totals prevent merging; gameplay grants are untouched.
+
+## Cooperative information aura (v1.9)
+
+`data.cooperativeRules` is present only with a fresh cooperative payload in an
+available run phase, including dead, paused and choosing. It is independent of
+ASXUI, party size changes, gem ownership and Fortune ownership. An unavailable
+snapshot or a solo payload omits it. The cooperative economy envelope identifies
+the native coop projection even when its numeric fields are unavailable.
+
+| Field | Meaning |
+| --- | --- |
+| `id` | Stable semantic identifier `cooperative_rules` |
+| `permanent` | `true`: no timed expiration during this cooperative run; not persistence across runs |
+| `priority` | `1`: display before other helpful auras |
+| `areaBonusShare` | `0.5`: fraction of positive global area/range bonuses retained; informational only |
+
+`texts.cooperativeRules` contains `title`, native `icon` texture path, `rule`,
+and a `notes` array. These are detached copies, like the rest of the API. Render
+the rule in normal text, followed by a blank line and gray notes:
+
+```text
+Cooperative Rules
+Area and range bonuses are 50% effective.
+
+The stats panel shows effective values.
+Item and reward descriptions may show base bonuses.
+```
+
+The retained ASX presentation bridge creates `ASXCooperativeRulesBuff`, a 32-pixel
+informational button using the native Prayer of Fortitude icon. It consumes no
+native aura slot, has no timer or cancellation action, and never modifies stats.
+It is deliberately absent from native `UnitBuff` / `GetPlayerBuff` enumeration;
+other addons consume the public record instead. The bridge supplies a leading
+native-buff-row fallback without ASXUI. A stale payload hides the button and
+releases any hovered tooltip; heartbeat refreshes do not create duplicate icons.
+
+A renderer may optionally reuse that button via
+`ASX_SetCooperativeRulesDocked(owner, true)`, where `owner` is its nonempty addon
+name. This returns the button when currently available and reserves its placement
+for that single owner (even if temporarily unavailable). A competing owner gets
+`nil`. Do not change its scripts or native aura APIs. Restore any borrowed anchors
+and call `ASX_SetCooperativeRulesDocked(owner, false)` when disabling the layout;
+this releases the reservation and restores the bridge's native-row fallback.
+Only the owning name can release it. The fallback remains visible while ASXUI's
+HUD is off. Addons that render a separate icon should coordinate ownership to
+avoid duplicate informational displays. Availability checks remain mandatory.

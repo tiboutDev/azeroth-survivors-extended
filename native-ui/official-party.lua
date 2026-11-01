@@ -118,8 +118,8 @@ local function decode(wire)
                 result.members[id].crystals={red=red,blue=blue,green=green,yellow=yellow,index=index,total=red+blue+green+yellow}
             elseif a[1]=="O" and table.getn(a)==4 and id==result.own and result.members[id] then
                 local xp,gold=integer(a[3],0,1e10),integer(a[4],0,1e10)
-                if not xp or not gold or result.members[id].economy then return nil end
-                result.members[id].economy={xp=xp/1000000,gold=gold/1000000}
+                if (not xp and a[3]~="-")or(not gold and a[4]~="-")or result.members[id].economy then return nil end
+                result.members[id].economy={xp=xp and xp/1000000 or nil,gold=gold and gold/1000000 or nil}
             elseif a[1]=="B" and (table.getn(a)==7 or table.getn(a)==8) and result.members[id] then
                 local boss,category,rarity=integer(a[3],1,4294967295),integer(a[4],0,4),integer(a[5],0,4)
                 local amount,best=integer(a[6],1,14000),integer(a[7],0,14000)
@@ -449,7 +449,7 @@ end
 local function crystalDescription(tooltip,c)
     tooltip:ClearLines();tooltip:AddLine("Crystal Resonance",1,1,1)
     tooltip:AddLine("Crystals collected: "..c.total,0.75,0.75,0.75)
-    for _,line in ipairs({{c.red,10,"damage"},{c.blue,5,"cooldown recovery"},{c.green,15,"maximum health"},{c.yellow,10,"area of effect"}})do
+    for _,line in ipairs({{c.red,12,"damage"},{c.blue,7,"cooldown recovery"},{c.green,15,"maximum health"},{c.yellow,12,"area of effect"}})do
         if line[1]>0 then tooltip:AddLine("+"..(line[1]*line[2]).."% "..line[3],0.12,1,0,true)end
     end
     tooltip:AddLine("Persists through death. Ends with this run.",0.75,0.75,0.75,true);tooltip:Show()
@@ -648,10 +648,12 @@ local function apiState()
     local own=allowed and supplyOwner()or nil
     local input=phase..":"..tostring(own~=nil)..":"..tostring(AZS_RUN_UPDATED)..":"..tostring(modelWire)
     if apiCache and input==apiInput then return apiCache end
-    local state={api={major=1,minor=7},available=own~=nil,phase=phase,data={},texts={}}
+    local state={api={major=1,minor=9},available=own~=nil,phase=phase,data={},texts={}}
     if own then
         state.session={epoch=model.epoch,recipientGUID=model.own}
-        state.data={economy=apiCopy(own.economy),crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
+        state.data={sharedEconomy=apiCopy(own.economy),crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
+        -- Retain v1.7's complete-pair guarantee for existing consumers.
+        if own.economy and own.economy.xp~=nil and own.economy.gold~=nil then state.data.economy=apiCopy(own.economy)end
         state.data.loot={};local lootTexts={}
         for _,drop in ipairs(own.loot or{})do
             table.insert(state.data.loot,{event=drop.event,rarity=drop.rarity,isNew=drop.isNew})
@@ -670,12 +672,12 @@ local function apiState()
         local crystalText
         if state.data.crystals then
             local c=state.data.crystals
-            c.bonuses={damage=c.red*10,cooldownRecovery=c.blue*5,maximumHealth=c.green*15,areaOfEffect=c.yellow*10}
+            c.bonuses={damage=c.red*12,cooldownRecovery=c.blue*7,maximumHealth=c.green*15,areaOfEffect=c.yellow*12}
             crystalText={title="Crystal Resonance",icon=crystalIcon,note="Crystals collected: "..c.total}
             crystalText.pickups={}
             local names={"Red","Blue","Green","Yellow"}
             local keys={"red","blue","green","yellow"}
-            local gains={"+10% damage","+5% cooldown recovery","+15% maximum health","+10% area of effect"}
+            local gains={"+12% damage","+7% cooldown recovery","+15% maximum health","+12% area of effect"}
             local colors={{1,.25,.2},{.3,.65,1},{.12,1,0},{1,.82,0}}
             for i,key in ipairs(keys)do
                 crystalText.pickups[key]={title=names[i].." Crystal collected",reward=gains[i],note="Crystal Resonance - lasts until the end of the run.",icon=crystalIcon,color={.12,1,0},titleColor=colors[i]}
@@ -693,6 +695,12 @@ local function apiState()
             return {title=value.title,icon=value.icon,reward=value.reward,note=value.note,color=apiCopy(value.color)}
         end
         state.texts={loot=lootTexts,equipment=equipmentTexts,crystals=crystalText,supplies=textOnly(formatted.owner.discovery),fortune=textOnly(formatted.blessing),sayge=textOnly(formatted.owner.ritual),consumables=consumableTexts}
+        if own.economy then
+            state.data.cooperativeRules={id="cooperative_rules",permanent=true,priority=1,areaBonusShare=0.5}
+            state.texts.cooperativeRules={title="Cooperative Rules",icon="Interface\\Icons\\Spell_Holy_PrayerofFortitude",
+                rule="Area and range bonuses are 50% effective.",
+                notes={"The stats panel shows effective values.","Item and reward descriptions may show base bonuses."}}
+        end
         if state.texts.supplies then state.texts.supplies.name=own.discovery.name;state.texts.supplies.description=own.discovery.text end
     else
         state.reason=not allowed and "outside_run"or(type(AZS_RUN_UPDATED)=="number"and GetTime()-AZS_RUN_UPDATED>4 and "stale"or"missing_or_invalid_payload")
@@ -703,7 +711,7 @@ local function apiState()
     state.updatedAt=own and modelTime or nil
     apiCache=state;apiInput=input;return state
 end
-function ASX_GetAPIVersion()return 1,7 end
+function ASX_GetAPIVersion()return 1,9 end
 function ASX_GetState(major)
     if major~=nil and major~=1 then return nil,"unsupported_version"end
     return apiCopy(apiState())
@@ -749,3 +757,85 @@ function ASXOfficialPartyReadout()
     end
     return result, built, model and model.own, asxNativeActive, blessingFor("player")
 end
+
+-- Informational aura: no native buff slot, cancellation or gameplay mutation.
+-- Exists without ASXUI. Other consumers can render the detached API record.
+local cooperativeButton,cooperativeDock,cooperativeAnchor
+local function cooperativeRestore()
+    local e=cooperativeAnchor
+    if e then
+        local a,b,c,x,y=e.frame:GetPoint(1)
+        if a=="TOPRIGHT"and b==cooperativeButton and c=="TOPLEFT"and x==-5 and y==0 then
+            e.frame:ClearAllPoints();for _,point in ipairs(e.points)do e.frame:SetPoint(unpack(point))end
+        end
+    end
+    cooperativeAnchor=nil
+end
+local function cooperativeRefresh()
+    local state=apiState()
+    local text=state.available and state.data.cooperativeRules and state.texts.cooperativeRules
+    if not text then
+        cooperativeRestore()
+        if cooperativeButton then
+            setShown(cooperativeButton,false)
+            if cooperativeButton.hovered then GameTooltip:Hide();cooperativeButton.hovered=false end
+        end
+        return nil
+    end
+    if not cooperativeButton then
+        local b=CreateFrame("Button","ASXCooperativeRulesBuff",UIParent);cooperativeButton=b
+        b:SetWidth(32);b:SetHeight(32)
+        b.icon=b:CreateTexture(nil,"ARTWORK");b.icon:SetAllPoints(b);b.icon:SetTexture(text.icon)
+        b:SetScript("OnEnter",function()
+            local current=apiState()
+            local t=current.available and current.data.cooperativeRules and current.texts.cooperativeRules
+            if not t then GameTooltip:Hide();return end
+            b.hovered=true;GameTooltip:SetOwner(b,"ANCHOR_RIGHT");GameTooltip:ClearLines()
+            GameTooltip:AddLine(t.title,1,1,1);GameTooltip:AddLine(t.rule,1,1,1,true)
+            GameTooltip:AddLine(" ")
+            for _,note in ipairs(t.notes)do GameTooltip:AddLine(note,.65,.65,.65,true)end
+            GameTooltip:Show()
+        end)
+        b:SetScript("OnLeave",function()b.hovered=false;GameTooltip:Hide()end)
+    end
+    if not cooperativeDock then
+        local first=getglobal("BuffButton0")
+        -- Follow a cosmetic reorder to its leading native button. Anchoring
+        -- to an interior button would create a cycle with reordered auras.
+        local seen={}
+        while first and type(first.GetPoint)=="function"do
+            if seen[first]then first=nil;break end
+            seen[first]=true
+            local _,parent=first:GetPoint(1)
+            if type(parent)=="string"then parent=getglobal(parent)end
+            local name=parent and parent.GetName and parent:GetName()
+            if type(name)~="string"or not string.find(name,"^BuffButton%d+$")then break end
+            first=parent
+        end
+        if first and first:IsShown()and type(first.GetNumPoints)=="function"and first:GetNumPoints()>0 then
+            local _,parent=first:GetPoint(1)
+            if parent~=cooperativeButton then
+                cooperativeRestore()
+                local points={};for i=1,first:GetNumPoints()do points[i]={first:GetPoint(i)}end
+                cooperativeAnchor={frame=first,points=points}
+                cooperativeButton:ClearAllPoints();for _,point in ipairs(points)do cooperativeButton:SetPoint(unpack(point))end
+                first:ClearAllPoints();first:SetPoint("TOPRIGHT",cooperativeButton,"TOPLEFT",-5,0)
+            end
+        else
+            cooperativeRestore();cooperativeButton:ClearAllPoints();cooperativeButton:SetPoint("TOPRIGHT",UIParent,"TOPRIGHT",-205,-13)
+        end
+    end
+    setShown(cooperativeButton,true);return cooperativeButton
+end
+-- A single explicit owner borrows placement; release restores native fallback.
+function ASX_SetCooperativeRulesDocked(owner,docked)
+    if type(owner)~="string"or owner==""then return nil end
+    if docked then
+        if cooperativeDock and cooperativeDock~=owner then return nil end
+        cooperativeRestore();cooperativeDock=owner;return cooperativeRefresh()
+    elseif cooperativeDock==owner then
+        cooperativeDock=nil;return cooperativeRefresh()
+    end
+end
+local cooperativeUpdate=observer:GetScript("OnUpdate")
+observer:SetScript("OnUpdate",function()cooperativeUpdate();cooperativeRefresh()end)

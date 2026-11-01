@@ -31,6 +31,12 @@ fn tick(r:&dyn Services,game:u64)->Result<(),String>{
  #[cfg(feature="test-hooks")]if fixture_enabled(){
   let retry={let guard=STATE.lock().map_err(|_|"Crystal fixture retry unavailable")?;guard.as_ref().and_then(|s|fixture_retry_point(s.reserves.iter().map(|v|&v.rules),now,(0,host.guid),host.position))};
   if let Some(point)=retry{r.events_fixture_event_pose(game,0,host.guid,point)?;r.events_info(&format!("crystal fixture retry owned host: point={point:?} clock={now}"));return Ok(())}
+  if std::env::var("ASX_TEST_CRYSTAL_UI_ONLY").as_deref()==Ok("1"){
+   for actor in p.actors.iter().filter(|a|a.slot!=0&&a.phase==Phase::Playing&&a.hp>0.){
+    let point={let guard=STATE.lock().map_err(|_|"Crystal guest fixture unavailable")?;guard.as_ref().and_then(|s|fixture_retry_point(s.reserves.iter().map(|v|&v.rules),now,(actor.slot,actor.guid),actor.position))};
+    if let Some(point)=point{r.events_fixture_event_pose(game,actor.slot,actor.guid,point)?;r.events_info(&format!("crystal UI fixture retry guest: slot={} point={point:?}",actor.slot));}
+   }
+  }
  }
  let endless=r.events_endless(game)?;
  let (remove,refresh,spawn)={let mut guard=STATE.lock().map_err(|_|"Crystal state unavailable")?;let s=guard.as_mut().ok_or("Crystal state missing")?;
@@ -102,7 +108,7 @@ impl Drop for Scope<'_>{fn drop(&mut self){if let Some(loan)=self.loan.take(){if
 pub fn native_stats(r:&dyn Services,game:u64,native:impl FnOnce()){
  if PROBE.with(|v|v.get())||STATS.with(|v|v.borrow().contains(&game)){native();return}let Some(id)=r.events_run_source(game).ok().flatten()else{native();return};let counts=totals(game,id);if counts.count()==0{native();return}
  #[cfg(feature="test-hooks")]
- let base=if fixture_enabled(){
+ let base=if fixture_enabled()&&std::env::var("ASX_TEST_CRYSTAL_UI_ONLY").as_deref()!=Ok("1"){
   static SEEN:Mutex<BTreeSet<(Owner,[u32;4])>>=Mutex::new(BTreeSet::new());
   let first=SEEN.lock().ok().is_some_and(|mut seen|seen.len()<128&&seen.insert((id,counts.0)));
   if first{struct Guard(bool);impl Drop for Guard{fn drop(&mut self){PROBE.with(|p|p.set(self.0));}}let _guard=Guard(PROBE.with(|p|p.replace(true)));r.events_refresh_stats(game).ok().and_then(|_|r.events_ring_stat_values(game).ok())}else{None}

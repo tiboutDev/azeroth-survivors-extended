@@ -326,12 +326,27 @@ fn refresh_enchantments(r:&Runtime,game:u64){
  }}}
  if let Ok(mut state)=STATE.lock(){if let Some(s)=state.as_mut(){s.enchantments=notes;}}
 }
+// Keep each independently known value. An explicit unavailable cell prevents Lua
+// from silently displaying the recipient's personal stat as a shared multiplier.
+fn economy_wire(owner:u64,xp:Option<f32>,gold:Option<f32>)->String{
+ fn cell(value:Option<f32>)->String{value.filter(|v|v.is_finite()&&(0.0..=10000.0).contains(v)).map_or_else(||"-".into(),|v|((f64::from(v)*1_000_000.).round()as u64).to_string())}
+ format!("O|{owner}|{}|{}\n",cell(xp),cell(gold))
+}
+#[cfg(test)]mod economy_projection_tests{
+ use super::*;
+ #[test]fn missing_or_invalid_gold_never_discards_current_shared_xp(){
+  assert_eq!(economy_wire(11,Some(1.35),None),"O|11|1350000|-\n");
+  assert_eq!(economy_wire(11,None,Some(1.6)),"O|11|-|1600000\n");
+  assert_eq!(economy_wire(11,Some(f32::NAN),Some(-1.)),"O|11|-|-\n");
+  assert_eq!(economy_wire(11,Some(0.),Some(1.)),"O|11|0|1000000\n");
+ }
+}
 fn event_text(r:&Runtime,game:u64,slot:u32)->String{
  let Some(party)=r.extension_party()else{return String::new()};
  let Some(actor)=party.actors.iter().find(|a|a.slot==slot)else{return String::new()};let owner=actor.guid;let mut text=String::new();
- if let (Some(xp),Some(gold))=(super::xp_hooks::services::effective_multiplier(r),super::wallet::effective_multiplier(r,game,actor)){
-  if [xp,gold].iter().all(|v|v.is_finite()&&*v>=0.&&*v<=10000.){text.push_str(&format!("O|{owner}|{}|{}\n",(f64::from(xp)*1_000_000.).round()as u64,(f64::from(gold)*1_000_000.).round()as u64));}
- }
+ #[cfg(feature="test-hooks")]
+ if std::env::var("ASX_TEST_COOP_UI").as_deref()==Ok("1") {static SAMPLES:AtomicUsize=AtomicUsize::new(0);let n=SAMPLES.fetch_add(1,Ordering::Relaxed);if n<3000&&n%100==0{r.log.info(&format!("coop economy diagnostic: slot={slot} owner={owner} xp={:?} gold={:?} actors={:?}",super::xp_hooks::services::effective_multiplier(r),super::wallet::effective_multiplier(r,game,actor),party.actors.iter().map(|a|(a.slot,a.xp_multiplier,a.gold_multiplier)).collect::<Vec<_>>()));}}
+ text.push_str(&economy_wire(owner,super::xp_hooks::services::effective_multiplier(r),super::wallet::effective_multiplier(r,game,actor)));
  if let Some((event,held,inside))=super::world_events::coop::view(game,owner){text.push_str(&format!("R|{owner}|{event}|{held}|{}|{}\n",u8::from(inside),u8::from(super::world_events::coop::all_inside(game))));}
  for(c,remaining,index)in super::supplies::buffs(game,owner){if index<32&&remaining>0.{text.push_str(&format!("C|{owner}|{}|{}|{}|{index}|{}|{}|{}\n",c.family as u8,c.tier,remaining.ceil()as u32,hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}
  if let Some(d)=super::supplies::discovery(game,owner){text.push_str(&format!("D|{owner}|{}|{}|{}|{}|{}|{}|{}\n",d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.reward.text().as_bytes()),d.reward.quality()));}
@@ -489,7 +504,7 @@ unsafe extern "system" fn spell_presentation(
     perks: u64,
 ) -> *mut u8 {
     let original: SpellPresentation = std::mem::transmute(SPELL_ORIGINAL.load(Ordering::Acquire));
-    let result = RUNTIME.get().filter(|r|r.rules).and_then(|r|glyphs::special_presentation(r,original as *const () as usize,[output as u64,ability,stats,u64::from(kind),perks])).map(|p|p as *mut u8).unwrap_or_else(||original(output, ability, stats, kind, perks));
+    let result = original(output, ability, stats, kind, perks);
     #[cfg(feature = "test-hooks")]
     let _timing = performance::start(2);
     if let Some(r) = RUNTIME.get().filter(|r| r.rules) {
@@ -503,7 +518,6 @@ unsafe extern "system" fn spell_presentation(
             let Some(guid) = r.extension_party().and_then(|p|p.actors.iter().find(|a|a.slot==slot).map(|a|a.guid)) else {
                 return;
             };
-            glyphs::tooltip(r, output as u64, slot, guid, id);
             let Ok(strings) = r
                 .adapter
                 .spell_presentation_strings(&r.local, output as u64)
@@ -567,4 +581,30 @@ pub fn spell_hook(adapter: Adapter) -> crate::install::HookSpec {
         detour: spell_presentation as *const () as usize,
         trampoline: &SPELL_ORIGINAL,
     }
+}
+
+#[cfg(feature="test-hooks")]
+pub(super) fn fixture_economy(r:&Runtime,server:u64){
+ if std::env::var("ASX_TEST_COOP_UI").as_deref()!=Ok("1"){return}
+ if r.adapter.observe(&r.local,server).ok().is_none_or(|s|s.role!=asx_game::official::Role::Host){return}
+ let Some(p)=r.extension_party()else{return};
+ if p.actors.len()!=2||p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return}
+ static STAGE:AtomicUsize=AtomicUsize::new(0);let stage=STAGE.load(Ordering::Acquire);
+ if stage>=4{return}
+ if stage==3{
+  if p.clock<12.||STAGE.compare_exchange(3,4,Ordering::AcqRel,Ordering::Acquire).is_err(){return}
+  let game=r.adapter.game_address(server).unwrap();
+  let gold:unsafe extern "system" fn(u64,u32)->usize=unsafe{std::mem::transmute(r.local.base+r.adapter.gold_entry().rva as usize)};
+  let chest:unsafe extern "system" fn(u64)->bool=unsafe{std::mem::transmute(r.local.base+r.adapter.chest_entry().rva as usize)};
+  unsafe{gold(game,1000);let opened=chest(game);r.log.info(&format!("coop economy equipment draw: opened={opened}"));}
+  return
+ }
+ if p.clock<[2.,6.,10.][stage]{return}
+ if STAGE.compare_exchange(stage,stage+1,Ordering::AcqRel,Ordering::Acquire).is_err(){return}
+ let xp=if stage==2{2500}else{1000};let gold=if stage==0{2000}else{3000};
+ let rewards=p.actors.iter().map(|a|((a.slot,a.guid),asx_gameplay::blessings::Blessing{boss:1,category:if a.slot==0{1}else{2},rarity:0,amount:if a.slot==0{xp}else{gold}})).collect::<Vec<_>>();
+ match blessings::ritual_rewards(r,r.adapter.game_address(server).unwrap(),&rewards){
+  Ok(())=>r.log.info(&format!("coop economy fixture: stage={} xp={xp} gold={gold}",stage+1)),
+  Err(e)=>r.log.warn(&format!("Coop economy fixture rejected: {e}")),
+ }
 }

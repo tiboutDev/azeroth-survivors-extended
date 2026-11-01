@@ -1,5 +1,8 @@
 # Compatibility workflow
 
+Use the [expected-behavior acceptance reference](ASX-BEHAVIOR.md) to plan and
+record feature-level verification; update affected criteria with semantic changes.
+
 Keep the authoritative checkout on Linux. Generated Windows receivers are
 execution targets, never alternate source checkouts. Planning and checks do not
 build, copy files or launch clients.
@@ -144,8 +147,8 @@ portable profiles. Helper build outputs are excluded from Git and receiver stagi
 `contract-links.json` records operation-level owners together with the rationale,
 source references and shared/diagnostic/retained context. Jewelry card hooks,
 spell/support modifiers, native identity snapshots and reward presenters keep
-multiple owners where appropriate. Disabled glyph and upstream-native mark or
-guardian dispositions are retained; attribution does not enable their hooks.
+multiple owners where appropriate. Reserved removed IDs and upstream-native mark
+or guardian dispositions remain explicit; attribution does not enable hooks.
 
 Contracts not explicitly reviewed retain the union of their domain owners and
 all explicitly reviewed owners elsewhere in the same source file. This prevents

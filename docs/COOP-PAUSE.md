@@ -43,3 +43,37 @@ must carry personal ownership through the same retained visibility/rebuild path
 as the waiting panel, while preserving native menu actions. A personal menu is
 distinct from another participant's waiting panel and does not release the
 shared barrier on close.
+
+## Guest Escape input boundary
+
+Observe native UI Pause actions before the guest input filter, rather than only
+at the later apply handler. In 0.135.1 the filter consumes Pause (tag 7) for an
+active guest and returns true, so the apply handler never sees that action.
+ASX records the validated personal-menu request first and forwards both original
+arguments to the filter. Its boolean return is preserved exactly; native queue
+ownership, filtering, fallback dispatch and every other action remain native.
+
+The diagnostic overlap fixture follows the same filter-then-apply ordering.
+`coop-native-escape` separately generates the native keyboard Escape event in a
+normal guest client; passing synthetic ownership state cannot satisfy it.
+The explicit `coop-native-escape-visual` variant adds sparse captures.
+Bounded menu screenshots belong
+only to the owned guest window. They do not inspect the user's desktop.
+
+## Inspection windows
+
+Talents and other read-only inspection windows also emit native UI Pause actions.
+In a live cooperative run, ASX consumes these payload-free requests before they
+enter the native queue when no personal menu is owned. The reviewed Escape
+producer is identified by its exact call return address and keeps both open and
+close requests. Once a menu is owned, its Back, Options and Resume actions retain
+their native queue flow. Solo, lobby, non-Pause and invalid inputs forward
+unchanged. No actor phase, clock or native input buffer is rewritten.
+
+The queue stub has a Windows forwarding test; exact-image tests validate both
+Escape producers and the queue entry. `coop-ui-probe` uses real Fortune
+replacements, the native talents key and separate bounded Lua character/button
+actions. Its passive readout and acceptance checks require current shared values
+on both clients, both windows and ongoing game time. It excludes unrelated
+compatibility/crystal fixtures. Visual claims additionally require reviewing the
+explicit sparse captures.

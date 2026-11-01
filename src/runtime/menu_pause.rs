@@ -1,10 +1,13 @@
 //! Native menu ownership; existing native coop stream and retained menu only.
-use super::{local_base, pause, Adapter};
 #[cfg(feature = "test-hooks")]
 use super::Runtime;
+use super::{local_base, pause, Adapter};
 use services::Services;
 mod services;
-use std::sync::{atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering}, Mutex};
+use std::sync::{
+    atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
+    Mutex,
+};
 static ACTIVE: AtomicBool = AtomicBool::new(false);
 static KEY_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 static KEY_NEXT: AtomicUsize = AtomicUsize::new(0);
@@ -24,6 +27,26 @@ pub fn observe_role(role: asx_game::official::Role) {
         ),
         Ordering::Release,
     );
+}
+static UI_QUEUE: AtomicUsize = AtomicUsize::new(0);
+crate::context_stub_rw!(queue_entry, 0, queue, UI_QUEUE);
+unsafe extern "system" fn queue(c: &mut crate::stub::Context) {
+    if let Some(r)=services::active(){filter_queue(r,c);}
+}
+fn filter_queue(r:&dyn Services,c:&mut crate::stub::Context){
+    if !ACTIVE.load(Ordering::Acquire)||LOCAL_OPEN.load(Ordering::Acquire){return}
+    // The native frontend also queues Pause when opening/closing inspection
+    // windows (notably talents). They must not acquire cooperative menu ownership.
+    // Escape and all actions of an already-owned native menu keep their flow.
+    if c.return_address()==r.escape_queue_source(){return}
+    let live=REMOTE_EPOCH.load(Ordering::Acquire)!=0||r.cached_party().is_some_and(|p|p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Inactive));
+    if !live{return}
+    if let Ok(Some(open))=r.request(c.rdx){
+        // Pause is a payload-free native variant. Consume only this UI request;
+        // do not mutate simulation phase, input bytes, clocks or other actions.
+        c.skip=1;c.result=0;
+        r.info(&format!("official inspection pause ignored: open={open}"));
+    }
 }
 static ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 static REMOTE_EPOCH: AtomicU64 = AtomicU64::new(0);
@@ -78,9 +101,7 @@ pub fn reason(
     p: &asx_game::official::PartyObservation,
 ) -> Option<asx_gameplay::official::PauseReason> {
     if !r.has_menu() {
-        return asx_gameplay::official::group_pause(
-            p.actors.iter().map(|a| (a.slot + 1, a.phase)),
-        );
+        return asx_gameplay::official::group_pause(p.actors.iter().map(|a| (a.slot + 1, a.phase)));
     }
     let Ok(mut s) = STATE.lock() else { return None };
     s.reconcile(game, p);
@@ -121,8 +142,7 @@ fn request(r: &dyn Services, server: u64, open: bool) -> Result<(), String> {
     let open = open || (!LOCAL_OPEN.load(Ordering::Acquire) && pause::active());
     match role {
         asx_game::official::Role::Host => {
-            let p = r.cached_party()
-                .ok_or("Missing menu run")?;
+            let p = r.cached_party().ok_or("Missing menu run")?;
             let a = p
                 .actors
                 .iter()
@@ -147,8 +167,8 @@ fn request(r: &dyn Services, server: u64, open: bool) -> Result<(), String> {
     r.info(&format!("official menu request: open={open} role={role:?}"));
     Ok(())
 }
-type Input = unsafe extern "system" fn(u64, u64);
-unsafe extern "system" fn input(server: u64, action: u64) {
+type Input = unsafe extern "system" fn(u64, u64) -> bool;
+unsafe extern "system" fn input(server: u64, action: u64) -> bool {
     let original: Input = std::mem::transmute(ORIGINAL.load(Ordering::Acquire));
     if let Some(r) = services::active() {
         if let Ok(Some(open)) = r.request(action) {
@@ -157,7 +177,9 @@ unsafe extern "system" fn input(server: u64, action: u64) {
             }
         }
     }
-    original(server, action);
+    // Preserve whether native consumed this input; the caller owns all fallback
+    // dispatch. Guest Pause is consumed here before the old apply-only hook.
+    original(server, action)
 }
 pub fn command(r: &dyn Services, c: &mut crate::stub::Context) -> bool {
     if r.opcode() != Some(c.r9 as u16) {
@@ -171,8 +193,7 @@ pub fn command(r: &dyn Services, c: &mut crate::stub::Context) -> bool {
         }
         let slot = r.peer(c.rcx, c.r8)?;
         let (epoch, open) = r.wire(c.rsp_entry)?;
-        let p = r.party(c.rcx)?
-            .ok_or("Missing menu party")?;
+        let p = r.party(c.rcx)?.ok_or("Missing menu party")?;
         let a = p
             .actors
             .iter()
@@ -193,7 +214,11 @@ pub fn command(r: &dyn Services, c: &mut crate::stub::Context) -> bool {
     true
 }
 pub fn hooks(a: Adapter) -> Vec<crate::install::HookSpec> {
-    let mut hooks = Vec::new();
+    let e=a.menu_queue_entry();
+    let mut hooks = vec![crate::install::HookSpec{
+        name:"official-inspection-pause",target:local_base()+e.rva as usize,
+        detour:queue_entry as *const ()as usize,trampoline:&UI_QUEUE,
+    }];
     if let Some(e) = a.menu_entry() {
         hooks.push(crate::install::HookSpec {
             name: "official-menu-input",
@@ -215,13 +240,29 @@ pub fn hooks(a: Adapter) -> Vec<crate::install::HookSpec> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    unsafe extern "system" fn native(server: u64, action: u64) {
+    unsafe extern "system" fn native_queue(receiver:u64,action:u64)->u64{assert_eq!((receiver,action),(0x12340,0x56780));77}
+    #[test]
+    fn ui_queue_preserves_native_receiver_action_and_return(){
+        let _guard=crate::test_support::TEST_LOCK.lock().unwrap();
+        let old=UI_QUEUE.swap(native_queue as *const ()as usize,Ordering::AcqRel);
+        let call:unsafe extern "system" fn(u64,u64)->u64=unsafe{std::mem::transmute(queue_entry as *const ())};
+        assert_eq!(unsafe{call(0x12340,0x56780)},77);
+        UI_QUEUE.store(old,Ordering::Release);
+    }
+    static NATIVE_RESULT: AtomicBool = AtomicBool::new(false);
+    unsafe extern "system" fn native(server: u64, action: u64) -> bool {
         assert_eq!((server, action), (0x12340, 0x56780));
+        NATIVE_RESULT.load(Ordering::Acquire)
     }
     #[test]
     fn input_forwards_borrowed_native_action_and_receiver() {
-        ORIGINAL.store(native as *const () as usize, Ordering::Release);
-        unsafe { input(0x12340, 0x56780) }
+        let _guard = crate::test_support::TEST_LOCK.lock().unwrap();
+        let old = ORIGINAL.swap(native as *const () as usize, Ordering::AcqRel);
+        for value in [false, true] {
+            NATIVE_RESULT.store(value, Ordering::Release);
+            assert_eq!(unsafe { input(0x12340, 0x56780) }, value);
+        }
+        ORIGINAL.store(old, Ordering::Release);
     }
 }
 
@@ -277,7 +318,22 @@ pub fn fixture(r: &Runtime, server: u64) {
         let bytes = unsafe { std::slice::from_raw_parts_mut(action.as_mut_ptr() as *mut u8, 64) };
         bytes[..4].copy_from_slice(&7u32.to_le_bytes());
         bytes[4] = u8::from(open);
-        unsafe { input(server, action.as_ptr() as u64) };
+        // Reproduce native queue dispatch: observe before its guest filter, then
+        // apply only when the native filter returns false. This fixture still
+        // does not claim keyboard coverage; the native-Escape suite does.
+        if !unsafe { input(server, action.as_ptr() as u64) } {
+            if let Err(error) = unsafe {
+                r.adapter.fixture_menu_apply(
+                    &r.local,
+                    r.local.base as u64,
+                    server,
+                    action.as_ptr() as u64,
+                )
+            } {
+                r.log
+                    .warn(&format!("Native menu fixture apply rejected: {error}"));
+            }
+        }
         r.log
             .info(&format!("native menu fixture: host={host} open={open}"));
     }
