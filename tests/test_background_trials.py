@@ -76,6 +76,20 @@ class BackgroundTrials(unittest.TestCase):
             background.run_child(args, Path('/tmp/test-results/trial/start'))
         self.assertEqual(called, [((45,), {'game_version': '0.135.1', 'package_path': Path('prepared.zip')})])
 
+    def test_packaged_coop_uses_native_ready_input_without_restarting_autostart(self):
+        import asx_install_trial
+        host = asx_install_trial.native_coop_controls(1)
+        guest = asx_install_trial.native_coop_controls(2)
+        self.assertEqual(host["WOW_ROGUE_TAPS"].split(";"), ["410,485"] * 32)
+        self.assertEqual(guest["WOW_ROGUE_TAPS"].split(";"), ["306,525"] * 32)
+        for controls in (host, guest):
+            self.assertNotIn("WOW_ROGUE_AUTOSTART", controls)
+            self.assertEqual(controls["WOW_ROGUE_ROAM"], "1")
+            self.assertEqual(controls["ASX_LOG_NATIVE_UI"], "1")
+        for slot in (0, 3, True, 1.0):
+            with self.subTest(slot=slot), self.assertRaises(ValueError):
+                asx_install_trial.native_coop_controls(slot)
+
     def test_shared_wallet_dispatch_requires_two_clients_without_starting_them(self):
         args = background.parse_args(['--reward-wallet-trial'])
         runner = mock.Mock()

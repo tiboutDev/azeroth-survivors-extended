@@ -316,3 +316,10 @@ retain the original native event evidence during manual-start trials.
 Start/resume, progression and synchronization remain mandatory; a connected
 lobby, an answered check or a loaded scene cannot satisfy cooperative acceptance.
 Recheck this fixture visually if the native dialog or disposable resolution changes.
+
+The packaged-archive coop trial uses the same native ready-button taps and ROAM
+input as the extension trials in its fixed 800x600 private windows. Native
+AUTOSTART is disabled for coop because repeated ready checks prevent progression.
+This changes only the isolated test driver: no OS input, native-state writes or
+production launcher changes are involved. Gameplay-start, signature, installed
+DLL/addon, backup and uninstall checks remain mandatory.

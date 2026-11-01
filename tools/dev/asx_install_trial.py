@@ -4,6 +4,13 @@ from pathlib import Path
 from client_registry import VERSION
 ROOT=Path(__file__).resolve().parents[2]
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def native_coop_controls(slot):
+    """Native-only ready/Move-to-begin input for the fixed private 800x600 scene."""
+    if type(slot) is not int or slot not in (1, 2):
+        raise ValueError("Packaged trial requires host/guest slots 1 and 2")
+    return {"WOW_ROGUE_TAPS": ";".join(["410,485" if slot == 1 else "306,525"] * 32),
+            "ASX_LOG_NATIVE_UI": "1", "WOW_ROGUE_ROAM": "1"}
+
 def stop_game(folder):
     sessions=list((folder/"ASX/Logs").glob("*/session.json"))
     if not sessions:return
@@ -60,7 +67,10 @@ def run(seconds,game_version=VERSION,package_path=None):
         with socket.socket()as probe:probe.bind(("127.0.0.1",0));port=probe.getsockname()[1]
         password=uuid.uuid4().hex
         for slot,(folder,base)in enumerate(zip(folders,environments),1):
-            env=dict(base,WOW_ROGUE_AUTOPICK="1",WOW_ROGUE_AUTOSTART="1",WOW_ROGUE_AUTOPLAY="18"if slot==1 else"4",WOW_ROGUE_COOP_PASSWORD=password,WOW_ROGUE_SHOTS=str(folder/"shots"))
+            env=dict(base,WOW_ROGUE_AUTOPICK="1",WOW_ROGUE_AUTOPLAY="18"if slot==1 else"4",WOW_ROGUE_COOP_PASSWORD=password,WOW_ROGUE_SHOTS=str(folder/"shots"))
+            # AUTOSTART repeatedly restarts native ready checks; use the same
+            # native CLI input as the qualified extension trials, never OS input.
+            env.update(native_coop_controls(slot))
             env["WOW_ROGUE_COOP_HOST"if slot==1 else"WOW_ROGUE_COOP_JOIN"]=str(port)if slot==1 else f"127.0.0.1:{port}"
             from trial_limits import environment
             env.update(environment());env.pop("WOW_ROGUE_SHOTS",None)
