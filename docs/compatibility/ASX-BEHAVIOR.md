@@ -1,5 +1,7 @@
 # ASX expected behavior and compatibility acceptance
 
+Use the [compatibility checklist](COMPATIBILITY-CHECKLIST.md) for execution order; this catalog owns the expected behavior criteria.
+
 Maintained acceptance reference for **current main source**, reviewed against
 official **0.138.0**. Covers all ASX-01–ASX-29 features, including disabled and
 upstream-owned behavior. This is not proof that an installed DLL or published
@@ -64,7 +66,7 @@ not replace the other sections.
 
 Mode: **Both**. Disposition: **active**. Details: [Contract](CLIENT-ADAPTER.md).
 
-Candidate profiles: `official`, `tooling`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `official`, `tooling`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -80,7 +82,7 @@ Candidate profiles: `official`, `tooling`. [Scenario mappings and limits](../com
 
 Mode: **Coop**. Disposition: **active**. Details: [Contract](CLIENT-ADAPTER.md).
 
-Candidate profiles: `official`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `official`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -92,9 +94,9 @@ Candidate profiles: `official`. [Scenario mappings and limits](../compat/feature
 
 ### ASX-03 — Shared wallet
 
-Mode: **Coop**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Coop**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `official`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `official`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -106,9 +108,9 @@ Candidate profiles: `official`. [Scenario mappings and limits](../compat/feature
 
 ### ASX-04 — Purchased caches
 
-Mode: **Coop**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Coop**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `official`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `official`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -118,9 +120,9 @@ Candidate profiles: `official`. [Scenario mappings and limits](../compat/feature
 
 ### ASX-05 — Native guardian rewards
 
-Mode: **Coop**. Disposition: **upstream**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Coop**. Disposition: **upstream**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `official`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `official`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -129,9 +131,9 @@ Candidate profiles: `official`. [Scenario mappings and limits](../compat/feature
 
 ### ASX-06 — Pause, Escape and inspection
 
-Mode: **Coop**. Disposition: **active**. Details: [Contract](COOP-PAUSE.md).
+Mode: **Coop**. Disposition: **active**. Details: [Contract](../features/COOP-PAUSE.md).
 
-Candidate profiles: `official`, `official-party-ui`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `official`, `official-party-ui`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -144,9 +146,9 @@ Candidate profiles: `official`, `official-party-ui`. [Scenario mappings and limi
 
 ### ASX-07 — Allied healing and shields
 
-Mode: **Coop**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Coop**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `support`, `periodic`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `support`, `periodic`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -156,9 +158,9 @@ Candidate profiles: `support`, `periodic`. [Scenario mappings and limits](../com
 
 ### ASX-08 — Hybrid support and retaliation
 
-Mode: **Coop**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Coop**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `support`, `periodic`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `support`, `periodic`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -168,9 +170,9 @@ Candidate profiles: `support`, `periodic`. [Scenario mappings and limits](../com
 
 ### ASX-09 — Hunter's Mark
 
-Mode: **Coop**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Coop**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `combat`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `combat`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -179,9 +181,9 @@ Candidate profiles: `combat`. [Scenario mappings and limits](../compat/feature-v
 
 ### ASX-10 — Talent taunts
 
-Mode: **Coop**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Coop**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `combat`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `combat`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -191,9 +193,9 @@ Candidate profiles: `combat`. [Scenario mappings and limits](../compat/feature-v
 
 ### ASX-11 — Immunity and aggro
 
-Mode: **Coop**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Coop**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `combat`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `combat`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -203,9 +205,9 @@ Candidate profiles: `combat`. [Scenario mappings and limits](../compat/feature-v
 
 ### ASX-12 — Resurrection Sickness
 
-Mode: **Coop**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Coop**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `fatigue`, `support`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `fatigue`, `support`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -215,9 +217,9 @@ Candidate profiles: `fatigue`, `support`. [Scenario mappings and limits](../comp
 
 ### ASX-13 — Sayge's Dark Fortunes
 
-Mode: **Both**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Both**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `rules`, `official-party-ui`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `rules`, `official-party-ui`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -229,9 +231,9 @@ Candidate profiles: `rules`, `official-party-ui`. [Scenario mappings and limits]
 
 ### ASX-14 — Reward exclusions
 
-Mode: **Both**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Both**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `rules`, `official`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `rules`, `official`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -246,9 +248,9 @@ meaning remains in Git history, not in current gameplay or player documentation.
 
 ### ASX-16 — Ring enchantments
 
-Mode: **Both**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Both**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `enchantments`, `official-party-ui`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `enchantments`, `official-party-ui`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -260,9 +262,9 @@ Candidate profiles: `enchantments`, `official-party-ui`. [Scenario mappings and 
 
 ### ASX-17 — Party builds and addon contract
 
-Mode: **Coop**. Disposition: **active**. Details: [Contract](OFFICIAL-PARTY-UI.md).
+Mode: **Coop**. Disposition: **active**. Details: [Contract](../features/OFFICIAL-PARTY-UI.md).
 
-Candidate profiles: `official-party-ui`, `support`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `official-party-ui`, `support`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -275,9 +277,9 @@ Candidate profiles: `official-party-ui`, `support`. [Scenario mappings and limit
 
 ### ASX-18 — Retained native presentation
 
-Mode: **Coop / reward cards**. Disposition: **active**. Details: [Contract](OFFICIAL-PARTY-UI.md).
+Mode: **Coop / reward cards**. Disposition: **active**. Details: [Contract](../features/OFFICIAL-PARTY-UI.md).
 
-Candidate profiles: `official-party-ui`, `official`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `official-party-ui`, `official`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -289,7 +291,7 @@ Candidate profiles: `official-party-ui`, `official`. [Scenario mappings and limi
 
 Mode: **Both**. Disposition: **active**. Details: [Contract](CLIENT-ADAPTER.md).
 
-Candidate profiles: `official`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `official`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -300,9 +302,9 @@ Candidate profiles: `official`. [Scenario mappings and limits](../compat/feature
 
 ### ASX-20 — Installation and maintenance
 
-Mode: **Distribution**. Disposition: **active**. Details: [Contract](ASX-INSTALLATION.md).
+Mode: **Distribution**. Disposition: **active**. Details: [Contract](../release/ASX-INSTALLATION.md).
 
-Candidate profiles: `asx-install`, `tooling`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `asx-install`, `tooling`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -318,9 +320,9 @@ Candidate profiles: `asx-install`, `tooling`. [Scenario mappings and limits](../
 
 ### ASX-21 — Native marks and duplicate loot
 
-Mode: **Both**. Disposition: **upstream**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Both**. Disposition: **upstream**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `official`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `official`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -329,9 +331,9 @@ Candidate profiles: `official`. [Scenario mappings and limits](../compat/feature
 
 ### ASX-22 — Crystal Resonance
 
-Mode: **Both**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Both**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `crystals`, `official-party-ui`, `asxui`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `crystals`, `official-party-ui`, `asxui`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -343,9 +345,9 @@ Candidate profiles: `crystals`, `official-party-ui`, `asxui`. [Scenario mappings
 
 ### ASX-23 — ASXUI HUD and minimap
 
-Mode: **Both**. Disposition: **active**. Details: [Contract](NATIVE-WORLD-UI.md).
+Mode: **Both**. Disposition: **active**. Details: [Contract](../features/NATIVE-WORLD-UI.md).
 
-Candidate profiles: `asxui`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `asxui`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -368,9 +370,9 @@ Candidate profiles: `asxui`. [Scenario mappings and limits](../compat/feature-va
 
 ### ASX-24 — Combat text
 
-Mode: **Both**. Disposition: **active**. Details: [Contract](NATIVE-WORLD-UI.md).
+Mode: **Both**. Disposition: **active**. Details: [Contract](../features/NATIVE-WORLD-UI.md).
 
-Candidate profiles: `official-party-ui`, `support`, `asxui`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `official-party-ui`, `support`, `asxui`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -380,9 +382,9 @@ Candidate profiles: `official-party-ui`, `support`, `asxui`. [Scenario mappings 
 
 ### ASX-25 — Participant markers
 
-Mode: **Coop**. Disposition: **active**. Details: [Contract](NATIVE-WORLD-UI.md).
+Mode: **Coop**. Disposition: **active**. Details: [Contract](../features/NATIVE-WORLD-UI.md).
 
-Candidate profiles: `official-party-ui`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `official-party-ui`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -391,9 +393,9 @@ Candidate profiles: `official-party-ui`. [Scenario mappings and limits](../compa
 
 ### ASX-26 — Treasure Goblins
 
-Mode: **Both**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Both**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `rules`, `official`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `rules`, `official`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -405,9 +407,9 @@ Candidate profiles: `rules`, `official`. [Scenario mappings and limits](../compa
 
 ### ASX-27 — Lost Supplies
 
-Mode: **Solo / Coop**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Solo / Coop**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `rules`, `diagnostics`, `official-party-ui`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `rules`, `diagnostics`, `official-party-ui`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -420,9 +422,9 @@ Candidate profiles: `rules`, `diagnostics`, `official-party-ui`. [Scenario mappi
 
 ### ASX-28 — Sayge's Trial
 
-Mode: **Solo / Coop**. Disposition: **active**. Details: [Contract](FEATURE-RULES.md).
+Mode: **Solo / Coop**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
 
-Candidate profiles: `rules`, `diagnostics`, `official-party-ui`. [Scenario mappings and limits](../compat/feature-validation.json).
+Candidate profiles: `rules`, `diagnostics`, `official-party-ui`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -434,7 +436,7 @@ Candidate profiles: `rules`, `diagnostics`, `official-party-ui`. [Scenario mappi
 
 ## ASX-29 — Cooperative area bonuses
 
-Mode: **Coop**. Disposition: **active**. Details: [Rules](FEATURE-RULES.md).
+Mode: **Coop**. Disposition: **active**. Details: [Rules](../features/FEATURE-RULES.md).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -458,12 +460,12 @@ do not belong here.
 
 | Area | Source owners | Detailed reference |
 | --- | --- | --- |
-| XP/wallet/rewards/pause | gameplay `official.rs`; runtime `experience.rs`, `xp_hooks.rs`, `menu_pause.rs`; selected `official_native/` | [Rules](FEATURE-RULES.md), [Pause](COOP-PAUSE.md), [Adapter](CLIENT-ADAPTER.md) |
-| Support/combat/sickness | gameplay `support.rs`, `periodic.rs`, `marks.rs`, `taunts.rs`, `immunity_aggro.rs`, `resurrection_fatigue.rs` and runtime/native consumers | [Rules](FEATURE-RULES.md) |
-| Rings/crystals/events | gameplay `enchantments.rs`, `crystals.rs`, `blessings.rs`, `supplies.rs`, `rituals.rs`, `treasure_goblins.rs`; runtime event/reward services | [Rules](FEATURE-RULES.md), [Player guide](player/FEATURES.md) |
-| API/party/HUD | `native-ui/official-party.lua`, `addons/ASXUI/`, runtime `party_ui.rs` | [API](ADDON-API.md), [Party](OFFICIAL-PARTY-UI.md), [World UI](NATIVE-WORLD-UI.md), [ASXUI guide](../addons/ASXUI/README.md) |
-| Installation/release | `asx/`, `tools/build/asx_*.py` | [Installation](ASX-INSTALLATION.md), [Reproducibility](REPRODUCIBILITY.md) |
-| Coverage/native boundaries | `compat/features.json`, `feature-validation.json`, `contract-links.json`, `suites.json`, exact descriptor | [Workflow](COMPATIBILITY-WORKFLOW.md), [Testing](TESTING.md) |
+| XP/wallet/rewards/pause | gameplay `official.rs`; runtime `experience.rs`, `xp_hooks.rs`, `menu_pause.rs`; selected `official_native/` | [Rules](../features/FEATURE-RULES.md), [Pause](../features/COOP-PAUSE.md), [Adapter](CLIENT-ADAPTER.md) |
+| Support/combat/sickness | gameplay `support.rs`, `periodic.rs`, `marks.rs`, `taunts.rs`, `immunity_aggro.rs`, `resurrection_fatigue.rs` and runtime/native consumers | [Rules](../features/FEATURE-RULES.md) |
+| Rings/crystals/events | gameplay `enchantments.rs`, `crystals.rs`, `blessings.rs`, `supplies.rs`, `rituals.rs`, `treasure_goblins.rs`; runtime event/reward services | [Rules](../features/FEATURE-RULES.md), [Player guide](../player/FEATURES.md) |
+| API/party/HUD | `native-ui/official-party.lua`, `addons/ASXUI/`, runtime `party_ui.rs` | [API](../features/ADDON-API.md), [Party](../features/OFFICIAL-PARTY-UI.md), [World UI](../features/NATIVE-WORLD-UI.md), [ASXUI guide](../../addons/ASXUI/README.md) |
+| Installation/release | `asx/`, `tools/build/asx_*.py` | [Installation](../release/ASX-INSTALLATION.md), [Reproducibility](../release/REPRODUCIBILITY.md) |
+| Coverage/native boundaries | `compat/features.json`, `feature-validation.json`, `contract-links.json`, `suites.json`, exact descriptor | [Workflow](COMPATIBILITY-WORKFLOW.md), [Testing](../development/TESTING.md) |
 
 Integrating another branch requires adding its intended behavior, source mapping
 and verification cases here. A prototype/model/helper alone is not acceptance.

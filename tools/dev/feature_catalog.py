@@ -26,7 +26,7 @@ def render(features=None):
 
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument("--write-doc",action="store_true");a=p.parse_args()
- content=render();dest=ROOT/"docs/ASX-FEATURES.md"
+ content=render();dest=ROOT/"docs/compatibility/ASX-FEATURES.md"
  if a.write_doc:dest.write_text(content)
  elif dest.read_text()!=content:raise SystemExit("Feature documentation is stale; run feature_catalog.py --write-doc")
  print("Feature catalog and documentation verified")

@@ -3,8 +3,8 @@
 This summarizes the current supported source policy. The portable implementations in
 `crates/asx-gameplay/src/` are the precise reference for calculations; selected
 native translation belongs in `asx-game`. Stable feature identities live in
-[ASX-FEATURES.md](ASX-FEATURES.md), and player explanations in
-[player/FEATURES.md](player/FEATURES.md).
+[ASX-FEATURES.md](../compatibility/ASX-FEATURES.md), and player explanations in
+[player/FEATURES.md](../player/FEATURES.md).
 
 ## Shared rewards
 
@@ -276,7 +276,7 @@ name, icon, stacks and remaining time. Rules: `resurrection_fatigue.rs`.
 Keep native party/menu widgets and owner-correct tooltips. See
 [party UI](OFFICIAL-PARTY-UI.md) and [pause](COOP-PAUSE.md). Feature rule tests,
 selected-memory fixtures and native stand-ins cover different risks. Consult
-[testing](TESTING.md) rather than copying a historical live-trial recipe.
+[testing](../development/TESTING.md) rather than copying a historical live-trial recipe.
 
 ## Sayge's Trial
 

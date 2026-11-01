@@ -159,7 +159,7 @@ or stale ASX data hides all widgets. The matching rebuilt ASX bridge is required
 
 ## Public ASX data contract
 
-ASXUI consumes [ASX addon contract](../../docs/ADDON-API.md) through
+ASXUI consumes [ASX addon contract](../../docs/features/ADDON-API.md) through
 `ASX_GetState(1)` and `ASX_GetAPIVersion()`. Structured values live in `data`;
 ASX-owned wording/assets/colors live in `texts`. It no longer consumes the old
 private presentation/minimap getters. Other addons can use the same native-style

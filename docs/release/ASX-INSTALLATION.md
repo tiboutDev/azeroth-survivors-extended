@@ -1,8 +1,10 @@
 # Native-folder installation and distribution
 
+Follow the [release preparation checklist](RELEASE-CHECKLIST.md) for ordered commands, evidence and blocking conditions.
+
 ASX targets only the reviewed official **0.138.0** client. The native selector,
 supported-game registry and manifest validator reject other builds. Player steps
-are in [Installation](player/INSTALLATION.md); this page defines ownership and
+are in [Installation](../player/INSTALLATION.md); this page defines ownership and
 release boundaries.
 
 ## Owned layout
@@ -128,7 +130,7 @@ publication metadata out of those attachments.
 
 Run the relevant `asx-install` tests and validate the exact signed archive at an
 authorized release milestone. [Reproducibility](REPRODUCIBILITY.md), strict source
-hygiene and [verification](TESTING.md#publication-checks) are separate gates. Preparation, tests and
+hygiene and [verification](../development/TESTING.md#publication-checks) are separate gates. Preparation, tests and
 a source change never authorize deployment, upload or publication.
 
 ASXUI event-layout preferences migrate to a shared top-HUD anchor on next load;

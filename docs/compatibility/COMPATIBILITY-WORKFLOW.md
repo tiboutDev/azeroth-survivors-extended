@@ -1,5 +1,7 @@
 # Compatibility workflow
 
+For the ordered gates, expected results, evidence and stop conditions, start with the [compatibility checklist](COMPATIBILITY-CHECKLIST.md).
+
 Use the [expected-behavior acceptance reference](ASX-BEHAVIOR.md) to plan and
 record feature-level verification; update affected criteria with semantic changes.
 
@@ -303,7 +305,7 @@ focused isolated visual trial. Native modal input owns these actions; no server
 answer is written and no readiness gate is bypassed. The game's native ROAM driver supplies movement for "Move to begin" and remains
 active during the scenario. No OS keyboard/mouse input, desktop switching,
 Game-phase write or protected AddOn movement call is used. Diagnostic crystal
-scenes account for ordinary roaming as described in [testing](TESTING.md).
+scenes account for ordinary roaming as described in [testing](../development/TESTING.md).
 
 The pause scenario retains the common host autoplay startup delay. Its former
 four-second override repeatedly restarted ready checks in 0.133 even after a

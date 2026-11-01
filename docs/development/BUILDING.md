@@ -1,5 +1,7 @@
 # Building and checking ASX
 
+Use the [compatibility checklist](../compatibility/COMPATIBILITY-CHECKLIST.md) or [release checklist](../release/RELEASE-CHECKLIST.md) to place builds and checks in their required validation sequence.
+
 The production DLL and export probe target Windows x86-64. Portable policy and
 selected-memory tests can run on Linux or Windows. Use the Rust toolchain pinned
 in `rust-toolchain.toml` and the committed `Cargo.lock`.
@@ -42,7 +44,7 @@ is not execution evidence. Current Rust integration targets are `client_binding`
 `tools/dev/build-windows.sh` compiles a normal DLL; `build-chest-fixture.sh`
 compiles diagnostic fixtures. Both compile only. A normal artifact for sharing
 or reproducibility uses the path-remapped production builder in
-`tools/build/asx_release_binary.py`. Follow [reproducibility](REPRODUCIBILITY.md)
+`tools/build/asx_release_binary.py`. Follow [reproducibility](../release/REPRODUCIBILITY.md)
 and the artifact policy before building; normal/diagnostic artifacts are distinct.
 
 Private game import requires explicit source/receiver paths through
@@ -85,5 +87,5 @@ Ordinary extension trials take no screenshots. ASX_TEST_VISUAL=1 enables sparse
 captures only for an explicitly authorized visual trial; logs alone establish no
 claim about the rendered layout.
 
-See the [compatibility workflow](COMPATIBILITY-WORKFLOW.md) for resolved manifests,
+See the [compatibility workflow](../compatibility/COMPATIBILITY-WORKFLOW.md) for resolved manifests,
 artifact receipts, declarative suites and bounded Lua evidence.

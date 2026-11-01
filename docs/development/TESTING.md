@@ -1,10 +1,12 @@
 # Targeted ASX validation
 
-Use the [expected-behavior acceptance reference](ASX-BEHAVIOR.md) to plan and
+Ordered procedures: [compatibility checklist](../compatibility/COMPATIBILITY-CHECKLIST.md) and [release preparation checklist](../release/RELEASE-CHECKLIST.md).
+
+Use the [expected-behavior acceptance reference](../compatibility/ASX-BEHAVIOR.md) to plan and
 record feature-level verification; update affected criteria with semantic changes.
 
 The supported source target is official 0.138.0. Review the
-[feature inventory](ASX-FEATURES.md) and [adapter boundary](CLIENT-ADAPTER.md)
+[feature inventory](../compatibility/ASX-FEATURES.md) and [adapter boundary](../compatibility/CLIENT-ADAPTER.md)
 when changing native integration. Validation must cover the changed risk and
 state its limits; test counts alone are not a completion criterion.
 
@@ -146,9 +148,9 @@ prepared asset hashes, signatures and the stable download alias. It does not
 launch a game or publish. A release also requires strict source hygiene, an
 explicit historical-Git decision and exact signed-archive/runtime validation.
 
-The [reproducibility guide](REPRODUCIBILITY.md) describes local and Windows-native
+The [reproducibility guide](../release/REPRODUCIBILITY.md) describes local and Windows-native
 builder contracts. Controlled references belong under
-[validation](../validation/README.md); generated results and cleanup snapshots
+[validation](../../validation/README.md); generated results and cleanup snapshots
 belong to ignored local evidence. Exact hashes/bytes, reentry, participant
 identities and transactional ownership are independent boundaries: passing one
 does not establish the others.
@@ -181,7 +183,7 @@ native protection to force a passing result. A focused shield retry can share th
 assessors must pass. Pause trials stop six seconds after
 both controlled native menus have closed, retaining movement-resumption evidence.
 
-See the [compatibility workflow](COMPATIBILITY-WORKFLOW.md) for resolved manifests,
+See the [compatibility workflow](../compatibility/COMPATIBILITY-WORKFLOW.md) for resolved manifests,
 artifact receipts, declarative suites and bounded Lua evidence.
 
 ### Observed event fixture progression

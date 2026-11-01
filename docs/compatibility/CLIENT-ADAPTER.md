@@ -110,12 +110,12 @@ candidate references only: they do not establish the callee ABI or the target
 data layout. The offline comparer keeps those candidates separate from aligned
 instructions and refuses checkpoints created with the previous reference-inference
 policy; retain old evidence and start a fresh comparison instead. Use the profiles in
-[testing](TESTING.md); run Windows stand-ins when native register/stack wrappers
+[testing](../development/TESTING.md); run Windows stand-ins when native register/stack wrappers
 or generated code change. Current tests cover the selected 0.133 path;
 the full gate additionally enables that graph to preserve its tests.
 
-See [Rust architecture](RUST-ARCHITECTURE.md) for workspace boundaries and
-[party presentation](OFFICIAL-PARTY-UI.md) for owner-data and retained-widget rules.
+See [Rust architecture](../development/RUST-ARCHITECTURE.md) for workspace boundaries and
+[party presentation](../features/OFFICIAL-PARTY-UI.md) for owner-data and retained-widget rules.
 
 Native callable entry guards must account for ASX-owned hooks without accepting
 arbitrary jumps. The hook installer retains the exact original and installed

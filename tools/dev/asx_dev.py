@@ -172,7 +172,7 @@ def main():
  if a.command=='check':
   _,client,_=binding_registry.load_binding()
   if binding_registry.owned_path(client['descriptor']).read_text()!=binding_registry.render():raise ValueError('Stale binding')
-  if(ROOT/'docs/ASX-FEATURES.md').read_text()!=feature_catalog.render():raise ValueError('Stale feature documentation')
+  if(ROOT/'docs/compatibility/ASX-FEATURES.md').read_text()!=feature_catalog.render():raise ValueError('Stale feature documentation')
   print('Client, binding, feature inventory and scenario schemas verified; no game launched.')
  elif a.command=='preflight':verify_staged();print('Execution bundle, artifact provenance and native identity verified; no game launched.')
  elif a.command=='inventory':print(json.dumps(compatibility.inventory(),indent=2))

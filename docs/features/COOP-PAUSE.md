@@ -25,7 +25,7 @@ translation and call shapes stay selected in `asx-game`; portable menu policy
 lives in `asx-gameplay::official::MenuOwners`.
 
 Portable policy, selected-memory fixtures and Windows stand-ins cover distinct
-risks. Read [testing](TESTING.md) for the current check scope; synthetic callback
+risks. Read [testing](../development/TESTING.md) for the current check scope; synthetic callback
 evidence does not establish every visible menu flow in a running game.
 
 At entry to a host-owned group pause, ASX emits the existing native

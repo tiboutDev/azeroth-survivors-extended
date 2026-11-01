@@ -1,6 +1,6 @@
 # Working scope
 
-Read [building](docs/BUILDING.md) and [development](docs/DEVELOPMENT.md).
+Read [building](docs/development/BUILDING.md) and [development](docs/development/DEVELOPMENT.md).
 Resolve the active checkout and worktrees from Git. Machine paths, pairing,
 editor handoffs and session notes belong in ignored local configuration, not
 project documentation. Never implement source changes in a generated receiver.
@@ -33,9 +33,9 @@ never restore it as a fallback or run it beside official simulation.
   No legacy launcher, helper executable, browser UI or isolated-AppData product
   is an ASX runtime dependency. `avrt-probe` remains an independent export probe.
 
-Read [CLIENT-ADAPTER.md](docs/CLIENT-ADAPTER.md) before native-integration changes
-and [ASX-FEATURES.md](docs/ASX-FEATURES.md) before feature or compatibility changes.
-Read [ASX-BEHAVIOR.md](docs/ASX-BEHAVIOR.md), the criterion-by-criterion acceptance
+Read [CLIENT-ADAPTER.md](docs/compatibility/CLIENT-ADAPTER.md) before native-integration changes
+and [ASX-FEATURES.md](docs/compatibility/ASX-FEATURES.md) before feature or compatibility changes.
+Read [ASX-BEHAVIOR.md](docs/compatibility/ASX-BEHAVIOR.md), the criterion-by-criterion acceptance
 reference. Update affected stable acceptance IDs in the same change as any new
 feature, semantic fix, retirement or integration, together with the feature
 catalog and detailed/player references. Every compatibility review must account
@@ -84,7 +84,7 @@ or replay already-granted shared receipts.
 
 ## Native presentation and activation
 
-Read [OFFICIAL-PARTY-UI.md](docs/OFFICIAL-PARTY-UI.md) before UI changes. Enrich
+Read [OFFICIAL-PARTY-UI.md](docs/features/OFFICIAL-PARTY-UI.md) before UI changes. Enrich
 native `PlayerFrame`/`PartyMemberFrame1..4` children only. Native health, death,
 resurrection, lobby, pause and replay/menu authority stay native.
 
@@ -103,7 +103,7 @@ custom-CVar activation. Diagnostic probes remain opt-in and `test-hooks` only.
 
 ## Validation and artifact policy
 
-Read [docs/TESTING.md](docs/TESTING.md). Use the smallest current relevant profiles
+Read [docs/development/TESTING.md](docs/development/TESTING.md). Use the smallest current relevant profiles
 through `sh tools/dev/check.sh --profile <name>`; repeat profiles to combine.
 Inspect `--dry-run` when needed. Unknown executable changes select the full
 portable gate; documentation-only changes launch no tests. Retired custom-engine
@@ -144,7 +144,7 @@ full portable checks do not implicitly perform Windows, game or package trials.
 
 ## Distribution and publication
 
-Read [ASX-INSTALLATION.md](docs/ASX-INSTALLATION.md). Current packaging overlays
+Read [ASX-INSTALLATION.md](docs/release/ASX-INSTALLATION.md). Current packaging overlays
 `start-asx.cmd`, `README-ASX.txt` and owned `ASX/` files on a supported native
 folder. Use native saves/settings; never redirect AppData or restore legacy
 Coop/UserData installation logic. Never ship native EXEs/MPQs or touch official

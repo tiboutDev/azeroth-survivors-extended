@@ -111,7 +111,7 @@ update does not authorize replacing those upstream mechanics with ASX rules.
 
 Exact-image checks, portable rules/memory tests, Lua behavior and Windows ABI
 execution validate different boundaries. Use the full portable gate and the
-relevant Windows checks in [testing](TESTING.md). Generated instruction evidence,
+relevant Windows checks in [testing](../development/TESTING.md). Generated instruction evidence,
 logs and candidate reports stay in ignored local storage.
 
 A new normal artifact and a separate bounded normal-client trial are required

@@ -8,7 +8,7 @@ source directory or a declaration that publication gates have passed.
 builds for its recorded input fingerprint. It is a technical local-builder
 reference, not deployment/publication approval or Windows-native proof. Source
 changes require a new candidate and review. Preserve superseded references in
-private evidence. See [reproducibility](../docs/REPRODUCIBILITY.md).
+private evidence. See [reproducibility](../docs/release/REPRODUCIBILITY.md).
 
 The Windows-native reproducer requires its own approved
 `asx-reproducible-build.json`. That reference is absent; the gate must remain

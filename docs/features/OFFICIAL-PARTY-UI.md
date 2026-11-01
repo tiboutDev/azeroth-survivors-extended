@@ -41,7 +41,7 @@ permission to release the host's barrier.
 
 Diagnostic writer channels and controlled fixtures are `test-hooks` only and
 explicitly opted in. Production addon activation uses the owned file/read-buffer
-gate described in [installation](ASX-INSTALLATION.md). Do not add persisted CVars,
+gate described in [installation](../release/ASX-INSTALLATION.md). Do not add persisted CVars,
 a parallel network or modifications to native game assets as a presentation path.
 
 Run `official-party-ui` for required Lua 5.1 behavior and selected-memory checks.

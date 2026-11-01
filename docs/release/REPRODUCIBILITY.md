@@ -1,6 +1,8 @@
 # ASX build reproducibility
 
-The [approved local WSL reference](../validation/asx-reproducible-build-xwin.json)
+Reproducibility is one gate in the [release preparation checklist](RELEASE-CHECKLIST.md); candidate production never approves a release.
+
+The [approved local WSL reference](../../validation/asx-reproducible-build-xwin.json)
 identifies the approved **0.138.0-asx.1** normal DLL (1,905,664 bytes)
 for native **0.138.0**:
 
@@ -21,7 +23,7 @@ use local native-engine loopback; they do not establish public-lobby or WAN pari
 
 ## Reproduce
 
-Prepare the WSL environment in [BUILDING.md](BUILDING.md), then run:
+Prepare the WSL environment in [BUILDING.md](../development/BUILDING.md), then run:
 
 ```sh
 python3 tools/build/asx_reproducibility.py --candidate test-results/repro-check/new-candidate.json

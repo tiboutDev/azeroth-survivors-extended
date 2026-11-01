@@ -5,7 +5,7 @@ combat logs, nameplate health updates or the native marker transport.
 
 ## Standalone presentation: ASXUI
 
-The optional [ASXUI addon](../addons/ASXUI/README.md) owns enemy plate styling
+The optional [ASXUI addon](../../addons/ASXUI/README.md) owns enemy plate styling
 and minimap pin rendering. Install it in `benilla-config/AddOns/ASXUI`, outside
 `ASX/`. Plate styling works through the native addon API without the DLL.
 The DLL installs no plate-input or plate-style hooks. A narrowly scoped exact-build

@@ -95,8 +95,10 @@ start-asx.cmd --check
 This is an offline, read-only diagnosis. It lists all detected problems, does not
 recover transactions, write installation files, download updates or start the game.
 Missing or modified documentation and the CMD bootstrap are warnings; they do not
-block an already running launcher. Missing or modified DLL, Python or addon
-components require repair. Foreign loaders and addons are never silently replaced.
+block an already running launcher. Missing or modified critical DLL, launcher or
+internal ASX presentation files require repair. If the bundled ASXUI is unavailable,
+ASX can use the native interface; repair can restore the optional addon. Foreign
+loaders and addons are never silently replaced.
 
 ```bat
 start-asx.cmd --repair
@@ -124,9 +126,11 @@ with its old contents backed up.
 For an interrupted transaction, use `start-asx.cmd --recover`. Recovery requires
 confirmation and restarts the launcher if client files were restored.
 
-If Python or the launcher cannot start, or the Python runtime needs replacement,
-close ASX and restore it from the complete trusted archive. Repair never modifies
-the official game executable, game archives, native progression or settings.
+Normal signed compatible updates can replace the Python runtime automatically
+through the detached update helper. If Python or the launcher is damaged and
+cannot start, close ASX and restore it from the complete trusted archive. Repair
+never modifies the official game executable, game archives, native progression
+or settings.
 
 ## Roll back an ASX update
 

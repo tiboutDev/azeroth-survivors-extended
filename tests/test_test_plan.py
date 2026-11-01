@@ -21,7 +21,7 @@ class Plans(unittest.TestCase):
                 self.assertEqual(m.choose([name]), ['full'])
 
     def test_docs_only_do_not_start_checks(self):
-        self.assertEqual(m.plan(None, ['AGENTS.md', 'docs/TESTING.md'])['commands'], [])
+        self.assertEqual(m.plan(None, ['AGENTS.md', 'docs/development/TESTING.md'])['commands'], [])
 
     def test_current_native_and_retained_presentation_paths_keep_official_checks(self):
         for name in ('crates/asx-game/src/official_native/support.rs',

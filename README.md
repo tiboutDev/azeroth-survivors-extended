@@ -1,4 +1,6 @@
 # Azeroth Survivors Extended
+
+Step-by-step maintainer procedures: [native compatibility](docs/compatibility/COMPATIBILITY-CHECKLIST.md) and [release preparation](docs/release/RELEASE-CHECKLIST.md).
 ### More choices. Deeper builds. Stronger teamwork.
 
 **Home** · [Installation](docs/player/INSTALLATION.md) · [Features](docs/player/FEATURES.md) · [In the workshop](docs/player/WORKSHOP.md)
@@ -64,7 +66,7 @@ These labels describe feature maturity, not exhaustive validation of every class
 2. Extract the compatible ASX archive into your game folder, beside `AzerothSurvivors.exe`.
 3. Run **`start-asx.cmd`**. It installs the included ASXUI addon and starts ASX automatically.
 
-ASXUI needs no separate download. ASX updates its managed files with your confirmed ASX updates and preserves its saved preferences.
+ASXUI needs no separate download. Signed ASX updates compatible with your installed game install automatically, update the managed addon files and preserve saved preferences.
 
 For multiplayer, use the official **Co-op** menu. All participants should use the same compatible game and ASX versions.
 
@@ -105,19 +107,21 @@ Nameplate styling requires neither the ASX gameplay DLL nor its launcher;
 minimap pins require the matching ASX projection bridge. See its README for
 commands, font licensing and compatibility limits.
 
-The [ASX addon contract](docs/ADDON-API.md) exposes versioned structured values
+The [ASX addon contract](docs/features/ADDON-API.md) exposes versioned structured values
 and ASX-authored text using native-style Lua globals/getters/handlers.
 
 ## Development
 
+See the [documentation index](docs/README.md) for player, development, compatibility, release and feature references.
+
 Source currently targets official **0.138.0**. Normal-artifact and in-game
 validation of this port remain separate from source checks; published kits
 declare their own supported game version. See
-[client compatibility](docs/CLIENT-COMPATIBILITY.md).
+[client compatibility](docs/compatibility/CLIENT-COMPATIBILITY.md).
 
 For source organization and engineering practices, see
-[Development](docs/DEVELOPMENT.md). The maintained
-[behavior and compatibility checklist](docs/ASX-BEHAVIOR.md) defines expected
+[Development](docs/development/DEVELOPMENT.md). The maintained
+[behavior and compatibility checklist](docs/compatibility/ASX-BEHAVIOR.md) defines expected
 outcomes for every ASX feature, including disabled and native-owned behavior.
 
 ## License
@@ -129,7 +133,7 @@ of the [GNU General Public License, version 3](LICENSE).
 ASX is distributed without any warranty; see the license for details.
 The original game, its assets and third-party dependencies retain their own licenses.
 
-Developer workflow: [compatibility and diagnostic tooling](docs/COMPATIBILITY-WORKFLOW.md).
+Developer workflow: [compatibility and diagnostic tooling](docs/compatibility/COMPATIBILITY-WORKFLOW.md).
 
 ## Native balance data
 

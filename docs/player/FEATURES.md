@@ -84,8 +84,10 @@ the model visible, so you can still point it out to the group.
 ASXUI shows the crystal color and its bonus in a short pickup popup. Notices
 queue for nearby pickups and stack below the top HUD. **Crystal Resonance**
 keeps the accumulated bonuses in one buff: hover it to inspect your totals.
-Bonuses add up, survive death and reset with the next run. The buff follows
-Fortune at the start of the buff row, or comes first when Fortune is absent.
+Bonuses add up, survive death and reset with the next run. In co-op,
+**Cooperative Rules** comes first in the helpful-buff row. Fortune and then
+Crystal Resonance follow when present. In solo, Crystal Resonance follows
+Fortune, or comes first when Fortune is absent.
 
 Amulets keep their native effects and **no longer assign an ASX gem**. The
 prototype targets **4–6 opportunities before endless**, with at most two crystals

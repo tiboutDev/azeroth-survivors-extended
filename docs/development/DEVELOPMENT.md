@@ -1,11 +1,11 @@
 # ASX development
 
-Use the [expected-behavior acceptance reference](ASX-BEHAVIOR.md) to plan and
+Use the [expected-behavior acceptance reference](../compatibility/ASX-BEHAVIOR.md) to plan and
 record feature-level verification; update affected criteria with semantic changes.
 
 ASX extends the official native 0.138.0 engine. Player documentation starts at the
-[project home](../README.md). For engineering work, read the [testing policy](TESTING.md),
-[feature inventory](ASX-FEATURES.md) and [adapter boundary](CLIENT-ADAPTER.md).
+[project home](../../README.md). For engineering work, read the [testing policy](TESTING.md),
+[feature inventory](../compatibility/ASX-FEATURES.md) and [adapter boundary](../compatibility/CLIENT-ADAPTER.md).
 
 ## Source organization
 
@@ -127,7 +127,7 @@ establish publication readiness.
 
 Do not keep session status, cleanup counts or generated run reports as current
 project instructions. Store them in ignored local evidence; keep lasting build
-references under [validation](../validation/README.md). Source, installed normal
+references under [validation](../../validation/README.md). Source, installed normal
 binaries and published packages have separate identities and evidence scopes.
 
 ## Offline client comparison
@@ -173,7 +173,7 @@ values rather than copy version strings, hashes or archive lists. This registry
 does not authorize a new Rust adapter or establish save-fixture/ABI compatibility;
 those remain separately reviewed gates.
 
-See the [compatibility workflow](COMPATIBILITY-WORKFLOW.md) for resolved manifests,
+See the [compatibility workflow](../compatibility/COMPATIBILITY-WORKFLOW.md) for resolved manifests,
 artifact receipts, declarative suites and bounded Lua evidence.
 
 ### Event service boundary
