@@ -89,6 +89,7 @@ unsafe extern "system" fn ui_event(c: &mut crate::stub::Context) {
 
 fn handle_event(runtime: &dyn Services, c: &mut crate::stub::Context) {
     let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        runtime.trace_native_ui(c.rcx);
         if let Ok(value) = runtime.read_ui(c.rdx, c.r8) {
             if value["type"] == "unpaused" && PAUSED.load(Ordering::Acquire) && UI_INPUT_PAUSED.load(Ordering::Acquire) {
                 c.skip = 1;

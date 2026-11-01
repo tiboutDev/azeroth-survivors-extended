@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "games": {
-    "0.131.0": {
-      "sha256": "5dd6819d836748ccf809ab76fe6509c9ee793e087939b5d036c430d835a14e63",
+    "0.135.1": {
+      "sha256": "71e5f1767279db4bd428d1cd9c5d50d37759b72295386a69f9e3f6e70bc59249",
       "archives": [
         "Data/patch.MPQ",
         "Data/patch-2.MPQ",
@@ -16,8 +16,8 @@
         "Data/patch-A.MPQ",
         "Data/patch-B.MPQ"
       ],
-      "descriptor": "crates/asx-game/src/bindings/official131.rs",
-      "binding_manifest": "compat/clients/0.131.0.json"
+      "descriptor": "crates/asx-game/src/bindings/official1351.rs",
+      "binding_manifest": "compat/clients/0.135.1.json"
     }
   }
 }

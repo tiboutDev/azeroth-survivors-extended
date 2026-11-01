@@ -696,7 +696,7 @@
       "visibility": "pub",
       "name": "SHIELD_BREAK_SPELL_REGISTER",
       "type": "usize",
-      "value": "0xb"
+      "value": "0xe"
     },
     {
       "visibility": "pub",
@@ -1391,6 +1391,42 @@
       "name": "GOBLIN_MARK_FIELDS",
       "type": "[u64; 2]",
       "value": "[0xd08, 0x834]"
+    },
+    {
+      "name": "DAMAGE_TEXT_XMM",
+      "visibility": "pub",
+      "type": "usize",
+      "value": "0x7"
+    },
+    {
+      "name": "HEAL_TEXT_RESOLVER_ABI",
+      "visibility": "pub",
+      "type": "u8",
+      "value": "0x0"
+    },
+    {
+      "name": "TEXT_QUERY",
+      "visibility": "pub",
+      "type": "(u64, &[u8])",
+      "value": "(0xd821c0, &[0x56, 0x57, 0x53, 0x48, 0x83, 0xec, 0x30, 0x48, 0x89, 0x4c, 0x24, 0x28],)"
+    },
+    {
+      "name": "HEAL_TEXT_TAG",
+      "visibility": "pub",
+      "type": "[u64;2]",
+      "value": "[0xc8, 0xd8]"
+    },
+    {
+      "name": "HEROIC_LEVEL",
+      "visibility": "pub",
+      "type": "u64",
+      "value": "0x36f"
+    },
+    {
+      "visibility": "pub",
+      "name": "NATIVE_UI_LOG_FLAG",
+      "type": "u64",
+      "value": "0x18"
     }
   ]
 }

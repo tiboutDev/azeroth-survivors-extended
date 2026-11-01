@@ -28,6 +28,10 @@ fn tick(r:&dyn Services,game:u64)->Result<(),String>{
   if let Some(point)=align{r.events_fixture_event_pose(game,0,host.guid,point)?;r.events_info(&format!("crystal fixture aligned owned host with group center: point={point:?}"));return Ok(())}
  }
  if super::pause::active(){return Ok(())}
+ #[cfg(feature="test-hooks")]if fixture_enabled(){
+  let retry={let guard=STATE.lock().map_err(|_|"Crystal fixture retry unavailable")?;guard.as_ref().and_then(|s|fixture_retry_point(s.reserves.iter().map(|v|&v.rules),now,(0,host.guid),host.position))};
+  if let Some(point)=retry{r.events_fixture_event_pose(game,0,host.guid,point)?;r.events_info(&format!("crystal fixture retry owned host: point={point:?} clock={now}"));return Ok(())}
+ }
  let endless=r.events_endless(game)?;
  let (remove,refresh,spawn)={let mut guard=STATE.lock().map_err(|_|"Crystal state unavailable")?;let s=guard.as_mut().ok_or("Crystal state missing")?;
   if s.last==Some(now){return Ok(())}s.last=Some(now);s.clock=now;s.collection.retain(&ids);s.auras.retain(|id,_|ids.contains(id));s.pending.retain(|id|ids.contains(id));
@@ -54,14 +58,43 @@ fn tick(r:&dyn Services,game:u64)->Result<(),String>{
  }
  if let Some((id,color,draws,fixture))=spawn{
   let area=r.events_area(game)?;let point=super::world_events::place(r,game,area,1.,&draws)?;
-  #[cfg(feature="test-hooks")]let point=if fixture_enabled(){let distance=if fixture==1{8.}else{0.5};unsafe{r.events_ground(game,[host.position[0]+distance,host.position[1]],0.3,2.)}?}else{point};
+  // Native CLI roaming may separate participants between fixture opportunities.
+  // Near scenes use the guest's current position; only the owned host is moved.
+  // Real native claim distance, recipients, deadlines and stat rebuilds stay intact.
+  #[cfg(feature="test-hooks")]let center=if fixture_enabled()&&fixture>1{p.actors.get(1).map_or(host.position,|a|a.position)}else{host.position};
+  #[cfg(feature="test-hooks")]let point=if fixture_enabled(){let distance=if fixture==1{8.}else{0.5};unsafe{r.events_ground(game,[center[0]+distance,center[1]],0.3,2.)}?}else{point};
   let Some(point)=point else{r.events_info("crystal placement: no accessible site; opportunity consumed");return Ok(())};
+  #[cfg(feature="test-hooks")]if fixture_enabled()&&fixture>1&&p.actors.len()>1{r.events_fixture_event_pose(game,0,host.guid,point)?;r.events_info(&format!("crystal fixture near guest: event={id} guest={} point={point:?}",p.actors[1].guid));}
   let object=unsafe{r.events_object(game,4+color as u8,point)}?;let rules=Crystal::new(id,color,point,&ids).ok_or("Invalid crystal scene")?;
   let mut reserve=Some(Reserve{rules,object});{let mut guard=STATE.lock().map_err(|_|"Crystal state unavailable")?;if let Some(s)=guard.as_mut().filter(|s|s.game==game&&s.owner==host.guid&&s.clock==now){s.reserves.push(reserve.take().unwrap());}}
   if reserve.is_some(){unsafe{r.events_remove_event_object(game,object)}?;}else{r.events_info(&format!("crystal spawned: event={id} guid={} color={} position={point:?} display={} clock={now}",object.guid(),color as u8,[2973,2971,2972,2974][color as usize]));}
   #[cfg(not(feature="test-hooks"))]let _=fixture;
  }
  Ok(())
+}
+// Probe cloned production rules: never acknowledge a claim or change its deadline.
+#[cfg(feature="test-hooks")]
+fn fixture_retry_point<'a>(scenes:impl Iterator<Item=&'a Crystal>,now:f32,owner:Owner,position:[f32;3])->Option<[f32;3]>{
+ scenes.filter(|v|v.id>1).find_map(|v|{
+  let mut at_scene=v.clone();let mut at_player=v.clone();
+  (at_scene.claim(now,owner,v.position,true)&&!at_player.claim(now,owner,position,true)).then_some(v.position)
+ })
+}
+#[cfg(all(test,feature="test-hooks"))]mod fixture_retry_tests{
+ use super::*;
+ #[test]fn missed_near_claim_retries_without_claiming_replaying_or_extending_deadline(){
+  let ids=[(0,11),(1,22)];let mut near=Crystal::new(3,Color::Green,[0.;3],&ids).unwrap();
+  assert!(near.claim(10.,ids[1],[0.;3],true));let deadline=near.deadline;
+  assert_eq!(fixture_retry_point([&near].into_iter(),11.,ids[0],[20.,0.,0.]),Some([0.;3]));
+  assert_eq!(near.deadline,deadline);assert!(!near.done(11.));
+  assert_eq!(fixture_retry_point([&near].into_iter(),11.,ids[0],[0.;3]),None);
+  assert!(near.claim(11.,ids[0],[0.;3],true));assert!(near.done(11.));
+  assert_eq!(fixture_retry_point([&near].into_iter(),12.,ids[0],[20.,0.,0.]),None);
+  let mut expired=Crystal::new(4,Color::Yellow,[0.;3],&ids).unwrap();assert!(expired.claim(10.,ids[1],[0.;3],true));
+  assert_eq!(fixture_retry_point([&expired].into_iter(),expired.deadline.unwrap(),ids[0],[20.,0.,0.]),None);
+  let outlier=Crystal::new(1,Color::Red,[0.;3],&ids).unwrap();
+  assert_eq!(fixture_retry_point([&outlier].into_iter(),11.,ids[0],[20.,0.,0.]),None);
+ }
 }
 thread_local!{static STATS:RefCell<Vec<u64>>=const{RefCell::new(Vec::new())};static PROBE:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};}
 struct Scope<'a>{r:&'a dyn Services,loan:Option<StatInputLoan>}

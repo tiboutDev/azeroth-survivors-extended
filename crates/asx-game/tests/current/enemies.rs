@@ -9,9 +9,9 @@ use asx_game::{
 const GAME: u64 = 0x10000;
 const RECORDS: u64 = 0x20000;
 fn layout() -> EnemyLayout {
-    // Independent native125 fixture values, not derived from the descriptor under test.
+    // Independent 0.135.1 fixture values, not derived from the descriptor under test.
     EnemyLayout {
-        stride: 0x1f8,
+        stride: 0x200,
         guid_offset: 0xf0,
         guid_gap: 60,
         hp_gap: 128,
@@ -38,13 +38,13 @@ impl Mem for Memory {
 }
 
 fn memory() -> Memory {
-    let mut game = vec![0; 0xd90];
-    // Reviewed current Game enemy vector and 0.130 native clock.
-    for (at, value) in [(0x5b0, 2u64), (0x5b8, RECORDS), (0x5c0, 2)] {
+    let mut game = vec![0; 0x1000];
+    // Reviewed current Game enemy vector and 0.135.1 native clock.
+    for (at, value) in [(0x640, 2u64), (0x648, RECORDS), (0x650, 2)] {
         game[at..at + 8].copy_from_slice(&value.to_le_bytes());
     }
-    game[0xce0..0xce4].copy_from_slice(&11f32.to_le_bytes());
-    let stride = 0x1f8;
+    game[0xe88..0xe8c].copy_from_slice(&11f32.to_le_bytes());
+    let stride = 0x200;
     let mut records = vec![0; stride * 2];
     records[0xf0..0xf0 + 8].copy_from_slice(&123456u64.to_le_bytes());
     records[0x178 - 4..0x178].copy_from_slice(&f32::NAN.to_le_bytes());
@@ -79,7 +79,7 @@ fn selected_support_reads_current_health_and_ignores_retired_enemies() {
 fn selected_support_rejects_invalid_extents_and_skips_nonfinite_records() {
     let adapter = SelectedAdapter::select(current::SHA256).unwrap();
     let mut m = memory();
-    m.game[0x5c0..0x5c8].copy_from_slice(&3u64.to_le_bytes());
+    m.game[0x650..0x658].copy_from_slice(&3u64.to_le_bytes());
     assert!(adapter.support_enemies(&m, GAME).is_err());
     let mut m = memory();
     m.records.pop();
@@ -107,7 +107,7 @@ fn parser_rejects_invalid_layouts_and_partial_current_records() {
     ] {
         assert!(parse_enemies_layout(&[], 0., bad).is_err());
     }
-    assert!(parse_enemies_layout(&vec![0; 0x1f8 - 1], 0., layout()).is_err());
+    assert!(parse_enemies_layout(&vec![0; 0x200 - 1], 0., layout()).is_err());
 }
 
 #[test]

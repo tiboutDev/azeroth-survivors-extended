@@ -739,9 +739,6 @@
     "official_native.menu_icons.menu_bindings": [
       "ASX-18"
     ],
-    "official_native.menu_icons.menu_cache_entries": [
-      "ASX-18"
-    ],
     "official_native.menu_icons.menu_entries": [
       "ASX-18"
     ],
@@ -1675,6 +1672,28 @@
     ],
     "official_native.stat_inputs.apply_consumable_speed": [
       "ASX-27"
+    ],
+    "official_native.combat.hurt_actor_tagged": [
+      "ASX-09",
+      "ASX-10",
+      "ASX-15",
+      "ASX-26"
+    ],
+    "official_native.support.effects.call_native_heal": [
+      "ASX-07",
+      "ASX-08",
+      "ASX-12",
+      "ASX-15"
+    ],
+    "official_native.combat_text.resolve_with_native_parts": [
+      "ASX-24"
+    ],
+    "official_native.combat_text.append_native_heal_text": [
+      "ASX-24"
+    ],
+    "official_native.enable_native_ui_logging": [
+      "ASX-01",
+      "ASX-18"
     ]
   },
   "evidence": {
@@ -3390,15 +3409,6 @@
       "shared": false
     },
     "official_native.menu_icons.menu_bindings": {
-      "reason": "Native lobby/menu class presentation and retained participant cards.",
-      "references": [
-        "crates/asx-game/src/official_native/menu_icons.rs",
-        "src/runtime/menu_ui.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.menu_icons.menu_cache_entries": {
       "reason": "Native lobby/menu class presentation and retained participant cards.",
       "references": [
         "crates/asx-game/src/official_native/menu_icons.rs",
@@ -5299,6 +5309,54 @@
       ],
       "role": "native-operation",
       "shared": false
+    },
+    "official_native.combat.hurt_actor_tagged": {
+      "reason": "Preserve both native Hurt source words through delayed taunt redirection and fallback; retain actor transactions, defensive isolation and identity checks.",
+      "references": [
+        "crates/asx-game/src/official_native/combat.rs",
+        "src/runtime/combat.rs",
+        "src/runtime/glyphs.rs",
+        "src/runtime/treasure_goblins.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
+    "official_native.support.effects.call_native_heal": {
+      "reason": "Synthetic healing and meter calls provide the reviewed fifth native source descriptor while retaining active-actor and spell attribution.",
+      "references": [
+        "crates/asx-game/src/official_native/support.rs",
+        "src/runtime/support.rs",
+        "src/runtime/fatigue.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
+    "official_native.combat_text.resolve_with_native_parts": {
+      "reason": "Selected native query predicate plus GUID/entity map lookup; retain query ownership and exact pointer-wrapper ABI for healing text.",
+      "references": [
+        "crates/asx-game/src/official_native/combat_text.rs",
+        "src/runtime/combat_text.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.combat_text.append_native_heal_text": {
+      "reason": "Native outgoing damage and allied direct/periodic healing text entries and draw queue.",
+      "references": [
+        "crates/asx-game/src/official_native/combat_text.rs",
+        "src/runtime/combat_text.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.enable_native_ui_logging": {
+      "reason": "Opt-in native stdout event logging independent of Game autostart; validate only the selected sink boolean and preserve all other bytes.",
+      "references": [
+        "crates/asx-game/src/official_native.rs",
+        "src/runtime/pause/services.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
     }
   },
   "conservative_notes": {

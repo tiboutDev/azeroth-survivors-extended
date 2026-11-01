@@ -47,7 +47,7 @@
     },
     {
       "id": "ASX-05",
-      "contract": "Native guardian rewards; no supplemental item grant is installed for 0.130. Preserve each native skill/item reward once.",
+      "contract": "Native guardian rewards; no supplemental item grant is installed for the selected client. Preserve each native skill/item reward once.",
       "mode": "Coop",
       "reference": "[Contract](FEATURE-RULES.md)",
       "native_domains": [

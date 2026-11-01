@@ -60,15 +60,19 @@ def assess_ranked(host,native,players):
  return result
 
 def assess_fixture_party(host):
- """Fixture grants update the current actor before the next host projection.
- Require identical XP throughout and gold convergence at the next sampled boundary.
+ """Observe gold at every active native boundary, including reward choices.
+ XP remains comparable when both actors play. Gold must converge in the very
+ next sample within five wall seconds, including samples taken during a pause.
  """
- rows=[]
+ rows=[];gold_rows=[]
  for line in host.splitlines():
   if "official party: clock="not in line:continue
-  actors=re.findall(r"phase: Playing, gold: (\d+), level: (\d+), xp: (\d+)",line)
+  actors=re.findall(r"phase: (Playing|Choosing), gold: (\d+), level: (\d+), xp: (\d+)",line)
   time=re.search(r"(\d+\.\d+)s",line)
-  if len(actors)==2 and time:rows.append((float(time[1]),[tuple(map(int,a))for a in actors]))
- transients=[i for i,(_,a)in enumerate(rows)if a[0][0]!=a[1][0]]
- checks=dict(equal_progression=len(rows)>=3 and all(a[0][1:]==a[1][1:]for _,a in rows),gold_converges_after_fixture=len(rows)>=3 and all(i+1<len(rows)and rows[i+1][0]-rows[i][0]<=5 and rows[i+1][1][0][0]==rows[i+1][1][1][0]for i in transients))
- return dict(checks=checks,comparable_samples=len(rows),transient_gold_samples=[dict(time=rows[i][0],actors=rows[i][1],next_time=rows[i+1][0]if i+1<len(rows)else None)for i in transients])
+  if len(actors)!=2 or not time:continue
+  sample=(float(time[1]),[tuple(map(int,a[1:]))for a in actors])
+  gold_rows.append(sample)
+  if all(a[0]=="Playing"for a in actors):rows.append(sample)
+ transients=[i for i,(_,a)in enumerate(gold_rows)if a[0][0]!=a[1][0]]
+ checks=dict(equal_progression=len(rows)>=3 and all(a[0][1:]==a[1][1:]for _,a in rows),gold_converges_after_fixture=len(gold_rows)>=3 and all(i+1<len(gold_rows)and gold_rows[i+1][0]-gold_rows[i][0]<=5 and gold_rows[i+1][1][0][0]==gold_rows[i+1][1][1][0]for i in transients))
+ return dict(checks=checks,comparable_samples=len(rows),gold_samples=len(gold_rows),transient_gold_samples=[dict(time=gold_rows[i][0],actors=gold_rows[i][1],next_time=gold_rows[i+1][0]if i+1<len(gold_rows)else None)for i in transients])

@@ -247,7 +247,11 @@ impl Adapter {
         registers: [u64; 3],
         base: u64,
     ) -> Result<Option<(u64, u64)>> {
-        let [frame, _, definition] = registers;
+        let [frame, _, _] = registers;
+        // 0.135.1 keeps the killed enemy GUID in R13. Its optional unique-boss
+        // definition is copied from the enemy row into this reviewed frame slot.
+        let definition = q(m, frame.checked_add(crate::current::ENCOUNTER_DEFINITION_FRAME)
+            .ok_or("Encounter definition frame overflow")?)?;
         self.blessing_event(m, frame, definition, base)
     }
 }

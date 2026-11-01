@@ -113,15 +113,15 @@ mod current_frame_tests {
         }
     }
     #[test]
-    fn aura_pointer_uses_the_current_negative_stack_slot() {
+    fn aura_pointer_uses_the_current_positive_stack_slot() {
         let a = Adapter::select(crate::current::SHA256).unwrap();
         let mut m = Bytes(vec![0; 0x50000]);
         let game = 0x10000;
-        m.0[game + 0xd9e] = 1;
-        m.0[game + 0xda3] = 1;
-        m.0[game + 0x4b0..game + 0x4b8].copy_from_slice(&123u64.to_le_bytes());
-        m.0[game + 0xce0..game + 0xce4].copy_from_slice(&42f32.to_le_bytes());
-        m.0[0x30000..0x30008].copy_from_slice(&0x40000u64.to_le_bytes());
+        m.0[game + 0xf46] = 1;
+        m.0[game + 0xf4b] = 1;
+        m.0[game + 0x538..game + 0x540].copy_from_slice(&123u64.to_le_bytes());
+        m.0[game + 0xe88..game + 0xe8c].copy_from_slice(&42f32.to_le_bytes());
+        m.0[0x30040..0x30048].copy_from_slice(&0x40000u64.to_le_bytes());
         let mut r = [0u64; 15];
         r[0] = game as u64;
         r[8] = 0x30008;

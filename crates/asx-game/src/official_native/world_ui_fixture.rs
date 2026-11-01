@@ -35,7 +35,7 @@ impl Adapter {
     if word(m,row+v::ENEMY_GUID as u64)?==new.guid{
      // Only disposable witnesses: survive the observation window.
      m.write(row+v::ENEMY_HP as u64,&100000f32.to_le_bytes())?;
-     if label=="elite"{m.write(row+0x1f4,&[1])?;}
+     if label=="elite"{m.write(row+crate::current::ENEMY_ELITE,&[1])?;}
      break;
     }
    }

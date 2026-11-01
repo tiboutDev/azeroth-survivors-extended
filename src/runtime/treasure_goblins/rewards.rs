@@ -35,8 +35,10 @@ thread_local! {static SCOPE:RefCell<Option<Scope>>=const{RefCell::new(None)};}
 static POOL: AtomicUsize = AtomicUsize::new(0);
 static EXCLUDE: AtomicUsize = AtomicUsize::new(0);
 static CHOICE: AtomicUsize = AtomicUsize::new(0);
-crate::context_stub_rw!(@emit pool_entry,0,pool,POOL,["mov rbx, [rsp + 32 + {rbx}]","mov rdi, [rsp + 32 + {rdi}]"]);
+crate::context_stub_rw!(@emit pool_entry,0,pool,POOL,["mov r15, [rsp + 32 + {r15}]"]);
 unsafe extern "system" fn pool(c: &mut crate::stub::Context) {
+    #[cfg(test)]
+    if tests::POOL_PROBE.load(Ordering::Acquire) { c.r15 = 3; return; }
     let scope = SCOPE.with(|s| s.borrow().as_ref().map(|s| s.game));
     let Some(game) = scope.filter(|g| *g == c.rsi) else {
         return;
@@ -48,8 +50,7 @@ unsafe extern "system" fn pool(c: &mut crate::stub::Context) {
     };
     match r.adapter.goblin_amulet_pool(&m, c.rbp, game) {
         Ok(()) => {
-            c.rbx = 3;
-            c.rdi = 3;
+            c.r15 = 3;
         }
         Err(e) => r.log.warn(&format!("Goblin amulet pool rejected: {e}")),
     }
@@ -307,6 +308,34 @@ pub(super) fn install(r: &Runtime) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    pub(super) static POOL_PROBE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    #[unsafe(naked)]
+    unsafe extern "system" fn capture_pool_registers() {
+        core::arch::naked_asm!("mov [rcx], rbx", "mov [rcx+8], rdi", "mov [rcx+16], r15", "ret");
+    }
+    #[unsafe(naked)]
+    unsafe extern "system" fn invoke_pool_registers(_out: *mut u64) {
+        core::arch::naked_asm!(
+            "push rbx", "push rdi", "push r15", "sub rsp, 32",
+            "mov rbx, 111", "mov rdi, 222", "mov r15, 333", "call {entry}",
+            "add rsp, 32", "pop r15", "pop rdi", "pop rbx", "ret", entry=sym pool_entry);
+    }
+    #[test]
+    fn current_pool_stub_writes_r15_and_preserves_native_owner_registers() {
+        let _lock = crate::test_support::TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        struct Restore(usize);
+        impl Drop for Restore {
+            fn drop(&mut self) {
+                POOL_PROBE.store(false, Ordering::Release);
+                POOL.store(self.0, Ordering::Release);
+            }
+        }
+        let _restore = Restore(POOL.swap(capture_pool_registers as *const () as usize, Ordering::AcqRel));
+        POOL_PROBE.store(true, Ordering::Release);
+        let mut registers = [0u64; 3];
+        unsafe { invoke_pool_registers(registers.as_mut_ptr()); }
+        assert_eq!(registers, [111, 222, 3]);
+    }
     unsafe extern "system" fn native_choice(g: u64, k: u8, b: bool) {
         assert_eq!((g, k, b), (7, 1, true));
     }

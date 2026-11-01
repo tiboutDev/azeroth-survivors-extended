@@ -66,7 +66,7 @@ REVIEWED_ASSET_REFERENCE_LINES = {'asx/supported-games.json': {'3c577b33d4e6a040
                        '987eee303b7ed4d5db512611753c407296f197734eff0a8433989202196cf048': 1,
                        'ae6d4e51b48b613f1d08bb978435e977ccce5999cbea929822e4c1ebd1db6e43': 2,
                        'bc00817d9234576cce10abdd3ff150417114a0215eb6c52a2032d9e519f8008f': 1,
-                       '82e8eca50c31669d2d26912f72e12169d7039175607ce1eec27f1e16b59ba4f9': 1,
+                       '3605c24ca41e779158f2a9ce512aaf8039515e729ac4e76bb03ee63515f20b89': 1,
                        'c6e58abcf8e62bd45abf1cc0ee7fc007ddbac56db902cc520cf73d87f7db069a': 1,
                        'c88519b8fcf03d88aa60189927db84c313681728b121cc9073920b2a85c17a65': 1,
                        'cada535360ad0ff6273d08bd35e003aff192a4759e360e5433a02e02a6a0c0c2': 1,

@@ -5,8 +5,8 @@ use std::sync::atomic::AtomicUsize;
 pub static DAMAGE_NEXT: AtomicUsize = AtomicUsize::new(0);
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 static THIRD: f32 = 1.0 / 3.0;
-/// The selected renderer keeps the current entry in r14 and its freshly calculated
-/// size in xmm7. No stored size changes; preserve every other register and flags.
+/// The selected renderer keeps the current entry in R14 and its fresh size in
+/// the descriptor-selected XMM7/XMM8. Preserve every other register and flags.
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 #[unsafe(naked)]
 pub unsafe extern "C" fn damage_entry() {
@@ -15,9 +15,22 @@ pub unsafe extern "C" fn damage_entry() {
  "cmp byte ptr [r14 + 0x38], 0", "je 2f",
  "cmp byte ptr [r14 + 0x38], 2", "jne 3f",
  "2:", "cmp dword ptr [r14 + 0x34], {green}", "je 3f",
- "mulss xmm7, dword ptr [rip + {third}]",
+ ".if {fresh} == 8", "mulss xmm8, dword ptr [rip + {third}]",
+ ".elseif {fresh} == 7", "mulss xmm7, dword ptr [rip + {third}]",
+ ".else", ".error \"Unsupported combat-text size register\"", ".endif",
  "3:", "popfq", "jmp qword ptr [rip + {next}]",
- green=const crate::current::HEAL_TEXT_COLOR,third=sym THIRD,next=sym DAMAGE_NEXT);
+ green=const crate::current::HEAL_TEXT_COLOR,fresh=const crate::current::DAMAGE_TEXT_XMM,third=sym THIRD,next=sym DAMAGE_NEXT);
+}
+type NativeEntityQuery = unsafe extern "system" fn(u64, u64, *const u8) -> u8;
+type NativeEntityLookup = unsafe extern "system" fn(*const u64, u64) -> u64;
+/// 0.133 separates the query predicate from the GUID/entity map lookup. The
+/// lookup borrows a pointer to the map reference, not the map pointer directly.
+unsafe fn resolve_with_native_parts(predicate: NativeEntityQuery, lookup: NativeEntityLookup, target: u64, objects: u64, query: *const u8) -> Result<u64> {
+    match predicate(target, objects, query) {
+        0 => Ok(0),
+        1 => Ok(lookup(&objects, target)),
+        _ => Err("Invalid native text query result".into()),
+    }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct HealText {
@@ -27,13 +40,13 @@ pub struct HealText {
     pub critical: bool,
 }
 impl Adapter {
-    /// Exact reviewed 0.131 renderer seam, after size interpolation/clamping.
+    /// Exact selected renderer seam, after size interpolation/clamping.
     pub fn damage_text_size_entry(self) -> super::super::official::Entry {
         let (rva, bytes) = crate::current::DAMAGE_TEXT_SIZE;
         super::super::official::Entry { rva, bytes }
     }
 
-    pub fn combat_text_entries(self) -> [super::super::official::Entry; 8] {
+    pub fn combat_text_entries(self) -> [super::super::official::Entry; 9] {
         use crate::current as v;
         [
             v::DIRECT_HEAL_TEXT,
@@ -44,6 +57,7 @@ impl Adapter {
             v::HEAL_LOG_PACKET,
             v::HEAL_LOG_RESERVE,
             v::PERIODIC_TEXT_POINT,
+            v::TEXT_QUERY,
         ]
         .map(|(rva, bytes)| super::super::official::Entry { rva, bytes })
     }
@@ -61,6 +75,9 @@ impl Adapter {
                     .map_err(|_| "Truncated text identity")?,
             ))
         };
+        let tag = u64_at(bp + crate::current::HEAL_TEXT_TAG[usize::from(periodic)])?;
+        let expected = if periodic { 0x8000_0000_0000_008d } else { 0x8000_0000_0000_008e };
+        if tag != expected { return Ok(vec![]); }
         let payload = bp + crate::current::HEAL_TEXT_PAYLOAD[usize::from(periodic)];
         let (target, caster) = if periodic {
             (u64_at(payload + 0x18)?, u64_at(payload + 0x20)?)
@@ -128,13 +145,32 @@ impl Adapter {
             bp + crate::current::HEAL_TEXT_QUERY[usize::from(periodic)],
             24,
         )?;
-        type Entity = unsafe extern "system" fn(u64, u64, u64, u64, *const u8) -> u64;
-        let resolve: Entity = std::mem::transmute(base + crate::current::TEXT_ENTITY.0 as usize);
-        let entity = resolve(heal.target, objects, 0, 0, query.as_ptr());
-        if entity as u32 == 0 {
-            return Ok(false);
-        }
+        let entity = match crate::current::HEAL_TEXT_RESOLVER_ABI {
+            0 => {
+                type Entity = unsafe extern "system" fn(u64, u64, u64, u64, *const u8) -> u64;
+                let resolve: Entity = std::mem::transmute(base + crate::current::TEXT_ENTITY.0 as usize);
+                resolve(heal.target, objects, 0, 0, query.as_ptr())
+            }
+            1 => {
+                let predicate: NativeEntityQuery = std::mem::transmute(base + crate::current::TEXT_QUERY.0 as usize);
+                let lookup: NativeEntityLookup = std::mem::transmute(base + crate::current::TEXT_ENTITY.0 as usize);
+                resolve_with_native_parts(predicate, lookup, heal.target, objects, query.as_ptr())?
+            }
+            _ => return Err("Unsupported native text resolver ABI".into()),
+        };
         let params = bp + crate::current::HEAL_TEXT_PARAMS[usize::from(periodic)];
+        self.append_native_heal_text(m, base, params, heal, entity)
+    }
+
+    /// Publish through the native writer after resolving the native entity.
+    /// Separating resolution from ownership transfer keeps both ABIs independently testable.
+    pub unsafe fn append_native_heal_text(
+        self, m: &dyn MutableMemory, base: usize, params: u64, heal: HealText, entity: u64,
+    ) -> Result<bool> {
+        if entity as u32 == 0 { return Ok(false); }
+        let word = |at| -> Result<u64> {
+            Ok(u64::from_le_bytes(m.read(at, 8)?.try_into().map_err(|_| "Truncated native text writer")?))
+        };
         let writer = word(params + 0x70)?;
         let tick_ptr = word(params + 0x80)?;
         let tick = m.read(params + 0x8c, 4)?;
@@ -197,41 +233,74 @@ mod tests {
         #[unsafe(naked)]
         unsafe extern "C" fn end() {
             core::arch::naked_asm!(
-                "pushfq",
-                "pop rax",
-                "mov [r14 + 0x20], rax",
-                "movaps xmm0, xmm7",
-                "ret"
+                "pushfq", "pop rax", "mov [r14 + 0x20], rax",
+                "movups [r14 + 0x50], xmm7", "movups [r14 + 0x60], xmm8", "ret"
             );
         }
         #[unsafe(naked)]
-        unsafe extern "system" fn invoke(_row: *const u8, _size: f32) -> f32 {
-            core::arch::naked_asm!("push r14","sub rsp, 48","movaps [rsp + 32], xmm7","mov r14, rcx","movaps xmm7, xmm1","cmp rsp, rsp","call {entry}","movaps xmm7, [rsp + 32]","add rsp, 48","pop r14","ret",entry=sym damage_entry);
+        unsafe extern "system" fn invoke(_row: *mut u8, _size: f32) {
+            core::arch::naked_asm!(
+                "push r14", "sub rsp, 64", "movaps [rsp + 32], xmm7", "movaps [rsp + 48], xmm8",
+                "mov r14, rcx", "movups xmm7, [rcx + 0x50]", "movups xmm8, [rcx + 0x60]",
+                "movss xmm7, xmm1", "movss xmm8, xmm1", "cmp rsp, rsp", "call {entry}",
+                "movaps xmm7, [rsp + 32]", "movaps xmm8, [rsp + 48]", "add rsp, 64", "pop r14", "ret",
+                entry=sym damage_entry
+            );
         }
-        let previous = DAMAGE_NEXT.swap(
-            end as *const () as usize,
-            std::sync::atomic::Ordering::Release,
-        );
+        let expected_register = match crate::current::VERSION {
+            "0.131.0" => 7,
+            "0.133.0" | "0.135.1" => 8,
+            _ => panic!("Fresh-size fixture requires native register review"),
+        };
+        assert_eq!(crate::current::DAMAGE_TEXT_XMM, expected_register);
+        let previous = DAMAGE_NEXT.swap(end as *const () as usize, std::sync::atomic::Ordering::Release);
+        struct Restore(usize);
+        impl Drop for Restore { fn drop(&mut self) { DAMAGE_NEXT.store(self.0, std::sync::atomic::Ordering::Release); } }
+        let _restore = Restore(previous);
         for cat in 0..6 {
-            let mut row = [0u8; 64];
-            row[0x38] = cat;
-            for _ in 0..3 {
-                let got = unsafe { invoke(row.as_ptr(), 0.0275) };
-                let expected = if cat == 0 || cat == 2 {
-                    0.0275 / 3.0
-                } else {
-                    0.0275
-                };
-                assert!((got - expected).abs() < 1e-8);
-                assert_eq!(
-                    u64::from_le_bytes(row[0x20..0x28].try_into().unwrap()) & 0x41,
-                    0x40
-                );
+            for green in [false, true] {
+                let mut row = [0u8; 128];
+                row[0x38] = cat;
+                row[0x50..0x60].fill(0x77);
+                row[0x60..0x70].fill(0x88);
+                if green { row[0x34..0x38].copy_from_slice(&crate::current::HEAL_TEXT_COLOR.to_le_bytes()); }
+                for _ in 0..3 {
+                    unsafe { invoke(row.as_mut_ptr(), 0.0275); }
+                    let expected = if !green && (cat == 0 || cat == 2) { 0.0275 / 3.0 } else { 0.0275 };
+                    let (fresh, other) = if expected_register == 8 { (0x60, 0x50) } else { (0x50, 0x60) };
+                    let read = |at| f32::from_le_bytes(row[at..at + 4].try_into().unwrap());
+                    assert!((read(fresh) - expected).abs() < 1e-8);
+                    assert_eq!(read(other), 0.0275);
+                    assert_eq!(&row[0x54..0x60], &[0x77; 12]);
+                    assert_eq!(&row[0x64..0x70], &[0x88; 12]);
+                    assert_eq!(u64::from_le_bytes(row[0x20..0x28].try_into().unwrap()) & 0x41, 0x40);
+                }
             }
-            row[0x34..0x38].copy_from_slice(&crate::current::HEAL_TEXT_COLOR.to_le_bytes());
-            assert_eq!(unsafe { invoke(row.as_ptr(), 0.0275) }, 0.0275);
         }
-        DAMAGE_NEXT.store(previous, std::sync::atomic::Ordering::Release);
+    }
+    #[test]
+    fn split_native_query_preserves_its_three_args_and_lookup_pointer_wrapper() {
+        use std::sync::atomic::{AtomicU8, AtomicUsize, Ordering};
+        static ACCEPT: AtomicU8 = AtomicU8::new(1);
+        static LOOKUPS: AtomicUsize = AtomicUsize::new(0);
+        unsafe extern "system" fn predicate(target: u64, objects: u64, query: *const u8) -> u8 {
+            assert_eq!((target, objects), (0x123456789abcdef0, 0x23456789abcdef01));
+            assert_eq!(std::slice::from_raw_parts(query, 24), &[0x42; 24]);
+            ACCEPT.load(Ordering::SeqCst)
+        }
+        unsafe extern "system" fn lookup(map_reference: *const u64, target: u64) -> u64 {
+            assert_eq!((*map_reference, target), (0x23456789abcdef01, 0x123456789abcdef0));
+            LOOKUPS.fetch_add(1, Ordering::SeqCst);
+            0x3456789abcdef012
+        }
+        let query = [0x42u8; 24];
+        let resolve = || unsafe { resolve_with_native_parts(predicate, lookup, 0x123456789abcdef0, 0x23456789abcdef01, query.as_ptr()) };
+        assert_eq!(resolve().unwrap(), 0x3456789abcdef012);
+        ACCEPT.store(0, Ordering::SeqCst);
+        assert_eq!(resolve().unwrap(), 0);
+        ACCEPT.store(2, Ordering::SeqCst);
+        assert!(resolve().is_err());
+        assert_eq!(LOOKUPS.load(Ordering::SeqCst), 1);
     }
     struct Bytes {
         data: Vec<u8>,
@@ -255,10 +324,11 @@ mod tests {
         let mut m = Bytes {
             data: vec![0; 0x1000],
         };
-        put(&mut m, 0xd0, 11);
-        put(&mut m, 0xd8, 22);
-        m.data[0xe4..0xe8].copy_from_slice(&37u32.to_le_bytes());
-        m.data[0xe8] = 1;
+        put(&mut m, 0x2f8, 0x8000_0000_0000_008e);
+        put(&mut m, 0x300, 11);
+        put(&mut m, 0x308, 22);
+        m.data[0x314..0x318].copy_from_slice(&37u32.to_le_bytes());
+        m.data[0x318] = 1;
         assert_eq!(
             adapter()
                 .native_heal_texts(&m, 0, false, &[11, 22])
@@ -278,17 +348,20 @@ mod tests {
             .native_heal_texts(&m, 0, false, &[22])
             .unwrap()
             .is_empty());
+        put(&mut m, 0x2f8, 0x8000_0000_0000_008d);
+        assert!(adapter().native_heal_texts(&m, 0, false, &[11, 22]).unwrap().is_empty());
     }
     #[test]
     fn periodic_heals_preserve_packet_order_and_exclude_native_damage() {
         let mut m = Bytes {
             data: vec![0; 0x1000],
         };
-        put(&mut m, 0x4a0, 3);
-        put(&mut m, 0x4a8, 0x700);
-        put(&mut m, 0x4b0, 3);
-        put(&mut m, 0x4b8, 11);
-        put(&mut m, 0x4c0, 22);
+        put(&mut m, 0x0, 0x8000_0000_0000_008d);
+        put(&mut m, 0x8, 3);
+        put(&mut m, 0x10, 0x700);
+        put(&mut m, 0x18, 3);
+        put(&mut m, 0x20, 11);
+        put(&mut m, 0x28, 22);
         for (i, (kind, amount)) in [(0u32, 77u32), (1, 13), (1, 17)].into_iter().enumerate() {
             m.data[0x700 + i * 20..0x708 + i * 20]
                 .copy_from_slice(&[kind.to_le_bytes(), amount.to_le_bytes()].concat());
@@ -301,7 +374,7 @@ mod tests {
         assert!(rows
             .iter()
             .all(|r| r.target == 11 && r.caster == 22 && !r.critical));
-        put(&mut m, 0x4b0, 33);
+        put(&mut m, 0x18, 33);
         assert!(adapter().native_heal_texts(&m, 0, true, &[11, 22]).is_err());
     }
 

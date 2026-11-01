@@ -64,7 +64,7 @@ pub struct Adapter {
 impl Adapter {
     pub fn select(hash: &str) -> Result<Self> {
         let revision = match hash {
-            crate::current::SHA256 => Revision::V131,
+            crate::current::SHA256 => Revision::V1351,
             _ => return Err("No reviewed official-engine adapter for this executable".into()),
         };
         Ok(Self { revision })
@@ -453,6 +453,19 @@ impl Adapter {
         }
         Ok(receiver)
     }
+    /// Opt-in native console trace only. Does not change Game autostart or autopick.
+    pub fn enable_native_ui_logging(
+        self, mem: &dyn super::official::MutableMemory, receiver: u64,
+    ) -> Result<()> {
+        if receiver < 0x10000 { return Err("Invalid native UI log receiver".into()); }
+        let at = receiver.checked_add(crate::current::NATIVE_UI_LOG_FLAG)
+            .ok_or("Native UI log flag overflow")?;
+        match mem.read(at, 1)?.as_slice() {
+            [0] => mem.write(at, &[1]),
+            [1] => Ok(()),
+            _ => Err("Invalid native UI log flag".into()),
+        }
+    }
     pub fn set_ui_autopick(
         self,
         mem: &dyn super::official::MutableMemory,
@@ -751,9 +764,9 @@ mod tests {
                 0xc58 => self.role.to_le_bytes().to_vec(),
                 0xc98 => self.count.to_le_bytes().to_vec(),
                 0xf49 => vec![self.connected],
-                0xdb8 => self.role.to_le_bytes().to_vec(),
-                0xdf8 => self.count.to_le_bytes().to_vec(),
-                0x11f5 => vec![self.connected],
+                0xf60 => self.role.to_le_bytes().to_vec(),
+                0xfa0 => self.count.to_le_bytes().to_vec(),
+                0x139d => vec![self.connected],
                 _ => return Err("Unexpected union read".into()),
             };
             if bytes.len() != n {
@@ -825,17 +838,17 @@ mod tests {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Revision {
-    V131,
+    V1351,
 }
 impl Adapter {
     pub fn name(self) -> &'static str {
         match self.revision {
-            Revision::V131 => "official-coop-0.131.0",
+            Revision::V1351 => "official-coop-0.135.1",
         }
     }
     pub fn version(self) -> &'static str {
         match self.revision {
-            Revision::V131 => "0.131.0",
+            Revision::V1351 => "0.135.1",
         }
     }
     fn rva(self, baseline: u64) -> u64 {

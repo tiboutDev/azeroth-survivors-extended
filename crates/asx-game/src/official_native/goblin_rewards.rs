@@ -21,12 +21,12 @@ impl Adapter {
         .map(|(rva, bytes)| Entry { rva, bytes })
     }
     pub fn goblin_amulet_pool(self, m: &dyn MutableMemory, frame: u64, game: u64) -> Result<()> {
-        if q(m, frame + 0x168)? != game {
+        if q(m, frame + crate::current::GOBLIN_REWARD_GAME_FRAME)? != game {
             return Err("Amulet generator owner changed".into());
         }
-        let cap = q(m, frame + 0x1a0)?;
-        let p = q(m, frame + 0x1a8)?;
-        let n = q(m, frame + 0x1b0)?;
+        let cap = q(m, frame + crate::current::GOBLIN_REWARD_POOL_FRAME)?;
+        let p = q(m, frame + crate::current::GOBLIN_REWARD_POOL_FRAME + 8)?;
+        let n = q(m, frame + crate::current::GOBLIN_REWARD_POOL_FRAME + 16)?;
         if cap < 3 || cap > 256 || n > cap || p < 0x10000 {
             return Err("Invalid native amulet opportunity pool".into());
         }
@@ -38,7 +38,7 @@ impl Adapter {
             rows[i * 24 + 8..i * 24 + 16].copy_from_slice(&1u64.to_le_bytes());
         }
         m.write(p, &rows)?;
-        m.write(frame + 0x1b0, &3u64.to_le_bytes())
+        m.write(frame + crate::current::GOBLIN_REWARD_POOL_FRAME + 16, &3u64.to_le_bytes())
     }
     pub fn goblin_amulet_key(self, m: &dyn Mem, _game: u64, output: u64) -> Result<Option<String>> {
         if q(m, output + 0x78)? != crate::current::AMULET_CHOICE_TAG {
@@ -110,7 +110,7 @@ impl Adapter {
             );
             amount *= repeats.max(1) as f32;
         }
-        let heroic = m.read(game + 0x36f, 1)?[0];
+        let heroic = m.read(game + crate::current::HEROIC_LEVEL, 1)?[0];
         if heroic > 5 {
             return Err("Invalid native mark difficulty".into());
         }
@@ -207,8 +207,8 @@ impl Adapter {
             type Choice = unsafe extern "system" fn(u64, u8, bool);
             let f: Choice = std::mem::transmute((base + crate::current::ITEM_CHOICE_RVA) as usize);
             f(game, 1, true);
-            let ptr = q(io, game + 0x6a8)?;
-            let n = q(io, game + 0x6b0)?;
+            let ptr = q(io, game + self.game_field(0x668))?;
+            let n = q(io, game + self.game_field(0x670))?;
             if !(1..=3).contains(&n) || ptr < 0x10000 {
                 return Err("Invalid goblin amulet choices".into());
             }
@@ -243,16 +243,16 @@ mod tests {
         let a = Adapter::select(crate::current::SHA256).unwrap();
         let m = Memory::default();
         let f = 0x10000;
-        for (off, v) in [(0x168, 7u64), (0x1a0, 8), (0x1a8, 0x30000), (0x1b0, 5)] {
+        for (off, v) in [(0x1a0, 7u64), (0x1a8, 8), (0x1b0, 0x30000), (0x1b8, 5)] {
             m.write(f + off, &v.to_le_bytes()).unwrap();
         }
         m.write(0x30000, &[0xa5; 192]).unwrap();
         assert!(a.goblin_amulet_pool(&m, f, 8).is_err());
-        assert_eq!(q(&m, f + 0x1b0).unwrap(), 5);
+        assert_eq!(q(&m, f + 0x1b8).unwrap(), 5);
         a.goblin_amulet_pool(&m, f, 7).unwrap();
-        assert_eq!(q(&m, f + 0x1a0).unwrap(), 8);
-        assert_eq!(q(&m, f + 0x1a8).unwrap(), 0x30000);
-        assert_eq!(q(&m, f + 0x1b0).unwrap(), 3);
+        assert_eq!(q(&m, f + 0x1a8).unwrap(), 8);
+        assert_eq!(q(&m, f + 0x1b0).unwrap(), 0x30000);
+        assert_eq!(q(&m, f + 0x1b8).unwrap(), 3);
         assert_eq!(m.read(0x30048, 120).unwrap(), [0xa5; 120]);
         for i in 0..3 {
             assert_eq!(q(&m, 0x30008 + i * 24).unwrap(), 1);

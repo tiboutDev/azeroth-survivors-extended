@@ -46,7 +46,11 @@ pub trait SupportCalls: CurrencyMemory {
     fn emit_support_heal(&self, game: u64, spell: u32, fraction: f32) -> Result<()>;
     fn refresh_support(&self, game: u64) -> Result<()>;
     fn support_hit(&self, game: u64, guid: u64, amount: f32, spell: u32) -> Result<()>;
-    fn support_hurt(&self, game: u64, amount: f32, enemy: u64, melee: bool) -> Result<()>;
+    fn support_hurt(&self, game: u64, amount: f32, enemy: u64, melee: bool) -> Result<()> {
+        self.support_hurt_tagged(game, amount, enemy, melee, u32::from(!melee), 0)
+    }
+    /// Preserve both native source words, including redirected basic hits.
+    fn support_hurt_tagged(&self, game: u64, amount: f32, enemy: u64, melee: bool, native_kind: u32, native_spell: u32) -> Result<()>;
     fn support_damage(&self, game: u64, guid: u64, amount: f32) -> Result<()>;
     fn shield_proc(
         &self,
@@ -61,7 +65,7 @@ pub trait SupportCalls: CurrencyMemory {
     fn healing_meter(&self, game: u64, spell: u32, amount: f32) -> Result<()>;
 }
 pub use crate::official_native::support::{
-    AuraState, BreakFrame, NativeEffect, OwnedEffect, PeriodicTick, PerkLoan, RetaliationTick,
+    NativeHealCall, call_native_heal, NativeHurtCall, AuraState, BreakFrame, NativeEffect, OwnedEffect, PeriodicTick, PerkLoan, RetaliationTick,
     SupportCaster, SupportDelivery, SupportReceipt, SupportTalents,
 };
 pub use official_native::{
@@ -318,9 +322,6 @@ impl SelectedAdapter {
     }
     pub fn menu_bindings(self, base: usize) -> crate::official_native::MenuBindings {
         self.native.menu_bindings(base)
-    }
-    pub fn menu_cache_entries(self) -> [Entry; 2] {
-        self.native.menu_cache_entries()
     }
     pub fn menu_entries(self) -> [Entry; 7] {
         self.native.menu_entries()
@@ -807,6 +808,9 @@ impl SelectedAdapter {
     }
     pub fn ui_receiver(self, mem: &dyn Mem, server: u64, base: u64) -> Result<u64> {
         self.native.ui_receiver(mem, server, base)
+    }
+    pub fn enable_native_ui_logging(self, mem: &dyn MutableMemory, receiver: u64) -> Result<()> {
+        self.native.enable_native_ui_logging(mem, receiver)
     }
     pub fn set_ui_autopick(
         self,
@@ -1635,7 +1639,7 @@ impl SelectedAdapter {
     pub fn damage_text_size_entry(self) -> Entry {
         self.native.damage_text_size_entry()
     }
-    pub fn combat_text_entries(self) -> [Entry; 8] {
+    pub fn combat_text_entries(self) -> [Entry; 9] {
         self.native.combat_text_entries()
     }
     pub fn native_heal_texts(
@@ -2161,4 +2165,10 @@ impl SelectedAdapter {
 impl SelectedAdapter{
  pub fn crystal_stats(self,m:&dyn MutableMemory,g:u64,totals:asx_gameplay::crystals::Totals)->Result<Option<StatInputLoan>>{self.native.crystal_stats(m,g,totals)}
  pub fn project_crystal_aura(self,m:&dyn MutableMemory,f:&FatigueAura,count:u32)->Result<Option<u32>>{self.native.project_crystal_aura(m,f,count)}
+}
+
+impl SelectedAdapter {
+    pub fn hurt_actor_tagged(self,io:&dyn SupportCalls,game:u64,slot:u32,guid:u64,amount:f32,enemy:u64,melee:bool,native_kind:u32,native_spell:u32)->Result<Option<f32>> {
+        self.native.hurt_actor_tagged(io,game,slot,guid,amount,enemy,melee,native_kind,native_spell)
+    }
 }

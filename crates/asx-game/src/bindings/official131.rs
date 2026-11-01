@@ -213,8 +213,8 @@ pub const NORMAL_MARKS_FACTOR_RVA: u64 = 0x62757c0;
 pub const HEROIC_REWARD_TABLE: u64 = 0x7774e60;
 
 // Indices into the saved register contract supplied by the support bridge.
-pub const SHIELD_BREAK_GAME_REGISTER: usize = 0x7; // R13
-pub const SHIELD_BREAK_SPELL_REGISTER: usize = 0xb; // R12
+pub const SHIELD_BREAK_GAME_REGISTER: usize = 0x7; // RBX
+pub const SHIELD_BREAK_SPELL_REGISTER: usize = 0xe; // R15
 
 // Direct/periodic healing callbacks borrow their own native ECS frames.
 pub const HEAL_TEXT_PAYLOAD: [u64; 2] = [0xd0, 0x4a0];
@@ -331,3 +331,13 @@ pub const EVENT_SCENE_COUNTER_OFFSET: u64 = 0xd14;
 pub const EVENT_CLOCK_OFFSET: u64 = 0xce0;
 pub const GOBLIN_ENDLESS_KILLS_OFFSET: u64 = 0xd48;
 pub const GOBLIN_MARK_FIELDS: [u64; 2] = [0xd08, 0x834];
+
+// Selected world-number register, resolver composition, event tags and run difficulty.
+pub const DAMAGE_TEXT_XMM: usize = 0x7;
+pub const HEAL_TEXT_RESOLVER_ABI: u8 = 0x0;
+pub const TEXT_QUERY: (u64, &[u8]) = (0xd821c0, &[0x56, 0x57, 0x53, 0x48, 0x83, 0xec, 0x30, 0x48, 0x89, 0x4c, 0x24, 0x28],);
+pub const HEAL_TEXT_TAG: [u64;2] = [0xc8, 0xd8];
+pub const HEROIC_LEVEL: u64 = 0x36f;
+
+// Native sink console logging, independent of the Game autostart flag.
+pub const NATIVE_UI_LOG_FLAG: u64 = 0x18;

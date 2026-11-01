@@ -288,3 +288,31 @@ has already been consumed before the new integration is built.
 Extension trials copy ASXUI into each disposable native addon profile. Its files
 are part of the staging/UI fingerprint, so a solo prerequisite cannot validate
 a different addon build. This is diagnostic staging, not ASX installer ownership.
+
+### Native lobby readiness
+
+The 0.133 client requires every participant to answer its native ready check.
+Its native CLI AUTOSTART path repeatedly starts new checks, including after all
+participants answer; this was reproduced with ASX inactive. The isolated harness
+therefore uses the game's bounded tap driver for the host's Enter button and the
+guest's Ready button in its fixed 800x600 window. Coordinates were checked in a
+focused isolated visual trial. Native modal input owns these actions; no server
+answer is written and no readiness gate is bypassed. The game's native ROAM driver supplies movement for "Move to begin" and remains
+active during the scenario. No OS keyboard/mouse input, desktop switching,
+Game-phase write or protected AddOn movement call is used. Diagnostic crystal
+scenes account for ordinary roaming as described in [testing](TESTING.md).
+
+The pause scenario retains the common host autoplay startup delay. Its former
+four-second override repeatedly restarted ready checks in 0.133 even after a
+guest answered. A bounded native lobby comparison reproduced that difference;
+the pause fixture still owns its asymmetric three/twenty-second reward windows.
+
+`ASX_LOG_NATIVE_UI=1` enables only the selected native sink's stdout log flag,
+independently of Game autostart and autopick. It is off by default, requires a
+valid current sink boolean and preserves every other byte. This observer is
+available in normal builds without changing gameplay. The harness uses it to
+retain the original native event evidence during manual-start trials.
+
+Start/resume, progression and synchronization remain mandatory; a connected
+lobby, an answered check or a loaded scene cannot satisfy cooperative acceptance.
+Recheck this fixture visually if the native dialog or disposable resolution changes.

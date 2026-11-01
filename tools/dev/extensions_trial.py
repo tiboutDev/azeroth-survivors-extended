@@ -170,7 +170,8 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     env["AZCOOP_TEST_BONUS_TOOLTIP"]="1";env["AZCOOP_TEST_OFFICIAL_CHOICE_DELAY"]="8"
     if slot==1:env["AZCOOP_TEST_MARKS121"]="1"
    if completion=="pause":
-    env["WOW_ROGUE_AUTOPLAY"]="4" # Explicit held-choice windows own their 3/20-second timing.
+    # Retain the common host startup delay: early autoplay restarts 0.133 ready checks.
+    # Explicit held-choice windows still own their 3/20-second timing.
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
     env.update(AZCOOP_TEST_OFFICIAL_PAUSE="1",WOW_ROGUE_ROAM="1")
     if shield_only and slot==1:env.update(AZCOOP_TEST_SUPPORT121="1",ASX_TEST_SUPPORT_SHIELD_ONLY="1")
@@ -205,6 +206,16 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     (addon/"Observer.lua").write_bytes((ROOT/"tools/dev/diagnostics/observer.lua").read_bytes())
     with (addon/"ASX.toc").open("a")as toc:toc.write("DiagnosticConfig.lua\nObserver.lua\n")
    if players==2:env.update(WOW_ROGUE_COOP_PASSWORD=password);env["WOW_ROGUE_COOP_HOST"if slot==1 else"WOW_ROGUE_COOP_JOIN"]=str(port)if slot==1 else f"127.0.0.1:{port}"
+   if players==2:
+    # Native 0.133 AUTOSTART restarts ready checks even after all answers arrive.
+    # Use native UI taps in the fixed 800x600 disposable window instead. Modal
+    # input ownership prevents the host's Enter tap from restarting a check.
+    env.pop("WOW_ROGUE_AUTOSTART",None)
+    env["WOW_ROGUE_TAPS"]=";".join(["410,485"if slot==1 else"306,525"]*32)
+    # Keep the original native event stream without enabling native autostart.
+    env["ASX_LOG_NATIVE_UI"]="1"
+    env["WOW_ROGUE_ROAM"]="1" # Native Move to begin; fixture scenes account for ordinary roaming.
+
    from trial_limits import environment
    if visual:
     env.update(environment(visual=True));

@@ -1,6 +1,22 @@
 //! Native aura storage remains opaque to the coordinator. All rows are copied
 //! and rebound after native callbacks; no native pointer survives a call.
 use super::*;
+/// Reviewed 0.131/0.133 Hurt ABI: two native source words follow the melee flag on
+/// the stack. The original consumer reads both; forwarding four args is invalid.
+pub type NativeHurtCall=unsafe extern "system" fn(u64,f32,u64,bool,u32,u32);
+
+/// Reviewed 0.133 healing and meter ABI. The source descriptor is borrowed only
+/// for this call. The older 0.131 callee ignores the additional fifth argument.
+pub type NativeHealCall = unsafe extern "system" fn(u64, f32, u32, *const u64, *const u64);
+
+/// Native lifesteal uses source tag -1 to derive attribution from the active
+/// actor and spell. Keep the descriptor encoding inside the selected adapter.
+pub unsafe fn call_native_heal(call: NativeHealCall, game: u64, amount: f32, spell: u32, metadata: *const u64) {
+    let source = [u64::from(u32::MAX), 0];
+    call(game, amount, spell, metadata, source.as_ptr());
+}
+
+
 #[derive(Clone, Copy, Debug, Default)]
 pub struct SupportTalents {
     pub overheal_cap: f32,
@@ -1127,5 +1143,22 @@ impl Adapter {
             rva: self.contact117(v),
             bytes: self.extension_bytes117(0x5bbf7b0, crate::current::GLYPH_ON_HIT_BYTES),
         }
+    }
+}
+
+
+#[cfg(test)]
+mod native_heal_call_tests {
+    use super::*;
+    static ARGS: std::sync::Mutex<Option<(u64, f32, u32, [u64; 6], [u64; 2])>> = std::sync::Mutex::new(None);
+    unsafe extern "system" fn native(game: u64, amount: f32, spell: u32, metadata: *const u64, source: *const u64) {
+        *ARGS.lock().unwrap() = Some((game, amount, spell, std::ptr::read(metadata.cast()), std::ptr::read(source.cast())));
+    }
+    #[test]
+    fn synthetic_heal_and_meter_preserve_arguments_and_supply_a_valid_native_source() {
+        let metadata = [u64::MAX - 1, 11, 22, 33, 44, 55];
+        let game = 0x123456789abcdef0;
+        unsafe { call_native_heal(native, game, 1.25, 0x11223344, metadata.as_ptr()); }
+        assert_eq!(*ARGS.lock().unwrap(), Some((game, 1.25, 0x11223344, metadata, [u64::from(u32::MAX), 0])));
     }
 }

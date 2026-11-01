@@ -15,24 +15,6 @@ impl Adapter {
     pub fn menu_bindings(self, base: usize) -> MenuBindings {
         MenuBindings { base, adapter:self }
     }
-    /// Extend the native menu cache key only after its phase/modal guards.
-    /// RAX is dead here; the selected miss continuation uses the original
-    /// owned-string cleanup, root retirement and normal constructor.
-    pub fn menu_cache_entries(self) -> [Entry; 2] {
-        [
-            Entry {
-                rva: self.rva(0x10d95b),
-                bytes: self.expected(0x10d95b, &[
-                    0x44, 0x38, 0x73, 0x38, 0x75, 0x5b, 0x40, 0x38, 0x7b, 0x39, 0x75, 0x55, 0x44,
-                    0x38, 0x6b, 0x3a,
-                ]),
-            },
-            Entry {
-                rva: self.rva(0x10d9e0),
-                bytes: self.expected(0x10d9e0, &[0x8b, 0xb5, 0x38, 2, 0, 0, 0x48, 0x8b, 0x9d, 0x78, 2, 0, 0]),
-            },
-        ]
-    }
     pub fn menu_entries(self) -> [Entry; 7] {
         [
             Entry {

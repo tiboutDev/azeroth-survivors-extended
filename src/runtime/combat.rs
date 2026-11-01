@@ -15,6 +15,8 @@ struct Pending {
     fallback: u32,
     fallback_guid: u64,
     amount: f32,
+    native_kind:u32,
+    native_spell:u32,
 }
 #[derive(Default)]
 struct State {
@@ -354,7 +356,7 @@ unsafe extern "system" fn basic(c: &mut crate::stub::Context) {
         Err(e) => r.log.warn(&format!("Official basic target rejected: {e}")),
     }
 }
-pub fn redirect_melee(r: &Runtime, game: u64, amount: f32, enemy: u64, melee: bool) -> bool {
+pub fn redirect_melee(r: &Runtime, game: u64, amount: f32, enemy: u64, melee: bool,native_kind:u32,native_spell:u32) -> bool {
     if !melee || enemy == 0 {
         return false;
     }
@@ -381,7 +383,7 @@ pub fn redirect_melee(r: &Runtime, game: u64, amount: f32, enemy: u64, melee: bo
                 guid,
                 fallback: actor.slot,
                 fallback_guid: actor.guid,
-                amount,
+                amount,native_kind,native_spell,
             });
             return true;
         }
@@ -403,7 +405,7 @@ pub fn finish(r: &Runtime, game: u64) {
         }
         match r
             .adapter
-            .hurt_actor(&io, game, p.target, p.guid, p.amount, p.enemy, true)
+            .hurt_actor_tagged(&io, game, p.target, p.guid, p.amount, p.enemy, true,p.native_kind,p.native_spell)
         {
             Ok(Some(effective)) => r.log.info(&format!(
                 "official taunt melee: enemy={} original={} recipient={} effective={effective}",
@@ -413,14 +415,14 @@ pub fn finish(r: &Runtime, game: u64) {
                 if let Ok(mut s) = STATE.lock() {
                     s.taunts.bindings.remove(&p.enemy);
                 }
-                let _ = r.adapter.hurt_actor(
+                let _ = r.adapter.hurt_actor_tagged(
                     &io,
                     game,
                     p.fallback,
                     p.fallback_guid,
                     p.amount,
                     p.enemy,
-                    true,
+                    true,p.native_kind,p.native_spell,
                 );
             }
             Err(e) => r.log.warn(&format!("Official taunt hurt rejected: {e}")),

@@ -722,14 +722,13 @@ unsafe extern "system" fn periodic(game: u64, dt: f32) {
         let Ok(before) = runtime.adapter.support_caster(&runtime.local, game) else {
             continue;
         };
-        type Heal = unsafe extern "system" fn(u64, f32, u32, *const u64);
-        let heal: Heal = std::mem::transmute(HEAL_ORIGINAL.load(Ordering::Acquire));
+        let heal: asx_game::official::NativeHealCall = std::mem::transmute(HEAL_ORIGINAL.load(Ordering::Acquire));
         let metadata = [(-2i64) as u64, 0, 0, 0, 0, 0];
         let previous = FOREIGN_HEAL.with(|v| v.replace(true));
         let raw = tick.raw * fatigue::for_source(game, tick.owner.caster, tick.owner.caster_guid);
         #[cfg(feature="test-hooks")]
         fatigue::with_source(game,tick.owner.caster,tick.owner.caster_guid,||fatigue::fixture_trace(runtime,game,if tick.owner.caster_guid==tick.owner.target_guid {3}else{2},tick.raw,raw));
-        combat_text::with_periodic_text_source(game,Some((tick.owner.caster_guid,tick.owner.spell)),||heal(game, raw, 0, metadata.as_ptr()));
+        combat_text::with_periodic_text_source(game,Some((tick.owner.caster_guid,tick.owner.spell)),||asx_game::official::call_native_heal(heal, game, raw, 0, metadata.as_ptr()));
         FOREIGN_HEAL.with(|v| v.set(previous));
         let Ok(after) = runtime.adapter.support_caster(&runtime.local, game) else {
             continue;
@@ -962,18 +961,18 @@ pub(super) fn observe_combat_damage(game: u64, enemy: u64, amount: f32, spell: u
     }
 }
 
-type Hurt = unsafe extern "system" fn(u64, f32, u64, bool);
-unsafe extern "system" fn hurt(game: u64, amount: f32, enemy: u64, melee: bool) {
+type Hurt = asx_game::official::NativeHurtCall;
+unsafe extern "system" fn hurt(game: u64, amount: f32, enemy: u64, melee: bool,native_kind:u32,native_spell:u32) {
     #[cfg(feature="test-hooks")]
     if std::env::var("AZCOOP_TEST_BLESSINGS").as_deref()==Ok("1"){return;}
     let original: Hurt = std::mem::transmute(HURT_ORIGINAL.load(Ordering::Acquire));
-    let original=|game,amount,enemy,melee|{original(game,amount,enemy,melee);if let Some(r)=RUNTIME.get().filter(|r|r.rules){combat::observe_immunity(r,game);}};
+    let original=|game,amount,enemy,melee|{original(game,amount,enemy,melee,native_kind,native_spell);if let Some(r)=RUNTIME.get().filter(|r|r.rules){combat::observe_immunity(r,game);}};
     if let Some(r) = RUNTIME.get().filter(|r| r.rules) {
         // No native coop context exists in a solo run. Keep its original hit
         // path; foreign aura isolation only applies to a captured coop party.
         let coop=r.party.lock().map(|party|party.is_some()).unwrap_or(false);
         if !coop {return original(game,amount,enemy,melee);}
-        if combat::redirect_melee(r, game, amount, enemy, melee) {
+        if combat::redirect_melee(r, game, amount, enemy, melee,native_kind,native_spell) {
             return;
         }
     }
@@ -1053,5 +1052,16 @@ unsafe extern "system" fn effect_hit(game:u64,enemy:u64,effect:u64,damage:f32,sp
  #[test]fn borrowed_effect_wrapper_preserves_five_arguments_and_xmm3_damage(){
  EFFECT_HIT.store(native as *const () as usize,Ordering::SeqCst);let a=0x1122334455667788;let b=0x8877665544332211;
  for spell in [25912,635,845]{unsafe{effect_hit(a,b,0x123456789abcdef0,1.25,spell)};assert_eq!(*ARGS.lock().unwrap(),Some((a,b,0x123456789abcdef0,1.25,spell)));}
+ }
+}
+
+#[cfg(test)]mod hurt_forwarding_abi_tests{
+ use super::*;
+ static ARGS:std::sync::Mutex<Option<(u64,f32,u64,bool,u32,u32)>>=std::sync::Mutex::new(None);
+ unsafe extern "system" fn native(game:u64,amount:f32,enemy:u64,melee:bool,kind:u32,spell:u32){*ARGS.lock().unwrap()=Some((game,amount,enemy,melee,kind,spell));}
+ #[test]fn inactive_hurt_forwarding_preserves_both_native_source_stack_words(){
+  let previous=HURT_ORIGINAL.swap(native as *const ()as usize,Ordering::SeqCst);
+  struct Restore(usize);impl Drop for Restore{fn drop(&mut self){HURT_ORIGINAL.store(self.0,Ordering::SeqCst);}}let _restore=Restore(previous);
+  for melee in [false,true]{let args=(0x123456789abcdef0,1.25,0xf130000012345678,melee,0x11223344,0x55667788);unsafe{hurt(args.0,args.1,args.2,args.3,args.4,args.5)}assert_eq!(*ARGS.lock().unwrap(),Some(args));}
  }
 }

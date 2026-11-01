@@ -9,7 +9,7 @@ mod advanced;
 mod effects;
 pub use advanced::{NativeEffect, RetaliationTick};
 pub use effects::{
-    AuraState, BreakFrame, OwnedEffect, PeriodicTick, PerkLoan, SupportReceipt, SupportTalents,
+    NativeHealCall, call_native_heal, NativeHurtCall, AuraState, BreakFrame, OwnedEffect, PeriodicTick, PerkLoan, SupportReceipt, SupportTalents,
 };
 pub const ROUTE: u32 = 0xac115000;
 // Internal descriptor padding only, not native protocol opcodes. Three target

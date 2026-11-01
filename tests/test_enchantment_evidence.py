@@ -47,3 +47,18 @@ class Evidence(unittest.TestCase):
   self.assertFalse(m.assess_fixture_party(text.replace('3.000s','9.000s'))["checks"]["gold_converges_after_fixture"])
   self.assertFalse(m.assess_fixture_party(text.replace('xp: 0','xp: 1',1))["checks"]["equal_progression"])
   self.assertFalse(m.assess_fixture_party(text.rsplit('\n',1)[0])["checks"]["gold_converges_after_fixture"])
+
+ def test_gold_convergence_during_long_reward_pause_is_observed(self):
+  def row(t,phase,a,b):return f"{t:.3f}s official party: clock=1 actors=[phase: {phase}, gold: {a}, level: 1, xp: 0, phase: {phase}, gold: {b}, level: 1, xp: 0]"
+  text="\n".join([row(0,"Playing",10,10),row(1,"Playing",10,10),row(2,"Playing",22,10),row(3,"Choosing",22,22),row(22,"Playing",22,22)])
+  evidence=m.assess_fixture_party(text)
+  self.assertTrue(all(evidence["checks"].values()))
+  self.assertEqual(evidence["gold_samples"],5)
+  self.assertEqual(evidence["transient_gold_samples"][0]["next_time"],3)
+  self.assertFalse(m.assess_fixture_party(text.replace("3.000s","9.000s"))["checks"]["gold_converges_after_fixture"])
+ def test_choosing_samples_cannot_hide_an_unsettled_wallet(self):
+  def row(t,phase,a,b):return f"{t:.3f}s official party: clock=1 actors=[phase: {phase}, gold: {a}, level: 1, xp: 0, phase: {phase}, gold: {b}, level: 1, xp: 0]"
+  rows=[row(0,"Playing",10,10),row(1,"Playing",10,10),row(2,"Choosing",22,10),row(3,"Choosing",22,10),row(4,"Playing",22,22)]
+  evidence=m.assess_fixture_party("\n".join(rows))
+  self.assertTrue(evidence["checks"]["equal_progression"])
+  self.assertFalse(evidence["checks"]["gold_converges_after_fixture"])

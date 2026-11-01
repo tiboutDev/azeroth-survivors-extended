@@ -21,15 +21,12 @@ fn adapter()->SelectedAdapter{SelectedAdapter::select(asx_game::current::SHA256)
 }
 
 #[test]fn healing_text_borrows_native_writer_and_transfers_one_owned_message(){
- unsafe extern "system" fn entity(guid:u64,objects:u64,exclude_self:u64,self_guid:u64,query:*const u8)->u64{
-  assert_eq!((guid,objects,exclude_self,self_guid),(11,0xe3000,0,0));assert_eq!(std::slice::from_raw_parts(query,24),&[5;24]);0x100000019
- }
- let m=memory();let a=adapter();let bp=0xe0000;
+ let m=memory();let a=asx_game::official_native::Adapter::select(asx_game::current::SHA256).unwrap();let bp=0xe0000;
  for(at,n)in [(bp,0x1000),(0xe1000,0x80),(0xe2000,0x200),(0xe4000,4)]{m.data.borrow_mut().insert(at,vec![0;n]);}
- m.write(bp+0x228,&0xe3000u64.to_le_bytes()).unwrap();m.write(bp+0x368,&[5;24]).unwrap();m.write(bp+0x3b8,&0xe1000u64.to_le_bytes()).unwrap();m.write(bp+0x3c8,&0xe4000u64.to_le_bytes()).unwrap();m.write(bp+0x3d4,&17u32.to_le_bytes()).unwrap();
+ m.write(bp+0x2d8,&0xe1000u64.to_le_bytes()).unwrap();m.write(bp+0x2e8,&0xe4000u64.to_le_bytes()).unwrap();m.write(bp+0x2f4,&17u32.to_le_bytes()).unwrap();
  for(at,n)in [(0x20,4u64),(0x28,0xe2000),(0x30,1),(0x40,9)]{m.write(0xe1000+at,&n.to_le_bytes()).unwrap();}
- let base=entity as *const() as usize-asx_game::current::TEXT_ENTITY.0 as usize;
- assert!(unsafe{a.draw_native_heal_text(&m,base,bp,false,asx_game::official_native::HealText{target:11,caster:22,amount:37,critical:true})}.unwrap());
+ let base=0; // Spare capacity: this writer path makes no native call.
+ assert!(unsafe{a.append_native_heal_text(&m,base,bp+0x268,asx_game::official_native::HealText{target:11,caster:22,amount:37,critical:true},0x100000019)}.unwrap());
  assert_eq!(m.read(0xe1030,8).unwrap(),2u64.to_le_bytes());assert_eq!(m.read(0xe1040,8).unwrap(),10u64.to_le_bytes());assert_eq!(m.read(0xe4000,4).unwrap(),17u32.to_le_bytes());assert_eq!(m.read(0xe2000,0x38).unwrap(),vec![0;0x38]);
  let row=m.read(0xe2038,0x38).unwrap();let ptr=u64::from_le_bytes(row[8..16].try_into().unwrap());assert_eq!(m.read(ptr,3).unwrap(),b"+37");assert_eq!(m.allocs.get(),1);assert_eq!(row[40],2);assert_eq!(&row[32..40],&0x100000019u64.to_le_bytes());assert_eq!(&row[48..],&9u64.to_le_bytes());
 }
@@ -134,4 +131,22 @@ fn equipment_uses_native_categories_stably_and_keeps_owner_text_and_identity() {
  assert_eq!(adapter().party_build(&partial).unwrap().items[0].name,"R");
  let unknown=serde_json::json!({"abilities":[],"jewelry":[row("future","U1"),row("future","U2")]});
  assert_eq!(adapter().party_build(&unknown).unwrap().items[0].name,"U1");
+}
+
+
+#[test]
+fn native_console_trace_preserves_autopick_and_every_other_sink_byte() {
+ let m=memory();let a=adapter();let sink=0xe0000;
+ let mut before=vec![0xa5;32];before[0x18]=0;before[0x19]=1;
+ m.data.borrow_mut().insert(sink,before.clone());
+ a.enable_native_ui_logging(&m,sink).unwrap();
+ let mut expected=before;expected[0x18]=1;
+ assert_eq!(m.read(sink,32).unwrap(),expected);
+ a.enable_native_ui_logging(&m,sink).unwrap();
+ assert_eq!(m.read(sink,32).unwrap(),expected);
+ m.write(sink+0x18,&[2]).unwrap();expected[0x18]=2;
+ assert!(a.enable_native_ui_logging(&m,sink).is_err());
+ assert_eq!(m.read(sink,32).unwrap(),expected);
+ assert!(a.enable_native_ui_logging(&m,0).is_err());
+ assert!(a.enable_native_ui_logging(&m,u64::MAX).is_err());
 }

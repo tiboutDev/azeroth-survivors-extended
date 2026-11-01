@@ -75,6 +75,7 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 {{BASIC_ORIGIN_XY}}
 {{BASIC_ORIGIN_Z}}
 {{ENCOUNTER_GAME_FRAME}}
+{{ENCOUNTER_DEFINITION_FRAME}}
 {{ENEMY_STRIDE}}
 {{ENEMY_DEAD}}
 {{ENEMY_GUID}}
@@ -84,6 +85,7 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 {{ENEMY_HP}}
 {{ENEMY_POSITION}}
 {{ENEMY_VULNERABILITY}}
+{{ENEMY_ELITE}}
 {{ITEM_CHOICE_RVA}}
 {{RING_TABLE}}
 {{AMULET_TABLE}}
@@ -181,6 +183,8 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 {{GOBLIN_FINAL_MOTION}}
 
 {{GOBLIN_AMULET_POOL}}
+{{GOBLIN_REWARD_GAME_FRAME}}
+{{GOBLIN_REWARD_POOL_FRAME}}
 
 {{GOBLIN_AMULET_EXCLUDE}}
 
@@ -213,8 +217,8 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 {{HEROIC_REWARD_TABLE}}
 
 // Indices into the saved register contract supplied by the support bridge.
-{{SHIELD_BREAK_GAME_REGISTER}} // R13
-{{SHIELD_BREAK_SPELL_REGISTER}} // R12
+{{SHIELD_BREAK_GAME_REGISTER}} // RBX
+{{SHIELD_BREAK_SPELL_REGISTER}} // R15
 
 // Direct/periodic healing callbacks borrow their own native ECS frames.
 {{HEAL_TEXT_PAYLOAD}}
@@ -331,3 +335,13 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 {{EVENT_CLOCK_OFFSET}}
 {{GOBLIN_ENDLESS_KILLS_OFFSET}}
 {{GOBLIN_MARK_FIELDS}}
+
+// Selected world-number register, resolver composition, event tags and run difficulty.
+{{DAMAGE_TEXT_XMM}}
+{{HEAL_TEXT_RESOLVER_ABI}}
+{{TEXT_QUERY}}
+{{HEAL_TEXT_TAG}}
+{{HEROIC_LEVEL}}
+
+// Native sink console logging, independent of the Game autostart flag.
+{{NATIVE_UI_LOG_FLAG}}

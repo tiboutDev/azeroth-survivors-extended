@@ -1,4 +1,4 @@
-//! Native field translation for the sole supported official client, 0.131.0.
+//! Native field translation for the sole supported official client, 0.135.1.
 use super::Adapter;
 use crate::{memory::Mem, Result};
 
@@ -120,7 +120,7 @@ mod tests {
             (0xc46, 0xc47),
         ];
 
-        let mut native = vec![0xa5; 0xe00];
+        let mut native = vec![0xa5; 0x1000];
         for &(start, end) in &spans {
             let offset = usize::try_from(adapter.row_field(true, start as u64)).unwrap();
             for byte in offset..offset + end - start {

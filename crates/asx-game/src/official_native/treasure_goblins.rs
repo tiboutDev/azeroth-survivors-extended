@@ -335,13 +335,13 @@ impl Adapter {
         Ok((map as usize, GoblinDefinition::from_native(data)))
     }
     fn goblin_array(self, m: &dyn Mem, game: u64) -> Result<(u64, usize)> {
-        let cap = q(m, game + 0x5b0)?;
-        let p = q(m, game + 0x5b8)?;
-        let n = q(m, game + 0x5c0)?;
+        let cap = q(m, game + self.game_field(0x570))?;
+        let p = q(m, game + self.game_field(0x578))?;
+        let n = q(m, game + self.game_field(0x580))?;
         if n > cap
             || cap > 65536
             || n > 8192
-            || (n > 0 && (p < 0x10000 || p.checked_add(n * 504).is_none()))
+            || (n > 0 && (p < 0x10000 || p.checked_add(n * v::ENEMY_STRIDE as u64).is_none()))
         {
             return Err("Invalid event enemy array".into());
         }
@@ -383,7 +383,7 @@ impl Adapter {
         call(game, 0, position.as_ptr());
         let (p, n) = self.goblin_array(m, game)?;
         for i in before..n {
-            let guid = q(m, p + i as u64 * 504 + v::ENEMY_GUID as u64)?;
+            let guid = q(m, p + i as u64 * v::ENEMY_STRIDE as u64 + v::ENEMY_GUID as u64)?;
             if ((guid >> 24) & 0xffffff) == u64::from(v::GOBLIN_ENTRY) {
                 return Ok(Some(GoblinHandle { guid, index: i }));
             }
@@ -392,13 +392,13 @@ impl Adapter {
     }
     fn goblin_row(self, m: &dyn Mem, game: u64, h: &mut GoblinHandle) -> Result<Option<u64>> {
         let (p, n) = self.goblin_array(m, game)?;
-        if h.index < n && q(m, p + h.index as u64 * 504 + v::ENEMY_GUID as u64)? == h.guid {
-            return Ok(Some(p + h.index as u64 * 504));
+        if h.index < n && q(m, p + h.index as u64 * v::ENEMY_STRIDE as u64 + v::ENEMY_GUID as u64)? == h.guid {
+            return Ok(Some(p + h.index as u64 * v::ENEMY_STRIDE as u64));
         }
         for i in 0..n {
-            if q(m, p + i as u64 * 504 + v::ENEMY_GUID as u64)? == h.guid {
+            if q(m, p + i as u64 * v::ENEMY_STRIDE as u64 + v::ENEMY_GUID as u64)? == h.guid {
                 h.index = i;
-                return Ok(Some(p + i as u64 * 504));
+                return Ok(Some(p + i as u64 * v::ENEMY_STRIDE as u64));
             }
         }
         Ok(None)
@@ -414,7 +414,7 @@ impl Adapter {
         let p = self
             .goblin_row(m, game, h)?
             .ok_or("Missing event instance for elite priority")?;
-        m.write(p + 0x1f4, &[1])
+        m.write(p + v::ENEMY_ELITE, &[1])
     }
     pub fn goblin_snapshot(
         self,
@@ -445,7 +445,7 @@ impl Adapter {
         Ok(Some(GoblinSnapshot {
             alive: hp > 0. && m.read(p + 0xb0, 4)? != 1u32.to_le_bytes(),
             hp,
-            elite: m.read(p + 0x1f4, 1)? == [1],
+            elite: m.read(p + v::ENEMY_ELITE, 1)? == [1],
             position,
         }))
     }
@@ -613,18 +613,41 @@ pub(super) mod tests {
         let game = 0x10000;
         let row = 0x20000;
         let guid = 0xf130f5a001000001u64;
-        for (offset, value) in [(0x5b0, 1u64), (0x5b8, row), (0x5c0, 1)] {
+        for (offset, value) in [(0x640, 1u64), (0x648, row), (0x650, 1)] {
             m.write(game + offset, &value.to_le_bytes()).unwrap();
         }
         m.write(row + v::ENEMY_GUID as u64, &guid.to_le_bytes())
             .unwrap();
-        m.write(row + 0x1f4, &[0]).unwrap();
+        m.write(row + 0x1f8, &[0]).unwrap();
         let mut handle = GoblinHandle { guid, index: 0 };
         a.goblin_elite(&m, game, &mut handle).unwrap();
-        assert_eq!(m.read(row + 0x1f4, 1).unwrap(), [1]);
+        assert_eq!(m.read(row + 0x1f8, 1).unwrap(), [1]);
         let template = GoblinDefinition::from_native([0u8; 80]);
         assert_eq!(template.0[76], 0);
         assert_eq!(number(&template.0, 40), 2.);
+    }
+    #[test]
+    fn goblin_tracking_uses_selected_stride_at_nonzero_indices_and_rebinds_after_compaction() {
+        let a = Adapter::select(v::SHA256).unwrap();
+        let m = Memory::default();
+        let (game, rows, guid) = (0x10000, 0x20000, 0xf130f5a001000001u64);
+        for (offset, value) in [(0x640, 3u64), (0x648, rows), (0x650, 3)] {
+            m.write(game + offset, &value.to_le_bytes()).unwrap();
+        }
+        // Independent native fixture: three 512-byte enemy rows, GUID at +0xf0.
+        m.write(rows, &[0; 3 * 512]).unwrap();
+        m.write(rows + 2 * 512 + 0xf0, &guid.to_le_bytes()).unwrap();
+        let mut h = GoblinHandle { guid, index: 2 };
+        assert_eq!(a.goblin_row(&m, game, &mut h).unwrap(), Some(rows + 2 * 512));
+        m.write(rows + 2 * 512 + 0xf0, &0u64.to_le_bytes()).unwrap();
+        m.write(rows + 512 + 0xf0, &guid.to_le_bytes()).unwrap();
+        assert_eq!(a.goblin_row(&m, game, &mut h).unwrap(), Some(rows + 512));
+        assert_eq!(h.index, 1);
+        a.goblin_elite(&m, game, &mut h).unwrap();
+        assert_eq!(m.read(rows + 512 + 0x1f8, 1).unwrap(), [1]);
+        assert_eq!(m.read(rows + 0x1f8, 1).unwrap(), [0]);
+        m.write(rows + 512 + 0xf0, &0u64.to_le_bytes()).unwrap();
+        assert_eq!(a.goblin_row(&m, game, &mut h).unwrap(), None);
     }
     #[test]
     fn recycle_filter_preserves_other_enemies_order_and_native_vector_ownership() {
@@ -668,25 +691,27 @@ pub(super) mod tests {
         let frame = 0x10000;
         let hash = b"3ef7f3eb90fa64d85635bc771b647bee.blp";
         let cap = hash.len() as u64;
-        m.write(frame + 0xcb8, &cap.to_le_bytes()).unwrap();
-        m.write(frame + 0xcc0, &0x30000u64.to_le_bytes()).unwrap();
-        m.write(frame + 0xcc8, &cap.to_le_bytes()).unwrap();
+        m.write(frame + 0xcd8, &cap.to_le_bytes()).unwrap();
+        m.write(frame + 0xce0, &0x30000u64.to_le_bytes()).unwrap();
+        m.write(frame + 0xce8, &cap.to_le_bytes()).unwrap();
         m.write(0x30000, hash).unwrap();
-        m.write(frame + 0xcd0, &[9, 0, 0, 0, 0, 0]).unwrap();
-        m.write(frame + 0xdf0, &71u64.to_le_bytes()).unwrap();
+        m.write(frame + 0xcf0, &[9, 0, 0, 0, 0, 0]).unwrap();
+        m.write(frame + 0xe70, &71u64.to_le_bytes()).unwrap();
         assert_eq!(a.goblin_outfit_metadata(&m, frame).unwrap(), Some(71));
-        assert_eq!(q(&m, frame + 0xcb8).unwrap(), u64::MAX);
+        assert_eq!(q(&m, frame + 0xcd8).unwrap(), u64::MAX);
         assert_eq!(a.goblin_outfit_metadata(&m, frame).unwrap(), None);
         assert!(a.goblin_outfit_key(&m, frame, 72).is_err());
-        m.write(frame + 0x954, &[0xa5; 12]).unwrap();
+        m.write(frame + 0x900, &[0xa5; 12]).unwrap();
         a.goblin_outfit_key(&m, frame, 71).unwrap();
-        assert_eq!(m.read(frame + 0x954, 12).unwrap(), [0xa5; 12]);
-        let key = m.read(frame + 0x920, 52).unwrap();
-        assert_eq!(m.read(frame + 0xcd0, 6).unwrap(), [9, 0, 0, 0, 0, 0]);
+        assert_eq!(m.read(frame + 0x900, 12).unwrap(), [0xa5; 12]);
+        let key = m.read(frame + 0x8c0, 64).unwrap();
+        assert_eq!(m.read(frame + 0xcf0, 6).unwrap(), [9, 0, 0, 0, 0, 0]);
         assert_eq!(
-            u32::from_le_bytes(key[0x18..0x1c].try_into().unwrap()),
+            u32::from_le_bytes(key[0x1c..0x20].try_into().unwrap()),
             31105
         );
+        assert_eq!(key[0x39], 9);
+        assert_eq!(&key[..4], &[0; 4]);
     }
     #[test]
     fn final_navigation_scopes_the_creature_and_preserves_unrelated_register_lanes() {

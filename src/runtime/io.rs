@@ -179,13 +179,9 @@ impl asx_game::official::SupportCalls for Access<'_> {
         unsafe { call(game, guid, amount, spell, 3, false, false) };
         Ok(())
     }
-    fn support_hurt(&self, game: u64, amount: f32, enemy: u64, melee: bool) -> Result<(), String> {
-        type Hurt = unsafe extern "system" fn(u64, f32, u64, bool);
-        let call: Hurt = unsafe {
-            std::mem::transmute(self.local.base + self.adapter.hurt_entry().rva as usize)
-        };
-        unsafe { call(game, amount, enemy, melee) };
-        Ok(())
+    fn support_hurt_tagged(&self,game:u64,amount:f32,enemy:u64,melee:bool,native_kind:u32,native_spell:u32)->Result<(),String>{
+        let call:asx_game::official::NativeHurtCall=unsafe{std::mem::transmute(self.local.base+self.adapter.hurt_entry().rva as usize)};
+        unsafe{call(game,amount,enemy,melee,native_kind,native_spell)};Ok(())
     }
     fn support_damage(&self, game: u64, guid: u64, amount: f32) -> Result<(), String> {
         type Damage = unsafe extern "system" fn(u64, u64, f32, u32, u32, bool, bool);
@@ -271,12 +267,11 @@ impl asx_game::official::SupportCalls for Access<'_> {
         Ok(())
     }
     fn healing_meter(&self, game: u64, spell: u32, amount: f32) -> Result<(), String> {
-        type Meter = unsafe extern "system" fn(u64, f32, u32, *const u64);
-        let call: Meter = unsafe {
+        let call: asx_game::official::NativeHealCall = unsafe {
             std::mem::transmute(self.local.base + self.adapter.support_entries()[3].rva as usize)
         };
         let metadata = [(-2i64) as u64, 0, 0, 0, 0, 0];
-        unsafe { call(game, amount, spell, metadata.as_ptr()) };
+        unsafe { asx_game::official::call_native_heal(call, game, amount, spell, metadata.as_ptr()) };
         Ok(())
     }
 }

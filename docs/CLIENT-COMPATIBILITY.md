@@ -1,12 +1,12 @@
-# Official 0.131.0 client boundary
+# Official 0.135.1 client boundary
 
 The sole source target is the exact Windows x86-64 executable with SHA-256:
 
 ```text
-5dd6819d836748ccf809ab76fe6509c9ee793e087939b5d036c430d835a14e63
+71e5f1767279db4bd428d1cd9c5d50d37759b72295386a69f9e3f6e70bc59249
 ```
 
-`bindings/official131.rs` owns current native contacts, complete instruction
+`bindings/official1351.rs` owns current native contacts, complete instruction
 guards, field translations and register/frame choices. Version labels and
 similar instruction sequences cannot select another executable. The launcher
 registry and private importer use this same exact identity. Direct native launch
@@ -15,30 +15,36 @@ remains inert; the retired custom engine is not a fallback.
 ## Selected layouts
 
 Host Game and private actor fields have independent translations. Private actor
-stride is `0xa38`; native peers use stride `0x758`. Native capacity remains five.
+stride is `0xb58`; native peers use stride `0x858`. Native capacity remains five.
 Snapshots copy only the identity, resources, phase and bounded headers consumed
 by party/support observations. Unused owned native context data is not cloned.
 Gold moves independently from adjacent vitals and native earned-gold counters;
 the wallet continues to project its selected gold fields only.
 
-Enemy records use stride `0x1f8`. The selected schema separates GUID/death/target
+Enemy records use stride `0x200`. The selected schema separates GUID/death/target
 from the moved aura, health, position and vulnerability fields. Every reader,
 writer and retained fixture uses that schema, without changing native ownership,
 crowd-control budgets, spawn rules or target policy for special abilities.
 
 The NPC continuation uses XMM15 for distance. Temporary actor XY is at frame
 `+0x70`; frame `+0x80` belongs to the native iterator and must not be overwritten.
-Encounter handling retains the native definition owner while reading Game from
-the selected `+0x228` frame slot. Other frame origins stay descriptor-owned.
-The basic-action Game pointer is at `+0x3a0`, with origin Z at `+0x27c`.
-Shield-break callbacks read Game from RBX and the spell from R12. The aura-row
-pointer is at RBP-8 at the projection seam; periodic-heal UI payloads start at
-RBP+0x4a0. These are callback-local lifetimes, not general stack translations.
+Encounter handling reads the unique boss definition from `+0x908` and Game from
+the selected `+0x918` frame slot. R13 holds the killed enemy GUID. Other frame origins stay descriptor-owned.
+The basic-action Game pointer is at `+0x3b0`, with origin Z at `+0x284`.
+Shield-break callbacks read Game from RBX and the spell from R15. The aura-row
+pointer is at RBP+0x38 at the projection seam; periodic-heal UI payloads start at
+RBP+8. These are callback-local lifetimes, not general stack translations.
 
-The native compositor now carries its armor tag and appearance in registers;
-the goblin's frame contains a 52-byte armor payload without the preceding tag.
-The direct-heal text hook starts at the common native branch destination, avoiding
-an incoming jump into displaced instructions.
+The native compositor uses a 64-byte tagged armor key. The selected adapter
+preserves its four-byte prefix and race byte. Metadata, appearance, entity and
+armor-key frame locations are selected independently.
+
+Fresh damage-number size now uses XMM8; R14 still owns the message. Direct and
+periodic heal wrappers have separate reviewed frames and event discriminators.
+The native entity resolver is now a query predicate plus a map lookup borrowing
+a pointer to the map reference. Healing/meter calls additionally require a fifth
+borrowed source descriptor; synthetic ASX healing uses the native unspecified
+source tag, while Hurt forwarding preserves both native source stack words.
 
 Native pause input retains tag 7 and its boolean payload. ASX menu ownership
 uses the existing native reliable transport, with selected role/stream/peer
@@ -62,7 +68,7 @@ being covered by a guessed global layout shift.
 ## Feature dispositions
 
 These are source dispositions for [the stable inventory](ASX-FEATURES.md), not
-claims that every feature has been exercised in a normal running 0.130 client.
+claims that every feature has been exercised in a normal running selected client.
 
 | ID | Disposition for the selected client |
 | --- | --- |
@@ -79,7 +85,7 @@ claims that every feature has been exercised in a normal running 0.130 client.
 | ASX-11 | Preserve immunity target-pool loans and identity/lifetime cleanup. |
 | ASX-12 | Preserve fatigue stacks and simulation-clock recovery with native aura presentation. |
 | ASX-13 | Preserve Fortune rules and native aura/stat presentation; Sayge trials provide rewards when enabled, with encounter grants retained only as the disabled-trial fallback. |
-| ASX-14 | Preserve the four-item exclusion without changing native inventory. |
+| ASX-14 | Preserve the three economy-item exclusions; the pickup-radius trinket remains available. |
 | ASX-15 | Keep glyph gameplay disabled and retain all nine catalogs. |
 | ASX-16 | Preserve per-ring enchantment identity/ranks and scoped native stat loans. |
 | ASX-17 | Enrich retained native party children and native owner-correct tooltips. |
@@ -87,8 +93,8 @@ claims that every feature has been exercised in a normal running 0.130 client.
 | ASX-19 | Preserve run/session resets, slot plus GUID bindings and callback ordering. |
 | ASX-20 | Align native-folder registry, importer and build metadata with the exact selected executable. |
 | ASX-21 | Keep marks upstream-native; duplicate-loot gold compensation remains disabled. |
-| ASX-22 | Preserve fixed personal gem identity and native amulet/stat reconstruction, including native replacement confirmation and target-upgrade tooltip text. |
-| ASX-23 | Preserve native nameplate rank, size and visibility augmentation before rendering. |
+| ASX-22 | Preserve personal crystal claims, permanent Crystal Resonance totals and native stat loans; the former amulet gem is retired. |
+| ASX-23 | Preserve ASXUI Lua HUD and nameplate presentation through native addon APIs; no DLL nameplate hooks. |
 | ASX-24 | Preserve fresh-size damage text and native direct/periodic healing text through reviewed frame lifetimes. |
 | ASX-25 | Preserve random native markers and manual reservations through the moved server marker table. |
 | ASX-26 | Preserve optional goblin spawning, fleeing, bounds, equipment, amulet choices and whole native mark rewards. |
@@ -113,21 +119,40 @@ not validate an installed DLL, a downloaded kit or an unchanged historical build
 reference. No build, deployment, publication or normal-client trial follows
 implicitly from this document.
 
-## 0.131.0 review
+## 0.135.1 review
 
-Code/data contacts move independently. All 262 consumed contacts are reviewed;
-historical canonical keys remain lookup keys. Host/private/enemy consumed field
-translations are unchanged. The shared-XP routine changes its internal ECS
-storage offsets while retaining the ASX receipt/header/call contract. Native
-forwarding owns those storage changes. Dormant menu-cache seams are rebound to
-their equivalent phase/cache comparisons and miss path; no lobby decorations
-are re-enabled. Every generated guard ends on a complete instruction.
+The adapter is pinned to the exact executable above. Historical 0.133 descriptors
+remain comparison references and cannot activate a client. Static review and
+generated guards do not substitute for portable, Windows ABI and isolated live
+qualification of the actual resulting DLL.
 
-Data review covers the complete map/NPC/boss definition region, 102 retained
-glyph rows, equipment, heroic rewards, marks and the support vtable. A conservative
-raw pointer scan retains its findings: short arrays are checked with expanded
-record bounds; exact numeric coefficient/discriminator pairs and two complete
-leaf functions are classified separately, without a regional exemption.
+Game and Actor translations are composed independently over reviewed native
+spans. Their common actor header grew, mutable scalars moved before the derived
+stats block, and one native stat was inserted. The two complete native swap
+leaves were executed sequentially with independent byte sentinels: all 3,060
+translated Game bytes and 2,341 translated Actor bytes agree. Four bytes of retired
+native padding remain unmapped. Direct native XP,
+gold and health consumers independently identify the corresponding scalar fields.
+The peer-row stride stays 0x858; server role, stream, sink and mark fields move by
+0x88. Private Actor contexts occupy 0xb58 bytes.
 
-Native gameplay/balance remains upstream-owned. Glyph gameplay stays disabled;
-native marks remain authoritative. Old executable hashes are rejected.
+Enemy rows occupy 0x200 bytes. Their constructor preserves the selected HP,
+position, identity, aura and vulnerability offsets; the elite flag moves to
+0x1f8. Movement uses separately reviewed stack locations. Aura-row output, native
+encounter Game storage and the goblin amulet pool have distinct frame changes.
+The pool's live count is R15; its callback preserves the other native registers.
+Goblin creation and handle rebinding use the same selected 0x200 enemy stride,
+including nonzero array indices and compaction; no legacy 504-byte stride remains.
+
+The native spell catalog now has 103 rows: Stormstrike (17364) and Rockbiter
+(8017) replace Call of Flame (16038). The retired symbol is absent from the
+selected address map; each new spell has its own explicit native symbol. The
+nine historical glyph rule catalogs remain retained with glyph gameplay disabled.
+Native item-modifier discriminants 37/38 become 43/44; their coefficients remain
+native. ASX does not overwrite these upstream data or reinstate the removed spell.
+
+Both executable identity and every selected entry guard remain mandatory. All
+eleven native archives match the previously reviewed data set. Native balance,
+encounter schedules, native marks and simulation ownership remain upstream-owned.
+The historical 0.131.0-asx.3 reproducibility approval is unchanged. This port does
+not publish a release or alter an installed player client.

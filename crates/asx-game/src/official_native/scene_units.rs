@@ -63,7 +63,7 @@ impl Adapter {
         .collect()
     }
     pub fn event_enemy_count(self, m: &dyn Mem, game: u64) -> Result<u64> {
-        let b = m.read(game + 0x5c0, 8)?;
+        let b = m.read(game + self.game_field(0x580), 8)?;
         let n = u64::from_le_bytes(b.try_into().map_err(|_| "Truncated native enemy count")?);
         if n > 8192 {
             return Err("Invalid native enemy count".into());

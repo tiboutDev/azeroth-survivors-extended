@@ -4,6 +4,7 @@ use asx_gameplay::official::PausePresentation;
 use serde_json::Value;
 
 pub(super) trait Services {
+    fn trace_native_ui(&self, _receiver: u64) {}
     fn read_ui(&self, pointer: u64, length: u64) -> Result<Value, String>;
     fn decode_pause(&self, value: &Value) -> Result<Option<PausePresentation>, String>;
     fn pause_notice(&self, active: bool) -> Option<&'static str>;
@@ -28,6 +29,19 @@ pub(super) fn available() -> Option<&'static dyn Services> {
 }
 
 impl Services for Runtime {
+    fn trace_native_ui(&self, receiver: u64) {
+        static ENABLED: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| {
+            std::env::var("ASX_LOG_NATIVE_UI").as_deref() == Ok("1")
+        });
+        static REPORTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+        if !*ENABLED { return; }
+        let io = super::super::io::Access { local: &self.local, adapter: self.adapter };
+        if let Err(error) = self.adapter.enable_native_ui_logging(&io, receiver) {
+            if !REPORTED.swap(true, std::sync::atomic::Ordering::Relaxed) {
+                self.log.warn(&format!("Native UI logging rejected: {error}"));
+            }
+        }
+    }
     fn read_ui(&self, pointer: u64, length: u64) -> Result<Value, String> {
         self.adapter.read_ui(&self.local, pointer, length)
     }

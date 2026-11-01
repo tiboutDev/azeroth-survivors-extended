@@ -157,7 +157,7 @@ impl Adapter {
         // The native constructor appends to the current actor's packet queue.
         // Take that exact new packet before callbacks and deliver through the
         // native participant sender, so decorative objects exist for everyone.
-        let queued = q(m, game + 0x680)?;
+        let queued = q(m, game + self.game_field(0x640))?;
         let guid = create(game, descriptor.as_ptr(), position.as_ptr(), 5, 0);
         if ((guid >> 24) & 0xffffff) != u64::from(entry) {
             return Err("Native event GUID identity rejected".into());
@@ -172,9 +172,9 @@ impl Adapter {
         game: u64,
         before: u64,
     ) -> Result<Vec<u8>> {
-        let cap = q(m, game + 0x670)?;
-        let ptr = q(m, game + 0x678)?;
-        let len = q(m, game + 0x680)?;
+        let cap = q(m, game + self.game_field(0x630))?;
+        let ptr = q(m, game + self.game_field(0x638))?;
+        let len = q(m, game + self.game_field(0x640))?;
         if before >= 4096 || len != before + 1 || len > cap || cap > 4096 || ptr < 0x10000 {
             return Err("Native event queue changed".into());
         }
@@ -196,7 +196,7 @@ impl Adapter {
             return Err("Invalid created event packet".into());
         }
         let body = m.read(bytes, size as usize)?;
-        m.write(game + 0x680, &before.to_le_bytes())?;
+        m.write(game + self.game_field(0x640), &before.to_le_bytes())?;
         m.free_native(bytes, allocation as usize)?;
         Ok(body)
     }
@@ -637,9 +637,9 @@ mod event_packet_tests {
             freed: RefCell::new(vec![]),
         };
         for (at, v) in [
-            (0x10670, 4u64),
-            (0x10678, 0x11000),
-            (0x10680, 2),
+            (0x10700, 4u64),
+            (0x10708, 0x11000),
+            (0x10710, 2),
             (0x11020, 4),
             (0x11028, 0x12000),
             (0x11030, 4),
@@ -658,7 +658,7 @@ mod event_packet_tests {
             a.take_created_event_packet(&m, 0x10000, 1).unwrap(),
             b"body"
         );
-        assert_eq!(q(&m, 0x10680).unwrap(), 1);
+        assert_eq!(q(&m, 0x10710).unwrap(), 1);
         assert_eq!(*m.freed.borrow(), vec![(0x12000, 4)]);
         assert!(a.take_created_event_packet(&m, 0x10000, 1).is_err());
         assert_eq!(m.freed.borrow().len(), 1);
@@ -666,10 +666,10 @@ mod event_packet_tests {
     #[test]
     fn changed_queue_is_never_truncated_or_freed() {
         let m = queue();
-        m.write(0x10680, &3u64.to_le_bytes()).unwrap();
+        m.write(0x10710, &3u64.to_le_bytes()).unwrap();
         let a = Adapter::select(crate::current::SHA256).unwrap();
         assert!(a.take_created_event_packet(&m, 0x10000, 1).is_err());
-        assert_eq!(q(&m, 0x10680).unwrap(), 3);
+        assert_eq!(q(&m, 0x10710).unwrap(), 3);
         assert!(m.freed.borrow().is_empty());
     }
 }

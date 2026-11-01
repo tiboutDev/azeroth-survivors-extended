@@ -354,7 +354,10 @@ impl Adapter {
         }
         Ok(distance)
     }
-    pub fn hurt_actor(
+    pub fn hurt_actor(self,io:&dyn SupportCalls,game:u64,slot:u32,guid:u64,amount:f32,enemy:u64,melee:bool)->Result<Option<f32>>{
+        self.hurt_actor_tagged(io,game,slot,guid,amount,enemy,melee,u32::from(!melee),0)
+    }
+    pub fn hurt_actor_tagged(
         self,
         io: &dyn SupportCalls,
         game: u64,
@@ -363,6 +366,8 @@ impl Adapter {
         amount: f32,
         enemy: u64,
         melee: bool,
+        native_kind:u32,
+        native_spell:u32,
     ) -> Result<Option<f32>> {
         if !amount.is_finite()
             || !(0.0..=1e12).contains(&amount)
@@ -389,7 +394,7 @@ impl Adapter {
         let result = (|| {
             let before = f(&io.read(game + self.game_field(0x4f8), 8)?, 0)
                 + f(&io.read(game + self.game_field(0x4fc), 4)?, 0);
-            io.support_hurt(game, amount, enemy, melee)?;
+            io.support_hurt_tagged(game, amount, enemy, melee,native_kind,native_spell)?;
             let after = f(&io.read(game + self.game_field(0x4f8), 8)?, 0)
                 + f(&io.read(game + self.game_field(0x4fc), 4)?, 0);
             io.flush_actor(game)?;

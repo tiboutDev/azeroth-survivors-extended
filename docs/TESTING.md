@@ -1,6 +1,6 @@
 # Targeted ASX validation
 
-The supported source target is official 0.131.0. Review the
+The supported source target is official 0.135.1. Review the
 [feature inventory](ASX-FEATURES.md) and [adapter boundary](CLIENT-ADAPTER.md)
 when changing native integration. Validation must cover the changed risk and
 state its limits; test counts alone are not a completion criterion.
@@ -28,19 +28,19 @@ are written under ignored `test-results/targeted/` directories.
 `official-party-ui` separately so its explicit Lua 5.1 check is not replaced by
 generic Python discovery, where that optional dependency can be skipped.
 
-`full` tests the current 0.131 Rust graph, Python suite and Clippy. Retired
+`full` tests the current 0.133 Rust graph, Python suite and Clippy. Retired
 reader/tool implementations and their exclusive tests are not part of the gate.
 
 | Profile | Current risk covered |
 | --- | --- |
-| official | Native 0.130 selection, normalized snapshots, menu ownership, native policy transactions, current source boundaries and evidence assessors |
+| official | Native current-build selection, normalized snapshots, menu ownership, native policy transactions, current source boundaries and evidence assessors |
 | official-party-ui | Retained native children, owner origins, menu projection, world-number packet decoding, marker policy, shared card boundaries and required Lua 5.1 behavior through uv/lupa |
 | asxui | Independent Lua 5.1 plate/HUD styling, native XP preservation, drawer/counter/equipment behavior, restoration and standalone number-font selection |
 | asx-install | Owned native-folder installation, signatures, transactions, interrupted-client recovery, rollback and publication inventory verification |
 | gems | Retained historical gem formats and selected jewelry helpers |
 | crystals | Personal claims, shared expiry, free draws, native aura preservation, Lua/API totals and tooltip |
 | enchantments | Ring identity/ranks, selected jewelry transactions and evidence rejection |
-| glyphs | Retained rule catalogs and shared bonus representation; glyph gameplay remains disabled on 0.130 |
+| glyphs | Retained rule catalogs and shared bonus representation; glyph gameplay remains disabled on the current client |
 | fatigue | Resurrection penalties, recovery policy and selected native integration |
 | rules | All independent gameplay policy and contract tests |
 | combat | Marks, taunts and immunity policy plus selected native fixtures |
@@ -287,6 +287,15 @@ packets. With two clients, it first aligns the owned host to the group center
 after the initial native spawn/choice transition (at least five simulation
 seconds), so both actors can actually reach the five nearby crystals at the production
 pickup radius. It then moves only the owned host to claim an outlying witness.
+For each of the five nearby opportunities, the controlled two-client fixture
+uses the guest's current native position and moves only the owned host beside
+the crystal. This keeps both recipients in production pickup range despite the
+native CLI movement driver. It does not grant a claim directly, move the guest,
+alter the pickup radius or bypass recipient/deadline checks. If native movement displaces the host before the next observation, the fixture
+retries that near placement until the real claim succeeds or its original
+deadline expires. It probes cloned production rules; no claim or deadline is
+changed by planning a retry, and no retry pose is written during pause. The
+first outlying witness retains its original placement and host-only move.
 The guest remains out of range of that witness to exercise personal claims and
 shared expiry. Native simulation and grants remain authoritative throughout.
 Production color draws, spawn frequency and participant positions are untouched
@@ -380,6 +389,27 @@ ordinary burst attacks from killing the first witness prematurely. The first
 still requires a real normal-enemy taunt control and a natural 25-second escape;
 the second requires observed movement before the controlled native kill. No
 health, immunity, lifetime, clock or production scheduling rule is changed.
+
+### Cooperative fixture economy observations
+
+XP comparisons require both actors to be playing. Gold convergence additionally
+uses native snapshots during reward choices: a choice can legitimately last more
+than five seconds while its first paused snapshot already has equal balances.
+Every unequal active snapshot must be followed immediately by an equal one
+within five wall seconds, including during choices. Missing, late or still
+unequal next snapshots fail. This also detects mismatches occurring entirely
+inside a choice window; it does not extend the convergence deadline.
+
+### Native support fixture positioning
+
+The two-client support/recovery fixture keeps only its owned host beside the
+guest's current native position once the support scene begins. Native CLI ROAM
+otherwise separates the actors beyond the native heal eligibility radius, even
+when the diagnostic target selector names the guest. No pose is written while
+ASX pause authority is active. Native range/health predicates, actual casts,
+periodic ticks, shield consumption and revival remain authoritative; no failed
+cast or missing observation is counted as a pass. Normal builds contain no such
+fixture behavior.
 
 ### Verified private Windows desktops
 

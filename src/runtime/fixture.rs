@@ -1203,7 +1203,15 @@ fn completion121_tick(r:&Runtime,server:u64){
  let shield_only=std::env::var("ASX_TEST_SUPPORT_SHIELD_ONLY").as_deref()==Ok("1");
  static INITIALIZED:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
  if !INITIALIZED.swap(true,Ordering::AcqRel)&&shield_only{*STATE.lock().unwrap()=(5,0,0.,0.);}
- let Ok(Some(p))=r.adapter.party(&r.local,server)else{return};if p.actors.len()!=2||p.clock<12.||p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return}
+ let Ok(Some(p))=r.adapter.party(&r.local,server)else{return};if p.actors.len()!=2||p.clock<12.{return}
+ // The native CLI movement driver separates these two owned participants.
+ // Keep the support/recovery scene in native range; never move the guest or
+ // write poses while paused. Native eligibility, effects and revival stay intact.
+ if !super::pause::active(){
+  let Ok(game)=r.adapter.game_address(server)else{return};let io=io::Access{local:&r.local,adapter:r.adapter};
+  if let Err(error)=r.adapter.fixture_event_pose(&io,game,0,p.actors[0].guid,p.actors[1].position){r.log.warn(&format!("Support121 fixture pose rejected: {error}"));return}
+ }
+ if p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return}
  let (index,stage,began,before)=*STATE.lock().unwrap();if index>=if shield_only{6}else{CASES.len()}{
   if std::env::var("AZCOOP_TEST_SUPPORT121_FULL").as_deref()==Ok("1"){
    fatigue_tick(r,server);
