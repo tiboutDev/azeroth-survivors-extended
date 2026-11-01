@@ -166,3 +166,9 @@ history. No source push/publication follows implicitly from cleanup or preparati
 Project documentation describes current source and supported workflows.
 Historical checkpoints remain in Git history and private evidence backups;
 they do not supersede these instructions or authorize retired workflows.
+
+Final release preparation must use `tools/build/asx_release_layout.py`: keep only
+UPLOAD/ and the compact README, release notes and publication guide in the
+publication folder. Preserve reports, hashes, references, source metadata and
+verification receipts under ignored `.local/releases/<version>/` in this project.
+Use the publication verifier's explicit evidence directory after finalization.

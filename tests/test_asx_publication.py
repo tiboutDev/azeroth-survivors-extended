@@ -34,3 +34,39 @@ class PublicationTests(unittest.TestCase):
  def test_changed_player_alias_is_rejected(self):
   root,_=self.prepare();(root/"UPLOAD/ASX.zip").write_bytes(b"changed")
   with self.assertRaisesRegex(ValueError,"checksum"):publication.verify(root,True)
+
+class ReleaseLayoutTests(PublicationTests):
+ def layout(self):
+  import sys
+  sys.path.insert(0,str(ROOT/'tools/build'))
+  import asx_release_layout
+  return asx_release_layout
+ def release(self):
+  root,meta=self.prepare()
+  for name in ('README-PREPARATION.md','RELEASE-NOTES.md','PUBLISH-ON-GITHUB.md'):(root/name).write_text(name)
+  (root/'VALIDATION.json').write_text('{"technical_validation_passed":true,"reference_approved":true}')
+  (root/'test.log').write_bytes(b'complete preserved evidence')
+  return root,meta
+ def test_finalize_preserves_assets_evidence_and_verification_stays_outside(self):
+  root,meta=self.release();evidence=root.parent/(root.name+'-evidence');self.addCleanup(__import__('shutil').rmtree,evidence,True)
+  before={p.name:p.read_bytes()for p in(root/'UPLOAD').iterdir()}
+  self.layout().finalize(root,evidence)
+  self.assertEqual({p.name for p in root.iterdir()},self.layout().KEEP)
+  self.assertEqual(before,{p.name:p.read_bytes()for p in(root/'UPLOAD').iterdir()})
+  self.assertEqual((evidence/'test.log').read_bytes(),b'complete preserved evidence')
+  inventory=(evidence/'layout-inventory.json').read_bytes()
+  publication.verify(root,True,evidence)
+  self.assertFalse((root/'LOCAL-VERIFICATION.json').exists())
+  self.layout().finalize(root,evidence)
+  self.assertEqual(inventory,(evidence/'layout-inventory.json').read_bytes())
+ def test_conflicting_evidence_does_not_remove_any_original(self):
+  root,_=self.release();evidence=root.parent/(root.name+'-evidence');evidence.mkdir();self.addCleanup(__import__('shutil').rmtree,evidence,True)
+  (evidence/'test.log').write_bytes(b'previous different proof')
+  with self.assertRaisesRegex(ValueError,'conflict'):self.layout().finalize(root,evidence)
+  self.assertEqual((root/'test.log').read_bytes(),b'complete preserved evidence')
+  self.assertEqual((evidence/'test.log').read_bytes(),b'previous different proof')
+ def test_bad_signed_asset_preserves_original_evidence(self):
+  root,_=self.release();(root/'UPLOAD/ASX.zip').write_bytes(b'corrupted')
+  evidence=root.parent/(root.name+'-evidence')
+  with self.assertRaisesRegex(ValueError,'checksum'):self.layout().finalize(root,evidence)
+  self.assertTrue((root/'test.log').exists());self.assertFalse(evidence.exists())

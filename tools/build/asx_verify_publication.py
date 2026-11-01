@@ -11,8 +11,9 @@ def download(url,size):
     if len(raw)!=size:raise ValueError("Published asset size differs")
     return raw
 
-def verify(root,local=False):
-    meta=json.loads((root/"PUBLICATION.json").read_text());data={}
+def verify(root,local=False,evidence=None):
+    evidence=Path(evidence)if evidence is not None else root
+    meta=json.loads((evidence/"PUBLICATION.json").read_text());data={}
     base="https://github.com/"+meta["repository"]+"/releases/"
     for name,spec in meta["assets"].items():
         if Path(name).name!=name or "/"in name or "\\"in name or not 0<spec["size"]<=64<<20:raise ValueError("Invalid local publication inventory")
@@ -35,9 +36,10 @@ def verify(root,local=False):
             if digest(raw)!=spec["sha256"]:raise ValueError("Latest-release link differs: "+name)
             print("OK latest/download/"+name,flush=True)
     result={"passed":True,"published_checked":not local,"tag":meta["tag"],"signed_feeds":1+int(legacy <= data.keys()),"assets":len(data),"game_launched":False}
-    (root/("LOCAL-VERIFICATION.json"if local else"PUBLIC-VERIFICATION.json")).write_text(json.dumps(result,indent=2)+"\n")
+    (evidence/("LOCAL-VERIFICATION.json"if local else"PUBLIC-VERIFICATION.json")).write_text(json.dumps(result,indent=2)+"\n")
     print("Verified release signatures and archive alias",flush=True)
     return result
 if __name__=="__main__":
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument("--folder",type=Path,default=Path(__file__).resolve().parent);parser.add_argument("--local",action="store_true")
-    args=parser.parse_args();verify(args.folder.resolve(),args.local)
+    parser.add_argument("--evidence-dir",type=Path,help="Project-local evidence folder containing PUBLICATION.json")
+    args=parser.parse_args();verify(args.folder.resolve(),args.local,args.evidence_dir)

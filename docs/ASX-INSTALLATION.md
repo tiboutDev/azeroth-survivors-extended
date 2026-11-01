@@ -131,3 +131,30 @@ Bundled ASXUI now includes the HUD, persistent frame layout and shared native
 panel theme modules. The validator accepts the exact previous pre-HUD inventory
 for authenticated rollback, as well as the complete current inventory; arbitrary
 partial inventories and preference files remain rejected.
+
+### Final publication-folder layout
+
+Every prepared release must finish with exactly `UPLOAD/`,
+`README-PREPARATION.md`, `RELEASE-NOTES.md` and `PUBLISH-ON-GITHUB.md` at its root.
+`UPLOAD/` contains only the stable archive alias, versioned archive, signed feed
+and feed signature. Avoid duplicate root archives, copied verifier scripts and
+individual test reports in the publication folder.
+
+The package builder creates an intermediate working folder. After signing and
+validation, finalize it with:
+
+```sh
+uv run --with cryptography python3 tools/build/asx_release_layout.py \
+  --folder /path/to/prepared-release \
+  --evidence-dir .local/releases/<version>
+```
+
+The finalizer verifies signatures and hashes, copies all remaining root files
+into the ignored project evidence directory, checks every copy before removing
+originals, and writes a compact README and publication guide. Conflicting evidence
+or unexpected directories stop finalization. Native game assets and signing keys
+are never evidence inputs. Keep earlier failed trials and complete logs locally.
+Use `asx_verify_publication.py --evidence-dir .local/releases/<version>` to read
+publication metadata and write verification receipts there, keeping the prepared
+folder minimal. Structural reorganization never changes signed asset bytes or
+implies validation of new source, reproducibility approval or publication.
