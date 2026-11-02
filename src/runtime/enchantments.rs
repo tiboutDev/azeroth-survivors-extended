@@ -6,13 +6,13 @@ use super::{io, Runtime};
 use std::sync::atomic::{AtomicBool, Ordering};
 use azsx_game::official::{RingChoice,RingStatLoan};
 use azsx_gameplay::enchantments::{Enchantment,Enchantments,RankedEnchantment,Rank};
-#[derive(Default)]struct State{game:u64,clock:f32,rules:Enchantments,offers:Vec<(RingChoice,Enchantment)>,rng:u64}
+#[derive(Default)]struct State{game:u64,clock:f32,rules:Enchantments,offers:Vec<(RingChoice,Enchantment)>,previous:Vec<(RingChoice,Enchantment)>,rng:u64}
 static STATE:std::sync::Mutex<Option<State>>=std::sync::Mutex::new(None);
 thread_local!{static PENDING:std::cell::RefCell<Vec<(RingChoice,Enchantment)>>=const{std::cell::RefCell::new(Vec::new())};static STATS:std::cell::RefCell<Vec<u64>>=const{std::cell::RefCell::new(Vec::new())};}
 pub fn reset(){if let Ok(mut s)=STATE.lock(){*s=None;}}
 pub fn observe(game:u64,p:Option<&azsx_game::official::PartyObservation>){
  let Some(p)=p else{reset();return};
- if let Ok(mut guard)=STATE.lock(){let s=guard.get_or_insert_with(State::default);if s.game!=game||p.clock+0.01<s.clock{*s=State{game,..Default::default()};}s.clock=p.clock;let ids=p.actors.iter().map(|a|(a.slot,a.guid)).collect::<Vec<_>>();s.rules.retain(&ids);s.offers.retain(|(c,_)|ids.contains(&(c.slot,c.guid)));}
+ if let Ok(mut guard)=STATE.lock(){let s=guard.get_or_insert_with(State::default);if s.game!=game||p.clock+0.01<s.clock{*s=State{game,..Default::default()};}s.clock=p.clock;let ids=p.actors.iter().map(|a|(a.slot,a.guid)).collect::<Vec<_>>();s.rules.retain(&ids);s.offers.retain(|(c,_)|ids.contains(&(c.slot,c.guid)));s.previous.retain(|(c,_)|ids.contains(&(c.slot,c.guid)));}
 }
 fn offer(c:RingChoice)->Option<(Enchantment,bool)>{
  if let Some(e)=PENDING.with(|p|p.borrow().iter().rev().find(|(o,_)|o.game==c.game&&o.slot==c.slot&&o.guid==c.guid&&o.ring==c.ring&&c.rank>o.rank).map(|(_,e)|*e)){return Some((e,false))}
@@ -22,7 +22,9 @@ fn offer(c:RingChoice)->Option<(Enchantment,bool)>{
  if let Some((_,e))=s.offers.iter().find(|(o,_)|*o==c){return Some((*e,true))}
  if s.rng==0{s.rng=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos()as u64^c.guid^c.game;}
  s.rng=s.rng.wrapping_add(0x9e3779b97f4a7c15);let mut z=s.rng;z=(z^(z>>30)).wrapping_mul(0xbf58476d1ce4e5b9);z=(z^(z>>27)).wrapping_mul(0x94d049bb133111eb);z^=z>>31;
- let e=Enchantment::ALL[(z&7)as usize];
+ let previous=s.previous.iter().find(|(o,_)|o.slot==c.slot&&o.guid==c.guid&&o.ring==c.ring).map(|(_,e)|*e);
+ let candidates=Enchantment::ALL.into_iter().filter(|e|Some(*e)!=previous).collect::<Vec<_>>();
+ let e=candidates[(z as usize)%candidates.len()];
  if s.offers.len()>=64{s.offers.remove(0);}s.offers.push((c,e));Some((e,true))
 }
 pub fn card(r:&dyn Services,output:u64,game:u64){
@@ -37,7 +39,14 @@ pub fn selecting(r:&dyn Services,game:u64,index:u64)->Selection{
  let selected=r.ring_selected(game,index).ok().flatten().and_then(|c|STATE.lock().ok().and_then(|s|{let s=s.as_ref().filter(|s|s.game==game)?;if let Some(e)=s.rules.get(c.slot,c.guid,c.ring){return Some((c,e))}s.offers.iter().find(|(o,_)|*o==c).map(|(_,e)|(c,*e))}));
  if let Some(v)=selected{PENDING.with(|p|p.borrow_mut().push(v));}Selection(selected)
 }
-fn retire_offers(s:&mut State,slot:u32,guid:u64){s.offers.retain(|(c,_)|c.slot!=slot||c.guid!=guid);}
+fn retire_offers(s:&mut State,slot:u32,guid:u64){
+ for (c,e) in s.offers.iter().filter(|(c,_)|c.slot==slot&&c.guid==guid){
+  s.previous.retain(|(o,_)|o.slot!=c.slot||o.guid!=c.guid||o.ring!=c.ring);
+  if s.previous.len()>=64{s.previous.remove(0);}
+  s.previous.push((*c,*e));
+ }
+ s.offers.retain(|(c,_)|c.slot!=slot||c.guid!=guid);
+}
 /// Retire declined proposals before native acceptance may construct a new choice.
 /// The captured selection/PENDING scope retains the selected enchantment.
 pub fn retire_choice(r:&dyn Services,game:u64,index:u64){
@@ -130,6 +139,18 @@ pub fn fixture_tick(r:&Runtime,game:u64){
   retire_offers(&mut s,0,11);assert_eq!(s.rules.get(0,11,0),Some(Enchantment::Alacrity));assert_eq!(s.offers,vec![(b,Enchantment::Warding)]);
  }
 
+ #[test]fn a_new_choice_cannot_repeat_the_last_declined_enchantment_for_that_ring(){
+  let _guard=crate::test_support::TEST_LOCK.lock().unwrap();reset();
+  let c=RingChoice{game:1,slot:0,guid:11,ring:0,rank:1,rarity:0,value:0};
+  let mut previous=None;
+  for _ in 0..128 {
+   let (e,first)=offer(c).unwrap();assert!(first);assert_ne!(Some(e),previous);
+   assert_eq!(offer(c),Some((e,true))); // redraws of the same visible choice stay stable
+   {let mut state=STATE.lock().unwrap();retire_offers(state.as_mut().unwrap(),0,11);}
+   previous=Some(e);
+  }
+  reset();
+ }
  #[test]fn reentrant_reward_build_keeps_the_locked_preview_and_other_ring_offer(){
  let _guard=crate::test_support::TEST_LOCK.lock().unwrap();
   reset();let c=RingChoice{game:10,slot:0,guid:111,ring:0,rank:1,rarity:0,value:1};let other=RingChoice{ring:1,..c};let(e,_)=offer(c).unwrap();let second=offer(other).unwrap();

@@ -2041,12 +2041,9 @@ impl SelectedAdapter {
     pub fn solo_visual_entries(self) -> Vec<Entry> { self.native.solo_visual_entries() }
     pub fn engineering_with_actor<T>(self,io:&dyn SupportCalls,game:u64,slot:u32,owner:u64,action:impl FnOnce()->Result<T>)->Result<T>{self.native.engineering_with_actor(io,game,slot,owner,action)}
     pub fn solo_gadget_observation(self,m:&dyn Mem,game:u64,owner:u64)->Result<(f32,f32,f32,f32)>{self.native.solo_gadget_observation(m,game,owner)}
-    pub fn solo_sapper_has_target(self,m:&dyn Mem,game:u64,owner:u64)->Result<bool>{self.native.solo_sapper_has_target(m,game,owner)}
     pub unsafe fn solo_gadget_net(self,m:&dyn Mem,base:u64,game:u64,owner:u64)->Result<usize>{self.native.solo_gadget_net(m,base,game,owner)}
-    pub unsafe fn solo_gadget_belt(self,m:&dyn Mem,base:u64,game:u64,owner:u64)->Result<(f32,f32)>{self.native.solo_gadget_belt(m,base,game,owner)}
     pub fn solo_gadget_speed(self,m:&dyn MutableMemory,game:u64,owner:u64,value:f32)->Result<()>{self.native.solo_gadget_speed(m,game,owner,value)}
-    pub fn solo_sapper_backlash(self,io:&dyn SupportCalls,game:u64,owner:u64)->Result<Option<(f32,f32)>>{self.native.solo_sapper_backlash(io,game,owner)}
-    pub unsafe fn solo_engineering_burst(self,m:&dyn Mem,base:u64,game:u64,owner:u64,point:[f32;3],sapper:bool)->Result<usize>{self.native.solo_engineering_burst(m,base,game,owner,point,sapper)}
+    pub unsafe fn solo_grenade_stun(self,m:&dyn Mem,base:u64,game:u64,owner:u64,point:[f32;3])->Result<usize>{self.native.solo_grenade_stun(m,base,game,owner,point)}
     pub fn solo_new_mortar_token(self,serial:u32)->Option<u64>{self.native.solo_new_mortar_token(serial)}
     pub fn solo_mortar_token(self,m:&dyn Mem,spell:u32,effect:u64)->Result<Option<u64>>{self.native.solo_mortar_token(m,spell,effect)}
     pub unsafe fn solo_launch_mortar(self,m:&dyn Mem,base:u64,game:u64,owner:u64,draw:u32,token:u64)->Result<Option<SoloMortarLaunch>>{self.native.solo_launch_mortar(m,base,game,owner,draw,token)}

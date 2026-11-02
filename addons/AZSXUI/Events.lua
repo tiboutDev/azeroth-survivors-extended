@@ -389,6 +389,7 @@ function AZSXEventVisualReadout()
 end
 
 local engineeringBadge,engineeringToast,engineeringScope,engineeringSeen,engineeringUntil=nil,nil,nil,nil,0
+local engineeringNext,engineeringPulse=nil,0
 local demonToast,demonScope,demonSeen,demonUntil=nil,nil,nil,0
 local defaults={demon={x=0,y=0},engineering={x=0,y=0},supplies={x=0,y=0},fortune={x=0,y=0},crystals={x=0,y=0},sayge={x=0,y=0},revive={x=0,y=0},loot={x=0,y=0},marks={x=0,y=0}}
 local anchor=CreateFrame("Frame","AZSXUIEventAnchor",UIParent)
@@ -465,7 +466,7 @@ end
 local function refreshEngineering()
     local e=model and model.engineering
     local scope=model and(model.epoch..":"..model.own)or nil
-    if scope~=engineeringScope then engineeringScope=scope;engineeringSeen=e and e.event or nil;engineeringUntil=0 end
+    if scope~=engineeringScope then engineeringScope=scope;engineeringSeen=e and e.event or nil;engineeringUntil=0;engineeringNext=nil;engineeringPulse=0 end
     if not e then if engineeringBadge then engineeringBadge:Hide()end;if engineeringToast then engineeringToast:Hide()end;return end
     if not engineeringBadge then
         local f=CreateFrame("Button","AZSXUIEngineeringBadge",UIParent);f:SetWidth(28);f:SetHeight(28)
@@ -480,6 +481,11 @@ local function refreshEngineering()
     if fortune and vitals and vitals:IsShown()then engineeringBadge:SetPoint("LEFT",fortune,"RIGHT",8,0)
     elseif vitals and vitals:IsShown()then engineeringBadge:SetPoint("LEFT",vitals,"RIGHT",8,0)
     else engineeringBadge:SetPoint("BOTTOM",UIParent,"BOTTOM",190,208)end
+    if engineeringNext and e.nextTrigger>engineeringNext+100 then engineeringPulse=GetTime()+0.8 end
+    engineeringNext=e.nextTrigger
+    local active=e.remaining>0 or GetTime()<engineeringPulse
+    engineeringBadge:SetScale(active and(1.04+0.03*math.sin(GetTime()*10))or 1)
+    engineeringBadge.border:SetVertexColor(active and .3 or 1,1,active and .3 or 1)
     engineeringBadge.icon:SetTexture(e.icon);engineeringBadge:Show()
     if engineeringSeen~=e.event then
         engineeringSeen=e.event;engineeringUntil=GetTime()+5

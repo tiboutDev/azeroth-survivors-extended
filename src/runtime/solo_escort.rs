@@ -109,6 +109,11 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
     let preview=std::env::var("AZSX_TEST_ESCORT_PREVIEW").as_deref()==Ok("1");
     #[cfg(not(feature="test-hooks"))]
     let preview=false;
+    #[cfg(feature="test-hooks")]
+    if preview {
+        let expected=std::env::var("AZSX_TEST_ESCORT_PLAYERS").ok().and_then(|v|v.parse::<usize>().ok()).unwrap_or(1);
+        if participants.len()!=expected { return Ok(()); }
+    }
     let first_boss_at={
         let mut budget=OPPORTUNITIES.lock().map_err(|_|"Escort budget unavailable")?;
         #[cfg(feature="test-hooks")]
@@ -240,7 +245,7 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
                     for object in objects{let _=unsafe{r.adapter.remove_event_object(&access,r.local.base as u64,g,object)};}
                     return Ok(())
                 }
-                notice(r,g,"A damaged Mechanical Chicken awaits repairs. Escort it to extraction for an engineering gadget.");
+                notice(r,g,"A damaged Mechanical Chicken awaits repairs. Help it reach the extraction point.");
         }
     }
     // Test-hook only: a bounded escort rehearsal moves the owned actors

@@ -1,7 +1,7 @@
 //! Run-local engineering equipment per native participant.
 use super::{event_services::Services, io, Runtime, RUNTIME};
 use azsx_game::official::{ActorObservation, SoloMortarLaunch};
-use azsx_gameplay::{solo_events::{sapper_backlash_budget, Equipment, Gadget}, Phase};
+use azsx_gameplay::{solo_events::{ Equipment, Gadget}, Phase};
 use std::{collections::BTreeMap, sync::Mutex};
 
 static STATE: Mutex<BTreeMap<u64, State>> = Mutex::new(BTreeMap::new());
@@ -77,6 +77,8 @@ pub fn award_group(r: &Runtime, game: u64, recipients: &[(u32,u64)])
             scale_base:r.adapter.solo_player_scale_base(), next_check:p.clock,
             mortars:BTreeMap::new() };
         let kind = Gadget::ALL[s.draw() as usize % Gadget::ALL.len()];
+        #[cfg(feature="test-hooks")]
+        let kind = if std::env::var("AZSX_TEST_GADGET_KIND").as_deref()==Ok("grenade"){Gadget::Grenade}else{kind};
         let draw = s.draw();
         s.equipment = Equipment::new(kind, p.clock, draw);
         if s.equipment.is_none() { return Err("Engineering equipment rejected".into()); }
@@ -154,11 +156,6 @@ fn tick_actor(r: &Runtime, game: u64, now: f32, a: &ActorObservation) -> Result<
         with_actor(r, game, a.slot, a.guid, || deliver_mortar(r, game, a.guid, receipt, enemy))?;
     }
     if a.phase != Phase::Playing || a.hp <= 0. { return Ok(()) }
-    let check_target = STATE.lock().ok().is_some_and(|state| state.get(&a.guid)
-        .is_some_and(|s| now >= s.next_check && s.equipment.as_ref()
-            .is_some_and(|e| e.kind == Gadget::Sapper && e.due(now))));
-    let sapper_target = !check_target || with_actor(r, game, a.slot, a.guid,
-        || r.adapter.solo_sapper_has_target(&r.local, game, a.guid))?;
     let activation = {
         let mut state = STATE.lock().map_err(|_| "Engineering state unavailable")?;
         let Some(s) = state.get_mut(&a.guid).filter(|s| s.game == game && s.slot == a.slot) else {
@@ -168,11 +165,6 @@ fn tick_actor(r: &Runtime, game: u64, now: f32, a: &ActorObservation) -> Result<
         s.next_check = now + 0.2;
         let Some(e) = s.equipment.as_ref() else { return Ok(()) };
         if !e.due(now) { return Ok(()) }
-        if e.kind == Gadget::Sapper &&
-            (sapper_backlash_budget(a.hp, a.maximum).is_none_or(|v| v <= 0.) || !sapper_target) {
-            s.next_check = now + 1.;
-            return Ok(())
-        }
         let schedule = s.draw();
         let effect_draw = s.draw();
         let e = s.equipment.as_mut().ok_or("Engineering equipment missing")?;
@@ -183,7 +175,7 @@ fn tick_actor(r: &Runtime, game: u64, now: f32, a: &ActorObservation) -> Result<
         Some((kind, effect_draw, e.effect_until()))
     };
     if let Some((kind, draw, until)) = activation {
-        if matches!(kind, Gadget::Net | Gadget::ProtectionBelt | Gadget::Sapper | Gadget::Mortar) {
+        if matches!(kind, Gadget::Net | Gadget::Grenade) {
             with_actor(r, game, a.slot, a.guid,
                 || activate(r, game, a.slot, a.guid, a.position, a.maximum, kind, draw, until))?;
         } else {
@@ -198,7 +190,7 @@ fn activate(
     slot: u32,
     owner: u64,
     position: [f32; 3],
-    maximum: f32,
+    _maximum: f32,
     kind: Gadget,
     draw: u32,
     until: f32,
@@ -216,43 +208,11 @@ fn activate(
                 .info(&format!("solo Net native rooted targets: {count}"));
         }
         Gadget::RocketBoots => refresh(r, game, slot, owner)?,
-        Gadget::ProtectionBelt => {
-            let (before, after) = unsafe {
-                r.adapter
-                    .solo_gadget_belt(&r.local, r.local.base as u64, game, owner)
-            }?;
-            r.log.info(&format!(
-                "solo Belt native shield: before={before} after={after}"
-            ));
-        }
-        Gadget::Sapper => {
-            if let Some((before, after)) = r.adapter.solo_sapper_backlash(
-                &io::Access {
-                    local: &r.local,
-                    adapter: r.adapter,
-                },
-                game,
-                owner,
-            )? {
-                let point = position;
-                let hits = unsafe {
-                    r.adapter.solo_engineering_burst(
-                        &r.local,
-                        r.local.base as u64,
-                        game,
-                        owner,
-                        point,
-                        true,
-                    )
-                }?;
-                r.log.info(&format!("solo Sapper native explosion: targets={hits} before_hp={before} after_hp={after} maximum_hp={} protected_floor=75%",maximum));
-            }
-        }
         Gadget::ShrinkRay => {
             let scale = match draw % 3 {
-                0 => 0.8,
+                0 => 0.5,
                 1 => 1.,
-                _ => 1.2,
+                _ => 1.5,
             };
             unsafe {
                 r.adapter
@@ -260,7 +220,7 @@ fn activate(
             }?;
             r.log.info(&format!("solo Shrink Ray native visual: scale={scale} until={until} gameplay_fields_changed=false"));
         }
-        Gadget::Mortar => {
+        Gadget::Grenade => {
             let token = {
                 let mut state = STATE.lock().map_err(|_| "Mortar state unavailable")?;
                 let s = state
@@ -303,7 +263,7 @@ fn activate(
                 let receipt = s.mortars.get_mut(&token).ok_or("Mortar receipt disappeared")?;
                 receipt.launch = Some(launch);
                 receipt.expires = launch.arrives + 5.;
-                r.log.info(&format!("Mortar native launched: owner={owner} token={token} target={}", launch.target));
+                r.log.info(&format!("Grenade native launched: owner={owner} token={token} target={}", launch.target));
             } else {
                 s.mortars.remove(&token);
             }
@@ -324,18 +284,21 @@ fn deliver_mortar(
     if launch.target != enemy {
         return Err("Mortar impact target identity changed".into());
     }
+    // The native projectile follows its identified target. Resolve the impact
+    // location now rather than exploding at that target's launch-time position.
+    let Some(point)=r.adapter.support_enemies(&r.local,game)?.into_iter()
+        .find(|e|e.guid==enemy&&e.hp>0.).map(|e|e.position.map(|v|v as f32))else{return Ok(())};
     let hits = unsafe {
-        r.adapter.solo_engineering_burst(
+        r.adapter.solo_grenade_stun(
             &r.local,
             r.local.base as u64,
             game,
             owner,
-            launch.point,
-            false,
+            point,
         )
     }?;
     r.log.info(&format!(
-        "solo Mortar native impact: target={enemy} area_hits={hits} radius=6 original_impact=true"
+        "solo Grenade native impact: target={enemy} stunned_targets={hits} radius=3 original_impact=true"
     ));
     Ok(())
 }
@@ -354,7 +317,7 @@ pub fn wire(game: u64, owner: u64) -> Option<String> {
     let state = STATE.lock().ok()?;
     let s = state.get(&owner).filter(|s| s.game == game)?;
     let e = s.equipment.as_ref()?;
-    let kind = Gadget::ALL.iter().position(|v| *v == e.kind)?;
+    let kind = e.kind as u8;
     let centis = |v: f32| ((v - s.clock).max(0.) * 100.).round().min(60000.) as u32;
     Some(format!(
         "W|{owner}|{}|{kind}|{}|{}\n",

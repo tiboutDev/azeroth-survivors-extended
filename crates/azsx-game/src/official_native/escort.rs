@@ -282,25 +282,6 @@ impl Adapter {
         io.swap_actor(game, host_row)?;
         result.and_then(|value| flush.map(|_| value))
     }
-    /// Do not spend a Sapper health budget in an empty area. This is a copied
-    /// native target observation, not a damage probe or a new combat engine.
-    pub fn solo_sapper_has_target(self, m: &dyn Mem, game: u64, owner: u64) -> Result<bool> {
-        let p = self.solo_gadget_owner(m, game, owner)?;
-        let origin = p.actors[0].position;
-        let (ptr, n) = self.goblin_array(m, game)?;
-        let rows = m.read(ptr, n * v::ENEMY_STRIDE)?;
-        Ok(self.support_enemies(m, game)?.into_iter().any(|e| {
-            e.hp > 0.
-                && (e.position[0] - f64::from(origin[0]))
-                    .hypot(e.position[1] - f64::from(origin[1]))
-                    <= 8.
-                && rows.chunks_exact(v::ENEMY_STRIDE).any(|row| {
-                    u64::from_le_bytes(row[v::ENEMY_GUID..v::ENEMY_GUID + 8].try_into().unwrap())
-                        == e.guid
-                        && ordinary_gadget_target(row)
-                })
-        }))
-    }
     /// Native Entangling Roots effect. Native diminishing returns, aura transport
     /// and motion cancellation remain authoritative; no synthetic root timer.
     pub unsafe fn solo_gadget_net(
@@ -365,34 +346,6 @@ impl Adapter {
             }
         }
         Ok(rooted)
-    }
-    /// Native Power Word: Shield effect and absorption pool. Its native lifetime
-    /// is retained; never clear a possibly stronger player shield on expiry.
-    pub unsafe fn solo_gadget_belt(
-        self,
-        m: &dyn Mem,
-        base: u64,
-        game: u64,
-        owner: u64,
-    ) -> Result<(f32, f32)> {
-        self.solo_gadget_owner(m, game, owner)?;
-        let read = || -> Result<f32> {
-            let v = f32::from_le_bytes(
-                m.read(game + v::SOLO_NATIVE_SHIELD, 4)?
-                    .try_into()
-                    .map_err(|_| "Truncated native shield")?,
-            );
-            if !v.is_finite() || v < 0. {
-                return Err("Invalid native shield".into());
-            }
-            Ok(v)
-        };
-        let before = read()?;
-        let call: NativeGadgetEffect =
-            std::mem::transmute((base + self.native_hit_effect_entry().rva) as usize);
-        invoke_gadget_effect(call, game, owner, 7, 0.20, 17);
-        self.solo_gadget_owner(m, game, owner)?;
-        Ok((before, read()?))
     }
     /// Applied once after each native stat reconstruction, never incremented in
     /// frame updates. The native movement implementation uses the derived value.
@@ -537,6 +490,8 @@ impl Adapter {
         }
         let p = self.solo_gadget_owner(m, game, owner)?;
         let origin = p.actors[0].position;
+        let (ptr,n)=self.goblin_array(m,game)?;
+        let rows=m.read(ptr,n*v::ENEMY_STRIDE)?;
         let mut targets = self
             .support_enemies(m, game)?
             .into_iter()
@@ -545,6 +500,9 @@ impl Adapter {
                     && (e.position[0] - f64::from(origin[0]))
                         .hypot(e.position[1] - f64::from(origin[1]))
                         <= 30.
+                    && rows.chunks_exact(v::ENEMY_STRIDE).any(|row|
+                        u64::from_le_bytes(row[v::ENEMY_GUID..v::ENEMY_GUID+8].try_into().unwrap())==e.guid
+                        && ordinary_gadget_target(row))
             })
             .collect::<Vec<_>>();
         targets.sort_by_key(|e| e.guid);
@@ -598,28 +556,23 @@ impl Adapter {
             arrives,
         }))
     }
-    /// Bounded native damage deliveries. The caller invokes Mortar only after its
+    /// Bounded native control deliveries. The caller invokes the grenade only after its
     /// identified original native projectile impact, never on launch or a timer.
-    pub unsafe fn solo_engineering_burst(
+    pub unsafe fn solo_grenade_stun(
         self,
         m: &dyn Mem,
         base: u64,
         game: u64,
         owner: u64,
         point: [f32; 3],
-        sapper: bool,
     ) -> Result<usize> {
         if point.iter().any(|v| !v.is_finite()) {
             return Err("Invalid engineering explosion".into());
         }
         self.solo_gadget_owner(m, game, owner)?;
-        let radius = if sapper { 8. } else { 6. };
-        let spell = if sapper {
-            v::SOLO_SAPPER_SPELL
-        } else {
-            v::SOLO_MORTAR_SPELL
-        };
-        let amount = if sapper { 100. } else { 70. };
+        let radius = 3.;
+        let (ptr,n)=self.goblin_array(m,game)?;
+        let rows=m.read(ptr,n*v::ENEMY_STRIDE)?;
         let mut targets = self
             .support_enemies(m, game)?
             .into_iter()
@@ -628,14 +581,18 @@ impl Adapter {
                     && (e.position[0] - f64::from(point[0]))
                         .hypot(e.position[1] - f64::from(point[1]))
                         <= radius
+                    && rows.chunks_exact(v::ENEMY_STRIDE).any(|row|
+                        u64::from_le_bytes(row[v::ENEMY_GUID..v::ENEMY_GUID+8].try_into().unwrap())==e.guid
+                        && ordinary_gadget_target(row))
             })
             .collect::<Vec<_>>();
-        targets.sort_by_key(|e| e.guid);
-        type Damage = unsafe extern "system" fn(u64, u64, f32, u32, u32, bool, bool);
-        let call: Damage =
-            std::mem::transmute((base + self.support_proc_entries()[0].rva) as usize);
+        targets.sort_by(|a,b| {
+            let distance = |e: &crate::enemies::EnemyExact| (e.position[0]-f64::from(point[0])).hypot(e.position[1]-f64::from(point[1]));
+            distance(a).total_cmp(&distance(b)).then(a.guid.cmp(&b.guid))
+        });
+        let call: NativeGadgetEffect = std::mem::transmute((base + self.native_hit_effect_entry().rva) as usize);
         let mut hits = 0;
-        for target in targets.into_iter().take(128) {
+        for target in targets.into_iter().take(3) {
             self.solo_gadget_owner(m, game, owner)?;
             let current = self.support_enemies(m, game)?.into_iter().find(|e| {
                 e.guid == target.guid
@@ -644,8 +601,8 @@ impl Adapter {
                         .hypot(e.position[1] - f64::from(point[1]))
                         <= radius
             });
-            let Some(current) = current else { continue };
-            if sapper {
+            let Some(_current) = current else { continue };
+            {
                 let (ptr, n) = self.goblin_array(m, game)?;
                 let rows = m.read(ptr, n * v::ENEMY_STRIDE)?;
                 if !rows.chunks_exact(v::ENEMY_STRIDE).any(|row| {
@@ -656,51 +613,20 @@ impl Adapter {
                     continue;
                 }
             }
-            call(game, target.guid, amount, spell, 2, false, false);
-            if self
-                .combat_hp(m, game, target.guid)?
-                .is_some_and(|hp| f64::from(hp) < current.hp)
-            {
-                hits += 1;
-            }
+            // Native control tags 2/3 share the exact reviewed crowd-control path.
+            // Zero damage; native immunity and diminishing returns remain authoritative.
+            invoke_gadget_effect(call, game, target.guid, 3, 2., v::SOLO_MORTAR_SPELL);
+            let clock=self.solo_gadget_owner(m,game,owner)?.clock;
+            let (ptr,n)=self.goblin_array(m,game)?;
+            let rows=m.read(ptr,n*v::ENEMY_STRIDE)?;
+            if rows.chunks_exact(v::ENEMY_STRIDE).any(|row|
+                u64::from_le_bytes(row[v::ENEMY_GUID..v::ENEMY_GUID+8].try_into().unwrap())==target.guid
+                && f32::from_le_bytes(row[v::SOLO_ENEMY_ROOT_UNTIL..v::SOLO_ENEMY_ROOT_UNTIL+4].try_into().unwrap())>clock) {hits+=1;}
+
         }
         Ok(hits)
     }
-    /// Backlash never spends health at/below 75% maximum HP. The reviewed solo
-    /// native path multiplies by (1 - reduction), then only reduces/absorbs damage
-    /// before subtracting HP. Divide by the actual amplification when reduction is
-    /// negative; do not bypass shields, rewrite HP or resurrect after a lethal hit.
-    pub fn solo_sapper_backlash(
-        self,
-        io: &dyn crate::official::SupportCalls,
-        game: u64,
-        owner: u64,
-    ) -> Result<Option<(f32, f32)>> {
-        let p = self.solo_gadget_owner(io, game, owner)?;
-        let a = &p.actors[0];
-        let before = a.hp;
-        let budget = azsx_gameplay::solo_events::sapper_backlash_budget(a.hp, a.maximum)
-            .ok_or("Invalid Sapper health budget")?;
-        if budget <= 0. {
-            return Ok(None);
-        }
-        let reduction = f32::from_le_bytes(
-            io.read(game + v::SOLO_HURT_REDUCTION, 4)?
-                .try_into()
-                .map_err(|_| "Truncated native incoming reduction")?,
-        );
-        if !reduction.is_finite() || !(-100. ..=100.).contains(&reduction) {
-            return Err("Invalid native incoming reduction".into());
-        }
-        let amount = budget / (1. - reduction).max(1.);
-        io.support_hurt_tagged(game, amount, 0, false, 1, v::SOLO_SAPPER_SPELL)?;
-        let p = self.solo_gadget_owner(io, game, owner)?;
-        let a = &p.actors[0];
-        if a.hp + 0.001 < a.maximum * 0.75 {
-            return Err("Native Sapper backlash crossed the protected health floor".into());
-        }
-        Ok(Some((before, a.hp)))
-    }
+
 }
 #[cfg(test)]
 mod mortar_abi_tests {

@@ -1,4 +1,4 @@
-# AZSX addon contract 1.12
+# AZSX addon contract 1.13
 
 The DLL appends the provider to the selected native WorldStateFrame initialization script.
 Neither `AddOns/ASX` nor `AddOns/AZSX` is installed or required. The retained
@@ -37,7 +37,7 @@ modifies AZSX or snapshots obtained by another consumer.
 
 | Field | Meaning |
 |---|---|
-| `api.major`, `api.minor` | Contract version, currently 1.12 |
+| `api.major`, `api.minor` | Contract version, currently 1.13 |
 | `available` | Boolean; check before accessing run fields |
 | `reason` | When unavailable: `outside_run`, `stale`, or `missing_or_invalid_payload` |
 | `revision` | Monotonic content revision within this Lua environment; not persisted across client reloads |
@@ -191,7 +191,7 @@ remain compatible and must ignore the added field.
 From minor 10, `state.data.crystals` is present from run initialization, including before the first pickup. It contains integer
 `red`, `blue`, `green`, `yellow`, `total`, and the native presentation `index`
 (0–31; 32 means no free native slot). `bonuses` contains accumulated percentage
-values named `damage`, `cooldownRecovery`, `maximumHealth`, `areaOfEffect`.
+values named `damage`, `cooldownRecovery`, `maximumHealth`, `criticalStrikeChance`. The legacy `areaOfEffect` field remains zero for compatibility; yellow crystals now grant critical strike chance.
 `state.texts.crystals` contains the AZSX-authored title, icon, collection note, per-color tooltip `details` and `footer`. Zero counts carry discovery guidance.
 Every getter/handler snapshot remains detached. No crystal position is exposed
 to the minimap bridge. Aura indices are presentation metadata, not identities.
@@ -320,8 +320,8 @@ note, native icon, reward and duration. This is read-only presentation data;
 the native scene remains authoritative.
 
 `data.engineering` appears after extraction. Its `event` is a recipient-scoped
-reward revision, `kind` is one of `net`, `rocket_boots`, `sapper`, `mortar`,
-`shrink_ray`, `protection_belt`, and `nextTrigger` / `remaining` are bounded
+reward revision, `kind` is one of `net`, `rocket_boots`, `grenade`,
+`shrink_ray` (former damaging/shield kinds are retired), and `nextTrigger` / `remaining` are bounded
 centiseconds. `texts.engineering` supplies the native icon, title, description,
 reward and duration. The gadget lasts only for this run and has no rank.
 
@@ -346,3 +346,12 @@ the title, current objective, native icon, reward and duration. The record is
 a detached read-only copy; consuming Banish remains native. A consumer should
 deduplicate a reward by session identity and event, and hide its marker at a
 terminal stage.
+
+## API 1.13: utility gadgets and yellow critical chance
+
+Yellow crystals contribute `criticalStrikeChance` in percentage points; the
+legacy `areaOfEffect` crystal total remains zero. The current engineering kinds
+are `net`, `rocket_boots`, `grenade`, `shrink_ray`. Retired Sapper/Belt records
+are rejected; the native projectile's former Mortar wire slot now identifies
+the zero-damage Stun Grenade. The major-version getters and detached-copy
+contract remain unchanged.

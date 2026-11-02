@@ -4,7 +4,7 @@ This review compares current AZSX rules with the independent [native reference](
 
 ## Implemented first pass
 
-- Crystals: Red +12% damage, Blue +7% cooldown recovery input, Green +15% maximum health, Yellow +12% area. Permanent personal additive gains; existing free color draws, spawn budgets and claims remain.
+- Crystals: Red +12% damage, Blue +7% cooldown recovery input, Green +15% maximum health, Yellow +2 percentage points of critical strike chance. Permanent personal additive gains; existing free color draws, spawn budgets and claims remain.
 - Supplies Recovery: +8/+12/+16%; Vitality: +20/+30/+40% maximum health. Other families, 60-second effects, 90-second reserves and encounter thresholds remain.
 - Defense remains +3/+5/+7 points of damage reduction only. The earlier review incorrectly inferred hidden health from Archimtiros. Generic stat input 5 and jewelry definition kind 5 are distinct dispatch domains: the former adds reduction only, the latter also adds item-specific health. There is no hidden health to subtract. Warding enchantments also use the generic reduction input.
 - Native input restoration, same-family refresh without power stacking, and no free maximum-health heal remain required.

@@ -69,7 +69,7 @@ are freely drawn, so the same color can appear several times.
 | Red | +12% damage |
 | Blue | +7% cooldown recovery |
 | Green | +15% maximum health |
-| Yellow | +12% area of effect |
+| Yellow | +2 percentage points of critical strike chance |
 
 Each player present when a crystal appears can collect it once by passing close
 while alive. Your pickup does not take another player's reward. It also leaves
@@ -450,9 +450,10 @@ size; placement retries if no safe native path is found. There is at most one
 escort in a run; an unsuccessful or expired escort gives no reward. The chicken
 cannot be killed.
 
-The six possible gadgets have no ranks: Net, Rocket Boots, Sapper Charge,
-Mortar, Shrink Ray and Protection Belt. They trigger automatically under their
-own conditions. Sapper's backlash never lowers you below 75% of maximum health.
+The four possible gadgets have no ranks: Net, Rocket Boots, Stun Grenade and
+Shrink Ray. They trigger automatically and deal no damage. Net and Grenade
+control at most three ordinary enemies; Shrink Ray changes appearance only
+(x0.5, x1 or x1.5). The parachute cape remains under feasibility review.
 The optional AZSXUI addon lists the escort beneath the minimap, marks the
 chicken with a native `INV_Misc_EngGizmos_06` minimap icon, and keeps an equipped-gadget
 badge beside the health and Fortune display. The game rules do not require the

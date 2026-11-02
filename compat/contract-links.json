@@ -458,12 +458,6 @@
     "official_native.escort.escort_route": [
       "AZSX-30"
     ],
-    "official_native.escort.solo_engineering_burst": [
-      "AZSX-30"
-    ],
-    "official_native.escort.solo_gadget_belt": [
-      "AZSX-30"
-    ],
     "official_native.escort.solo_gadget_net": [
       "AZSX-30"
     ],
@@ -474,9 +468,6 @@
       "AZSX-30"
     ],
     "official_native.escort.solo_player_scale": [
-      "AZSX-30"
-    ],
-    "official_native.escort.solo_sapper_backlash": [
       "AZSX-30"
     ],
     "official_native.event_placement.clamp_event_health": [
@@ -1550,6 +1541,9 @@
       "AZSX-26",
       "AZSX-27",
       "AZSX-28"
+    ],
+    "official_native.escort.solo_grenade_stun": [
+      "AZSX-30"
     ]
   },
   "evidence": {
@@ -2615,26 +2609,6 @@
       "role": "native-operation",
       "shared": false
     },
-    "official_native.escort.solo_engineering_burst": {
-      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
-      "references": [
-        "crates/azsx-game/src/official_native/escort.rs",
-        "src/runtime/solo_escort.rs",
-        "docs/features/SOLO-ESCORT.md"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.escort.solo_gadget_belt": {
-      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
-      "references": [
-        "crates/azsx-game/src/official_native/escort.rs",
-        "src/runtime/solo_escort.rs",
-        "docs/features/SOLO-ESCORT.md"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
     "official_native.escort.solo_gadget_net": {
       "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
       "references": [
@@ -2666,16 +2640,6 @@
       "shared": false
     },
     "official_native.escort.solo_player_scale": {
-      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
-      "references": [
-        "crates/azsx-game/src/official_native/escort.rs",
-        "src/runtime/solo_escort.rs",
-        "docs/features/SOLO-ESCORT.md"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.escort.solo_sapper_backlash": {
       "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
       "references": [
         "crates/azsx-game/src/official_native/escort.rs",
@@ -4986,6 +4950,16 @@
       ],
       "role": "native-operation",
       "shared": true
+    },
+    "official_native.escort.solo_grenade_stun": {
+      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
+      "references": [
+        "crates/azsx-game/src/official_native/escort.rs",
+        "src/runtime/solo_escort.rs",
+        "docs/features/SOLO-ESCORT.md"
+      ],
+      "role": "native-operation",
+      "shared": false
     }
   },
   "conservative_notes": {

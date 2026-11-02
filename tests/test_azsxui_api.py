@@ -19,7 +19,7 @@ class APITests(unittest.TestCase):
 
     def test_cooperative_information_is_independent_detached_and_lifecycle_bound(self):
         self.cooperative_wire()
-        self.lua.execute('''local s=AZSX_GetState(1);assert(s.api.minor==12 and s.data.cooperativeRules.permanent and s.data.cooperativeRules.priority==1 and s.data.cooperativeRules.areaBonusShare==.5)
+        self.lua.execute('''local s=AZSX_GetState(1);assert(s.api.minor==13 and s.data.cooperativeRules.permanent and s.data.cooperativeRules.priority==1 and s.data.cooperativeRules.areaBonusShare==.5)
 assert(s.texts.cooperativeRules.rule=="Area and range bonuses are 50% effective.")
 s.data.cooperativeRules.areaBonusShare=99;s.texts.cooperativeRules.notes[1]="changed"
 assert(AZSX_GetState().data.cooperativeRules.areaBonusShare==.5 and AZSX_GetState().texts.cooperativeRules.notes[1]=="The stats panel shows effective values.")
@@ -102,7 +102,7 @@ phase="ready";update();assert(objects.BuffButton1.anchor[2]==UIParent)''')
         self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1')
     def test_local_equipment_native_text_copy_isolation_and_zero_item_snapshot(self):
         self.equipment_wire()
-        self.lua.execute('local major,minor=AZSX_GetAPIVersion();assert(major==1 and minor==12);local s=AZSX_GetState(1);assert(s.available and s.data.equipment[1].slot==1 and s.data.equipment[1].rank==2 and s.data.equipment[1].name==nil);assert(s.texts.equipment[1].name=="Native ring" and s.texts.equipment[1].text=="Exact owner text\\n+10 damage");s.texts.equipment[1].name="Mutated";assert(AZSX_GetState(1).texts.equipment[1].name=="Native ring")')
+        self.lua.execute('local major,minor=AZSX_GetAPIVersion();assert(major==1 and minor==13);local s=AZSX_GetState(1);assert(s.available and s.data.equipment[1].slot==1 and s.data.equipment[1].rank==2 and s.data.equipment[1].name==nil);assert(s.texts.equipment[1].name=="Native ring" and s.texts.equipment[1].text=="Exact owner text\\n+10 damage");s.texts.equipment[1].name="Mutated";assert(AZSX_GetState(1).texts.equipment[1].name=="Native ring")')
         self.equipment_wire(header='L|11|0',row='')
         self.lua.execute('local s=AZSX_GetState(1);assert(s.available and table.getn(s.data.equipment)==0 and table.getn(s.texts.equipment)==0)')
     def test_equipment_retains_native_category_and_rejects_unknown_category(self):
@@ -123,16 +123,16 @@ phase="ready";update();assert(objects.BuffButton1.anchor[2]==UIParent)''')
         base = "1|7|11|1\nM|11|0|506c61796572\n"
         solo = "V|11|3|1|2|75|200|1|0|40|120|0|10.5|20.25\nW|11|1|3|450|0\n"
         self.lua.globals().wire = (base + solo).encode().hex()
-        self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1;local s=AZSX_GetState(1);assert(s.available and s.api.minor==12 and s.data.soloEvent.kind=="chicken_escort" and s.data.soloEvent.progress==40 and s.data.soloEvent.total==120 and s.data.soloEvent.x==10.5 and s.data.soloEvent.y==20.25 and s.data.engineering.kind=="mortar" and s.data.engineering.nextTrigger==450 and s.texts.soloEvent.title=="Mechanical Chicken Escort");s.data.engineering.nextTrigger=99;s.data.soloEvent.x=999;s.texts.engineering.title="changed";assert(AZSX_GetState(1).data.engineering.nextTrigger==450 and AZSX_GetState(1).data.soloEvent.x==10.5 and AZSX_GetState(1).texts.engineering.title~="changed")')
+        self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1;local s=AZSX_GetState(1);assert(s.available and s.api.minor==13 and s.data.soloEvent.kind=="chicken_escort" and s.data.soloEvent.progress==40 and s.data.soloEvent.total==120 and s.data.soloEvent.x==10.5 and s.data.soloEvent.y==20.25 and s.data.engineering.kind=="grenade" and s.data.engineering.nextTrigger==450 and s.texts.soloEvent.title=="Mechanical Chicken Escort");s.data.engineering.nextTrigger=99;s.data.soloEvent.x=999;s.texts.engineering.title="changed";assert(AZSX_GetState(1).data.engineering.nextTrigger==450 and AZSX_GetState(1).data.soloEvent.x==10.5 and AZSX_GetState(1).texts.engineering.title~="changed")')
         for bad in ("V|11|3|1|2|75|200|1|0|121|120|0\n", "V|11|3|1|2|75|200|1|0|40|120|0|nan|20\n", "V|11|3|1|2|75|200|1|0|40|120|0|100000000|20\n", "W|11|1|6|450|0\n", "V|22|3|1|2|75|200|1|0|40|120|0\n"):
             self.lua.globals().wire = (base + bad).encode().hex()
             self.lua.execute('AZS_RUN.azsx=wire;AZS_RUN_UPDATED=now;assert(not AZSX_GetState(1).available)')
     def test_cooperative_guest_receives_scaled_route_and_individual_gadget(self):
         text=("1|7|22|1\nM|11|0|486f7374\nM|22|1|4775657374\n"
               "V|22|3|1|2|75|200|1|0|12|28|0|10.5|20.25\n"
-              "W|22|1|2|450|0\n")
+              "W|22|1|3|450|0\n")
         self.lua.globals().wire=text.encode().hex()
-        self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1;local s=AZSX_GetState(1);assert(s.available and s.session.recipientGUID=="22" and s.data.soloEvent.total==28 and s.data.soloEvent.progress==12 and s.data.engineering.kind=="sapper")')
+        self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1;local s=AZSX_GetState(1);assert(s.available and s.session.recipientGUID=="22" and s.data.soloEvent.total==28 and s.data.soloEvent.progress==12 and s.data.engineering.kind=="grenade")')
     def test_short_solo_escort_route_preserves_all_other_state(self):
         text=("1|7|11|1\nM|11|0|506c61796572\n"
               "B|11|1|1|0|1200|1200\n"

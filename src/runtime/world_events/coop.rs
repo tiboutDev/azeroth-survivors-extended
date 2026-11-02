@@ -554,7 +554,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
                     r,
                     game,
                     "Sayge",
-                    "Sayge's trial awaits. Hold the circle to claim your fortune!",
+                    "Sayge's trial awaits. Gather within the circle and complete his ritual!",
                 )?;
                 r.events_info(&format!(
                     "coop ritual spawned: position={point:?} stage={stage}"

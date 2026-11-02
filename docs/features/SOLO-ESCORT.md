@@ -20,7 +20,7 @@ in Naxxramas (44-yard radius) to 180 yards on the largest maps. Every segment
 must pass native terrain and clipping checks. The start and five-yard extraction
 footprints also probe interior navigation cells, not just their centers and rims. Purely visual foliage outside native navigation remains a placement limit.
 A map can still reject an attempt when
-no safe route exists; placement is not guaranteed. The chicken is an
+no safe route exists; placement is not guaranteed. The chicken uses native model scale 4.5 (three times its previous scale). The opening announcement describes the rescue without revealing its reward. The chicken is an
 invulnerable scene actor, not an enemy or ordinary escort quest. The portal
 marks the end of the route.
 
@@ -52,17 +52,15 @@ size, texture or clarity.
 
 ## Run-local gadget
 
-One of six gadgets is drawn freely with no rank, inventory item or permanent
+One of four utility/cosmetic gadgets is drawn freely with no rank, inventory item or permanent
 unlock. It is equipped for the current run and triggers automatically:
 
 | Gadget | Effect |
 | --- | --- |
-| Net | Roots nearby ordinary enemies using native root state. |
+| Net | Roots up to three nearest ordinary enemies within eight yards for up to two seconds, subject to native immunity/diminishing returns. |
 | Rocket Boots | Temporarily add 35% movement speed through native stat reconstruction. |
-| Goblin Sapper Charge | Native bounded explosion with native self-damage, never below 75% maximum HP. |
-| Mortar | Native projectile; a bounded six-yard explosion follows its identified impact. |
-| Shrink Ray | Cosmetic native player scale change only; no gameplay size/reach change. |
-| Protection Belt | Native temporary shield. |
+| Stun Grenade | A native zero-damage projectile; its identified impact controls at most three ordinary enemies within three yards for up to two seconds, subject to native immunity/diminishing returns. Triggers every 25-35 simulation seconds. |
+| Shrink Ray | Cosmetic native player scale x0.5, x1 or x1.5 for six seconds; no gameplay size/reach change. |
 
 Gadget triggers and cooldowns use simulation time. A participant’s death or departure removes that participant’s temporary effects
 and identity; run end removes all remaining effects. No uncertain native launch or grant is retried.
@@ -70,9 +68,9 @@ and identity; run end removes all remaining effects. No uncertain native launch 
 ## Presentation and compatibility
 
 The retained AZSX Lua provider exports structured escort and gadget data via
-API 1.12. AZSXUI displays the objective beneath the minimap, a native-icon
+API 1.13. AZSXUI displays the objective beneath the minimap, a native-icon
 `INV_Misc_EngGizmos_06` marker at the chicken while it is active, and a persistent gadget
-badge beside the health/Fortune medallions after extraction. The marker uses
+badge beside the health/Fortune medallions after extraction. A brief native-textured green pulse marks an activation or active effect without replaying the reward toast. The marker uses
 read-only live scene coordinates and disappears with the scene. Native aura
 templates supply encounter debuff borders. AZSXUI does not own gameplay. The selected 0.138.0 descriptor guards native scene, spline,
 projectile, combat and broadcast contacts. A future client needs a complete
@@ -82,3 +80,16 @@ The requested native `INV_Egg_05` is absent from every 0.138.0 MPQ in the
 reviewed isolated client. No replacement asset is bundled; the available
 `INV_Misc_EngGizmos_06` remains the marker until a future native client supplies
 the egg icon.
+
+### Parachute feasibility
+
+The cape is not an active reward. The reviewed executable contains a generic
+FeatherFall movement concept, but no reviewed Survivors slow-fall operation or
+parachute visual binding is available. A string in the general client is not
+proof of a usable run mechanic. Integration requires a verified falling state,
+a native slow-fall lifecycle, model/effect support and cooperative replication;
+none may be replaced by position writes or a cosmetic-only gameplay claim.
+
+All AZSX scene placement rejects finite samples in the native liquid grid,
+including the host goblin spawn path. This is conservative: elevated dry ground
+above mapped water may also be skipped. Failed placement never grants a reward.

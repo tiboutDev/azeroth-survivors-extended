@@ -368,7 +368,7 @@ pub const LOBBY_NAME: u64 = 0xd0;
 
 pub const SOLO_ENEMY_ELITE: usize = 0x200;
 pub const SOLO_ENEMY_ENCOUNTER: usize = 0x18;
-pub const SOLO_ENEMY_ROOT_UNTIL: usize = 0x1e0;
+pub const SOLO_ENEMY_ROOT_UNTIL: usize = 0x1dc;
 pub const SOLO_NATIVE_SHIELD: u64 = 0x56c;
 pub const SOLO_MORTAR_SPELL: u32 = 13237;
 pub const SOLO_SAPPER_SPELL: u32 = 13241;

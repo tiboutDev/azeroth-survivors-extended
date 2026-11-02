@@ -378,6 +378,7 @@ impl Adapter {
         {
             return Ok(None);
         }
+        let Some(point) = self.event_ground(m, base, game, [point[0],point[1]], 0.5, 2.)? else { return Ok(None); };
         let mut position = [0u8; 16];
         position[..4].copy_from_slice(&1u32.to_le_bytes());
         for (i, v) in point.into_iter().enumerate() {

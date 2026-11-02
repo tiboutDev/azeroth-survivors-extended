@@ -9,8 +9,8 @@ pub enum Color{Red,Blue,Green,Yellow}
 impl Color{
  pub const ALL:[Self;4]=[Self::Red,Self::Blue,Self::Green,Self::Yellow];
  pub fn roll(draw:u32)->Self{Self::ALL[(draw%4)as usize]}
- pub fn percent(self)->u32{[12,7,15,12][self as usize]}
- pub fn stat(self)->u32{[0,1,2,8][self as usize]}
+ pub fn percent(self)->u32{[12,7,15,2][self as usize]}
+ pub fn stat(self)->u32{[0,1,2,3][self as usize]}
  pub fn name(self)->&'static str{["Red Crystal","Blue Crystal","Green Crystal","Yellow Crystal"][self as usize]}
 }
 #[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]pub struct Totals(pub [u32;4]);
@@ -58,7 +58,7 @@ impl Director{
  use super::*;
  #[test]fn mixed_collection_uses_balanced_native_inputs(){
   let mut totals=Totals::default();for color in Color::ALL{assert!(totals.add(color));}assert!(totals.add(Color::Blue));
-  assert_eq!(totals.count(),5);assert_eq!(totals.inputs(),vec![(0,0.12),(1,0.14),(2,0.15),(8,0.12)]);
+  assert_eq!(totals.count(),5);assert_eq!(totals.inputs(),vec![(0,0.12),(1,0.14),(2,0.15),(3,0.02)]);
  }
 
  #[test]fn personal_claims_start_one_shared_deadline_and_keep_model_until_complete(){let ids=[(0,11),(1,22)];let mut c=Crystal::new(1,Color::Red,[0.;3],&ids).unwrap();assert!(!c.done(1000.));assert!(c.claim(1000.,ids[0],[0.;3],true));assert_eq!(c.deadline,Some(1060.));assert!(!c.done(1001.));assert!(!c.claim(1001.,ids[0],[0.;3],true));assert!(c.claim(1059.,ids[1],[0.;3],true));assert_eq!(c.deadline,Some(1060.));assert!(c.done(1059.));}

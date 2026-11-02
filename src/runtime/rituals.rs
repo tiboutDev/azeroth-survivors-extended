@@ -82,7 +82,7 @@ fn tick(r:&dyn Services,game:u64)->Result<(),String>{
    let mut owned=Some(object);
    {let mut state=STATE.lock().map_err(|_|"Ritual state unavailable")?;if let Some(s)=state.as_mut().filter(|s|s.game==game&&s.owner==a.guid&&s.clock==now&&s.ritual.is_none()){s.ritual=Ritual::new(s.encounters,now,point);s.object=owned.take();}}
    if let Some(stale)=owned{unsafe{r.events_remove_ritual_scene(game, &stale)}?;return Ok(())}
-   notice(r,game,"Sayge's trial awaits. Hold the circle to claim your fortune!");r.events_info(&format!("ritual spawned: guid={} position={point:?} clock={now}",guid));
+   notice(r,game,"Sayge's trial awaits. Gather within the circle and complete his ritual!");r.events_info(&format!("ritual spawned: guid={} position={point:?} clock={now}",guid));
   }else{r.events_info("ritual placement: no walkable footprint in bounded sample; retry in 10 simulation seconds");let mut state=STATE.lock().map_err(|_|"Ritual state unavailable")?;if let Some(s)=state.as_mut(){s.next=Some(now+10.);}}
  }
  #[cfg(feature="test-hooks")]if persistence_fixture(){

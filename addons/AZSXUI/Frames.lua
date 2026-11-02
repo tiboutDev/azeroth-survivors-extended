@@ -331,36 +331,62 @@ local function updateEncounters(active)
     local d=debuffs[j]
     if type(d)=="table"and type(d.name)=="string"and d.name~=""and type(d.icon)=="string"and d.icon~=""and(d.permanent or not finite(d.remaining)or d.remaining>0)then
      count=count+1
-     if count<=24 then
+     if count<=16 then
       local icon=row.debuffs[count]
       if not icon then
        local name="AZSXUIEncounter"..i.."Debuff"..count
-       icon=CreateFrame("Button",name,row,"PartyBuffButtonTemplate");icon:SetID(count);icon:SetWidth(18);icon:SetHeight(18)
-       icon.icon=getglobal(name.."Icon");icon.icon:SetAllPoints(icon)
-       icon.border=getglobal(name.."Border");if icon.border then icon.border:Show()end
-       icon.stack=font(icon,9);icon.stack:SetPoint("BOTTOMRIGHT",icon,"BOTTOMRIGHT",2,-1);icon.stack:SetTextColor(1,1,1)
+       icon=CreateFrame("Button",name,row,"TargetDebuffButtonTemplate");icon:SetID(count)
+       icon.icon=getglobal(name.."Icon")
+       icon.border=getglobal(name.."Border")
+       icon.stack=getglobal(name.."Count")
+       local nativeEnter=icon:GetScript("OnEnter")
+       local function nativeIndex(button)
+        if not button.effect or not AZS_TARGET or tostring(AZS_TARGET.id)~=tostring(button.unit)or not UnitDebuff then return nil end
+        local wanted=string.lower(string.gsub(button.effect.icon,"^Interface[\\/]Icons[\\/]",""))
+        local found
+        for index=1,16 do
+         local texture=UnitDebuff("target",index)
+         if texture and string.lower(string.gsub(texture,"^Interface[\\/]Icons[\\/]",""))==wanted then
+          if found then return nil end;found=index
+         end
+        end
+        return found
+       end
        icon:SetScript("OnEnter",function()
-        local effect=this.effect;if not effect then return end
-        GameTooltip:SetOwner(this,"ANCHOR_TOP");GameTooltip:SetText(effect.name,1,1,1)
-        if finite(effect.stacks)and effect.stacks>1 then GameTooltip:AddLine("Stacks: "..math.floor(effect.stacks),1,.82,0)end
-        if finite(effect.remaining)and not effect.permanent then GameTooltip:AddLine(string.format("%.0f s remaining",math.max(0,effect.remaining)),.8,.8,.8)end
-        GameTooltip:Show()
-       end);icon:SetScript("OnLeave",function()GameTooltip:Hide()end)
+        local index=nativeIndex(this)
+        if index and nativeEnter then this:SetID(index);nativeEnter()else GameTooltip:Hide()end
+       end)
+       icon:SetScript("OnUpdate",function()
+        if GameTooltip.IsOwned and GameTooltip:IsOwned(this)then
+         local index=nativeIndex(this)
+         if not index then GameTooltip:Hide()else this:SetID(index);if nativeEnter then nativeEnter()end end
+        end
+       end)
+       icon:SetScript("OnLeave",function()GameTooltip:Hide()end)
        row.debuffs[count]=icon
       end
-      icon.effect=d;icon:ClearAllPoints();icon:SetPoint("TOPLEFT",row,"BOTTOMLEFT",8+math.mod(count-1,12)*23,-3-math.floor((count-1)/12)*22)
-      icon.stack:SetText(finite(d.stacks)and d.stacks>1 and tostring(math.floor(d.stacks))or"")
+      icon.effect=d;icon.unit=b.id
+      local native=getglobal("TargetFrameDebuff"..count)
+      local size=native and native:GetWidth()or(count<=6 and 21 or 17)
+      icon:SetWidth(size);icon:SetHeight(size)
+      if icon.border then
+       local color=DebuffTypeColor and(DebuffTypeColor[d.dispelType or "none"]or DebuffTypeColor.none)
+       if color then icon.border:SetVertexColor(color.r,color.g,color.b)end
+       icon.border:Show()
+      end
+      icon:ClearAllPoints();icon:SetPoint("TOPLEFT",row,"BOTTOMLEFT",8+math.mod(count-1,12)*23,-3-math.floor((count-1)/12)*22)
+      if icon.stack then icon.stack:SetText(finite(d.stacks)and d.stacks>1 and tostring(math.floor(d.stacks))or"")end
       icon.icon:SetTexture(string.find(d.icon,"^Interface[\\/]")and d.icon or("Interface\\Icons\\"..d.icon));icon:Show()
      end
     end
    end end
    for j=count+1,table.getn(row.debuffs)do row.debuffs[j].effect=nil;row.debuffs[j]:Hide()end
    row.debuffCount=count
-   if count>24 then
+   if count>16 then
     row.more:ClearAllPoints();row.more:SetPoint("TOPLEFT",row,"BOTTOMLEFT",286,-25)
-    row.more:SetText("+"..(count-24));row.more:Show()
+    row.more:SetText("+"..(count-16));row.more:Show()
    else row.more:Hide()end
-   offset=offset+31+math.ceil(math.min(count,24)/12)*22
+   offset=offset+31+math.ceil(math.min(count,16)/12)*22
   elseif row then row:Hide();row.more:Hide();for _,icon in ipairs(row.debuffs)do icon.effect=nil;icon:Hide()end end
  end
  encounterHeight=offset;encounters:SetHeight(math.max(1,encounterHeight))

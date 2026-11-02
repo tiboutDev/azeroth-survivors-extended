@@ -504,3 +504,14 @@ normal startup migrates the layout and projects the new DLL. Verify the exact
 old DLL and unchanged native profiles at this step; require the exact new DLL,
 completed migration and actual native coop gameplay after startup. A same-DLL
 layout migration may already pass the initial readiness diagnostic.
+
+### Utility gadget impact regression
+
+`AZSX_TEST_ESCORT_PREVIEW=1` with `AZSX_TEST_GADGET_KIND=grenade` selects
+only the Stun Grenade reward in diagnostic escort trials. Production draws are
+unchanged. Extraction and identity-bound grants remain real; the flag grants
+no gadget directly and is forwarded only by the diagnostic escort fixture.
+Require at least one original projectile impact with an observed native control
+receipt and never more than three affected ordinary targets per impact.
+The impact center follows the identified target's current native position,
+not its former launch-time position. A launch without effective control fails.

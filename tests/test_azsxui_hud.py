@@ -33,6 +33,10 @@ function CreateFrame(kind,name,parent,template)
  function f:SetHighlightTexture(t)self.highlight=t end
  function f:SetScrollChild(v)self.scrollChild=v end
  function f:SetVerticalScroll(v)self.scroll=v end
+ if template=="TargetDebuffButtonTemplate"then
+  create("Font",name.."Count",f)
+  f.scripts.OnEnter=function()GameTooltip:SetUnitDebuff("target",this:GetID())end
+ end
  if name then _G[name]=f end
  return f
 end

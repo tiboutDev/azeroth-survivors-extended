@@ -11,13 +11,15 @@ class EventTests(unittest.TestCase):
         self.lua.execute((ROOT/'addons/AZSXUI/Theme.lua').read_text());self.lua.execute((ROOT/'addons/AZSXUI/Events.lua').read_text());self.lua.execute('tick()')
     def run_lua(self,s):self.lua.execute(s)
     def test_engineering_badge_and_single_reward_toast_follow_local_api(self):
-        self.run_lua('''view.engineering={event=1,kind="mortar",nextTrigger=450,remaining=0,title="Goblin Mortar",description="Native projectile",reward="Goblin Mortar equipped",duration="Until the end of the run",icon="Interface/Icons/INV_Gizmo_01"}
+        self.run_lua('''view.engineering={event=1,kind="grenade",nextTrigger=450,remaining=0,title="Goblin Stun Grenade",description="Native projectile",reward="Goblin Stun Grenade equipped",duration="Until the end of the run",icon="Interface/Icons/INV_Gizmo_01"}
 local original=AZSX_GetState
 function AZSX_GetState(...)local s=original(unpack(arg));s.data.engineering=view.engineering;s.texts.engineering=view.engineering;return s end
 local vitals=CreateFrame("Frame","AZSXUIHudVitals",UIParent);local fortune=CreateFrame("Frame","AZSXUIFortuneMedallion",UIParent);tick();assert(objects.AZSXUIEngineeringBadge:IsShown() and objects.AZSXUIEngineeringBadge.icon.texture==view.engineering.icon and objects.AZSXUIEngineeringBadge.anchor[2]==fortune)
 assert(objects.AZSXUIEngineeringRewardToast:IsShown() and objects.AZSXUIEngineeringRewardToast.reward.text==view.engineering.reward)
 now=now+6;tick();assert(not objects.AZSXUIEngineeringRewardToast:IsShown())
 tick();assert(not objects.AZSXUIEngineeringRewardToast:IsShown())
+view.engineering.nextTrigger=3000;tick();assert(objects.AZSXUIEngineeringBadge.scale>1)
+now=now+2;tick();assert(objects.AZSXUIEngineeringBadge.scale==1)
 view.engineering=nil;tick();assert(not objects.AZSXUIEngineeringBadge:IsShown())''')
     def test_sale_uses_exact_gold_and_native_coin_then_clears_for_a_buff(self):
         self.run_lua('view.owner.discovery.event=2;view.owner.discovery.gold=25;view.owner.discovery.note="Sold for 25 gold";now=now+4;tick();local t=objects.AZSXSupplyDiscoveryToast;assert(t.note.text=="Sold for 25" and t.coin:IsShown() and t.coin.texture=="Interface\\\\MoneyFrame\\\\UI-GoldIcon");view.owner.discovery.event=3;view.owner.discovery.gold=0;view.owner.discovery.note="+10% damage - 60 seconds";now=now+4;tick();assert(not t.coin:IsShown() and string.find(t.note.text,"Duration:",1,true))')

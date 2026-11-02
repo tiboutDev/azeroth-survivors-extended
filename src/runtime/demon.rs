@@ -191,7 +191,7 @@ fn tick(r:&Runtime,game:u64)->Result<(),String>{
                 s.created=now;s.ended=None;s.charge=0;s.inside=false;
                 #[cfg(feature="test-hooks")] { s.preview_present=None; }
                 drop(lock);
-                notice(r,game,"A bound demon awaits. Break the binding and defeat it to gain Banish.");
+                notice(r,game,"A bound demon awaits. Break the binding and face what lies within.");
                 r.log.info(&format!("Banished Demon created: event={serial} variant={variant}"));
             }
         }

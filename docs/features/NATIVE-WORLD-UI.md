@@ -271,3 +271,12 @@ live minimap projection. It has no mouse handler and adds no memory contact.
 The original native arrow remains intact as the fallback; the foreground copy
 hides when metadata is unavailable, pins are disabled or the hero is outside a
 panned view. Its frame level is above every AZSX event/cache/guardian pin.
+
+### Encounter debuff parity
+
+Encounter icons use the actual native `TargetDebuffButtonTemplate`, native
+count children, target-button sizes and `DebuffTypeColor` borders. They retain
+per-entity native debuff data and show at most sixteen icons. Hover forwards the
+native target tooltip only when the selected entity ID and one unique native
+aura icon agree. Unselected, stale or ambiguous auras never borrow another
+entity's tooltip; they remain visible without a fabricated description.

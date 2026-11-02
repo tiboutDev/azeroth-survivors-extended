@@ -36,7 +36,7 @@ annotation. Crystal Resonance replaces the old immutable amulet gem.
 
 Four native UnGoro crystal colors provide personal additive gains per pickup:
 Red +12% damage, Blue +7% cooldown recovery, Green +15% maximum health,
-Yellow +12% area of effect. Color draws are independent and equally likely;
+Yellow +2 percentage points of critical strike chance. Color draws are independent and equally likely;
 repeated colors are allowed. No rarity, pity rotation or ordering against other
 events is applied. All collected bonuses reset at the next run, not on death.
 
@@ -74,8 +74,8 @@ are temporarily borrowed and restored; repeated rebuilds must not accumulate
 bonuses. Preview/apply/improve text must reflect the accepted native rank.
 Native capped rings can remain unenchantable or low-tier. Declined previews retire
 when that actor accepts a validated native reward choice, before reentrant
-creation of the next reward. Accepted kinds stay locked; independent draws may
-still randomly repeat an enchantment.
+creation of the next reward. Accepted kinds stay locked; new draws
+exclude the previous declined enchantment for the same ring. Nonconsecutive repeats remain possible.
 
 Rules: `crystals.rs`, `enchantments.rs`; scene/stat coordination uses bounded
 event/reward services. Retained old gem formats are compatibility/test helpers,
@@ -438,3 +438,12 @@ This covers all contributions to that global stat. Base spell radii, separate
 spell-specific radius mechanics, reductions and solo play remain unchanged.
 The effective stats panel shows the adjusted total; individual item descriptions
 continue to describe nominal bonuses. This rule does not change enemy scaling.
+
+### Dry world-event placement
+
+AZSX-owned crystal, supplies, ritual, demon, escort/debris and goblin spawn
+sites reject finite native liquid-grid samples in addition to navigation and
+height checks. This deliberately also rejects mapped liquid beneath elevated
+ground; no scene is relocated after an uncertain native creation.
+Opening escort, demon and Sayge announcements describe the challenge without
+revealing its reward; success receipts retain the actual reward text.

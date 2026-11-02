@@ -70,10 +70,13 @@ assert(string.find(AZSXUIEncounter1.debuffs[1].icon.texture,"Ability_Gouge",1,tr
 assert(AZSXUIEncounter1.debuffs[1].icon==objects.AZSXUIEncounter1Debuff1Icon and AZSXUIEncounter1.debuffs[1].border==objects.AZSXUIEncounter1Debuff1Border and AZSXUIEncounter1.debuffs[1].border:IsShown())
 assert(AZSXUIEncounter1.debuffs[2].icon.texture=="Interface/Icons/Spell_Shadow_Curse")
 assert(AZSXUIEncounter2.anchor[5]==-53 and AZSXUIEncounter3.anchor[5]==-106)
-this=AZSXUIEncounter1.debuffs[1];this.scripts.OnEnter();assert(GameTooltip.title=="Rend" and GameTooltip.lines[1][1]=="Stacks: 2" and GameTooltip.lines[2][1]=="8 s remaining")
+this=AZSXUIEncounter1.debuffs[1];this.scripts.OnEnter();assert(GameTooltip.hidden)
+AZS_TARGET={id=1};function UnitDebuff(unit,index)assert(unit=="target");if index==2 then return "Interface/Icons/Ability_Gouge"end end
+this.scripts.OnEnter();assert(GameTooltip.title=="Native" and this:GetID()==2)
+AZS_TARGET.id=99;this.scripts.OnEnter();assert(GameTooltip.hidden)
 local many={};for i=1,25 do many[i]={name="Effect "..i,icon="Ability_Gouge",remaining=10}end
 AZS_UNITS={};guardians={};function AZS_GetBosses()return {{id=1,name="Boss",hp=50,hpm=100,debuffs=many}}end
-AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUIEncounter1.debuffs[13].anchor[5]==-25 and AZSXUIEncounter1.more:IsShown() and AZSXUIEncounter1.more:GetText()=="+1")
+AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUIEncounter1.debuffs[13].anchor[5]==-25 and AZSXUIEncounter1.more:IsShown() and AZSXUIEncounter1.more:GetText()=="+9")
 function AZS_GetBosses()return {}end
 AZSXUIFramesController.scripts.OnUpdate();assert(not AZSXUIEncounters:IsShown() and not AZSXUIEncounter1.debuffs[1]:IsShown())
 """)

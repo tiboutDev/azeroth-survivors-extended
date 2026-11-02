@@ -118,6 +118,8 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
    if os.environ.get('AZSX_TEST_ADDON_API')=='1':env['AZSX_TEST_ADDON_API']='1'
    if os.environ.get('AZSX_TEST_ESCORT_PREVIEW')=='1' and players in (1,2) and not normal:
     env['AZSX_TEST_ESCORT_PREVIEW']='1'
+    env['AZSX_TEST_ESCORT_PLAYERS']=str(players)
+    if os.environ.get('AZSX_TEST_GADGET_KIND')=='grenade':env['AZSX_TEST_GADGET_KIND']='grenade'
    if demon_preview and slot==1:env['AZSX_TEST_DEMON_PREVIEW']='1'
    if not normal:env.update(AZSX_LOST_SUPPLIES="0",AZSX_DARKMOON_TRIALS="0")
    if supplies:
@@ -209,7 +211,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
    if focused_event:
     # Keep unrelated card, boss and loot fixtures out of event observations.
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
-    env.update(WOW_ROGUE_AUTOPLAY="0",AZSX_TREASURE_GOBLINS="0",AZSX_LOST_SUPPLIES="0",AZSX_DARKMOON_TRIALS="0")
+    env.update(AZSX_TREASURE_GOBLINS="0",AZSX_LOST_SUPPLIES="0",AZSX_DARKMOON_TRIALS="0")
     (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
    if os.environ.get("AZSX_TEST_OBSERVED_STEPS")=="1":env["AZSX_TEST_OBSERVED_STEPS"]="1"
    if os.environ.get("AZSX_TEST_COOP_UI")=="1":env["AZSX_TEST_COOP_UI"]="1"
@@ -531,6 +533,11 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
                   escort_group_pause_resume=any(sequence[i:i+3]==['true','false','true'] for i in range(len(sequence)-2)),
                   escort_two_individual_gadgets={int(slot) for slot,_,_ in equipped}==set(range(players)),
                   escort_guest_api=all(any(row.get("available") is True and isinstance(row.get("event"),dict) for row in rows) and any(row.get("available") is True and isinstance(row.get("gadget"),dict) for row in rows) for rows in escort_rows))
+   if escort_preview and os.environ.get("AZSX_TEST_GADGET_KIND")=="grenade":
+    impacts=[int(v) for v in re.findall(r"solo Grenade native impact:.*stunned_targets=(\d+)",host)]
+    checks.update(grenade_native_impact=bool(impacts) and any(v>0 for v in impacts),
+                  grenade_target_cap=all(0<=v<=3 for v in impacts),
+                  grenade_equipped_all={int(slot) for slot,_,kind in equipped if kind=="Grenade"}==set(range(players)))
    if demon_preview:
     checks={k:checks[k] for k in ("clients_alive","started","clean_scripts","clean_adapter","startup_ack","coop_joined","equal_progression","shared_wallet","group_pause") if k in checks}
     states=re.findall(r"demon preview group: inside=(true|false) held=([0-9.]+)",host)

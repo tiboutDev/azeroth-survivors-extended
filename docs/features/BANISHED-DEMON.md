@@ -27,6 +27,8 @@ invented item, mark or talent. The reward is reserved before the native write
 and cannot be repeated by a later callback. The cooperative counter is
 game-local; it is not an independent per-participant inventory.
 
+The opening announcement presents the binding and challenge without revealing the reward.
+
 The optional AZSXUI addon shows the encounter under Objectives, places a native
 `Spell_Shadow_Cripple` minimap marker at the binding while active and displays
 a one-time reward toast. API `data.soloEvent` provides the same structured

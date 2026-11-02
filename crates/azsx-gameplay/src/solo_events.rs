@@ -333,44 +333,33 @@ impl Engagement {
     }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u8)]
 pub enum Gadget {
-    Net,
-    RocketBoots,
-    Sapper,
-    Mortar,
-    ShrinkRay,
-    ProtectionBelt,
+    Net = 0,
+    RocketBoots = 1,
+    Grenade = 3,
+    ShrinkRay = 4,
 }
 impl Gadget {
-    pub const ALL: [Self; 6] = [
-        Self::Net,
-        Self::RocketBoots,
-        Self::Sapper,
-        Self::Mortar,
-        Self::ShrinkRay,
-        Self::ProtectionBelt,
-    ];
+    pub const ALL: [Self; 4] = [Self::Net, Self::RocketBoots, Self::Grenade, Self::ShrinkRay];
     pub fn interval(self) -> (u32, u32) {
         match self {
             Self::Net => (12, 20),
             Self::RocketBoots => (16, 25),
-            Self::Sapper => (25, 40),
-            Self::Mortar => (15, 25),
+            Self::Grenade => (25, 35),
             Self::ShrinkRay => (10, 18),
-            Self::ProtectionBelt => (18, 30),
         }
     }
     pub fn duration(self) -> f32 {
         match self {
             Self::Net => 2.,
             Self::RocketBoots => 2.,
-            Self::Sapper | Self::Mortar => 0.,
+            Self::Grenade => 0.,
             Self::ShrinkRay => 6.,
-            Self::ProtectionBelt => 0.,
         }
     }
     pub fn ordinary_only(self) -> bool {
-        matches!(self, Self::Net | Self::Sapper)
+        matches!(self, Self::Net | Self::Grenade)
     }
 }
 #[derive(Clone, Debug)]
@@ -439,16 +428,6 @@ impl Equipment {
         true
     }
 }
-/// Prototype: raw backlash is at most 15% maximum HP, and never spends the
-/// final 75% of maximum health. A small reserve prevents f32 subtraction rounding
-/// from crossing the boundary. Native defenses can reduce the actual cost.
-pub fn sapper_backlash_budget(hp: f32, maximum: f32) -> Option<f32> {
-    if !hp.is_finite() || !maximum.is_finite() || hp < 0. || maximum <= 0. {
-        return None;
-    }
-    Some((hp - maximum * 0.75 - 0.01).max(0.).min(maximum * 0.15))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -739,7 +718,7 @@ mod tests {
         assert!(!e.acquire(id(), false));
     }
     #[test]
-    fn all_six_gadgets_have_bounded_delays_and_one_effect() {
+    fn all_active_gadgets_have_bounded_delays_and_one_effect() {
         for kind in Gadget::ALL {
             let mut g = Equipment::new(kind, 0., u32::MAX).unwrap();
             assert!(!g.trigger(1., true, true, 0));
@@ -760,30 +739,9 @@ mod tests {
         let mut g = Equipment::new(Gadget::RocketBoots, 0., 0).unwrap();
         assert!(g.trigger(16., true, true, 0));
         assert_eq!(g.effect_until(), 18.);
-        assert!(g.replace(Gadget::ProtectionBelt, 17., 0));
+        assert!(g.replace(Gadget::Net, 17., 0));
         assert_eq!(g.effect_until(), 17.);
         assert!(!g.trigger(18., true, true, 0));
-    }
-    #[test]
-    fn sapper_floor_is_seventy_five_percent_and_low_health_cannot_pay() {
-        assert!(Gadget::Net.ordinary_only() && Gadget::Sapper.ordinary_only());
-        assert_eq!(sapper_backlash_budget(75., 100.), Some(0.));
-        assert_eq!(sapper_backlash_budget(40., 100.), Some(0.));
-        assert!((sapper_backlash_budget(100., 100.).unwrap() - 15.).abs() < 0.0001);
-        assert!(sapper_backlash_budget(f32::NAN, 100.).is_none());
-        assert!(sapper_backlash_budget(1., 0.).is_none());
-        for maximum in [1., 97., 174., 1000., 100000.] {
-            for percent in 0..=100 {
-                let hp = maximum * percent as f32 / 100.;
-                let cost = sapper_backlash_budget(hp, maximum).unwrap();
-                assert!(cost >= 0. && cost <= maximum * 0.15);
-                if cost > 0. {
-                    assert!(hp - cost >= maximum * 0.75);
-                } else {
-                    assert_eq!(hp - cost, hp);
-                }
-            }
-        }
     }
 }
 

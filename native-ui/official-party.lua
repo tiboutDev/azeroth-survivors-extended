@@ -145,7 +145,8 @@ local function decode(wire)
                 local revision,kind=integer(a[3],1,1e9),integer(a[4],0,5)
                 local nextTrigger,effect=integer(a[5],0,60000),integer(a[6],0,60000)
                 if not revision or kind==nil or not nextTrigger or not effect or result.members[id].engineering then return nil end
-                local kinds={"net","rocket_boots","sapper","mortar","shrink_ray","protection_belt"}
+                local kinds={[1]="net",[2]="rocket_boots",[4]="grenade",[5]="shrink_ray"}
+                if not kinds[kind+1] then return nil end
                 result.members[id].engineering={event=revision,kind=kinds[kind+1],nextTrigger=nextTrigger,remaining=effect}
             elseif a[1]=="R" and (table.getn(a)==5 or table.getn(a)==6) and result.members[id] then
                 local event,held,inside=integer(a[3],1,4294967295),integer(a[4],0,2000),integer(a[5],0,1)
@@ -491,7 +492,7 @@ local function crystalPresentation(c)
             {"red","Red",12,"Damage","ffff6060"},
             {"blue","Blue",7,"Cooldown recovery","ff609fff"},
             {"green","Green",15,"Maximum health","ff50d870"},
-            {"yellow","Yellow",12,"Area of effect","ffffd050"},
+            {"yellow","Yellow",2,"Critical strike chance","ffffd050"},
         })do
             local count=c[row[1]]
             if count>0 then
@@ -702,7 +703,7 @@ local function apiState()
     local own=allowed and supplyOwner()or nil
     local input=phase..":"..tostring(own~=nil)..":"..tostring(AZS_RUN_UPDATED)..":"..tostring(modelWire)
     if apiCache and input==apiInput then return apiCache end
-    local state={api={major=1,minor=12},available=own~=nil,phase=phase,data={},texts={}}
+    local state={api={major=1,minor=13},available=own~=nil,phase=phase,data={},texts={}}
     if own then
         state.session={epoch=model.epoch,recipientGUID=model.own}
         state.data={sharedEconomy=apiCopy(own.economy),crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),soloEvent=apiCopy(own.soloEvent),engineering=apiCopy(own.engineering),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
@@ -726,13 +727,13 @@ local function apiState()
         local crystalText
         if state.data.crystals then
             local c=state.data.crystals
-            c.bonuses={damage=c.red*12,cooldownRecovery=c.blue*7,maximumHealth=c.green*15,areaOfEffect=c.yellow*12}
+            c.bonuses={damage=c.red*12,cooldownRecovery=c.blue*7,maximumHealth=c.green*15,areaOfEffect=0,criticalStrikeChance=c.yellow*2}
             local presentation=crystalPresentation(c)
             crystalText={title="Crystal Resonance",icon=crystalIcon,note=presentation.summary,details=presentation.details,footer=presentation.footer}
             crystalText.pickups={}
             local names={"Red","Blue","Green","Yellow"}
             local keys={"red","blue","green","yellow"}
-            local gains={"+12% damage","+7% cooldown recovery","+15% maximum health","+12% area of effect"}
+            local gains={"+12% damage","+7% cooldown recovery","+15% maximum health","+2% critical strike chance"}
             local colors={{1,.25,.2},{.3,.65,1},{.12,1,0},{1,.82,0}}
             for i,key in ipairs(keys)do
                 crystalText.pickups[key]={title=names[i].." Crystal collected",reward=gains[i],note="Crystal Resonance - lasts until the end of the run.",icon=crystalIcon,color={.12,1,0},titleColor=colors[i]}
@@ -766,9 +767,9 @@ local function apiState()
         end
         if state.data.engineering then
             local e=state.data.engineering
-            local names={net="Gnomish Net",rocket_boots="Goblin Rocket Boots",sapper="Goblin Sapper Charge",mortar="Goblin Mortar",shrink_ray="Gnomish Shrink Ray",protection_belt="Gnomish Harm Prevention Belt"}
-            local icons={net="Ability_Ensnare",rocket_boots="Spell_Fire_Fire",sapper="Spell_Fire_SelfDestruct",mortar="Spell_Fire_SelfDestruct",shrink_ray="Spell_Ice_MagicDamage",protection_belt="Spell_Holy_PowerWordShield"}
-            local descriptions={net="Roots up to three nearby ordinary enemies.",rocket_boots="A two-second movement speed burst.",sapper="Fire explosion against ordinary enemies. Backlash cannot lower health below 75%.",mortar="Native projectile with area damage at impact.",shrink_ray="Changes appearance for six seconds. Cosmetic only.",protection_belt="Grants a native shield with native absorption and expiry."}
+            local names={net="Gnomish Net",rocket_boots="Goblin Rocket Boots",grenade="Goblin Stun Grenade",shrink_ray="Gnomish Shrink Ray"}
+            local icons={net="Ability_Ensnare",rocket_boots="Spell_Fire_Fire",grenade="Spell_Fire_SelfDestruct",shrink_ray="Spell_Ice_MagicDamage"}
+            local descriptions={net="Roots up to three nearby ordinary enemies.",rocket_boots="A two-second movement speed burst.",grenade="Stuns up to three ordinary enemies within three yards for two seconds. Deals no damage.",shrink_ray="Changes appearance for six seconds. Cosmetic only."}
             state.texts.engineering={title=names[e.kind],icon="Interface\\Icons\\"..icons[e.kind],description=descriptions[e.kind],reward=names[e.kind],duration="Until the end of the run"}
         end
         if own.economy then
@@ -787,7 +788,7 @@ local function apiState()
     state.updatedAt=own and modelTime or nil
     apiCache=state;apiInput=input;return state
 end
-function AZSX_GetAPIVersion()return 1,12 end
+function AZSX_GetAPIVersion()return 1,13 end
 function AZSX_GetState(major)
     if major~=nil and major~=1 then return nil,"unsupported_version"end
     return apiCopy(apiState())

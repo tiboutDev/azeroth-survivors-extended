@@ -67,7 +67,30 @@ impl Adapter {
         }
         Ok(area)
     }
+    /// The reviewed height getter overlays this half-yard liquid grid on terrain.
+    /// Reject any finite liquid sample conservatively, including water beneath
+    /// elevated ground. Never confuse a navigable water surface with dry land.
+    fn event_dry(self, m: &dyn Mem, terrain: u64, p: [f32; 2]) -> Result<bool> {
+        let grid = terrain + 0xa8;
+        let cap = q(m, grid)?;
+        if cap == u64::MAX { return Ok(true); }
+        let ptr = q(m, grid+8)?;
+        let len = q(m, grid+16)?;
+        let dim = q(m, grid+24)?;
+        if dim == 0 && len == 0 { return Ok(true); }
+        if dim == 0 || dim > 16384 || len > cap || len < dim*dim
+            || cap > 256*1024*1024 || ptr < 0x10000 {
+            return Err("Invalid native event liquid grid".into());
+        }
+        let x = ((p[0]-f(m,grid+32)?)*2.).floor();
+        let y = ((p[1]-f(m,grid+36)?)*2.).floor();
+        if x < 0. || y < 0. || x >= dim as f32 || y >= dim as f32 { return Ok(true); }
+        let raw = m.read(ptr+(y as u64*dim+x as u64)*4,4)?;
+        let level = f32::from_le_bytes(raw.try_into().map_err(|_|"Truncated event liquid sample")?);
+        Ok(level.is_nan())
+    }
     fn event_walkable(self, m: &dyn Mem, terrain: u64, p: [f32; 2]) -> Result<bool> {
+        if !self.event_dry(m,terrain,p)? { return Ok(false); }
         let grid = terrain + 0x40;
         let cap = q(m, grid)?;
         if cap == u64::MAX {
@@ -253,5 +276,30 @@ mod tests {
             );
             assert_eq!(height(absent as *const () as usize, 0x123, 2., 3.), None);
         }
+    }
+}
+
+#[cfg(test)]
+mod dry_site_tests {
+    use super::*;
+    struct Bytes(Vec<u8>);
+    impl Mem for Bytes {
+        fn read(&self, at:u64, len:usize)->Result<Vec<u8>> {
+            self.0.get(at as usize..at as usize+len).map(|v|v.to_vec()).ok_or_else(||"Out of fixture".into())
+        }
+    }
+    fn grid(level:f32)->Bytes {
+        let mut m=Bytes(vec![0;0x12000]);let g=0x1000+0xa8;
+        for (at,value) in [(g,4u64),(g+8,0x11000),(g+16,4),(g+24,2)] {m.0[at..at+8].copy_from_slice(&value.to_le_bytes());}
+        for n in 0..4 {m.0[0x11000+n*4..0x11004+n*4].copy_from_slice(&level.to_le_bytes());}m
+    }
+    #[test]fn liquids_are_rejected_even_when_navigation_would_allow_them(){
+        let a=Adapter::select(v::SHA256).unwrap();
+        for level in [-10.,0.,12.,f32::INFINITY] {assert!(!a.event_dry(&grid(level),0x1000,[0.25,0.25]).unwrap());}
+        assert!(a.event_dry(&grid(f32::NAN),0x1000,[0.25,0.25]).unwrap());
+        let mut absent=grid(0.);absent.0[0x10a8..0x10b0].copy_from_slice(&u64::MAX.to_le_bytes());
+        assert!(a.event_dry(&absent,0x1000,[0.25,0.25]).unwrap());
+        let mut malformed=grid(0.);malformed.0[0x10c0..0x10c8].copy_from_slice(&0u64.to_le_bytes());
+        assert!(a.event_dry(&malformed,0x1000,[0.25,0.25]).is_err());
     }
 }
