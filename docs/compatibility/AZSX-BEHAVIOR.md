@@ -3,11 +3,10 @@
 Use the [compatibility checklist](COMPATIBILITY-CHECKLIST.md) for execution order; this catalog owns the expected behavior criteria.
 
 Maintained acceptance reference for **current main source**, reviewed against
-official **0.138.0**. Covers all AZSX-01–AZSX-29 features, including disabled and
-upstream-owned behavior. This is not proof that an installed DLL or published
-archive passes these requirements. Uncommitted source fixes are not automatically
-in a prepared release. Separate event-branch experiments (escort, gadgets, heroes)
-are outside this baseline until deliberately integrated.
+official **0.138.0**. Covers AZSX-01–AZSX-31, including disabled and upstream-owned behavior.
+This is not proof that an installed DLL or published archive passes these requirements.
+Uncommitted source fixes are not automatically in a prepared release.
+The turret experiment remains outside this baseline.
 
 ## Maintenance and use
 
@@ -495,3 +494,18 @@ Candidate profiles: `rules`, `official`, `official-party-ui`, `azsxui`. [Scenari
 | AZSX-30.05 | Native effects | Net roots ordinary nearby enemies; Boots use native movement reconstruction; Belt grants a native shield; Mortar launches a native projectile and applies one bounded AoE after impact; Shrink Ray changes only visual scale. |
 | AZSX-30.06 | Sapper safety | Native self-damage/shields/reduction apply, never lowering health below 75% maximum; defer activation without a health budget. Native enemies receive the bounded explosion once. |
 | AZSX-30.07 | Compatibility boundary | Exact 0.138.0 executable and selected entry bytes, fields, actor identity and source guard activation. Missing or changed contacts disable the escort; do not substitute guessed offsets or synthetic rewards. |
+
+
+### AZSX-31 — Banished Demon
+
+Mode: **Solo, Coop**. Disposition: **active**. Details: [Contract](../features/BANISHED-DEMON.md).
+
+Candidate profiles: `rules`, `official`, `official-party-ui`, `azsxui`. [Scenario mappings and limits](../../compat/feature-validation.json).
+
+| Criterion | Trigger / case | Required outcome |
+| --- | --- | --- |
+| AZSX-31.01 | Schedule and placement | Host draws a first opportunity at 90–150 simulation seconds and later opportunities 180–300 seconds apart; failed ground placement can retry. No simultaneous Mechanical Chicken escort. Native rune, captive demon and warlock scene, with one of three coherent native demon kits and no external assets. |
+| AZSX-31.02 | Group preparation | Every active participant alive and within four yards. Two cumulative seconds release one native hostile demon; departure suspends without resetting. Scene expires after four simulation minutes or on run teardown. |
+| AZSX-31.03 | Reward | A confirmed native death grants exactly one shared native Banish charge, consumed by native card choice. Missing enemy row, expiry, uncertain write and duplicate callback grant nothing extra. No ordinary XP, gold or boss reward from the event definition. |
+| AZSX-31.04 | Presentation | Detached API exposes the current recipient's structured event in solo and coop. Optional AZSXUI shows an objective, native-icon marker and one terminal reward toast; unrelated UI state survives. |
+| AZSX-31.05 | Compatibility boundary | Guard exact 0.138.0 Banish, demon definition, native spawn, world scene and broadcast contacts. Changed contacts disable the encounter rather than guessing. |

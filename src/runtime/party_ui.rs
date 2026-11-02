@@ -240,7 +240,8 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
     // server/HUD serializer. This restored presentation boundary owns its cache.
     if let Some(r)=RUNTIME.get().filter(|r|r.rules){
         lifecycle::refresh_solo(r,game as u64);
-        if r.solo.lock().ok().is_some_and(|p|p.is_some()){blessings::finish(r,game as u64);super::supplies::finish(r,game as u64);super::rituals::finish(r,game as u64);super::crystals::finish(r,game as u64);super::solo_escort::finish(r,game as u64);}
+        if r.solo.lock().ok().is_some_and(|p|p.is_some()){
+        blessings::finish(r,game as u64);super::supplies::finish(r,game as u64);super::rituals::finish(r,game as u64);super::crystals::finish(r,game as u64);super::solo_escort::finish(r,game as u64);super::demon::finish(r,game as u64);}
     }
     let result = original(output, game, native_context);
     #[cfg(feature="test-hooks")]
@@ -270,7 +271,7 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
                     if let Some(items)=STATE.lock().ok().and_then(|state|state.as_ref().and_then(|s|s.builds.get(&actor.guid).map(|b|local_equipment_notes(b,actor.guid,&s.enchantments)))){text.push_str(&items);}
                     if let Some(drops)=STATE.lock().ok().and_then(|state|state.as_ref().map(|s|drop_wire(s,actor.guid))){text.push_str(&drops);}
                     if let Some(row)=super::crystals::wire(game as u64,(0,actor.guid)){text.push_str(&row);}
-                    if let Some(row)=super::solo_escort::wire(game as u64,actor.guid){text.push_str(&row);}
+                    if let Some(row)=super::demon::wire(game as u64,actor.guid).or_else(||super::solo_escort::wire(game as u64,actor.guid)){text.push_str(&row);}
                     if let Some(row)=super::solo_gadgets::wire(game as u64,actor.guid){text.push_str(&row);}
                     if let Some(b)=blessings::view(0,actor.guid){text.push_str(&format!("B|{}|{}|{}|{}|{}|{}\n",actor.guid,b.boss,b.category,b.rarity,b.amount,b.amount));if let Some(receipt)=blessings::receipt(0,actor.guid){text.pop();text.push_str(&format!("|{receipt}\n"));}}
                     if let Some((event,held,inside))=super::rituals::view(game as u64,actor.guid){text.push_str(&format!("R|{}|{event}|{held}|{}|{}\n",actor.guid,u8::from(inside),u8::from(inside)));}
@@ -349,7 +350,7 @@ fn event_text(r:&Runtime,game:u64,slot:u32)->String{
  #[cfg(feature="test-hooks")]
  if std::env::var("AZSX_TEST_COOP_UI").as_deref()==Ok("1") {static SAMPLES:AtomicUsize=AtomicUsize::new(0);let n=SAMPLES.fetch_add(1,Ordering::Relaxed);if n<3000&&n%100==0{r.log.info(&format!("coop economy diagnostic: slot={slot} owner={owner} xp={:?} gold={:?} actors={:?}",super::xp_hooks::services::effective_multiplier(r),super::wallet::effective_multiplier(r,game,actor),party.actors.iter().map(|a|(a.slot,a.xp_multiplier,a.gold_multiplier)).collect::<Vec<_>>()));}}
  text.push_str(&economy_wire(owner,super::xp_hooks::services::effective_multiplier(r),super::wallet::effective_multiplier(r,game,actor)));
- if let Some(row)=super::solo_escort::wire(game,owner){text.push_str(&row);}
+ if let Some(row)=super::demon::wire(game,owner).or_else(||super::solo_escort::wire(game,owner)){text.push_str(&row);}
  if let Some(row)=super::solo_gadgets::wire(game,owner){text.push_str(&row);}
  if let Some((event,held,inside))=super::world_events::coop::view(game,owner){text.push_str(&format!("R|{owner}|{event}|{held}|{}|{}\n",u8::from(inside),u8::from(super::world_events::coop::all_inside(game))));}
  for(c,remaining,index)in super::supplies::buffs(game,owner){if index<32&&remaining>0.{text.push_str(&format!("C|{owner}|{}|{}|{}|{index}|{}|{}|{}\n",c.family as u8,c.tier,remaining.ceil()as u32,hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}

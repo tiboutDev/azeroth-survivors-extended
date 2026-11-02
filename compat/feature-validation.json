@@ -274,6 +274,22 @@
         "limit": "A bounded trial may not exercise all six random gadgets or observe a full normal post-boss route; report these separately from portable and diagnostic evidence. Purely visual tree models absent from native navigation require separate scenery evidence.",
         "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
       }
+    },
+    "AZSX-31": {
+      "profiles": [
+        "rules",
+        "official",
+        "official-party-ui",
+        "azsxui"
+      ],
+      "scope_note": "Portable group-presence, stage and one-time reward policy; exact 0.138.0 Banish/definition/spawn guard and Windows ABI checks. Native fight, guest projection and visual presentation require artifact-scoped solo and two-client trials.",
+      "targeted_scenario": {
+        "profile": "official",
+        "trigger": "In an isolated 0.138.0 solo run and then two-client coop run, approach the bound demon, have one participant leave and return during preparation, defeat the released native demon and inspect both participants.",
+        "expected": "One shared host-created scene; preparation suspends and resumes; one native demon fight and exactly one shared native Banish charge; guest API/objective/marker agree; no duplicate reward or HUD interruption.",
+        "limit": "A bounded diagnostic uses an accelerated first opportunity and participant positioning. Normal random cadence and all three kits require separate scope; the static binding scene has no unreviewed channel animation.",
+        "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
+      }
     }
   }
 }

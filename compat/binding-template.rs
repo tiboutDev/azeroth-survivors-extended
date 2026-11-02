@@ -159,6 +159,18 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 {{BONUS_NODE_ALIGN_ITEMS}}
 {{BONUS_ALIGN_START}}
 
+// Optional Banished Demon contacts, exact selected image.
+{{DEMON_BANISH_OFFSET}}
+{{DEMON_BANISH_READ}}
+{{DEMON_BANISH_CONSUME}}
+{{DEMON_BANISH_SERIALIZE}}
+{{DEMON_BANISH_ACTION}}
+{{DEMON_DEFINITIONS}}
+{{DEMON_ENTRIES}}
+{{DEMON_DISPLAYS}}
+{{DEMON_EVENT_ENTRY}}
+
+
 // Optional Treasure Goblin contacts; checked separately from required AZSX activation.
 {{GOBLIN_SPAWN}}
 {{GOBLIN_DEFINITION}}

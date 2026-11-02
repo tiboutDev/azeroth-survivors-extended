@@ -341,6 +341,27 @@
     "official_native.combat_text.resolve_with_native_parts": [
       "AZSX-24"
     ],
+    "official_native.demon.demon_banish_count": [
+      "AZSX-31"
+    ],
+    "official_native.demon.demon_definition": [
+      "AZSX-31"
+    ],
+    "official_native.demon.demon_entries": [
+      "AZSX-31"
+    ],
+    "official_native.demon.demon_grant_banish": [
+      "AZSX-31"
+    ],
+    "official_native.demon.demon_query": [
+      "AZSX-31"
+    ],
+    "official_native.demon.demon_scene": [
+      "AZSX-31"
+    ],
+    "official_native.demon.demon_spawn": [
+      "AZSX-31"
+    ],
     "official_native.duplicate_loot.loot_actor_gold": [
       "AZSX-03",
       "AZSX-21"
@@ -2231,6 +2252,76 @@
       "references": [
         "crates/azsx-game/src/official_native/combat_text.rs",
         "src/runtime/combat_text.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.demon.demon_banish_count": {
+      "reason": "Exact 0.138.0 native contact used by the host-owned Banished Demon scene or its shared Banish reward; selected-image guards and the run source check precede use. Live behavior requires solo and two-client receipts.",
+      "references": [
+        "crates/azsx-game/src/official_native/demon.rs",
+        "src/runtime/demon.rs",
+        "docs/features/BANISHED-DEMON.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.demon.demon_definition": {
+      "reason": "Exact 0.138.0 native contact used by the host-owned Banished Demon scene or its shared Banish reward; selected-image guards and the run source check precede use. Live behavior requires solo and two-client receipts.",
+      "references": [
+        "crates/azsx-game/src/official_native/demon.rs",
+        "src/runtime/demon.rs",
+        "docs/features/BANISHED-DEMON.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.demon.demon_entries": {
+      "reason": "Exact 0.138.0 native contact used by the host-owned Banished Demon scene or its shared Banish reward; selected-image guards and the run source check precede use. Live behavior requires solo and two-client receipts.",
+      "references": [
+        "crates/azsx-game/src/official_native/demon.rs",
+        "src/runtime/demon.rs",
+        "docs/features/BANISHED-DEMON.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.demon.demon_grant_banish": {
+      "reason": "Exact 0.138.0 native contact used by the host-owned Banished Demon scene or its shared Banish reward; selected-image guards and the run source check precede use. Live behavior requires solo and two-client receipts.",
+      "references": [
+        "crates/azsx-game/src/official_native/demon.rs",
+        "src/runtime/demon.rs",
+        "docs/features/BANISHED-DEMON.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.demon.demon_query": {
+      "reason": "Exact 0.138.0 native contact used by the host-owned Banished Demon scene or its shared Banish reward; selected-image guards and the run source check precede use. Live behavior requires solo and two-client receipts.",
+      "references": [
+        "crates/azsx-game/src/official_native/demon.rs",
+        "src/runtime/demon.rs",
+        "docs/features/BANISHED-DEMON.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.demon.demon_scene": {
+      "reason": "Exact 0.138.0 native contact used by the host-owned Banished Demon scene or its shared Banish reward; selected-image guards and the run source check precede use. Live behavior requires solo and two-client receipts.",
+      "references": [
+        "crates/azsx-game/src/official_native/demon.rs",
+        "src/runtime/demon.rs",
+        "docs/features/BANISHED-DEMON.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.demon.demon_spawn": {
+      "reason": "Exact 0.138.0 native contact used by the host-owned Banished Demon scene or its shared Banish reward; selected-image guards and the run source check precede use. Live behavior requires solo and two-client receipts.",
+      "references": [
+        "crates/azsx-game/src/official_native/demon.rs",
+        "src/runtime/demon.rs",
+        "docs/features/BANISHED-DEMON.md"
       ],
       "role": "native-operation",
       "shared": false

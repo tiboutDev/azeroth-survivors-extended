@@ -226,6 +226,7 @@ unsafe extern "system" fn damage(
     };
     original(game, enemy, amount, spell, school, flag, extra);
     if goblin {super::treasure_goblins::hit_complete(r,game,enemy,spell);}
+    super::demon::hit_complete(r,game,enemy);
     let after = before.and_then(|_| r.adapter.combat_hp(&r.local, game, enemy).ok().flatten());
     if let (Some(strength), Some(before), Some(after)) = (strength, before, after) {
         if before > after {

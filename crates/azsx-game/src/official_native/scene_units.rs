@@ -76,7 +76,7 @@ impl Adapter {
     pub unsafe fn event_chicken(self, m: &dyn MutableMemory, base: u64, game: u64, position: [f32; 3]) -> Result<EventObject> {
         self.event_scene_unit(m, base, game, position, 0xa50030, 6909, 1.5, "Mechanical Chicken", "Escort to extraction")
     }
-    unsafe fn event_scene_unit(
+    pub(super) unsafe fn event_scene_unit(
         self,
         m: &dyn MutableMemory,
         base: u64,

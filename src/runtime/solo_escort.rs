@@ -66,6 +66,9 @@ fn notice(r:&Runtime,g:u64,text:&str) {
     let access=io::Access{local:&r.local,adapter:r.adapter};
     let _=unsafe{r.adapter.event_notice(&access,r.local.base as u64,g,"AZSX Events",text)};
 }
+pub fn active(g:u64)->bool {
+    STATE.lock().ok().is_some_and(|s|s.as_ref().is_some_and(|s|s.game==g&&s.scene.as_ref().is_some_and(|scene|matches!(scene.stage(),Stage::Waiting|Stage::Preparing|Stage::Engaged))))
+}
 pub fn wire(g:u64,owner:u64)->Option<String> {
     let lock=STATE.lock().ok()?;
     let s=lock.as_ref().filter(|s|s.game==g&&s.participants.iter().any(|(_,id)|*id==owner))?;
@@ -140,6 +143,7 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
         }
         return Ok(())
     }
+    let demon_active=super::demon::active(g);
     let work={
         let mut lock=STATE.lock().map_err(|_|"Escort state unavailable")?;
         let s=lock.as_mut().ok_or("Escort state missing")?;
@@ -147,7 +151,7 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
         if s.next.is_infinite(){if let Some(boss_at)=first_boss_at{s.next=if preview{now+2.}else{boss_at+30.+s.draw(61)as f32};}}
         if s.ended.is_some_and(|end|now-end>=5.){s.scene=None;s.ended=None}
         let allowed=OPPORTUNITIES.lock().map_err(|_|"Escort budget unavailable")?.allows(Kind::ChickenEscort);
-        if s.scene.is_none()&&allowed&&now>=s.next{
+        if s.scene.is_none()&&allowed&&!demon_active&&now>=s.next{
             s.next=if preview{now+3.}else{now+45.+s.draw(31)as f32};
             s.serial=s.serial.checked_add(1).ok_or("Escort identity exhausted")?;
             Some((s.serial,(0..32).map(|_|(s.draw(u32::MAX),s.draw(u32::MAX))).collect::<Vec<_>>()))

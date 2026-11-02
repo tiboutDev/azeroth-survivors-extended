@@ -69,6 +69,7 @@ observer:SetScript('OnUpdate',function()
  if AZSX_GetAPIVersion then major,minor=AZSX_GetAPIVersion()end
  sample('api.contract',{available=api and api.available or false,major=major,minor=minor,native=type(AZS_RUN)=='table',global=type(AZSX_STATE)=='table',recipient=api and api.session and api.session.recipientGUID,ui=type(AZSXUI_HudReadout)=='function'})
  if cfg.escort then sample('azsx.escort',{available=api and api.available or false,event=api and api.data and api.data.soloEvent,gadget=api and api.data and api.data.engineering})end
+ if cfg.demon then sample('azsx.demon',{available=api and api.available or false,event=api and api.data and api.data.soloEvent})end
  if cfg.coop_ui then
   local state=AZSX_GetState and AZSX_GetState(1)
   local hud=AZSXUI_HudReadout and AZSXUI_HudReadout()

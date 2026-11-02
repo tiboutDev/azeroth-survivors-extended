@@ -46,6 +46,7 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         // The scene field setter is shared with an earlier native hook. Verify
         // escort contacts while the original client bytes are still intact.
         super::solo_escort::install(runtime);
+        super::demon::install(runtime);
     }
     if rules {
         super::ui_context::install(runtime)?;

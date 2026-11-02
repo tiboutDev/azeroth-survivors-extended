@@ -330,3 +330,19 @@ and do not require AZSXUI. Combine an event/revision with the session identity
 when deduplicating notifications. API minor 12 adds optional escort coordinates only; existing major-1 consumers
 may ignore them. A consumer must hide its marker when either coordinate is absent,
 invalid, or the escort stage is terminal.
+
+
+## API 1.12: Banished Demon
+
+`data.soloEvent` also carries the current recipient's Banished Demon
+encounter in solo or coop. `kind` is `banished_demon`; `event` is the positive
+run-local identity; `stage` uses the same 0–4 lifecycle as the escort.
+`held` and `maximum` are centiseconds of cumulative group preparation
+(maximum 200), `inside` reports whether all active participants are nearby,
+and optional finite `x`/`y` locate the binding while it exists.
+`banishes` is the shared native Banish count on the terminal receipt;
+`progress` and `total` are zero for this kind. `texts.soloEvent` supplies
+the title, current objective, native icon, reward and duration. The record is
+a detached read-only copy; consuming Banish remains native. A consumer should
+deduplicate a reward by session identity and event, and hide its marker at a
+terminal stage.

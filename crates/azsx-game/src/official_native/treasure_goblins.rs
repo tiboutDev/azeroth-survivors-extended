@@ -20,6 +20,8 @@ fn number(b: &[u8], at: usize) -> f32 {
 #[repr(C, align(8))]
 pub struct GoblinDefinition([u8; 80]);
 impl GoblinDefinition {
+    pub(super) fn event_native(bytes: [u8; 80]) -> Self { Self(bytes) }
+    pub(super) fn event_bytes(&self) -> &[u8; 80] { &self.0 }
     pub fn base_health(&self) -> f32 {
         number(&self.0, 48)
     }
@@ -50,6 +52,7 @@ pub struct GoblinHandle {
     index: usize,
 }
 impl GoblinHandle {
+    pub(super) fn event_spawn(guid: u64, index: usize) -> Self { Self { guid, index } }
     pub fn guid(self) -> u64 {
         self.guid
     }

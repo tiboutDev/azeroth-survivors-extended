@@ -2053,3 +2053,27 @@ impl SelectedAdapter {
     pub fn solo_player_scale_base(self)->f32{self.native.solo_player_scale_base()}
     pub unsafe fn solo_player_scale(self,m:&dyn Mem,base:u64,game:u64,owner:u64,scale:f32)->Result<()>{self.native.solo_player_scale(m,base,game,owner,scale)}
 }
+
+impl SelectedAdapter {
+    pub fn demon_entries(self) -> Vec<Entry> { self.native.demon_entries() }
+    pub fn demon_definition(self, m: &dyn Mem, base: u64, variant: usize) -> Result<GoblinDefinition> {
+        self.native.demon_definition(m, base, variant)
+    }
+    pub fn demon_banish_count(self, m: &dyn Mem, game: u64) -> Result<u32> {
+        self.native.demon_banish_count(m, game)
+    }
+    pub fn demon_grant_banish(self, m: &dyn MutableMemory, game: u64, host: u64) -> Result<Option<u32>> {
+        self.native.demon_grant_banish(m, game, host)
+    }
+    pub unsafe fn demon_query(self, m: &dyn MutableMemory, base: u64, game: u64, variant: usize) -> Result<()> {
+        self.native.demon_query(m, base, game, variant)
+    }
+    pub unsafe fn demon_spawn(self, m: &dyn Mem, base: u64, game: u64,
+        point: [f32; 3], variant: usize) -> Result<Option<GoblinHandle>> {
+        self.native.demon_spawn(m, base, game, point, variant)
+    }
+    pub unsafe fn demon_scene(self, m: &dyn MutableMemory, base: u64, game: u64,
+        point: [f32; 3], variant: usize) -> Result<Vec<EventObject>> {
+        self.native.demon_scene(m, base, game, point, variant)
+    }
+}

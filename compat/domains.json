@@ -44,7 +44,8 @@
       "crates/azsx-game/src/official_native/immunity_aggro.rs",
       "crates/azsx-game/src/enemies.rs",
       "crates/azsx-game/src/official_native/difficulty.rs",
-      "crates/azsx-game/src/official_native/escort.rs"
+      "crates/azsx-game/src/official_native/escort.rs",
+      "crates/azsx-game/src/official_native/demon.rs"
     ],
     "auras": [
       "crates/azsx-game/src/official_native/fatigue.rs",
@@ -63,7 +64,8 @@
       "crates/azsx-game/src/official_native/world_events.rs",
       "crates/azsx-game/src/official_native/event_placement.rs",
       "crates/azsx-game/src/official_native/scene_units.rs",
-      "crates/azsx-game/src/official_native/escort.rs"
+      "crates/azsx-game/src/official_native/escort.rs",
+      "crates/azsx-game/src/official_native/demon.rs"
     ],
     "spells": [],
     "ui": [

@@ -300,7 +300,7 @@
     },
     {
       "id": "AZSX-28",
-      "contract": "Optional Sayge’s Trial: native encounter trigger only between bosses, native ground rune, decorative Classic Sayge and candles, map-wide placement with flatness preference, interior navigation clearance and walkable fallback/AZSXUI minimap pin, persistent unfinished scene with stable identity and encounter-upgraded reward, cumulative presence that suspends until every active participant returns, explicit collective-wait presentation, bounded randomized power, automatic Fortune replacement and AZSXUI progress UI with configurable position, scale, opacity and visibility, shown only during native circle presence. Host-owned cooperative scene and shared progress require every active participant inside; personal Fortunes replace cooperative boss grants, with strongest XP/gold contributions preserved.",
+      "contract": "Optional Sayge\u2019s Trial: native encounter trigger only between bosses, native ground rune, decorative Classic Sayge and candles, map-wide placement with flatness preference, interior navigation clearance and walkable fallback/AZSXUI minimap pin, persistent unfinished scene with stable identity and encounter-upgraded reward, cumulative presence that suspends until every active participant returns, explicit collective-wait presentation, bounded randomized power, automatic Fortune replacement and AZSXUI progress UI with configurable position, scale, opacity and visibility, shown only during native circle presence. Host-owned cooperative scene and shared progress require every active participant inside; personal Fortunes replace cooperative boss grants, with strongest XP/gold contributions preserved.",
       "mode": "Solo / Coop",
       "reference": "[Contract](../features/FEATURE-RULES.md)",
       "native_domains": [
@@ -332,6 +332,18 @@
         "events",
         "combat",
         "stats",
+        "ui"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "AZSX-31",
+      "contract": "Host-owned solo and cooperative Banished Demon. Random opportunities begin at 90\u2013150 simulation seconds and recur 180\u2013300 seconds apart; placement may retry and never overlaps an active escort. Every active participant prepares within four yards for two cumulative seconds; leaving pauses progress. Native rune, captive, warlock, hostile demon combat and one confirmed-kill shared native Banish charge, once only. Three coherent native demon kits, no ordinary enemy reward or external assets. Detached API and optional AZSXUI objective, marker and toast. Exact 0.138.0 native contacts are guarded.",
+      "mode": "Solo, Coop",
+      "reference": "[Contract](../features/BANISHED-DEMON.md)",
+      "native_domains": [
+        "events",
+        "combat",
         "ui"
       ],
       "disposition": "active"

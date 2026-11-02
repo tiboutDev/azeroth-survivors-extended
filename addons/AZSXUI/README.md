@@ -47,7 +47,8 @@ addon files and preserves preferences and unknown files.
   trial icons retain their styles; caches use the native `INV_Box_02` icon; supplies retain `INV_Crate_01`.
   Both keep the same circular mask and tracking ring. A Mechanical Chicken
 escort uses the native `INV_Misc_EngGizmos_06` icon at its current exposed position and
-removes the pin when the scene ends.
+removes the pin when the scene ends. A Banished Demon binding uses the native
+  `Spell_Shadow_Cripple` icon and the same objective/marker lifecycle.
   Native cache coordinates come directly from `AZS_CHESTS`. Native cache opening,
   purchases, event progress and per-recipient availability stay authoritative.
 

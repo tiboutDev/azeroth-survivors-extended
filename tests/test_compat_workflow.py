@@ -41,7 +41,7 @@ class WorkflowTests(unittest.TestCase):
  def test_generated_binding_and_features_match(self):
   _,client,_=binding_registry.load_binding()
   self.assertEqual(binding_registry.owned_path(client["descriptor"]).read_text(),binding_registry.render())
-  self.assertEqual(len(feature_catalog.load_features()),30)
+  self.assertEqual(len(feature_catalog.load_features()),31)
  def test_production_native_access_has_no_historical_descriptor_dependency(self):
   root=Path(__file__).resolve().parents[1]
   for path in(root/"crates/azsx-game/src/official_native").rglob('*.rs'):

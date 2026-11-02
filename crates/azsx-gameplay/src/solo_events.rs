@@ -13,9 +13,10 @@ impl Kind {
         Self::TurretConstruction,
         Self::HeroAssistance,
     ];
-    /// The other draft event kinds are not eligible for current scheduling.
+    /// Demon and escort are the two reviewed native encounter families.
     pub fn active(escort_allowed: bool) -> Vec<Self> {
-        if escort_allowed { vec![Self::ChickenEscort] } else { Vec::new() }
+        if escort_allowed { vec![Self::BanishedDemon, Self::ChickenEscort] }
+        else { vec![Self::BanishedDemon] }
     }
 }
 /// A one-minute upper bound on large maps; smaller arenas get shorter routes.
@@ -31,19 +32,23 @@ pub fn escort_segments(radius: f32) -> Option<usize> {
     Some(((radius * 1.35 / ESCORT_SEGMENT_LENGTH).floor() as usize).clamp(8, ESCORT_SEGMENTS))
 }
 /// Every active participant must be alive, playing and within six yards.
-pub fn escort_party_present(
-    members: impl IntoIterator<Item = (bool, [f32; 2])>, focus: [f32; 2],
+pub fn event_party_present(
+    members: impl IntoIterator<Item = (bool, [f32; 2])>, focus: [f32; 2], radius: f32,
 ) -> bool {
+    if !radius.is_finite() || radius <= 0. { return false }
     let mut count = 0;
     for (ready, position) in members {
         count += 1;
         if !ready || position.iter().any(|v| !v.is_finite())
-            || (position[0] - focus[0]).hypot(position[1] - focus[1]) > 6. {
+            || (position[0] - focus[0]).hypot(position[1] - focus[1]) > radius {
             return false;
         }
     }
     count > 0
 }
+pub fn escort_party_present(
+    members: impl IntoIterator<Item = (bool, [f32; 2])>, focus: [f32; 2],
+) -> bool { event_party_present(members,focus,6.) }
 /// Small scenery points behind the starting chicken, clear of its forward route.
 pub fn escort_crash_sites(route: &[[f32; 3]]) -> Option<[[f32; 2]; 4]> {
     let [start, next, ..] = route else { return None };
@@ -128,7 +133,7 @@ impl Proofs {
     pub fn permits(self, kind: Kind, solo: bool) -> bool {
         self.assets && self.cleanup && match kind {
             Kind::ChickenEscort => self.navigation && self.gadget && self.attribution,
-            Kind::BanishedDemon => solo && self.hostile_combat && self.banish && self.attribution,
+            Kind::BanishedDemon => self.hostile_combat && self.banish && self.attribution,
             Kind::TurretConstruction => solo && self.ally_combat && self.attribution,
             Kind::HeroAssistance => solo && self.ally_combat && self.navigation
                 && self.attribution && self.hero_abilities,
@@ -223,7 +228,7 @@ impl Scene {
         self.held
     }
     pub fn observe(&mut self, o: Observation) -> Stage {
-        if o.id != self.id || (!o.solo && self.kind != Kind::ChickenEscort)
+        if o.id != self.id || (!o.solo && !matches!(self.kind, Kind::ChickenEscort | Kind::BanishedDemon))
             || !o.now.is_finite() || o.now < self.last {
             self.retire();
             return self.stage;
@@ -489,11 +494,10 @@ mod tests {
         s
     }
     #[test]
-    fn unapproved_cannon_and_incomplete_heroes_never_enter_normal_draws() {
-        assert_eq!(Kind::active(true), vec![Kind::ChickenEscort]);
-        assert!(Kind::active(false).is_empty());
+    fn only_reviewed_events_enter_normal_draws() {
+        assert_eq!(Kind::active(true), vec![Kind::BanishedDemon, Kind::ChickenEscort]);
+        assert_eq!(Kind::active(false), vec![Kind::BanishedDemon]);
         for allowed in [true, false] {
-            assert!(!Kind::active(allowed).contains(&Kind::BanishedDemon));
             assert!(!Kind::active(allowed).contains(&Kind::TurretConstruction));
             assert!(!Kind::active(allowed).contains(&Kind::HeroAssistance));
         }
@@ -528,10 +532,11 @@ mod tests {
         assert!(!budget.observe(2, 11, f32::NAN));
     }
     #[test]
-    fn no_unproved_activation_or_cooperative_fallback() {
+    fn no_unproved_activation_or_cooperative_prototype_fallback() {
         for k in Kind::ALL {
             assert!(Scene::new(id(), k, 0., Proofs::default(), true).is_none());
-            assert_eq!(Scene::new(id(), k, 0., proofs(), false).is_some(), k == Kind::ChickenEscort);
+            assert_eq!(Scene::new(id(), k, 0., proofs(), false).is_some(),
+                matches!(k, Kind::ChickenEscort | Kind::BanishedDemon));
             let mut p = proofs();
             p.cleanup = false;
             assert!(!p.permits(k, true));
@@ -610,10 +615,6 @@ mod tests {
                 id: Identity { owner: 22, ..id() },
                 ..obs(11.)
             },
-            Observation {
-                solo: false,
-                ..obs(11.)
-            },
             obs(1.),
             Observation {
                 now: f32::NAN,
@@ -653,6 +654,29 @@ mod tests {
         scene.observe(Observation { solo:false, present:true, ..obs(2.5) });
         scene.observe(Observation { solo:false, present:true, ..obs(3.) });
         assert!(scene.held() > held);
+    }
+    #[test]
+    fn cooperative_demon_needs_the_whole_group_to_break_the_binding() {
+        let focus=[10.,20.];
+        assert!(event_party_present([(true,[10.,20.]),(true,[13.9,20.])],focus,4.));
+        assert!(!event_party_present([(true,[10.,20.]),(true,[14.1,20.])],focus,4.));
+        assert!(!event_party_present([(true,[10.,20.]),(false,[10.,20.])],focus,4.));
+        let mut scene=Scene::new(id(),Kind::BanishedDemon,0.,proofs(),false).unwrap();
+        scene.observe(Observation{solo:false,present:true,..obs(0.)});
+        scene.observe(Observation{solo:false,present:true,..obs(1.)});
+        let held=scene.held();
+        scene.observe(Observation{solo:false,present:false,..obs(1.5)});
+        scene.observe(Observation{solo:false,present:false,..obs(2.)});
+        assert_eq!(scene.held(),held);
+        scene.observe(Observation{solo:false,present:true,..obs(2.5)});
+        scene.observe(Observation{solo:false,present:true,..obs(3.)});
+        scene.observe(Observation{solo:false,present:true,..obs(3.5)});
+        scene.observe(Observation{solo:false,present:true,..obs(4.)});
+        assert_eq!(scene.stage(),Stage::Engaged);
+        assert_eq!(scene.take_reward(),None);
+        scene.observe(Observation{solo:false,enemy_defeated:true,..obs(4.5)});
+        assert_eq!(scene.take_reward(),Some(Reward::BanishCharge));
+        assert_eq!(scene.take_reward(),None);
     }
     #[test]
     fn escort_length_scales_with_native_map_radius() {

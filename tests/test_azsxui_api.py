@@ -102,7 +102,7 @@ phase="ready";update();assert(objects.BuffButton1.anchor[2]==UIParent)''')
         self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1')
     def test_local_equipment_native_text_copy_isolation_and_zero_item_snapshot(self):
         self.equipment_wire()
-        self.lua.execute('local major,minor=AZSX_GetAPIVersion();assert(major==1 and minor==11);local s=AZSX_GetState(1);assert(s.available and s.data.equipment[1].slot==1 and s.data.equipment[1].rank==2 and s.data.equipment[1].name==nil);assert(s.texts.equipment[1].name=="Native ring" and s.texts.equipment[1].text=="Exact owner text\\n+10 damage");s.texts.equipment[1].name="Mutated";assert(AZSX_GetState(1).texts.equipment[1].name=="Native ring")')
+        self.lua.execute('local major,minor=AZSX_GetAPIVersion();assert(major==1 and minor==12);local s=AZSX_GetState(1);assert(s.available and s.data.equipment[1].slot==1 and s.data.equipment[1].rank==2 and s.data.equipment[1].name==nil);assert(s.texts.equipment[1].name=="Native ring" and s.texts.equipment[1].text=="Exact owner text\\n+10 damage");s.texts.equipment[1].name="Mutated";assert(AZSX_GetState(1).texts.equipment[1].name=="Native ring")')
         self.equipment_wire(header='L|11|0',row='')
         self.lua.execute('local s=AZSX_GetState(1);assert(s.available and table.getn(s.data.equipment)==0 and table.getn(s.texts.equipment)==0)')
     def test_equipment_retains_native_category_and_rejects_unknown_category(self):
@@ -141,6 +141,17 @@ phase="ready";update();assert(objects.BuffButton1.anchor[2]==UIParent)''')
         self.lua.globals().wire=text.encode().hex()
         self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1;local s=AZSX_GetState(1);assert(s.available and s.data.soloEvent.total==28 and s.data.fortune.amount==1200 and s.data.minimap.radii[1]==100 and s.texts.soloEvent.note)')
 
+    def test_shared_demon_banish_preserves_guest_api_and_rejects_unearned_charge(self):
+        base="1|7|22|1\nM|11|0|486f7374\nM|22|1|4775657374\n"
+        good=base+"V|22|8|0|3|200|200|0|1|0|0|0|10.5|20.25\n"
+        self.lua.globals().wire=good.encode().hex()
+        self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1;local s=AZSX_GetState(1);assert(s.available and s.session.recipientGUID=="22" and s.data.soloEvent.kind=="banished_demon" and s.data.soloEvent.banishes==1 and s.texts.soloEvent.reward=="+1 Banish");s.data.soloEvent.banishes=999;assert(AZSX_GetState(1).data.soloEvent.banishes==1)')
+        preparing=base+"V|22|8|0|1|75|200|1|0|0|0|0|10.5|20.25\n"
+        self.lua.globals().wire=preparing.encode().hex()
+        self.lua.execute('AZS_RUN.azsx=wire;AZS_RUN_UPDATED=now;local s=AZSX_GetState(1);assert(s.available and s.data.soloEvent.inside and s.data.soloEvent.held==75 and s.texts.soloEvent.note=="Break the binding together")')
+        bad=base+"V|22|8|0|2|200|200|0|1|0|0|0|10.5|20.25\n"
+        self.lua.globals().wire=bad.encode().hex()
+        self.lua.execute('AZS_RUN.azsx=wire;AZS_RUN_UPDATED=now;assert(not AZSX_GetState(1).available)')
     def test_legacy_escort_row_without_coordinates_remains_available(self):
         text="1|7|11|1\nM|11|0|506c61796572\nV|11|3|1|2|75|200|1|0|40|120|0\n"
         self.lua.globals().wire=text.encode().hex()

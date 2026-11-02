@@ -27,6 +27,18 @@ AZSXDiagnosticConfig={enabled="""+str(enabled).lower()+",session='unit',slot=0,m
   rows=self.decoded(records);last=[r for r in rows if r['kind']=='ui.supply_toast'][-1]
   self.assertEqual(last['data']['reward'],'Arcane Crystal');self.assertTrue(last['data']['visible']);self.assertEqual(last['data']['width'],388)
   self.assertEqual([r['sequence']for r in rows],list(range(1,len(rows)+1)))
+ def test_demon_record_passes_the_strict_collector(self):
+  import sys
+  sys.path.insert(0,str(ROOT/"tools/dev"))
+  from diagnostic_records import collect
+  lua,records=self.setup_observer()
+  lua.execute("""AZSXDiagnosticConfig.demon=true
+function AZSX_GetState()return {available=true,data={soloEvent={kind='banished_demon',stage=1,inside=true,held=100}}}end
+now=1;tick()
+""")
+  stream=collect("\n".join(records),"unit",0)
+  self.assertTrue(stream["passed"],stream["errors"])
+  self.assertTrue(any(r["kind"]=="azsx.demon" and r["data"]["event"]["inside"] for r in stream["records"]))
  def test_budget_and_expiry_detach_observer(self):
   lua,records=self.setup_observer(limit=4);lua.execute("now=1;tick();now=2;tick()")
   self.assertLessEqual(len(records),4);self.assertIsNone(lua.globals().tick)

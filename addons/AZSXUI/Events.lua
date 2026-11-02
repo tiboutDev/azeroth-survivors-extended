@@ -389,7 +389,8 @@ function AZSXEventVisualReadout()
 end
 
 local engineeringBadge,engineeringToast,engineeringScope,engineeringSeen,engineeringUntil=nil,nil,nil,nil,0
-local defaults={engineering={x=0,y=0},supplies={x=0,y=0},fortune={x=0,y=0},crystals={x=0,y=0},sayge={x=0,y=0},revive={x=0,y=0},loot={x=0,y=0},marks={x=0,y=0}}
+local demonToast,demonScope,demonSeen,demonUntil=nil,nil,nil,0
+local defaults={demon={x=0,y=0},engineering={x=0,y=0},supplies={x=0,y=0},fortune={x=0,y=0},crystals={x=0,y=0},sayge={x=0,y=0},revive={x=0,y=0},loot={x=0,y=0},marks={x=0,y=0}}
 local anchor=CreateFrame("Frame","AZSXUIEventAnchor",UIParent)
 anchor:SetWidth(1);anchor:SetHeight(1);anchor:EnableMouse(false)
 local function layoutSettings()
@@ -427,7 +428,7 @@ local function layout()
     local signature=p.x..":"..top
     if anchor.azsxPosition~=signature then anchor:ClearAllPoints();anchor:SetPoint("TOP",UIParent,"TOP",p.x,top);anchor.azsxPosition=signature end
     local offset=0
-    for _,entry in ipairs({{engineeringToast,"engineering",88},{reviveFrame,"revive",54},{ritualFrame,"sayge",54},{supplyToast,"supplies",88},{blessingToast,"fortune",88},{crystalToast,"crystals",88},{nativeToast,nativeCurrent and nativeCurrent.kind or "loot",88}})do
+    for _,entry in ipairs({{demonToast,"demon",88},{engineeringToast,"engineering",88},{reviveFrame,"revive",54},{ritualFrame,"sayge",54},{supplyToast,"supplies",88},{blessingToast,"fortune",88},{crystalToast,"crystals",88},{nativeToast,nativeCurrent and nativeCurrent.kind or "loot",88}})do
         local frame,kind,height=entry[1],entry[2],entry[3];local pref=preference(kind)
         if frame then
             if frame.azsxCompactToast then
@@ -448,6 +449,18 @@ local function layout()
             end
         end
     end
+end
+local function refreshDemonToast()
+    local e=model and model.owner and model.owner.soloEvent
+    local scope=model and(model.epoch..":"..model.own)or nil
+    if scope~=demonScope then demonScope=scope;demonSeen=nil;demonUntil=0 end
+    if e and e.kind=="banished_demon" and e.stage==3 and e.banishes and e.banishes>0 and e.event~=demonSeen then
+        demonSeen=e.event;demonUntil=GetTime()+6
+        if not demonToast then demonToast=discoveryToast("AZSXUIDemonRewardToast",e.title,e.icon)end
+        demonToast.title:SetText(e.title);demonToast.icon:SetTexture(e.icon)
+        demonToast.reward:SetText(e.reward);demonToast.note:SetText("Banish is available during this run.")
+    end
+    if demonToast then if GetTime()<demonUntil then demonToast:Show()else demonToast:Hide()end end
 end
 local function refreshEngineering()
     local e=model and model.engineering
@@ -487,7 +500,7 @@ local function update()
         end
         model={epoch=snapshot.session.epoch,own=snapshot.session.recipientGUID,owner={discovery=present(data.discovery,texts.supplies),ritual=present(data.sayge,texts.sayge),soloEvent=present(data.soloEvent,texts.soloEvent)},engineering=present(data.engineering,texts.engineering),blessing=present(data.fortune,texts.fortune),crystals=data.crystals,crystalTexts=texts.crystals and texts.crystals.pickups}
     end
-    refreshEngineering();refreshSupplyToast();refreshBlessingToast();refreshRitual();refreshCrystalToast();refreshRevive();refreshNativeRewards()
+    refreshEngineering();refreshDemonToast();refreshSupplyToast();refreshBlessingToast();refreshRitual();refreshCrystalToast();refreshRevive();refreshNativeRewards()
     if reviveFrame and reviveFrame:IsShown()and ritualFrame then ritualFrame:Hide()end
     layout()
     updateRitualBar(GetTime())

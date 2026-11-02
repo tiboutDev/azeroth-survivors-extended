@@ -18,6 +18,7 @@ pub(super) mod rewards;
 static AVAILABLE: AtomicBool = AtomicBool::new(false);
 static ACTIVE: AtomicBool = AtomicBool::new(false);
 static ORIGINAL: AtomicUsize = AtomicUsize::new(0);
+static DEFINITION_AVAILABLE: AtomicBool = AtomicBool::new(false);
 static SKIN_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 // Native records retain definition pointers, including after death. These twelve
 // immutable, map-specific templates therefore live for the process lifetime.
@@ -152,13 +153,7 @@ pub fn install(r: &Runtime) {
                 ));
             }
         }
-        let e = r.adapter.goblin_definition_entry();
-        crate::install::install_optional(crate::install::HookSpec {
-            name: "optional-treasure-goblin-definition",
-            target: r.local.base + e.rva as usize,
-            detour: definition_entry as *const () as usize,
-            trampoline: &ORIGINAL,
-        })?;
+        ensure_definition_hook(r)?;
         motion::install(r)?;
         rewards::install(r)?;
         #[cfg(feature = "test-hooks")]
@@ -186,6 +181,36 @@ pub fn install(r: &Runtime) {
             "Treasure Goblins unavailable: {e}. Core AZSX coop is unaffected."
         )),
     }
+}
+
+pub(super) fn ensure_definition_hook(r: &Runtime) -> Result<(), String> {
+    if DEFINITION_AVAILABLE.load(Ordering::Acquire) { return Ok(()) }
+    let e = r.adapter.goblin_definition_entry();
+    if r.local.read(r.local.base + e.rva as usize, e.bytes.len())? != e.bytes {
+        return Err("Native creature definition boundary changed".into());
+    }
+    crate::install::install_optional(crate::install::HookSpec {
+        name: "optional-event-creature-definition",
+        target: r.local.base + e.rva as usize,
+        detour: definition_entry as *const () as usize,
+        trampoline: &ORIGINAL,
+    })?;
+    DEFINITION_AVAILABLE.store(true, Ordering::Release);
+    Ok(())
+}
+pub(super) fn with_definition<T>(game: u64, definition: &GoblinDefinition,
+    action: impl FnOnce() -> Result<T, String>) -> Result<T, String> {
+    if !DEFINITION_AVAILABLE.load(Ordering::Acquire) {
+        return Err("Native creature definition hook unavailable".into());
+    }
+    struct Guard(Option<(u64, u64)>);
+    impl Drop for Guard {
+        fn drop(&mut self) { PENDING.with(|p| p.set(self.0)); }
+    }
+    let guard = Guard(PENDING.with(|p| p.replace(Some((game, definition.pointer())))));
+    let result = action();
+    drop(guard);
+    result
 }
 pub fn encounter(game: u64, normal_bosses:u32) {
     if !AVAILABLE.load(Ordering::Acquire) {

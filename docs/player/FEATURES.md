@@ -460,3 +460,18 @@ addon.
 
 See [the engineering details](../features/SOLO-ESCORT.md). Check the release
 notes before expecting this source feature in an installed build.
+
+
+## Banished Demon
+
+**Status: Playtesting**
+
+A bound demon can appear in a solo or cooperative run. All active players
+must stay close to the binding for two seconds to release it. Leaving pauses
+the preparation, and returning resumes it. Defeat the released demon to gain
+one Banish charge for the run's native card choices. The charge is shared in
+coop. The event uses native demon models and combat; the optional AZSXUI addon
+shows its location and objective. An appearance is possible, not guaranteed.
+
+See [the encounter details](../features/BANISHED-DEMON.md). Check the release
+notes before expecting this source feature in an installed build.

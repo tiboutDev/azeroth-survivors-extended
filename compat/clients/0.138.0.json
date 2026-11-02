@@ -477,6 +477,60 @@
       "value": "0x1"
     },
     {
+      "name": "DEMON_BANISH_OFFSET",
+      "type": "u64",
+      "value": "0xf18",
+      "visibility": "pub"
+    },
+    {
+      "name": "DEMON_BANISH_READ",
+      "type": "(u64, &[u8])",
+      "value": "(0x5d61991, &[0x8b, 0xb9, 0x18, 0x0f, 0, 0])",
+      "visibility": "pub"
+    },
+    {
+      "name": "DEMON_BANISH_CONSUME",
+      "type": "(u64, &[u8])",
+      "value": "(0x5d61a05, &[0xff, 0xcf, 0x89, 0xbe, 0x18, 0x0f, 0, 0])",
+      "visibility": "pub"
+    },
+    {
+      "name": "DEMON_BANISH_SERIALIZE",
+      "type": "(u64, &[u8])",
+      "value": "(0x5d5a2a5, &[0x45, 0x8b, 0xae, 0x18, 0x0f, 0, 0])",
+      "visibility": "pub"
+    },
+    {
+      "name": "DEMON_BANISH_ACTION",
+      "type": "(u64, &[u8])",
+      "value": "(0x5d61970, &[0x55, 0x41, 0x56, 0x56, 0x57, 0x53, 0x48, 0x83, 0xec, 0x50, 0x48, 0x8d, 0x6c, 0x24, 0x50])",
+      "visibility": "pub"
+    },
+    {
+      "name": "DEMON_DEFINITIONS",
+      "type": "[u64; 3]",
+      "value": "[0x710f660, 0x710f6b0, 0x710f480]",
+      "visibility": "pub"
+    },
+    {
+      "name": "DEMON_ENTRIES",
+      "type": "[u32; 3]",
+      "value": "[106, 107, 103]",
+      "visibility": "pub"
+    },
+    {
+      "name": "DEMON_DISPLAYS",
+      "type": "[u32; 3]",
+      "value": "[5047, 169, 2011]",
+      "visibility": "pub"
+    },
+    {
+      "name": "DEMON_EVENT_ENTRY",
+      "type": "u32",
+      "value": "0xa50020",
+      "visibility": "pub"
+    },
+    {
       "visibility": "pub",
       "name": "GOBLIN_SPAWN",
       "type": "(u64, &[u8])",

@@ -12,7 +12,7 @@ fn validate(line:&str,session:&str,slot:u64)->Result<(usize,serde_json::Value),S
  let sequence=value["sequence"].as_u64().filter(|n|(1..=512).contains(n)).ok_or("Invalid diagnostic sequence")? as usize;
  if value["schema"]!=1 || value["session"]!=session || value["slot"]!=slot || !value["data"].is_object(){return Err("Diagnostic identity/schema mismatch".into())}
  let kind=value["kind"].as_str().ok_or("Missing diagnostic kind")?;
- if !["api.contract","observer.started","observer.stopped","ui.coop_hud","ui.progression","ui.supply_toast","ui.sayge_progress","ui.buffs","ui.tooltip","azsx.ritual_model","azsx.escort"].contains(&kind){return Err("Unknown diagnostic observation".into())}
+ if !["api.contract","observer.started","observer.stopped","ui.coop_hud","ui.progression","ui.supply_toast","ui.sayge_progress","ui.buffs","ui.tooltip","azsx.ritual_model","azsx.escort","azsx.demon"].contains(&kind){return Err("Unknown diagnostic observation".into())}
  let time=value["clock"].as_f64().filter(|n|n.is_finite()&&*n>=0.).ok_or("Invalid diagnostic time")?;let _=time;
  Ok((sequence,value))
 }
@@ -50,6 +50,6 @@ pub(super) fn install(r:&Runtime)->Result<(),String>{
  #[test]fn reserved_malformed_write_is_not_forwarded(){assert_eq!(unsafe{write(77,NAME.as_ptr(),NAME.len(),b"invalid".as_ptr(),7,1)},0);}
  #[test]fn rejects_foreign_sessions_and_malformed_records(){
   let row=r#"AZSX_DIAG {"schema":1,"session":"unit","slot":0,"sequence":1,"clock":1,"kind":"ui.buffs","data":{}}"#;
-  assert!(validate(row,"unit",0).is_ok());assert!(validate(row,"foreign",0).is_err());assert!(validate(row,"unit",1).is_err());assert!(validate(&row.replace("ui.buffs","unknown"),"unit",0).is_err());assert!(validate(&row.replace("\"sequence\":1","\"sequence\":999"),"unit",0).is_err());
+  assert!(validate(row,"unit",0).is_ok());assert!(validate(&row.replace("ui.buffs","azsx.demon"),"unit",0).is_ok());assert!(validate(row,"foreign",0).is_err());assert!(validate(row,"unit",1).is_err());assert!(validate(&row.replace("ui.buffs","unknown"),"unit",0).is_err());assert!(validate(&row.replace("\"sequence\":1","\"sequence\":999"),"unit",0).is_err());
  }
 }

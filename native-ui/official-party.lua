@@ -128,16 +128,19 @@ local function decode(wire)
                 if a[8]and not receipt then return nil end
                 result.members[id].blessing={boss=boss,category=category,rarity=rarity,amount=amount,best=best,event=receipt}
             elseif a[1]=="V" and (table.getn(a)==12 or table.getn(a)==14) and id==result.own and result.members[id] then
-                local event,kind,stage=integer(a[3],1,1e9),integer(a[4],1,1),integer(a[5],0,4)
+                local event,kind,stage=integer(a[3],1,1e9),integer(a[4],0,1),integer(a[5],0,4)
                 local held,maximum,inside=integer(a[6],0,200),integer(a[7],200,200),integer(a[8],0,1)
-                local charge,progress,total,remaining=integer(a[9],0,0),integer(a[10],0,120),integer(a[11],8,120),integer(a[12],0,0)
+                local charge=integer(a[9],0,4294967295)
+                local progress=integer(a[10],0,kind==1 and 120 or 0)
+                local total=integer(a[11],kind==1 and 8 or 0,kind==1 and 120 or 0)
+                local remaining=integer(a[12],0,0)
                 local x,y
                 if table.getn(a)==14 then
                     x,y=tonumber(a[13]),tonumber(a[14])
                     if not x or not y or x~=x or y~=y or math.abs(x)>=1e8 or math.abs(y)>=1e8 then return nil end
                 end
-                if not event or not kind or stage==nil or not held or not maximum or inside==nil or charge==nil or not progress or not total or not remaining or progress>total or result.members[id].soloEvent then return nil end
-                result.members[id].soloEvent={event=event,kind="chicken_escort",stage=stage,held=held,maximum=maximum,inside=inside==1,progress=progress,total=total,x=x,y=y}
+                if not event or kind==nil or stage==nil or not held or not maximum or inside==nil or charge==nil or progress==nil or total==nil or remaining==nil or progress>total or result.members[id].soloEvent or (kind==0 and stage~=3 and charge~=0) or (kind~=0 and charge~=0) then return nil end
+                result.members[id].soloEvent={event=event,kind=kind==0 and "banished_demon" or "chicken_escort",stage=stage,held=held,maximum=maximum,inside=inside==1,banishes=charge,progress=progress,total=total,x=x,y=y}
             elseif a[1]=="W" and table.getn(a)==6 and id==result.own and result.members[id] then
                 local revision,kind=integer(a[3],1,1e9),integer(a[4],0,5)
                 local nextTrigger,effect=integer(a[5],0,60000),integer(a[6],0,60000)
@@ -749,10 +752,17 @@ local function apiState()
         state.texts={loot=lootTexts,equipment=equipmentTexts,crystals=crystalText,supplies=textOnly(formatted.owner.discovery),fortune=textOnly(formatted.blessing),sayge=textOnly(formatted.owner.ritual),consumables=consumableTexts}
         if state.data.soloEvent then
             local e=state.data.soloEvent
-            local notes={"Find the damaged chicken","Restart the chicken","Accompany the chicken to its teleporter","Extraction complete","Escort ended"}
-            local note=notes[e.stage+1]
-            if e.stage==2 and not e.inside then note=note.." (waiting for all players)" end
-            state.texts.soloEvent={title="Mechanical Chicken Escort",note=note,icon="Interface\\Icons\\INV_Misc_EngGizmos_06",reward="Engineering gadget equipped",duration="Until the end of the run"}
+            if e.kind=="banished_demon" then
+                local notes={"Find the bound demon","Break the binding together","Defeat the released demon","Demon defeated","The binding faded"}
+                local note=notes[e.stage+1]
+                if e.stage==1 and not e.inside then note=note.." (waiting for all players)" end
+                state.texts.soloEvent={title="Banished Demon",note=note,icon="Interface\\Icons\\Spell_Shadow_Cripple",reward="+1 Banish",duration="Until the end of the run"}
+            else
+                local notes={"Find the damaged chicken","Restart the chicken","Accompany the chicken to its teleporter","Extraction complete","Escort ended"}
+                local note=notes[e.stage+1]
+                if e.stage==2 and not e.inside then note=note.." (waiting for all players)" end
+                state.texts.soloEvent={title="Mechanical Chicken Escort",note=note,icon="Interface\\Icons\\INV_Misc_EngGizmos_06",reward="Engineering gadget equipped",duration="Until the end of the run"}
+            end
         end
         if state.data.engineering then
             local e=state.data.engineering
@@ -777,7 +787,7 @@ local function apiState()
     state.updatedAt=own and modelTime or nil
     apiCache=state;apiInput=input;return state
 end
-function AZSX_GetAPIVersion()return 1,11 end
+function AZSX_GetAPIVersion()return 1,12 end
 function AZSX_GetState(major)
     if major~=nil and major~=1 then return nil,"unsupported_version"end
     return apiCopy(apiState())
