@@ -2,7 +2,7 @@
 name = "azeroth-coop-native"
 version.workspace = true
 edition.workspace = true
-description = "ASX extensions for the official Azeroth Survivors engine"
+description = "AZSX extensions for the official Azeroth Survivors engine"
 license.workspace = true
 publish.workspace = true
 build = "build.rs"
@@ -14,19 +14,19 @@ crate-type = ["cdylib", "rlib"]
 path = "src/lib.rs"
 
 [features]
-# Live-test switches (AZCOOP_TEST_CRASH, AZCOOP_TEST_GUEST_LETHAL_AT). OFF in every shipped build: tools/build/asx_release_binary.py refuses a
+# Live-test switches (AZCOOP_TEST_CRASH, AZCOOP_TEST_GUEST_LETHAL_AT). OFF in every shipped build: tools/build/azsx_release_binary.py refuses a
 # DLL that contains them. Test builds: cargo build --release --features test-hooks --target-dir target/test-hooks
-test-hooks = ["asx-game/test-hooks"]
+test-hooks = ["azsx-game/test-hooks"]
 
 [dependencies]
-asx-gameplay.workspace = true
+azsx-gameplay.workspace = true
 minhook = "0.9"
 sha2 = "0.10"
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }
 base64 = "0.22"
 # Static facts about the game builds (PE reader, profile, readers) and the generated machine code per build.
-asx-game.workspace = true
+azsx-game.workspace = true
 windows-sys = { version = "0.61", features = [
     "Win32_Foundation",
     "Win32_Security",
@@ -50,8 +50,8 @@ windows-sys = { version = "0.61", features = [
 
 [workspace]
 resolver = "2"
-default-members = [".", "crates/asx-game", "crates/asx-gameplay"]
-members = [".", "crates/asx-game", "crates/asx-gameplay", "crates/avrt-probe"]
+default-members = [".", "crates/azsx-game", "crates/azsx-gameplay"]
+members = [".", "crates/azsx-game", "crates/azsx-gameplay", "crates/avrt-probe"]
 
 
 [workspace.package]
@@ -61,8 +61,8 @@ license = "GPL-3.0-only"
 publish = false
 
 [workspace.dependencies]
-asx-game = { path = "crates/asx-game" }
-asx-gameplay = { path = "crates/asx-gameplay" }
+azsx-game = { path = "crates/azsx-game" }
+azsx-gameplay = { path = "crates/azsx-gameplay" }
 
 [profile.release]
 opt-level = 3

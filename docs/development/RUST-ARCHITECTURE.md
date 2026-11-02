@@ -7,7 +7,7 @@ repository is ready to publish.
 ## Workspace shape
 
 Keep one workspace and four packages. The root package is the Windows DLL and
-composition root; `asx-gameplay` contains portable policy; `asx-game` owns
+composition root; `azsx-gameplay` contains portable policy; `azsx-game` owns
 selected native translation and verified build data; `avrt-probe` is an independent
 Windows export diagnostic. A root package inside a workspace is a standard Cargo
 layout; a virtual workspace or a crate per feature is not required. See the
@@ -20,8 +20,8 @@ versions. Release profiles and the lockfile remain workspace-wide. The existing
 `src/`, integration `tests/` and `crates/` locations follow
 [Cargo package conventions](https://doc.rust-lang.org/cargo/guide/project-layout.html).
 
-The two internal library packages use the `asx-` project prefix, with matching
-directory names. Rust imports use `asx_game` and `asx_gameplay`. This naming change
+The two internal library packages use the `azsx-` project prefix, with matching
+directory names. Rust imports use `azsx_game` and `azsx_gameplay`. This naming change
 does not rename the Windows loader artifact `avrt.dll` or external environment,
 addon and protocol identifiers. No edition or root-package move is required.
 
@@ -93,7 +93,7 @@ current clients.
 
 ## Resolved selected descriptor
 
-Production native consumers use `asx_game::current`. The current manifest and
+Production native consumers use `azsx_game::current`. The current manifest and
 binding template generate a self-contained descriptor; historical descriptors
 are test-only references. Native field gaps remain explicit failures. Manifest
 changes require exact-image and ABI review, not merely successful generation.

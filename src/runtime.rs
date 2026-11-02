@@ -30,12 +30,12 @@ mod crystals;
 mod menu_ui;
 #[cfg(feature="test-hooks")]
 mod presentation;
-mod addon_activation;
+mod addon_api;
 mod support;
 mod wallet;
 mod duplicate_loot;
 use crate::{log::Log, proc::Local};
-use asx_game::official::SelectedAdapter as Adapter;
+use azsx_game::official::SelectedAdapter as Adapter;
 use std::sync::{
     atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
     OnceLock,
@@ -46,11 +46,11 @@ struct Runtime {
     log: &'static Log,
     rules: bool,
     sampled: std::sync::Mutex<std::time::Instant>,
-    party: std::sync::Mutex<Option<asx_game::official::PartyObservation>>,
-    solo: std::sync::Mutex<Option<asx_game::official::PartyObservation>>,
+    party: std::sync::Mutex<Option<azsx_game::official::PartyObservation>>,
+    solo: std::sync::Mutex<Option<azsx_game::official::PartyObservation>>,
 }
 impl Runtime {
-    fn extension_party(&self)->Option<asx_game::official::PartyObservation>{
+    fn extension_party(&self)->Option<azsx_game::official::PartyObservation>{
         self.party.lock().ok().and_then(|p|p.clone()).or_else(||self.solo.lock().ok().and_then(|p|p.clone()))
     }
 }
@@ -64,7 +64,7 @@ fn local_base() -> usize {
         .base
 }
 
-pub(crate) fn restore_addon_activation(){addon_activation::restore();}
+
 
 mod raid_markers;
 
@@ -88,3 +88,5 @@ mod event_services;
 
 #[cfg(feature="test-hooks")]
 mod scenario_steps;
+
+mod lobby;

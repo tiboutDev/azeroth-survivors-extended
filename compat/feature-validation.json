@@ -1,15 +1,15 @@
 {
   "schema": 1,
   "features": {
-    "ASX-01": {
+    "AZSX-01": {
       "profiles": [
         "official",
         "tooling",
-        "asx-install"
+        "azsx-install"
       ],
       "scope_note": "Exact activation plus App/Config/Data packaging, restartable legacy migration, nonblocking optional UI/docs and automatic signed compatible updates. Windows isolated migration/fresh-install coop and detached runtime updater have separate artifact-scoped receipts; this does not claim public-lobby coverage."
     },
-    "ASX-02": {
+    "AZSX-02": {
       "profiles": [
         "official"
       ],
@@ -19,19 +19,19 @@
         "coop-progression-probe"
       ]
     },
-    "ASX-03": {
+    "AZSX-03": {
       "profiles": [
         "official"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-04": {
+    "AZSX-04": {
       "profiles": [
         "official"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-05": {
+    "AZSX-05": {
       "profiles": [
         "official"
       ],
@@ -39,7 +39,7 @@
       "targeted_scenario": {
         "profile": "official",
         "trigger": "Guardian rewards remain native; kill one guardian with two participants and count native skill/item deliveries once per actor.",
-        "expected": "A native guardian kill and all reward choices completed; no supplemental ASX grant.",
+        "expected": "A native guardian kill and all reward choices completed; no supplemental AZSX grant.",
         "limit": "Native reward cardinality requires a live guardian observation.",
         "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
       },
@@ -47,40 +47,40 @@
         "coop-coverage"
       ]
     },
-    "ASX-06": {
+    "AZSX-06": {
       "profiles": [
         "official",
         "official-party-ui"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-07": {
+    "AZSX-07": {
       "profiles": [
         "support",
         "periodic"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-08": {
+    "AZSX-08": {
       "profiles": [
         "support",
         "periodic"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-09": {
+    "AZSX-09": {
       "profiles": [
         "combat"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-10": {
+    "AZSX-10": {
       "profiles": [
         "combat"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-11": {
+    "AZSX-11": {
       "profiles": [
         "combat"
       ],
@@ -96,7 +96,7 @@
         "coop-coverage"
       ]
     },
-    "ASX-12": {
+    "AZSX-12": {
       "profiles": [
         "fatigue",
         "support"
@@ -113,88 +113,88 @@
         "coop-coverage"
       ]
     },
-    "ASX-13": {
+    "AZSX-13": {
       "profiles": [
         "rules",
         "official-party-ui"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-14": {
+    "AZSX-14": {
       "profiles": [
         "rules",
         "official"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-15": {
+    "AZSX-15": {
       "profiles": [
         "tooling"
       ],
       "scope_note": "Removed feature ID remains reserved; no runtime or live scenario coverage is required."
     },
-    "ASX-16": {
+    "AZSX-16": {
       "profiles": [
         "enchantments",
         "official-party-ui"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-17": {
+    "AZSX-17": {
       "profiles": [
         "official-party-ui",
         "support"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-18": {
+    "AZSX-18": {
       "profiles": [
         "official-party-ui",
         "official"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-19": {
+    "AZSX-19": {
       "profiles": [
         "official"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-20": {
+    "AZSX-20": {
       "profiles": [
-        "asx-install",
+        "azsx-install",
         "tooling"
       ],
       "scope_note": "Installer/launcher behavior is outside the native contract inventory. Selector/version links cover identity agreement only; distribution tests remain separate.",
       "targeted_scenario": {
-        "profile": "asx-install",
+        "profile": "azsx-install",
         "trigger": "Exercise installer/update/rollback/uninstall using temporary test fixtures only.",
         "expected": "Unknown files preserved; unsupported or altered content refused; rollback restores owned files.",
         "limit": "Portable fixture tests do not validate an actual signed distribution archive.",
         "live_status": "not-established-by-portable-tests"
       }
     },
-    "ASX-21": {
+    "AZSX-21": {
       "profiles": [
         "official"
       ],
       "scope_note": "Upstream-native marks; retired duplicate-loot gold behavior must remain disabled."
     },
-    "ASX-22": {
+    "AZSX-22": {
       "profiles": [
         "crystals",
         "official-party-ui",
-        "asxui"
+        "azsxui"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-23": {
+    "AZSX-23": {
       "profiles": [
-        "asxui"
+        "azsxui"
       ],
-      "scope_note": "Standalone Lua behavior and separately scoped native-client probes; old ASX live suites do not establish ASXUI parity.",
+      "scope_note": "Standalone Lua behavior and separately scoped native-client probes; old AZSX live suites do not establish AZSXUI parity.",
       "targeted_scenario": {
-        "profile": "asxui",
+        "profile": "azsxui",
         "trigger": "Compare ordinary and special-rank native nameplates while health changes.",
         "expected": "Enemy scale changes and restores; native health updates continue; friendly/unknown-name handling remains conservative.",
         "limit": "Native placement and font-character appearance require explicit sparse visual review of the exact addon.",
@@ -202,17 +202,17 @@
       },
       "live_suites": []
     },
-    "ASX-24": {
+    "AZSX-24": {
       "profiles": [
         "official-party-ui",
         "support",
-        "asxui"
+        "azsxui"
       ],
       "scope_note": "Native text/presentation checks exist; no dedicated declared live healing-text scenario.",
       "targeted_scenario": {
         "profile": "official-party-ui",
         "trigger": "Produce direct and periodic ally healing and an enemy damage number.",
-        "expected": "Recipient identity and native animation retained; ASXUI font loaded without a DLL; font-character scale verified separately.",
+        "expected": "Recipient identity and native animation retained; AZSXUI font loaded without a DLL; font-character scale verified separately.",
         "limit": "Portable presentation checks do not prove rendered world text positioning.",
         "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
       },
@@ -221,20 +221,20 @@
         "coop-ui-remaining"
       ]
     },
-    "ASX-25": {
+    "AZSX-25": {
       "profiles": [
         "official-party-ui"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-26": {
+    "AZSX-26": {
       "profiles": [
         "rules",
         "official"
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-27": {
+    "AZSX-27": {
       "profiles": [
         "rules",
         "diagnostics",
@@ -242,7 +242,7 @@
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-28": {
+    "AZSX-28": {
       "profiles": [
         "rules",
         "diagnostics",
@@ -250,11 +250,11 @@
       ],
       "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
     },
-    "ASX-29": {
+    "AZSX-29": {
       "profiles": [
         "rules",
         "enchantments",
-        "asxui",
+        "azsxui",
         "official-party-ui"
       ],
       "scope_note": "Portable rule and selected-adapter fixtures cover solo/host/guest and all five actor slots. Windows runtime scope tests cover reentrancy and unwind cleanup. These are not live spell-radius evidence. Lua 5.1 covers informational-aura lifecycle, detached API, tooltip notes, first placement, ownership and native fallback. Visual placement still requires rendered review."

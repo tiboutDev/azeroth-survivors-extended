@@ -9,7 +9,7 @@ from treasure_goblin_evidence import assess
 class GoblinEvidenceTests(unittest.TestCase):
     def fixture(self):
         host = "\n".join([
-            "ASX active:",
+            "AZSX active:",
             "treasure goblin arena: center=[0,0] radius=120 clearance=2",
             "treasure goblin equipment: native armor compositor selected",
             "treasure goblin spawned: game=a guid=10 clock=18",
@@ -24,7 +24,7 @@ class GoblinEvidenceTests(unittest.TestCase):
             "treasure goblin native: guid=10 clock=18 elite=true pursuers=[[-2,0,0]] position=[0,0,0]",
             "treasure goblin native: guid=10 clock=20 pursuers=[[-2,0,0]] position=[10,0,0]",
         ])
-        guest = "ASX active:\ntreasure goblin equipment: native armor compositor selected\ntreasure goblin received: opcode=61 guid=0\n" + "\n".join(
+        guest = "AZSX active:\ntreasure goblin equipment: native armor compositor selected\ntreasure goblin received: opcode=61 guid=0\n" + "\n".join(
             f"treasure goblin received: opcode={op} guid={guid}"
             for op in ("a9", "dd", "aa") for guid in (10, 11)
         )
@@ -34,7 +34,7 @@ class GoblinEvidenceTests(unittest.TestCase):
         host, guest = self.fixture()
         self.assertTrue(assess([host.replace('treasure goblin amulets: event=11 slot=1 guid=71 count=3 marks=1 keys=["d", "e", "f"]', "")])["passed"])
         self.assertTrue(assess([host, guest])["passed"])
-        self.assertFalse(assess(["ASX active:"])["passed"])
+        self.assertFalse(assess(["AZSX active:"])["passed"])
         self.assertFalse(assess([])["passed"])
 
     def test_wrong_creature_or_missing_movement_cannot_validate_replication(self):
@@ -49,7 +49,7 @@ class GoblinEvidenceTests(unittest.TestCase):
                 self.assertFalse(assess([host + "\n" + extra, guest])["passed"])
 
     def test_disable_preserves_core_and_has_no_creatures(self):
-        off = "ASX active:\nTreasure Goblins disabled; core ASX coop remains active."
+        off = "AZSX active:\nTreasure Goblins disabled; core AZSX coop remains active."
         self.assertTrue(assess([off, off], disabled=True)["passed"])
         self.assertFalse(assess([off + "\ntreasure goblin spawned:"], disabled=True)["passed"])
         self.assertFalse(assess(["Treasure Goblins disabled;"], disabled=True)["passed"])

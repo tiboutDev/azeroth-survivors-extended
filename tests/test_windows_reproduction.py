@@ -12,7 +12,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 REPRODUCE = ROOT / "scripts/reproduce.ps1"
 RELEASE = ROOT / "tools/build/release.ps1"
-GAME_VERSION = next(iter(json.loads((ROOT / "asx/supported-games.json").read_text())["games"]))
+GAME_VERSION = next(iter(json.loads((ROOT / "azsx/supported-games.json").read_text())["games"]))
 POWERSHELL = shutil.which("pwsh") or shutil.which("powershell.exe")
 
 
@@ -21,15 +21,15 @@ class WindowsReproduction(unittest.TestCase):
         source = REPRODUCE.read_text(encoding="utf-8-sig")
         missing_check = source.index("if (-not (Test-Path -LiteralPath $ExpectedManifest")
         parse = source.index("ConvertFrom-Json")
-        validation = source.index("Invalid reviewed Windows-native ASX reference.")
-        build = source.index("reproducible native Windows ASX build")
+        validation = source.index("Invalid reviewed Windows-native AZSX reference.")
+        build = source.index("reproducible native Windows AZSX build")
         launch = source.index("$builder = Join-Path")
         self.assertLess(missing_check, parse)
         self.assertLess(parse, validation)
         self.assertLess(validation, build)
         self.assertLess(build, launch)
         self.assertIn("$expected.builder -ne 'windows-msvc'", source)
-        self.assertNotIn("asx-reproducible-build-xwin.json", source)
+        self.assertNotIn("azsx-reproducible-build-xwin.json", source)
 
     def test_native_builder_uses_explicit_target_and_encoded_path_flags(self):
         source = RELEASE.read_text(encoding="utf-8-sig")
@@ -65,8 +65,8 @@ class WindowsReproduction(unittest.TestCase):
                 "sha256": "0" * 64,
             }), encoding="utf-8")
             for reference, expected_message in (
-                (missing, "No reviewed Windows-native ASX reference."),
-                (invalid, "Invalid reviewed Windows-native ASX reference."),
+                (missing, "No reviewed Windows-native AZSX reference."),
+                (invalid, "Invalid reviewed Windows-native AZSX reference."),
             ):
                 with self.subTest(reference=reference.name):
                     result = subprocess.run(
@@ -97,7 +97,7 @@ class WindowsReproduction(unittest.TestCase):
                 'set "target=%~7"\r\n'
                 'if not exist "%target%\\x86_64-pc-windows-msvc\\release" mkdir "%target%\\x86_64-pc-windows-msvc\\release"\r\n'
                 'echo deterministic test fixture>"%target%\\x86_64-pc-windows-msvc\\release\\avrt.dll"\r\n'
-                'echo %CARGO_ENCODED_RUSTFLAGS%>"%ASX_REPRO_TEST_FLAGS%"\r\n'
+                'echo %CARGO_ENCODED_RUSTFLAGS%>"%AZSX_REPRO_TEST_FLAGS%"\r\n'
                 'exit /b 0\r\n', encoding="ascii",
             )
             fake_rustc = bin_dir / "rustc.cmd"
@@ -114,7 +114,7 @@ class WindowsReproduction(unittest.TestCase):
             env["PATH"] = str(bin_dir) + os.pathsep + env.get("PATH", "")
             env["CARGO_TARGET_DIR"] = str(target_dir)
             env["CARGO_ENCODED_RUSTFLAGS"] = "unreviewed inherited override"
-            env["ASX_REPRO_TEST_FLAGS"] = str(cargo_log)
+            env["AZSX_REPRO_TEST_FLAGS"] = str(cargo_log)
             result = subprocess.run(
                 [POWERSHELL, "-NoProfile", "-File", str(REPRODUCE),
                  "-ExpectedManifest", str(expected)],

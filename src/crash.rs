@@ -261,7 +261,7 @@ pub struct Record {
 }
 
 // Flight records from earlier builds store the legacy engine's Hook::ALL
-// ordinal. Keep this diagnostic catalog local so the ASX-only root can decode
+// ordinal. Keep this diagnostic catalog local so the AZSX-only root can decode
 // retained crash files without linking the retired legacy bridge.
 const HISTORIC_HOOK_NAMES: &[&str] = &[
     "TICK", "SERIALIZE", "WRITE", "PAUSE", "RESUME", "START", "AWARD_XP",

@@ -39,8 +39,8 @@ class LocalArtifactsTests(unittest.TestCase):
         report = self.write("test-results/run/report.json", b'{"status":"kept"}\n')
         backup = self.write("test-results/repository-cleanup/originals/source.rs", b"original source\x00\xff")
         binary_bytes = bytes(range(256)) * 100
-        binary = self.write("target/asx/release/asx.dll", binary_bytes)
-        receipt = self.write("target/asx/release/build-receipt.json", b'{"sha256":"abc"}\n')
+        binary = self.write("target/azsx/release/azsx.dll", binary_bytes)
+        receipt = self.write("target/azsx/release/build-receipt.json", b'{"sha256":"abc"}\n')
         cache = self.write("target/debug/deps/unused.rmeta", b"disposable cache")
 
         dry = local_artifacts.summary(self.root)
@@ -59,20 +59,20 @@ class LocalArtifactsTests(unittest.TestCase):
             "test-results/run",
             "test-results/repository-cleanup",
             "test-results/repository-cleanup/originals",
-            "target/asx",
-            "target/asx/release",
+            "target/azsx",
+            "target/azsx/release",
             "test-results/run/report.json",
             "test-results/repository-cleanup/originals/source.rs",
-            "target/asx/release/asx.dll",
-            "target/asx/release/build-receipt.json",
+            "target/azsx/release/azsx.dll",
+            "target/azsx/release/build-receipt.json",
         })
         self.assertFalse(any("unused.rmeta" in item["path"] for item in index["entries"]))
         with tarfile.open(archive, "r:gz") as tar:
             restored = {member.name: tar.extractfile(member).read() for member in tar if member.isfile()}
         self.assertEqual(restored["test-results/run/report.json"], b'{"status":"kept"}\n')
         self.assertEqual(restored["test-results/repository-cleanup/originals/source.rs"], b"original source\x00\xff")
-        self.assertEqual(restored["target/asx/release/asx.dll"], binary_bytes)
-        self.assertEqual(restored["target/asx/release/build-receipt.json"], b'{"sha256":"abc"}\n')
+        self.assertEqual(restored["target/azsx/release/azsx.dll"], binary_bytes)
+        self.assertEqual(restored["target/azsx/release/build-receipt.json"], b'{"sha256":"abc"}\n')
         self.assertFalse(cache.exists())
 
     def test_modern_receipts_are_preserved_with_binaries_and_without_a_binary(self):

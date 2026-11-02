@@ -1,5 +1,5 @@
 //! Diagnostic-only progression gates. Native lifetime/healing/presence clocks stay unchanged.
-pub(super) fn enabled()->bool{std::env::var("ASX_TEST_OBSERVED_STEPS").as_deref()==Ok("1")}
+pub(super) fn enabled()->bool{std::env::var("AZSX_TEST_OBSERVED_STEPS").as_deref()==Ok("1")}
 pub(super) fn supply_ready(step:u32,reserves:usize,last_claim:Option<u64>)->bool{
  match step{0=>reserves==0,1=>reserves>=1,2..=10=>last_claim==Some(u64::from(step)),_=>false}
 }

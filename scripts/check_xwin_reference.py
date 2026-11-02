@@ -19,7 +19,7 @@ def verify(reference, candidate):
         raise ValueError("Builder mismatch; native Windows references are separate")
     expected = reference.get("artifact", {})
     if expected.get("file") != "avrt.dll" or expected.get("game_version") != selected_client()[0]:
-        raise ValueError("Reference does not identify the supported ASX artifact")
+        raise ValueError("Reference does not identify the supported AZSX artifact")
     if candidate.get("status") != "pending-review":
         raise ValueError("Expected a fresh two-build candidate")
     gates = candidate.get("verification", {})

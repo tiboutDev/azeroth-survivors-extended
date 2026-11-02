@@ -2,7 +2,7 @@
 #[cfg(feature = "test-hooks")]
 use super::presentation;
 use super::{
-    addon_activation, blessings, bonus_tooltip, bonus_ui, combat, combat_text, duplicate_loot,
+    addon_api, blessings, bonus_tooltip, bonus_ui, combat, combat_text, duplicate_loot,
     elites, experience, fatigue, local_base, menu_pause, menu_ui, party_ui,
     pause, reward_cards, run_stats, session, support, wallet, xp_hooks, Adapter, Runtime, RUNTIME,
 };
@@ -11,14 +11,14 @@ use crate::{log::Log, proc::Local};
 pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
     let adapter = Adapter::select(sha)?;
     log.info(&format!(
-        "ASX capabilities: duplicate-gold={} native-marks={}",
+        "AZSX capabilities: duplicate-gold={} native-marks={}",
         adapter.duplicate_loot_enabled(),
         adapter.native_marks_enabled()
     ));
     // Until gameplay capabilities are connected, activation is an explicit
     // observation trial. Never present an unmodified native run as mod parity.
-    let asx = std::env::var("ASX_ACTIVE").as_deref() == Ok("1");
-    if !asx && std::env::var("AZCOOP_OFFICIAL_OBSERVE").as_deref() != Ok("1") {
+    let azsx = std::env::var("AZSX_ACTIVE").as_deref() == Ok("1");
+    if !azsx && std::env::var("AZCOOP_OFFICIAL_OBSERVE").as_deref() != Ok("1") {
         return Err(
             "Official gameplay migration is not playable yet; explicit observation trial required"
                 .into(),
@@ -26,7 +26,7 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
     }
     let local = Local::game()?;
     adapter.verify(&local, local.base as u64)?;
-    let rules = asx || std::env::var("AZCOOP_OFFICIAL_GAMEPLAY").as_deref() == Ok("1");
+    let rules = azsx || std::env::var("AZCOOP_OFFICIAL_GAMEPLAY").as_deref() == Ok("1");
     RUNTIME
         .set(Runtime {
             adapter,
@@ -81,6 +81,10 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         let entry=adapter.menu_entries()[4];
         if r.local.read(local_base()+entry.rva as usize,entry.bytes.len())?!=entry.bytes{
             return Err("Native reward-header entry changed".into());
+        }
+        let title = adapter.menu_title_result_entry();
+        if r.local.read(local_base()+title.rva as usize,title.bytes.len())? != title.bytes {
+            return Err("Native menu title result changed".into());
         }
         crate::install::install(&menu_ui::hooks(adapter,local_base()))?;
         crate::install::install(&[party_ui::hook(adapter), party_ui::spell_hook(adapter)])?;
@@ -233,12 +237,13 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         "Official difficulty: native HP, damage and density; {} legacy sites verified intact.",
         adapter.native_difficulty_entries().len()
     ));
-    let ui_active = asx;
+    let ui_active = azsx;
     #[cfg(feature = "test-hooks")]
     let ui_active =
         ui_active || std::env::var("AZCOOP_TEST_OFFICIAL_PARTY_UI").as_deref() == Ok("1");
     if ui_active {
-        addon_activation::install(&RUNTIME.get().ok_or("Missing ASX runtime")?.local, log)?;
+        addon_api::install()?;
+        super::lobby::install()?;
     }
     if rules {
         super::treasure_goblins::install(runtime);
@@ -246,14 +251,14 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         super::crystals::install(runtime);
         super::rituals::install(runtime);
     }
-    if asx {
-        log.info("ASX active: official multiplayer, shared progression rules and native interface extensions enabled.");
-        if let Some(path) = std::env::var_os("ASX_READY_FILE") {
+    if azsx {
+        log.info("AZSX active: official multiplayer, shared progression rules and native interface extensions enabled.");
+        if let Some(path) = std::env::var_os("AZSX_READY_FILE") {
             std::fs::write(
                 path,
-                serde_json::json!({"product":"asx","game_sha256":sha}).to_string(),
+                serde_json::json!({"product":"azsx","game_sha256":sha}).to_string(),
             )
-            .map_err(|e| format!("ASX startup acknowledgement failed: {e}"))?;
+            .map_err(|e| format!("AZSX startup acknowledgement failed: {e}"))?;
         }
     } else {
         if rules {

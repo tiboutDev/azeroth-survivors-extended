@@ -4,13 +4,13 @@ use super::reward_services::Services;
 use super::{io, Runtime};
 #[cfg(feature="test-hooks")]
 use std::sync::atomic::{AtomicBool, Ordering};
-use asx_game::official::{RingChoice,RingStatLoan};
-use asx_gameplay::enchantments::{Enchantment,Enchantments,RankedEnchantment,Rank};
+use azsx_game::official::{RingChoice,RingStatLoan};
+use azsx_gameplay::enchantments::{Enchantment,Enchantments,RankedEnchantment,Rank};
 #[derive(Default)]struct State{game:u64,clock:f32,rules:Enchantments,offers:Vec<(RingChoice,Enchantment)>,rng:u64}
 static STATE:std::sync::Mutex<Option<State>>=std::sync::Mutex::new(None);
 thread_local!{static PENDING:std::cell::RefCell<Vec<(RingChoice,Enchantment)>>=const{std::cell::RefCell::new(Vec::new())};static STATS:std::cell::RefCell<Vec<u64>>=const{std::cell::RefCell::new(Vec::new())};}
 pub fn reset(){if let Ok(mut s)=STATE.lock(){*s=None;}}
-pub fn observe(game:u64,p:Option<&asx_game::official::PartyObservation>){
+pub fn observe(game:u64,p:Option<&azsx_game::official::PartyObservation>){
  let Some(p)=p else{reset();return};
  if let Ok(mut guard)=STATE.lock(){let s=guard.get_or_insert_with(State::default);if s.game!=game||p.clock+0.01<s.clock{*s=State{game,..Default::default()};}s.clock=p.clock;let ids=p.actors.iter().map(|a|(a.slot,a.guid)).collect::<Vec<_>>();s.rules.retain(&ids);s.offers.retain(|(c,_)|ids.contains(&(c.slot,c.guid)));}
 }
@@ -89,19 +89,19 @@ pub fn fixture_tick(r:&Runtime,game:u64){
  if !fixture_enabled(){return}
  static NEXT:std::sync::Mutex<(f32,u32)>=std::sync::Mutex::new((4.,0));
  static MATRIX:AtomicBool=AtomicBool::new(false);
- let Some(p)=r.extension_party()else{return};if p.actors.is_empty()||p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return}
+ let Some(p)=r.extension_party()else{return};if p.actors.is_empty()||p.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return}
  let io=io::Access{local:&r.local,adapter:r.adapter};
  if p.clock>=3. && !MATRIX.swap(true,Ordering::Relaxed){
   let before=r.adapter.ring_input_header(&r.local,game);
-  let _=asx_game::official::SupportCalls::refresh_support(&io,game);let baseline=r.adapter.ring_stat_values(&r.local,game);
+  let _=azsx_game::official::SupportCalls::refresh_support(&io,game);let baseline=r.adapter.ring_stat_values(&r.local,game);
   for kind in Enchantment::ALL{for rank in Rank::ALL{let e=RankedEnchantment{kind,rank};
-   OVERRIDE.with(|v|v.set(Some(e)));let _=asx_game::official::SupportCalls::refresh_support(&io,game);let actual=r.adapter.ring_stat_values(&r.local,game);let _=asx_game::official::SupportCalls::refresh_support(&io,game);let repeat=r.adapter.ring_stat_values(&r.local,game);OVERRIDE.with(|v|v.set(None));
+   OVERRIDE.with(|v|v.set(Some(e)));let _=azsx_game::official::SupportCalls::refresh_support(&io,game);let actual=r.adapter.ring_stat_values(&r.local,game);let _=azsx_game::official::SupportCalls::refresh_support(&io,game);let repeat=r.adapter.ring_stat_values(&r.local,game);OVERRIDE.with(|v|v.set(None));
    r.log.info(&format!("enchantment ranked matrix: tier={} name={} base={baseline:?} actual={actual:?} repeat={repeat:?} restored={}",rank as u8,kind.name(),r.adapter.ring_input_header(&r.local,game)==before));
   }
   }
-  let _=asx_game::official::SupportCalls::refresh_support(&io,game);
+  let _=azsx_game::official::SupportCalls::refresh_support(&io,game);
  }
- let limit=if std::env::var("ASX_TEST_HUD_FIXTURE").as_deref()==Ok("1"){5}else{40};
+ let limit=if std::env::var("AZSX_TEST_HUD_FIXTURE").as_deref()==Ok("1"){5}else{40};
  let due=NEXT.lock().ok().is_some_and(|mut n|{if p.clock<n.0||n.1>=limit{return false}n.0=p.clock+0.6;n.1+=1;true});
  if due{
   type Gold=unsafe extern "system" fn(u64,u32)->usize;type Chest=unsafe extern "system" fn(u64)->bool;
@@ -113,7 +113,7 @@ pub fn fixture_tick(r:&Runtime,game:u64){
   let owned=STATE.lock().ok().and_then(|guard|guard.as_ref().map(|s|{
       let mut owned=Vec::new();for a in &p.actors{for ring in 0..9u8{if let Some(e)=s.rules.get(a.slot,a.guid,ring){owned.push((a.slot,a.guid,ring,e.name()));}}}owned
   })).unwrap_or_default();
-  let header=r.adapter.ring_input_header(&r.local,game);let _=asx_game::official::SupportCalls::refresh_support(&io,game);let first=r.adapter.ring_stat_values(&r.local,game);let _=asx_game::official::SupportCalls::refresh_support(&io,game);let repeat=r.adapter.ring_stat_values(&r.local,game);
+  let header=r.adapter.ring_input_header(&r.local,game);let _=azsx_game::official::SupportCalls::refresh_support(&io,game);let first=r.adapter.ring_stat_values(&r.local,game);let _=azsx_game::official::SupportCalls::refresh_support(&io,game);let repeat=r.adapter.ring_stat_values(&r.local,game);
   r.log.info(&format!("enchantment fixture rebuild: stable={} restored={}",first==repeat,header==r.adapter.ring_input_header(&r.local,game)));
   let rows=owned.into_iter().map(|(slot,guid,ring,name)|{let row=r.adapter.ring_actor_owned(&r.local,game,slot,guid,ring,r.local.base as u64);(slot,guid,ring,name,row)}).collect::<Vec<_>>();
   r.log.info(&format!("enchantment fixture retained: {rows:?}"));

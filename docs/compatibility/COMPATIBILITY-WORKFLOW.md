@@ -2,7 +2,7 @@
 
 For the ordered gates, expected results, evidence and stop conditions, start with the [compatibility checklist](COMPATIBILITY-CHECKLIST.md).
 
-Use the [expected-behavior acceptance reference](ASX-BEHAVIOR.md) to plan and
+Use the [expected-behavior acceptance reference](AZSX-BEHAVIOR.md) to plan and
 record feature-level verification; update affected criteria with semantic changes.
 
 Keep the authoritative checkout on Linux. Generated Windows receivers are
@@ -12,15 +12,15 @@ build, copy files or launch clients.
 ## Review and plan
 
 ```sh
-python3 tools/dev/asx_dev.py check
-python3 tools/dev/asx_dev.py inventory > .local/contracts.json
-python3 tools/dev/asx_dev.py impact --comparison .local/comparison.json > .local/impact.json
-python3 tools/dev/asx_dev.py plan events
+python3 tools/dev/azsx_dev.py check
+python3 tools/dev/azsx_dev.py inventory > .local/contracts.json
+python3 tools/dev/azsx_dev.py impact --comparison .local/comparison.json > .local/impact.json
+python3 tools/dev/azsx_dev.py plan events
 sh tools/dev/check.sh --profile full
 sh tools/dev/check.sh --profile diagnostics
 ```
 
-`asx/supported-games.json` owns executable identity and archive inventory.
+`azsx/supported-games.json` owns executable identity and archive inventory.
 `compat/clients/` owns reviewed native literals; the template contains stable
 translation code. `compat/features.json` owns stable feature IDs, dispositions
 and affected domains. Feature documentation is generated with
@@ -42,7 +42,7 @@ the receipt. Normal and diagnostic artifacts are distinct.
 
 ```sh
 sh tools/dev/build-chest-fixture.sh
-python3 tools/dev/asx_dev.py stage --receiver "$RECEIVER" --dll target/test-hooks/x86_64-pc-windows-msvc/release/avrt.dll
+python3 tools/dev/azsx_dev.py stage --receiver "$RECEIVER" --dll target/test-hooks/x86_64-pc-windows-msvc/release/avrt.dll
 ```
 
 Staging requires an existing reviewed private import and an owned unchanged DLL.
@@ -56,8 +56,8 @@ operation, never a deployment command for player installations.
 In the staged receiver, with Windows Python:
 
 ```text
-python -I -B tools/dev/asx_dev.py validate solo-events
-python -I -B tools/dev/asx_dev.py validate coop-events
+python -I -B tools/dev/azsx_dev.py validate solo-events
+python -I -B tools/dev/azsx_dev.py validate coop-events
 ```
 
 Suites in `compat/suites.json` declare player count, artifact kind, maximum time,
@@ -84,7 +84,7 @@ separate from actual widget visibility, dimensions and text.
 
 A guarded test-hooks-only native setter consumes a reserved diagnostic mailbox
 before native configuration storage. Ordinary calls preserve arguments/returns.
-The registered name is only a log transport; it does not activate ASX or persist
+The registered name is only a log transport; it does not activate AZSX or persist
 a user setting. Each record carries schema, session, slot, sequence and clock;
 Rust adds copied actor identity when available. The collector rejects wrong
 sessions, missing/repeated sequence numbers, nonfinite clocks and malformed data.
@@ -178,7 +178,7 @@ The `source_fingerprint` field remains a compatibility alias of
 `compilation_fingerprint`; both must agree. Exact DLL hash and artifact kind
 checks remain mandatory.
 
-Retained native UI and the independent ASXUI addon are hashed independently at staging and validation. Validation identity
+Retained native UI and the independent AZSXUI addon are hashed independently at staging and validation. Validation identity
 continues to cover scenario-specific executable tooling and fixture data. A UI
 or fixture change requires the relevant new validation, but does not invalidate
 a schema-2 DLL whose compilation inputs are unchanged. Rust-embedded content
@@ -189,9 +189,9 @@ Old proofs without a UI identity cannot satisfy the new coop prerequisite.
 
 ### Execution-only Windows staging
 
-`asx_dev.py stage --receiver <isolated-folder> --dll <built-dll>` verifies the
+`azsx_dev.py stage --receiver <isolated-folder> --dll <built-dll>` verifies the
 compiler receipt against the authoritative checkout before deployment. It copies
-only the selected DLL, native UI, ASXUI, client/scenario registries and the union of
+only the selected DLL, native UI, AZSXUI, client/scenario registries and the union of
 Python dependencies and fixtures required by the declared live scenarios.
 Rust sources, Cargo inputs, portable tests and compiler helpers stay in WSL.
 Unchanged execution files are compared by SHA-256 and are not copied again.
@@ -199,7 +199,7 @@ Unknown receiver files and prior results are preserved, including old source
 copies; they are not consulted as proof of the current artifact.
 
 The schema-2 local staging receipt binds the compiler receipt, DLL, native
-executable identity and complete execution inventory. Run `asx_dev.py preflight`
+executable identity and complete execution inventory. Run `azsx_dev.py preflight`
 with Windows Python in the receiver to check these without launching a game.
 `validate` runs that same preflight before any scenario. Missing/changed tools,
 UI, ownership, executable or receipt fail closed. Source changes still require
@@ -257,7 +257,7 @@ HUD alone do not prove world-name visibility. NPC durability is raised only for
 the disposable elite/guardian witnesses; no production definitions are changed.
 The adapter fixture is available only through the propagated `test-hooks` feature.
 
-Self-targeted Rejuvenation probes the native periodic path separately from ASX
+Self-targeted Rejuvenation probes the native periodic path separately from AZSX
 foreign-HoT accounting. A refused cast, an ordinary direct-heal queue write or a
 positive gameplay heal cannot satisfy periodic-queue acceptance. Preserve those
 failures rather than weakening the checks. Native rank/name mapping and the
@@ -272,7 +272,7 @@ then restore the previously owned normal artifact.
 The remaining-UI scenario wounds each caster immediately before its native HoT,
 uses Renew and Rejuvenation separately and advances only on an accepted cast.
 Refused casts are retried at most four times without removing native eligibility
-or cooldown rules. Name witnesses flow through the owned ASX log, not DLL stderr;
+or cooldown rules. Name witnesses flow through the owned AZSX log, not DLL stderr;
 they retain the original native label on missing classification. Constructor
 role and GUID must match the actual retained label on both clients.
 
@@ -290,15 +290,15 @@ native integer packet twice. A successful test executable is not live proof of
 the newly installed callbacks; retain that distinction when a bounded game trial
 has already been consumed before the new integration is built.
 
-Extension trials copy ASXUI into each disposable native addon profile. Its files
+Extension trials copy AZSXUI into each disposable native addon profile. Its files
 are part of the staging/UI fingerprint, so a solo prerequisite cannot validate
-a different addon build. This is diagnostic staging, not ASX installer ownership.
+a different addon build. This is diagnostic staging, not AZSX installer ownership.
 
 ### Native lobby readiness
 
 The 0.133 client requires every participant to answer its native ready check.
 Its native CLI AUTOSTART path repeatedly starts new checks, including after all
-participants answer; this was reproduced with ASX inactive. The isolated harness
+participants answer; this was reproduced with AZSX inactive. The isolated harness
 therefore uses the game's bounded tap driver for the host's Enter button and the
 guest's Ready button in its fixed 800x600 window. Coordinates were checked in a
 focused isolated visual trial. Native modal input owns these actions; no server
@@ -312,7 +312,7 @@ four-second override repeatedly restarted ready checks in 0.133 even after a
 guest answered. A bounded native lobby comparison reproduced that difference;
 the pause fixture still owns its asymmetric three/twenty-second reward windows.
 
-`ASX_LOG_NATIVE_UI=1` enables only the selected native sink's stdout log flag,
+`AZSX_LOG_NATIVE_UI=1` enables only the selected native sink's stdout log flag,
 independently of Game autostart and autopick. It is off by default, requires a
 valid current sink boolean and preserves every other byte. This observer is
 available in normal builds without changing gameplay. The harness uses it to

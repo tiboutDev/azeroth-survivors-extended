@@ -1,7 +1,7 @@
 //! Host-owned currency policy. Native layouts/calls stay in the selected adapter.
 use super::*;
-use asx_game::official::{PartyObservation, NATIVE_PLAYERS};
-use asx_gameplay::official::{shared_gold_award, SharedWallet};
+use azsx_game::official::{PartyObservation, NATIVE_PLAYERS};
+use azsx_gameplay::official::{shared_gold_award, SharedWallet};
 #[derive(Clone, Copy)]
 struct State {
     game: u64,
@@ -71,7 +71,7 @@ pub fn boundary(
     let Some(party) = party.filter(|p| {
         terminal || p.actors
             .iter()
-            .any(|a| a.phase != asx_gameplay::Phase::Inactive)
+            .any(|a| a.phase != azsx_gameplay::Phase::Inactive)
     }) else {
         *STATE.lock().map_err(|_| "Wallet state unavailable")? = None;
         return Ok(());
@@ -98,7 +98,7 @@ pub fn boundary(
     };
     next.clock = party.clock;
     next.members = party.actors.len();
-    next.armory=snapshot_armory(next.armory,party.actors.iter().filter(|a|terminal||a.phase!=asx_gameplay::Phase::Inactive).map(|a|(a.slot,a.guid)),|slot,guid|runtime.adapter.armory_gold_bonus(&runtime.local,game,slot,guid))?;
+    next.armory=snapshot_armory(next.armory,party.actors.iter().filter(|a|terminal||a.phase!=azsx_gameplay::Phase::Inactive).map(|a|(a.slot,a.guid)),|slot,guid|runtime.adapter.armory_gold_bonus(&runtime.local,game,slot,guid))?;
     {
         *STATE.lock().map_err(|_| "Wallet state unavailable")? = Some(next);
     }
@@ -164,7 +164,7 @@ unsafe extern "system" fn gold(c: &mut crate::stub::Context) {
             commit(state, wallet)?;
             c.result = 1;
             if GOLD_SAMPLES.fetch_add(1, Ordering::Relaxed) < 512
-                || matches!(source, asx_gameplay::official::Award::ConvertedReward | asx_gameplay::official::Award::SkippedReward)
+                || matches!(source, azsx_gameplay::official::Award::ConvertedReward | azsx_gameplay::official::Award::SkippedReward)
             {
                 runtime.log.info(&format!(
                     "official gold: source={source:?} raw={} amount={amount} balance={} earned={}",
@@ -369,7 +369,7 @@ mod armory_tests {
         let snapshot=snapshot_armory([None;NATIVE_PLAYERS],members,|slot,_|{reads+=1;Ok(Some(if slot==0{0.1}else{0.3}))}).unwrap();assert_eq!(reads,2);
         let stable=snapshot_armory(snapshot,members,|_,_|Err("Native actor vector moved during reward".into())).unwrap();
         let own=cached_armory(&stable,0,111).unwrap().unwrap();let gear=members.map(|(s,g)|cached_armory(&stable,s,g).unwrap().unwrap());
-        let multiplier=asx_gameplay::official::shared_gold_equipment_multiplier(1.3,own,gear).unwrap();
+        let multiplier=azsx_gameplay::official::shared_gold_equipment_multiplier(1.3,own,gear).unwrap();
         assert!((multiplier-1.5).abs()<0.00001);
         let wallet=SharedWallet{gold:0,earned:0}.credit((100.*multiplier).round() as u32).unwrap();assert_eq!(wallet.gold,150);
     }
@@ -412,7 +412,7 @@ pub fn fixture_tick(r:&Runtime,server:u64){
  static OPENED:AtomicUsize=AtomicUsize::new(0);
  let result=(||->Result<(),String>{
   let Some(p)=r.adapter.party(&r.local,server)?else{return Ok(())};
-  if p.actors.len()!=2||p.clock<2.||p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return Ok(())}
+  if p.actors.len()!=2||p.clock<2.||p.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return Ok(())}
   if OPENED.load(Ordering::Acquire)>=3{return Ok(())}
   OPENED.fetch_add(1,Ordering::AcqRel);let game=r.adapter.game_address(server)?;
   type Gold=unsafe extern "system" fn(u64,u32)->usize;type Chest=unsafe extern "system" fn(u64)->bool;
@@ -423,12 +423,12 @@ pub fn fixture_tick(r:&Runtime,server:u64){
  })();if let Err(e)=result{r.log.warn(&format!("Reward wallet fixture setup rejected: {e}"));}
 }
 
-fn normalized_award(runtime:&Runtime,state:&State,game:u64,raw:u32,source:asx_gameplay::official::Award)->Result<u32,String>{
+fn normalized_award(runtime:&Runtime,state:&State,game:u64,raw:u32,source:azsx_gameplay::official::Award)->Result<u32,String>{
     let (_,multiplier,race)=runtime.adapter.current_gold(&runtime.local,game)?;
     let collector=runtime.adapter.effect_source(&runtime.local,game)?.ok_or("Missing gold collector identity")?;
     normalized_for_actor(runtime,state,raw,source,(multiplier,race,collector,false))
 }
-fn normalized_for_actor(runtime:&Runtime,state:&State,raw:u32,source:asx_gameplay::official::Award,origin:(f32,u8,(u32,u64),bool))->Result<u32,String>{
+fn normalized_for_actor(runtime:&Runtime,state:&State,raw:u32,source:azsx_gameplay::official::Award,origin:(f32,u8,(u32,u64),bool))->Result<u32,String>{
     let (multiplier,race,best)=normalized_multiplier(runtime,state,origin)?;
     shared_gold_award(raw,multiplier,runtime.adapter.racial_gold_bonus(race),best,state.members,source)
 }
@@ -438,20 +438,20 @@ fn normalized_multiplier(runtime:&Runtime,state:&State,origin:(f32,u8,(u32,u64),
     let best=actors.iter().map(|a|runtime.adapter.racial_gold_bonus(a.2)).fold(0.0f32,f32::max);
     let mut equipment=vec![];let mut collector_equipment=None;
     for &(slot,guid,_,phase) in &actors{
-        if phase==asx_gameplay::Phase::Inactive&&!terminal{continue}
+        if phase==azsx_gameplay::Phase::Inactive&&!terminal{continue}
         if let Some(bonus)=cached_armory(&state.armory,slot,guid)?{
             equipment.push(bonus);
             if (slot,guid)==collector{collector_equipment=Some(bonus);}
         }
     }
     let multiplier=if let Some(own)=collector_equipment{
-        asx_gameplay::official::shared_gold_equipment_multiplier(multiplier,own,equipment)?
+        azsx_gameplay::official::shared_gold_equipment_multiplier(multiplier,own,equipment)?
     }else if equipment.is_empty(){multiplier}else{return Err("Gold collector absent from armory membership".into())};
     let multiplier=multiplier-blessings::personal(collector.0,collector.1,2)+blessings::strongest(2);
     Ok((multiplier,race,best))
 }
 /// Read-only UI projection; the same provenance as a native world-gold receipt.
-pub(super) fn effective_multiplier(runtime:&Runtime,game:u64,actor:&asx_game::official::ActorObservation)->Option<f32>{
+pub(super) fn effective_multiplier(runtime:&Runtime,game:u64,actor:&azsx_game::official::ActorObservation)->Option<f32>{
     let state=state(game)?;
     let (value,race,best)=normalized_multiplier(runtime,&state,(actor.gold_multiplier,actor.race_id,(actor.slot,actor.guid),false)).ok()?;
     let result=(f64::from(value)-f64::from(runtime.adapter.racial_gold_bonus(race))+f64::from(best)).max(0.)as f32;
@@ -467,11 +467,11 @@ pub fn reward_credit(runtime:&Runtime,game:u64,collector:(u32,u64),base:u32,coun
         let (multiplier,race)=runtime.adapter.loot_actor_gold(&runtime.local,game,collector.0,collector.1)?;
         #[cfg(feature="test-hooks")]
         runtime.log.info(&format!("{source} gold provenance: slot={} base={base} multiplier={multiplier} personal_fortune={} shared_fortune={}",collector.0,blessings::personal(collector.0,collector.1,2),blessings::strongest(2)));
-        normalized_for_actor(runtime,&s,base,asx_gameplay::official::Award::World,(multiplier,race,collector,runtime.adapter.loot_victory(&runtime.local,game)?))?
+        normalized_for_actor(runtime,&s,base,azsx_gameplay::official::Award::World,(multiplier,race,collector,runtime.adapter.loot_victory(&runtime.local,game)?))?
     }else{
         if runtime.adapter.solo_run(&runtime.local,game)?.is_none(){return Err("Missing reward wallet authority".into())}
         let (_,multiplier,_)=runtime.adapter.current_gold(&runtime.local,game)?;
-        asx_gameplay::gold::multiply(base,multiplier)?
+        azsx_gameplay::gold::multiply(base,multiplier)?
     };
     let total=amount.checked_mul(count as u32).ok_or("Reward total overflow")?;
     let before=if let Some(s)=current{s.wallet}else{runtime.adapter.wallet_seed(&runtime.local,game)?};

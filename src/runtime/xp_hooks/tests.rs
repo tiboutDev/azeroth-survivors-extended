@@ -51,7 +51,7 @@ fn moved_award_stub_preserves_native_fallback_call() {
     assert_eq!(result, 4321);
 }
 
-use asx_game::official::ExperienceAward;
+use azsx_game::official::ExperienceAward;
 use std::cell::{Cell, RefCell};
 
 #[derive(Default)]

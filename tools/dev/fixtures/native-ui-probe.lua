@@ -2,7 +2,7 @@
 -- The selected sandbox has no print/file output; tagged errors are audit records.
 local previous=geterrorhandler and geterrorhandler()
 if seterrorhandler then seterrorhandler(function(message)
- if type(message)=="string" and string.find(message,"ASX_UI_PROBE",1,true) then return end
+ if type(message)=="string" and string.find(message,"AZSX_UI_PROBE",1,true) then return end
  if previous then previous(message) end
 end) end
 if SetCVar then pcall(SetCVar,"nameplateShowEnemies","1") end
@@ -12,7 +12,7 @@ local function safe(call)
  local ok,value=pcall(call)
  return ok and tostring(value) or "unsupported"
 end
-local function report(text) error("ASX_UI_PROBE "..text,0) end
+local function report(text) error("AZSX_UI_PROBE "..text,0) end
 frame:RegisterEvent("UNIT_COMBAT")
 frame:RegisterEvent("COMBAT_TEXT_UPDATE")
 frame:SetScript("OnEvent",function()

@@ -1,7 +1,7 @@
 //! Own-process native heap access. Calls happen only at reviewed owner-thread
 //! boundaries, with no gameplay-state lock held across a game allocator call.
 use crate::proc::Local;
-use asx_game::{
+use azsx_game::{
     official::{MutableMemory, SelectedAdapter},
     memory::Mem,
 };
@@ -62,7 +62,7 @@ impl MutableMemory for Access<'_> {
     }
 }
 
-impl asx_game::official::CurrencyMemory for Access<'_> {
+impl azsx_game::official::CurrencyMemory for Access<'_> {
     fn coinage(&self, map: u64, gold: u32) -> Result<(), String> {
         let copper = gold.checked_mul(10000).ok_or("Native coinage overflow")?;
         type Set = unsafe extern "system" fn(u64, u16, u32) -> usize;
@@ -74,7 +74,7 @@ impl asx_game::official::CurrencyMemory for Access<'_> {
     }
 }
 
-impl asx_game::official::SupportCalls for Access<'_> {
+impl azsx_game::official::SupportCalls for Access<'_> {
     fn loot_send(&self,server:u64,peer:Option<u64>,opcode:u16,bytes:&[u8])->Result<(),String>{
         let entry=self.adapter.loot_send_entry(peer.is_some()).ok_or("Loot transport unavailable")?;
         if self.local.read(self.local.base+entry.rva as usize,entry.bytes.len())?!=entry.bytes{return Err("Native loot transport bytes changed".into())}
@@ -174,7 +174,7 @@ impl asx_game::official::SupportCalls for Access<'_> {
         Ok(())
     }
     fn support_hurt_tagged(&self,game:u64,amount:f32,enemy:u64,melee:bool,native_kind:u32,native_spell:u32)->Result<(),String>{
-        let call:asx_game::official::NativeHurtCall=unsafe{std::mem::transmute(self.local.base+self.adapter.hurt_entry().rva as usize)};
+        let call:azsx_game::official::NativeHurtCall=unsafe{std::mem::transmute(self.local.base+self.adapter.hurt_entry().rva as usize)};
         unsafe{call(game,amount,enemy,melee,native_kind,native_spell)};Ok(())
     }
     fn support_damage(&self, game: u64, guid: u64, amount: f32) -> Result<(), String> {
@@ -261,11 +261,11 @@ impl asx_game::official::SupportCalls for Access<'_> {
         Ok(())
     }
     fn healing_meter(&self, game: u64, spell: u32, amount: f32) -> Result<(), String> {
-        let call: asx_game::official::NativeHealCall = unsafe {
+        let call: azsx_game::official::NativeHealCall = unsafe {
             std::mem::transmute(self.local.base + self.adapter.support_entries()[3].rva as usize)
         };
         let metadata = [(-2i64) as u64, 0, 0, 0, 0, 0];
-        unsafe { asx_game::official::call_native_heal(call, game, amount, spell, metadata.as_ptr()) };
+        unsafe { azsx_game::official::call_native_heal(call, game, amount, spell, metadata.as_ptr()) };
         Ok(())
     }
 }

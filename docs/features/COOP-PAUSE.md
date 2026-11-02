@@ -1,6 +1,6 @@
 # Cooperative pause
 
-ASX retains the native Paused menu, buttons and waiting panel. It does not add a
+AZSX retains the native Paused menu, buttons and waiting panel. It does not add a
 parallel menu, network listener or desktop/CPU control mechanism.
 
 The native `paused` notification sets the input gate; `unpaused` releases it.
@@ -14,21 +14,21 @@ opens that participant's menu; Resume/Escape closes only that ownership. Another
 menu or reward choice continues holding the barrier. Native options remain in
 their native flow.
 
-Guest ownership changes use the reliable native input stream with the ASX menu
+Guest ownership changes use the reliable native input stream with the AZSX menu
 opcode. Validate payload extent, current run epoch and connected peer/actor
 identity. Departed/inactive actors and reused slots cannot retain another
 character's menu. Teardown and a new run discard old ownership.
 
 `pause.rs` owns pause authority and UI trampolines; `menu_pause.rs` owns personal
 menu state. Session callbacks use bounded ports. Native offsets, enum/frame
-translation and call shapes stay selected in `asx-game`; portable menu policy
-lives in `asx-gameplay::official::MenuOwners`.
+translation and call shapes stay selected in `azsx-game`; portable menu policy
+lives in `azsx-gameplay::official::MenuOwners`.
 
 Portable policy, selected-memory fixtures and Windows stand-ins cover distinct
 risks. Read [testing](../development/TESTING.md) for the current check scope; synthetic callback
 evidence does not establish every visible menu flow in a running game.
 
-At entry to a host-owned group pause, ASX emits the existing native
+At entry to a host-owned group pause, AZSX emits the existing native
 `SMSG_MONSTER_MOVE` stop representation to each participant for the other current
 actors. This cancels the client's outstanding remote rendering spline, which
 would otherwise keep moving while authoritative simulation time is stopped.
@@ -38,7 +38,7 @@ movement updates resume the display. The sender's selected bytes and current
 slot/GUID identities are checked. No new hook or transport is added.
 
 The retained native pause renderer also forces visibility for a participant-owned
-menu. The native guest Input::Pause branch alone does not open that menu; ASX
+menu. The native guest Input::Pause branch alone does not open that menu; AZSX
 must carry personal ownership through the same retained visibility/rebuild path
 as the waiting panel, while preserving native menu actions. A personal menu is
 distinct from another participant's waiting panel and does not release the
@@ -49,7 +49,7 @@ shared barrier on close.
 Observe native UI Pause actions before the guest input filter, rather than only
 at the later apply handler. In 0.138.0 the filter consumes Pause (tag 7) for an
 active guest and returns true, so the apply handler never sees that action.
-ASX records the validated personal-menu request first and forwards both original
+AZSX records the validated personal-menu request first and forwards both original
 arguments to the filter. Its boolean return is preserved exactly; native queue
 ownership, filtering, fallback dispatch and every other action remain native.
 
@@ -63,7 +63,7 @@ only to the owned guest window. They do not inspect the user's desktop.
 ## Inspection windows
 
 Talents and other read-only inspection windows also emit native UI Pause actions.
-In a live cooperative run, ASX consumes these payload-free requests before they
+In a live cooperative run, AZSX consumes these payload-free requests before they
 enter the native queue when no personal menu is owned. The reviewed Escape
 producer is identified by its exact call return address and keeps both open and
 close requests. Once a menu is owned, its Back, Options and Resume actions retain

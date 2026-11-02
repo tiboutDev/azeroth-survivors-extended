@@ -1,4 +1,4 @@
-# Building and checking ASX
+# Building and checking AZSX
 
 Use the [compatibility checklist](../compatibility/COMPATIBILITY-CHECKLIST.md) or [release checklist](../release/RELEASE-CHECKLIST.md) to place builds and checks in their required validation sequence.
 
@@ -44,7 +44,7 @@ is not execution evidence. Current Rust integration targets are `client_binding`
 `tools/dev/build-windows.sh` compiles a normal DLL; `build-chest-fixture.sh`
 compiles diagnostic fixtures. Both compile only. A normal artifact for sharing
 or reproducibility uses the path-remapped production builder in
-`tools/build/asx_release_binary.py`. Follow [reproducibility](../release/REPRODUCIBILITY.md)
+`tools/build/azsx_release_binary.py`. Follow [reproducibility](../release/REPRODUCIBILITY.md)
 and the artifact policy before building; normal/diagnostic artifacts are distinct.
 
 Private game import requires explicit source/receiver paths through
@@ -66,7 +66,7 @@ Do not copy an old installed DLL merely because its filename matches.
 
 The live dispatcher uses Windows APIs and must run with a **Windows Python** from
 the receiver, rather than Linux Python under WSL. It also requires the isolated
-runtime import receipt and an ASX-DEV.json receipt matching the installed DLL hash.
+runtime import receipt and an AZSX-DEV.json receipt matching the installed DLL hash.
 Keep the concrete pairing, tool-cache paths and staging commands in ignored local
 workspace notes. Source checks and cross-compilation do not create that pairing.
 
@@ -83,7 +83,7 @@ reward-choice time before reducing the scenario duration.
 Disposable profile generation separately checks its reviewed executable allowlist;
 a registry update alone does not enable profiles for a new client. The native
 save parser remains responsible for accepting the fixture's talents/progression.
-Ordinary extension trials take no screenshots. ASX_TEST_VISUAL=1 enables sparse
+Ordinary extension trials take no screenshots. AZSX_TEST_VISUAL=1 enables sparse
 captures only for an explicitly authorized visual trial; logs alone establish no
 claim about the rendered layout.
 

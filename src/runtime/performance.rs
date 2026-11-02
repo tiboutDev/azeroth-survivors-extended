@@ -27,5 +27,5 @@ pub fn report(log: &Log) {
         "name": name, "calls": COUNTS[i].load(Ordering::Relaxed),
         "ns": NANOS[i].load(Ordering::Relaxed), "max_ns": MAX[i].load(Ordering::Relaxed)
     })).collect();
-    log.info(&format!("ASX startup profile: {}", serde_json::json!(rows)));
+    log.info(&format!("AZSX startup profile: {}", serde_json::json!(rows)));
 }

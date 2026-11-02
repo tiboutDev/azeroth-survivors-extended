@@ -34,13 +34,13 @@ class WorldReferenceTests(unittest.TestCase):
         self.assertEqual(cache_next(0xffffffff),0xffffffff)
         with self.assertRaises(ValueError):cache_next(-1)
 
-@unittest.skipUnless(os.environ.get('ASX_REVIEWED_IMAGE_1351') and importlib.util.find_spec('unicorn') and importlib.util.find_spec('pefile'),'Reviewed image and emulator required')
+@unittest.skipUnless(os.environ.get('AZSX_REVIEWED_IMAGE_1351') and importlib.util.find_spec('unicorn') and importlib.util.find_spec('pefile'),'Reviewed image and emulator required')
 class WorldNativeOracle(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         import unicorn
         from unicorn import x86_const as reg
-        cls.reg=reg;cls.image=Image(Path(os.environ['ASX_REVIEWED_IMAGE_1351']).read_bytes());cls.base=cls.image.base
+        cls.reg=reg;cls.image=Image(Path(os.environ['AZSX_REVIEWED_IMAGE_1351']).read_bytes());cls.base=cls.image.base
         cls.uc=unicorn.Uc(unicorn.UC_ARCH_X86,unicorn.UC_MODE_64)
         extent=max(a+n for a,n,_ in cls.image.sections);cls.uc.mem_map(cls.base,(extent+4095)&~4095)
         for va,size,raw in cls.image.sections:cls.uc.mem_write(cls.base+va,cls.image.blob[raw:raw+size])

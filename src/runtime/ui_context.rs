@@ -5,9 +5,9 @@ static SCRIPT:AtomicU64=AtomicU64::new(0);
 pub fn capture(script:u64){SCRIPT.store(script,Ordering::Release)}
 pub fn reset(){SCRIPT.store(0,Ordering::Release)}
 pub fn participants(r:&Runtime)->Vec<u64>{r.adapter.native_ui_participants(&r.local,SCRIPT.load(Ordering::Acquire)).unwrap_or_default()}
-pub fn minimap(r:&Runtime,owner:u64)->Option<asx_game::official::EventMinimap>{
+pub fn minimap(r:&Runtime,owner:u64)->Option<azsx_game::official::EventMinimap>{
  let value=r.adapter.event_minimap(&r.local,SCRIPT.load(Ordering::Acquire),owner);
- #[cfg(feature="test-hooks")]if std::env::var("ASX_TEST_EVENT_POLISH").as_deref()==Ok("1"){
+ #[cfg(feature="test-hooks")]if std::env::var("AZSX_TEST_EVENT_POLISH").as_deref()==Ok("1"){
   static SEEN:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
   if let Ok(Some(map))=&value{if !SEEN.swap(true,Ordering::Relaxed){r.log.info(&format!("events native minimap: center={:?} radii={:?}",map.center,map.radii));}}
   static ERRORS:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);

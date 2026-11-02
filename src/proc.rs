@@ -4,7 +4,7 @@
 //! trampolines. The Python reached all of this through the debugger handle; this is the same
 //! surface for the in-process core.
 
-use asx_game::memory::Mem;
+use azsx_game::memory::Mem;
 use windows_sys::Win32::Foundation::HANDLE;
 use windows_sys::Win32::System::Diagnostics::Debug::{FlushInstructionCache, ReadProcessMemory, WriteProcessMemory};
 use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;

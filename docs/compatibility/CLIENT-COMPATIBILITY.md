@@ -44,21 +44,21 @@ Fresh damage-number size now uses XMM8; RBX owns the message. Direct and
 periodic heal wrappers have separate reviewed frames and event discriminators.
 The native entity resolver is now a query predicate plus a map lookup borrowing
 a pointer to the map reference. Healing/meter calls additionally require a fifth
-borrowed source descriptor; synthetic ASX healing uses the native unspecified
+borrowed source descriptor; synthetic AZSX healing uses the native unspecified
 source tag, while Hurt forwarding preserves both native source stack words.
 
-Native pause input retains tag 7 and its boolean payload. ASX menu ownership
+Native pause input retains tag 7 and its boolean payload. AZSX menu ownership
 uses the existing native reliable transport, with selected role/stream/peer
 layouts and unchanged Win64 argument positions. Native reliability and recovery
-remain upstream responsibilities; ASX does not restore its retired transport.
+remain upstream responsibilities; AZSX does not restore its retired transport.
 
 Support deliveries retain 56-byte rows, actor auras retain 32-byte rows including
 the native producer GUID, and perks retain 64-byte rows. Foreign periodic effects
-keep producer/recipient ownership and original native accounting. ASX extends
+keep producer/recipient ownership and original native accounting. AZSX extends
 only the retained AZSRUN row in the native addon output, preserving other rows.
 
 The 0.130 Death Recap remains native, including its modal close/Escape route.
-ASX retains unknown native HUD fields and only enriches its owned presentation.
+AZSX retains unknown native HUD fields and only enriches its owned presentation.
 Amulet target milestones also remain native; gem stat inputs do not reconstruct
 target schedules or restore the removed rounding-only target.
 
@@ -68,44 +68,44 @@ being covered by a guessed global layout shift.
 
 ## Feature dispositions
 
-These are source dispositions for [the stable inventory](ASX-FEATURES.md), not
+These are source dispositions for [the stable inventory](AZSX-FEATURES.md), not
 claims that every feature has been exercised in a normal running selected client.
 
 | ID | Disposition for the selected client |
 | --- | --- |
-| ASX-01 | Exact hash, native guards and explicit launcher activation; reject other clients. |
-| ASX-02 | Preserve receipt scopes, raw-register sources, caller classification and rounding. |
-| ASX-03 | Preserve host wallet policy with independently translated balances and earned-gold fields. |
-| ASX-04 | Preserve one debit, participant identities and once-only personal native choices. |
-| ASX-05 | Keep guardian rewards native; no supplemental item grant. |
-| ASX-06 | Preserve choice/menu barriers over the native pause and reliable command paths. |
-| ASX-07 | Preserve allied support eligibility, native coefficients and producer attribution. |
-| ASX-08 | Preserve shield/proc accounting, foreign retaliation and periodic ownership. |
-| ASX-09 | Preserve strongest Hunter's Mark and native visuals through selected enemy fields. |
-| ASX-10 | Preserve eligible taunts and actor pose restoration without replacing native special targeting. |
-| ASX-11 | Preserve immunity target-pool loans and identity/lifetime cleanup. |
-| ASX-12 | Preserve fatigue stacks and simulation-clock recovery with native aura presentation. |
-| ASX-13 | Preserve Fortune rules and native aura/stat presentation; Sayge trials provide rewards when enabled, with encounter grants retained only as the disabled-trial fallback. |
-| ASX-14 | Preserve the three economy-item exclusions; the pickup-radius trinket remains available. |
-| ASX-15 | Reserved removed ID; no native dependencies. |
-| ASX-16 | Preserve per-ring enchantment identity/ranks and scoped native stat loans. |
-| ASX-17 | Enrich retained native party children and native owner-correct tooltips. |
-| ASX-18 | Preserve native menu/card roots, assets, flags and participant ownership. |
-| ASX-19 | Preserve run/session resets, slot plus GUID bindings and callback ordering. |
-| ASX-20 | Align native-folder registry, importer and build metadata with the exact selected executable. |
-| ASX-21 | Keep marks upstream-native; duplicate-loot gold compensation remains disabled. |
-| ASX-22 | Preserve personal crystal claims, permanent Crystal Resonance totals and native stat loans; the former amulet gem is retired. |
-| ASX-23 | Preserve ASXUI Lua HUD and nameplate presentation through native addon APIs; no DLL nameplate hooks. |
-| ASX-24 | Preserve fresh-size damage text and native direct/periodic healing text through reviewed frame lifetimes. |
-| ASX-25 | Preserve random native markers and manual reservations through the moved server marker table. |
-| ASX-26 | Preserve optional goblin spawning, fleeing, bounds, equipment, amulet choices and whole native mark rewards. |
-| ASX-27 | Preserve personal supplies, consumable/stat loans, materials, masked minimap pins and discovery UI. |
-| ASX-28 | Preserve persistent Sayge trials, native scenes, group presence, Fortune replacement and progress UI. |
-| ASX-29 | Keep 50% of positive AoE bonuses in coop, preserve base spell sizes and solo, and expose effective values plus native informational aura. |
+| AZSX-01 | Exact hash, native guards and explicit launcher activation; reject other clients. |
+| AZSX-02 | Preserve receipt scopes, raw-register sources, caller classification and rounding. |
+| AZSX-03 | Preserve host wallet policy with independently translated balances and earned-gold fields. |
+| AZSX-04 | Preserve one debit, participant identities and once-only personal native choices. |
+| AZSX-05 | Keep guardian rewards native; no supplemental item grant. |
+| AZSX-06 | Preserve choice/menu barriers over the native pause and reliable command paths. |
+| AZSX-07 | Preserve allied support eligibility, native coefficients and producer attribution. |
+| AZSX-08 | Preserve shield/proc accounting, foreign retaliation and periodic ownership. |
+| AZSX-09 | Preserve strongest Hunter's Mark and native visuals through selected enemy fields. |
+| AZSX-10 | Preserve eligible taunts and actor pose restoration without replacing native special targeting. |
+| AZSX-11 | Preserve immunity target-pool loans and identity/lifetime cleanup. |
+| AZSX-12 | Preserve fatigue stacks and simulation-clock recovery with native aura presentation. |
+| AZSX-13 | Preserve Fortune rules and native aura/stat presentation; Sayge trials provide rewards when enabled, with encounter grants retained only as the disabled-trial fallback. |
+| AZSX-14 | Preserve the three economy-item exclusions; the pickup-radius trinket remains available. |
+| AZSX-15 | Reserved removed ID; no native dependencies. |
+| AZSX-16 | Preserve per-ring enchantment identity/ranks and scoped native stat loans. |
+| AZSX-17 | Enrich retained native party children and native owner-correct tooltips. |
+| AZSX-18 | Preserve native menu/card roots, assets, flags and participant ownership. |
+| AZSX-19 | Preserve run/session resets, slot plus GUID bindings and callback ordering. |
+| AZSX-20 | Align native-folder registry, importer and build metadata with the exact selected executable. |
+| AZSX-21 | Keep marks upstream-native; duplicate-loot gold compensation remains disabled. |
+| AZSX-22 | Preserve personal crystal claims, permanent Crystal Resonance totals and native stat loans; the former amulet gem is retired. |
+| AZSX-23 | Preserve AZSXUI Lua HUD and nameplate presentation through native addon APIs; no DLL nameplate hooks. |
+| AZSX-24 | Preserve fresh-size damage text and native direct/periodic healing text through reviewed frame lifetimes. |
+| AZSX-25 | Preserve random native markers and manual reservations through the moved server marker table. |
+| AZSX-26 | Preserve optional goblin spawning, fleeing, bounds, equipment, amulet choices and whole native mark rewards. |
+| AZSX-27 | Preserve personal supplies, consumable/stat loans, materials, masked minimap pins and discovery UI. |
+| AZSX-28 | Preserve persistent Sayge trials, native scenes, group presence, Fortune replacement and progress UI. |
+| AZSX-29 | Keep 50% of positive AoE bonuses in coop, preserve base spell sizes and solo, and expose effective values plus native informational aura. |
 
 Native achievements, sets, marks,
 crowd-control rules, caster collision and ability caps remain native. A client
-update does not authorize replacing those upstream mechanics with ASX rules.
+update does not authorize replacing those upstream mechanics with AZSX rules.
 
 ## Validation scope
 
@@ -129,7 +129,7 @@ fields. The native constructor and encounter iterator independently confirm the
 row extent; multi-row and compaction fixtures exercise nonzero indices.
 
 Direct and periodic healing now pass through separate extracted native helpers.
-ASX observes their owning systems, before event destruction, with independent
+AZSX observes their owning systems, before event destruction, with independent
 copied-event, query, object-map and writer-parameter slots. The shared query and
 GUID lookup ABIs remain unchanged. Damage text retains XMM8 sizing but requires
 RBX for its message category/color. Windows stand-ins exercise that register
@@ -141,7 +141,7 @@ The same Game slot governs the economy-trinket filter. Downed-XP gates include
 both the host consumers and the separately reviewed guest reward producers.
 Native pause tag 7, input ownership and the reliable queue remain unchanged.
 
-Native common-item modifier tags 43/44 become 47/48. ASX continues to pass their
+Native common-item modifier tags 43/44 become 47/48. AZSX continues to pass their
 native definitions to native formatting/stat routines. This port does not change
 their coefficients. The native balance documents remain the explicitly recorded
 0.135.1 reference; their values were not refreshed by this compatibility task.

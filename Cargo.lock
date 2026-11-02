@@ -3,16 +3,16 @@
 version = 4
 
 [[package]]
-name = "asx-game"
+name = "azsx-game"
 version = "0.1.0"
 dependencies = [
- "asx-gameplay",
+ "azsx-gameplay",
  "serde_json",
  "sha2",
 ]
 
 [[package]]
-name = "asx-gameplay"
+name = "azsx-gameplay"
 version = "0.1.0"
 
 [[package]]
@@ -26,8 +26,8 @@ dependencies = [
 name = "azeroth-coop-native"
 version = "0.1.0"
 dependencies = [
- "asx-game",
- "asx-gameplay",
+ "azsx-game",
+ "azsx-gameplay",
  "base64",
  "minhook",
  "serde",

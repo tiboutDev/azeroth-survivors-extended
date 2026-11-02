@@ -28,8 +28,8 @@ def assess(host,guest):
  for slot,text in enumerate([host,guest]):
   audit=[]
   for line in text.splitlines():
-   if "ASX_DIAG "not in line:continue
-   try:record=json.loads(line.split("ASX_DIAG ",1)[1])
+   if "AZSX_DIAG "not in line:continue
+   try:record=json.loads(line.split("AZSX_DIAG ",1)[1])
    except ValueError:continue
    if record.get("kind")=="ui.progression":audit.append(record.get("data",{}))
   checks[f"slot_{slot}_live_position_available"]=any(a.get("api")=="ok"and a.get("live",0)>20 for a in audit)

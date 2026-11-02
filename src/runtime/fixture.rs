@@ -24,7 +24,7 @@ pub fn event(runtime: &Runtime, c: &crate::stub::Context, value: &serde_json::Va
     if pause_enabled(){pause_event(runtime,c,value);return;}
     if !compat121() && gems::fixture_enabled() && !value["choices"].as_array().is_some_and(|a|a.iter().any(|c|c["lines"].as_str().is_some_and(|s|s.contains("Gem:")))){return;}
     if !compat121() && enchantments::fixture_enabled() && !value["choices"].as_array().is_some_and(|a|a.iter().any(|c|c["lines"].as_str().is_some_and(|s|s.contains("Enchantment:")))){return;}
-    if std::env::var("ASX_TEST_COVERAGE").as_deref()==Ok("1") && value["type"]=="choices" {
+    if std::env::var("AZSX_TEST_COVERAGE").as_deref()==Ok("1") && value["type"]=="choices" {
         runtime.log.info(&format!("coverage native choices: {value}"));
     }
     economy_event(runtime, c, value);
@@ -49,7 +49,7 @@ pub fn event(runtime: &Runtime, c: &crate::stub::Context, value: &serde_json::Va
     }
 }
 pub fn tick(runtime: &Runtime, server: u64) {
-    if std::env::var("ASX_TEST_UI_REMAINING").as_deref()==Ok("1"){remaining_ui_tick(runtime,server);return;}
+    if std::env::var("AZSX_TEST_UI_REMAINING").as_deref()==Ok("1"){remaining_ui_tick(runtime,server);return;}
     if completion121_enabled(){completion121_tick(runtime,server);if pause_enabled(){pause_tick(runtime,server);}return;}
     if compat121(){marks121_tick(runtime,server);release_pending(runtime,server);if let Ok(game)=runtime.adapter.game_address(server){blessing_tick(runtime,server);gems::fixture_tick(runtime,game);enchantments::fixture_tick(runtime,game);}return;}
     if combat::immunity_fixture_enabled(){combat::immunity_fixture_tick(runtime,server);return;}
@@ -182,7 +182,7 @@ fn economy_tick(runtime: &Runtime, server: u64) {
     let stage = ECONOMY_STAGE.load(Ordering::Acquire);
     if stage == 0
         && party.clock > 3.0
-        && host.phase == asx_gameplay::Phase::Playing
+        && host.phase == azsx_gameplay::Phase::Playing
         && party.actors.len() == 3
     {
         ECONOMY_STAGE.store(1, Ordering::Release);
@@ -290,7 +290,7 @@ fn support_tick(runtime: &Runtime, server: u64) {
         || party
             .actors
             .iter()
-            .any(|a| a.phase != asx_gameplay::Phase::Playing)
+            .any(|a| a.phase != azsx_gameplay::Phase::Playing)
     {
         return;
     }
@@ -674,12 +674,12 @@ fn combat_tick(r: &Runtime, server: u64) {
     let began = COMBAT_CLOCK.lock().map(|t| *t).unwrap_or(party.clock);
     let enemy = COMBAT_ENEMY.load(Ordering::Acquire);
     let mark =
-        |strength| asx_gameplay::Mark::new((strength > 0.0).then_some(enemy), strength).unwrap();
+        |strength| azsx_gameplay::Mark::new((strength > 0.0).then_some(enemy), strength).unwrap();
     match stage {
         0 if party
             .actors
             .iter()
-            .all(|a| a.phase == asx_gameplay::Phase::Playing) =>
+            .all(|a| a.phase == azsx_gameplay::Phase::Playing) =>
         {
             let enemy = match r.adapter.fixture_combat_enemy(&io, game, 2) {
                 Ok(Some(enemy)) => enemy,
@@ -720,7 +720,7 @@ fn combat_tick(r: &Runtime, server: u64) {
                 .and_then(|v| v.into_iter().find(|e| e.id == enemy));
             r.log.info(&format!("official mark strongest: {read:?}"));
             let _ = r.adapter.attack_actor(&io, game, 0, enemy, 133, 10.0);
-            combat::fixture_mark(1, asx_gameplay::Mark::default());
+            combat::fixture_mark(1, azsx_gameplay::Mark::default());
             let _ = r.adapter.write_combat_mark(&io, game, enemy, 0.0);
             type Aura = unsafe extern "system" fn(u64, u64, u32, bool);
             let aura: Aura = unsafe {
@@ -736,7 +736,7 @@ fn combat_tick(r: &Runtime, server: u64) {
                 .ok()
                 .and_then(|v| v.into_iter().find(|e| e.id == enemy));
             r.log.info(&format!("official mark remaining: {read:?}"));
-            combat::fixture_mark(0, asx_gameplay::Mark::default());
+            combat::fixture_mark(0, azsx_gameplay::Mark::default());
             COMBAT_STAGE.store(4, Ordering::Release);
         }
         4 if party.clock > began + 3.2 => {
@@ -753,7 +753,7 @@ fn combat_tick(r: &Runtime, server: u64) {
             ));
             combat::fixture_talents(
                 0,
-                asx_gameplay::Talents {
+                azsx_gameplay::Talents {
                     fortified: true,
                     ..Default::default()
                 },
@@ -768,7 +768,7 @@ fn combat_tick(r: &Runtime, server: u64) {
             ));
             combat::fixture_talents(
                 1,
-                asx_gameplay::Talents {
+                azsx_gameplay::Talents {
                     ardent_defender: true,
                     ..Default::default()
                 },
@@ -783,7 +783,7 @@ fn combat_tick(r: &Runtime, server: u64) {
             ));
             combat::fixture_talents(
                 2,
-                asx_gameplay::Talents {
+                azsx_gameplay::Talents {
                     dire_bear_form: true,
                     ..Default::default()
                 },
@@ -816,7 +816,7 @@ fn combat_tick(r: &Runtime, server: u64) {
         }
         9 if party.clock > began + 8.2 => {
             let actor = &party.actors[2];
-            if actor.phase == asx_gameplay::Phase::Downed {
+            if actor.phase == azsx_gameplay::Phase::Downed {
                 COMBAT_STAGE.store(10, Ordering::Release);
             } else {
                 request_death(r, game, 2, actor.guid, party.clock);
@@ -834,7 +834,7 @@ fn combat_tick(r: &Runtime, server: u64) {
             && party
                 .actors
                 .iter()
-                .all(|a| a.phase == asx_gameplay::Phase::Playing) =>
+                .all(|a| a.phase == azsx_gameplay::Phase::Playing) =>
         {
             let progression = party
                 .actors
@@ -846,7 +846,7 @@ fn combat_tick(r: &Runtime, server: u64) {
             request_death(r, game, 0, party.actors[0].guid, party.clock);
             COMBAT_STAGE.store(12, Ordering::Release);
         }
-        12 if party.actors[0].phase == asx_gameplay::Phase::Downed => {
+        12 if party.actors[0].phase == azsx_gameplay::Phase::Downed => {
             r.log.info("official XP host downed observed");
             COMBAT_STAGE.store(13, Ordering::Release);
         }
@@ -856,7 +856,7 @@ fn combat_tick(r: &Runtime, server: u64) {
         13 if party
             .actors
             .iter()
-            .all(|a| a.phase == asx_gameplay::Phase::Playing) =>
+            .all(|a| a.phase == azsx_gameplay::Phase::Playing) =>
         {
             let progression = party
                 .actors
@@ -883,7 +883,7 @@ fn scaling_tick(r: &Runtime, server: u64) {
         || !p
             .actors
             .iter()
-            .all(|a| a.phase == asx_gameplay::Phase::Playing)
+            .all(|a| a.phase == azsx_gameplay::Phase::Playing)
     {
         return;
     }
@@ -914,7 +914,7 @@ static PARTY_BUFF_CLOCK: std::sync::Mutex<f32> = std::sync::Mutex::new(-10.0);
 fn party_ui_tick(runtime: &Runtime, server: u64) {
     if !party_ui_enabled() { return; }
     let Ok(Some(party)) = runtime.adapter.party(&runtime.local, server) else { return; };
-    if party.actors.len()!=3 || party.clock < 2.0 || party.actors.iter().any(|a| a.phase != asx_gameplay::Phase::Playing) { return; }
+    if party.actors.len()!=3 || party.clock < 2.0 || party.actors.iter().any(|a| a.phase != azsx_gameplay::Phase::Playing) { return; }
     let Some(mut prototype) = SUPPORT_PROTOTYPE.lock().ok().and_then(|p| p[0].clone()) else { return; };
     {
         let Ok(mut clock) = PARTY_BUFF_CLOCK.lock() else { return; };
@@ -962,17 +962,17 @@ fn fatigue_tick(r: &Runtime, server: u64) {
     let stage=FATIGUE_STAGE.load(Ordering::Acquire);
     let began=FATIGUE_CLOCK.lock().map(|v|*v).unwrap_or(party.clock);
     match stage {
-        0 if party.clock>=10.0 && guest.phase==asx_gameplay::Phase::Playing => {
+        0 if party.clock>=10.0 && guest.phase==azsx_gameplay::Phase::Playing => {
             request_death(r,game,1,guest.guid,party.clock);
             FATIGUE_STAGE.store(1,Ordering::Release);
         }
         // Redemption can revive between two safe fixture observations. A new
         // fatigue stack establishes that the native down/revive cycle occurred.
-        1 if guest.phase==asx_gameplay::Phase::Playing && view.stacks>=1 => {FATIGUE_STAGE.store(2,Ordering::Release);}
-        5 if guest.phase==asx_gameplay::Phase::Playing && view.stacks>=2 => {FATIGUE_STAGE.store(6,Ordering::Release);}
-        1 | 5 if guest.phase==asx_gameplay::Phase::Downed => { FATIGUE_STAGE.store(stage+1,Ordering::Release); }
+        1 if guest.phase==azsx_gameplay::Phase::Playing && view.stacks>=1 => {FATIGUE_STAGE.store(2,Ordering::Release);}
+        5 if guest.phase==azsx_gameplay::Phase::Playing && view.stacks>=2 => {FATIGUE_STAGE.store(6,Ordering::Release);}
+        1 | 5 if guest.phase==azsx_gameplay::Phase::Downed => { FATIGUE_STAGE.store(stage+1,Ordering::Release); }
         1 | 5 => request_death(r,game,1,guest.guid,party.clock),
-        2 | 6 if guest.phase==asx_gameplay::Phase::Playing && view.stacks>0 => {
+        2 | 6 if guest.phase==azsx_gameplay::Phase::Playing && view.stacks>0 => {
             FATIGUE_STAGE.store(stage+1,Ordering::Release);
             if let Ok(mut c)=FATIGUE_CLOCK.lock(){*c=party.clock;}
             r.log.info(&format!("fatigue fixture native revival: stacks={}",view.stacks));
@@ -1037,7 +1037,7 @@ fn blessing_tick(r:&Runtime,server:u64){
    return;
   }
  }
- if p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return;}
+ if p.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return;}
  let wave=stage/2;let due=8.0+wave as f32*7.0+if stage%2==1{1.5}else{0.0};
  if p.clock<due{return;}
  let Ok(game)=r.adapter.game_address(server)else{return;};
@@ -1051,7 +1051,7 @@ fn blessing_tick(r:&Runtime,server:u64){
   unsafe{r.adapter.fixture_spawn_encounter(r.local.base,game,def)};
   r.log.info(&format!("blessing fixture encounter spawned: wave={wave} index={}",if wave==5{0}else{wave}));
  }else{
-  use asx_game::official::SupportCalls;
+  use azsx_game::official::SupportCalls;
   let Ok(targets)=r.adapter.blessing_fixture_targets(&r.local,game)else{return;};
   if targets.is_empty(){return;}
   STAGE.store(stage+1,Ordering::Release);
@@ -1065,7 +1065,7 @@ static REGRESSION_STAGE:AtomicUsize=AtomicUsize::new(0);
 fn regression_tick(runtime:&Runtime,server:u64){
  if std::env::var("AZCOOP_TEST_OFFICIAL_REGRESSIONS").as_deref()!=Ok("1"){return}
  let Ok(Some(party))=runtime.adapter.party(&runtime.local,server)else{return};
- if party.actors.len()!=2 || !party.actors.iter().all(|a|a.phase==asx_gameplay::Phase::Playing){return}
+ if party.actors.len()!=2 || !party.actors.iter().all(|a|a.phase==azsx_gameplay::Phase::Playing){return}
  let Ok(game)=runtime.adapter.game_address(server)else{return};
  match REGRESSION_STAGE.load(Ordering::Acquire){
   0 if party.clock>4.=>{
@@ -1087,7 +1087,7 @@ static ARMORY_GOLD_DONE:AtomicBool=AtomicBool::new(false);
 fn armory_gold_tick(runtime:&Runtime,server:u64){
  if std::env::var("AZCOOP_TEST_ARMORY_GOLD").as_deref()!=Ok("1")||ARMORY_GOLD_DONE.load(Ordering::Acquire){return}
  let Ok(Some(party))=runtime.adapter.party(&runtime.local,server)else{return};
- if party.clock<4.||party.actors.len()!=2||!party.actors.iter().all(|a|a.phase==asx_gameplay::Phase::Playing){return}
+ if party.clock<4.||party.actors.len()!=2||!party.actors.iter().all(|a|a.phase==azsx_gameplay::Phase::Playing){return}
  ARMORY_GOLD_DONE.store(true,Ordering::Release);
  let Ok(game)=runtime.adapter.game_address(server)else{return};let io=io::Access{local:&runtime.local,adapter:runtime.adapter};
  let result=(||->Result<(),String>{
@@ -1137,16 +1137,16 @@ fn pause_tick(r:&Runtime,server:u64){
 
  let Ok(Some(party))=r.adapter.party(&r.local,server)else{return};
  r.log.info(&format!("pause fixture snapshot: clock={} actors={:?}",party.clock,party.actors.iter().map(|a|(a.slot,a.phase,a.position)).collect::<Vec<_>>()));
- if party.actors.len()!=2||party.clock<8.||party.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return}
+ if party.actors.len()!=2||party.clock<8.||party.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return}
  let open={let Ok(mut s)=PAUSE_TRIAL.lock()else{return};if s.cache{false}else{s.cache=true;true}};
  if open{if let Ok(game)=r.adapter.game_address(server){type Gold=unsafe extern "system" fn(u64,u32)->usize;type Chest=unsafe extern "system" fn(u64)->bool;let gold:Gold=unsafe{std::mem::transmute(r.local.base+r.adapter.gold_entry().rva as usize)};let chest:Chest=unsafe{std::mem::transmute(r.local.base+r.adapter.chest_entry().rva as usize)};let result=unsafe{gold(game,101);chest(game)};r.log.info(&format!("pause fixture native cache: {result}"));}}
 }
 
-fn xp_death_enabled()->bool{std::env::var("ASX_TEST_PROGRESSION").as_deref()==Ok("1")}
+fn xp_death_enabled()->bool{std::env::var("AZSX_TEST_PROGRESSION").as_deref()==Ok("1")}
 struct XpDeath {stage:u32,began:f32,level:u32,sampled:Option<Instant>}
 static XP_DEATH:std::sync::Mutex<XpDeath>=std::sync::Mutex::new(XpDeath{stage:0,began:0.,level:0,sampled:None});
 fn xp_death_tick(r:&Runtime,server:u64){
- if r.adapter.observe(&r.local,server).ok().is_none_or(|s|s.role!=asx_game::official::Role::Host){return}
+ if r.adapter.observe(&r.local,server).ok().is_none_or(|s|s.role!=azsx_game::official::Role::Host){return}
  {let Ok(mut s)=XP_DEATH.lock()else{return};if s.sampled.is_some_and(|t|t.elapsed()<Duration::from_millis(250)){return}s.sampled=Some(Instant::now());}
  let Ok(Some(party))=r.adapter.party(&r.local,server)else{return};if party.actors.len()!=2{return}
  let Ok(game)=r.adapter.game_address(server)else{return};
@@ -1156,10 +1156,10 @@ fn xp_death_tick(r:&Runtime,server:u64){
  let advance=|next|{if let Ok(mut s)=XP_DEATH.lock(){s.stage=next;s.began=party.clock;s.level=victim.level;}};
  let io=io::Access{local:&r.local,adapter:r.adapter};
  match stage {
-  0|4 if party.clock>=if stage==0{8.}else{began+3.} && party.actors.iter().all(|a|a.phase==asx_gameplay::Phase::Playing)=>{advance(stage+1);request_death(r,game,target as u32,victim.guid,party.clock);},
-  1|5 if victim.phase==asx_gameplay::Phase::Downed=>{r.log.info(&format!("XP progression dead: slot={target} level={}",victim.level));advance(stage+1);},
-  1|5 if victim.phase==asx_gameplay::Phase::Playing=>request_death(r,game,target as u32,victim.guid,party.clock),
-  2|6 if victim.phase==asx_gameplay::Phase::Downed=>{
+  0|4 if party.clock>=if stage==0{8.}else{began+3.} && party.actors.iter().all(|a|a.phase==azsx_gameplay::Phase::Playing)=>{advance(stage+1);request_death(r,game,target as u32,victim.guid,party.clock);},
+  1|5 if victim.phase==azsx_gameplay::Phase::Downed=>{r.log.info(&format!("XP progression dead: slot={target} level={}",victim.level));advance(stage+1);},
+  1|5 if victim.phase==azsx_gameplay::Phase::Playing=>request_death(r,game,target as u32,victim.guid,party.clock),
+  2|6 if victim.phase==azsx_gameplay::Phase::Downed=>{
    if stage==6 {
     static GUARDIAN:AtomicBool=AtomicBool::new(false);
     if !GUARDIAN.load(Ordering::Acquire) {
@@ -1170,7 +1170,7 @@ fn xp_death_tick(r:&Runtime,server:u64){
     }
    }
    if victim.level>level && party.clock>began+8. {r.log.info(&format!("XP progression advanced while dead: slot={target} before={level} after={}",victim.level));advance(stage+1);return}
-   if alive.phase!=asx_gameplay::Phase::Playing||pause::active(){return}
+   if alive.phase!=azsx_gameplay::Phase::Playing||pause::active(){return}
    // Kill real native enemies and let the survivor collect their native drops.
    // No direct XP/level writes or award calls; this exercises both shared guards.
    if let Ok(enemies)=r.adapter.support_enemies(&r.local,game){
@@ -1183,12 +1183,12 @@ fn xp_death_tick(r:&Runtime,server:u64){
     }
    }
   },
-  3|7 if victim.phase==asx_gameplay::Phase::Downed && alive.phase==asx_gameplay::Phase::Playing && !pause::active()=>{
+  3|7 if victim.phase==azsx_gameplay::Phase::Downed && alive.phase==azsx_gameplay::Phase::Playing && !pause::active()=>{
    // Native proximity/channel resurrection; keep the owned survivor in range.
    if let Err(e)=r.adapter.fixture_event_pose(&io,game,alive.slot,alive.guid,victim.position){r.log.warn(&format!("XP progression rescue pose rejected: {e}"));}
   },
-  3|7 if victim.phase==asx_gameplay::Phase::Playing=>{r.log.info(&format!("XP progression revived: slot={target} level={}",victim.level));advance(stage+1);},
-  8 if party.clock>began+3. && party.actors.iter().all(|a|a.phase==asx_gameplay::Phase::Playing)=>{
+  3|7 if victim.phase==azsx_gameplay::Phase::Playing=>{r.log.info(&format!("XP progression revived: slot={target} level={}",victim.level));advance(stage+1);},
+  8 if party.clock>began+3. && party.actors.iter().all(|a|a.phase==azsx_gameplay::Phase::Playing)=>{
    r.log.info("XP progression complete: both native death/XP/revival paths observed");advance(9);
   },
   _=>{}
@@ -1211,7 +1211,7 @@ fn completion121_enabled()->bool{std::env::var("AZCOOP_TEST_SUPPORT121").as_dere
 fn completion121_tick(r:&Runtime,server:u64){
  static STATE:std::sync::Mutex<(usize,u8,f32,f32)>=std::sync::Mutex::new((0,0,0.,0.));
  const CASES:[(u32,u32,u32);12]=[(635,0,1),(331,1,0),(139,0,1),(774,1,0),(8936,1,0),(17,0,1),(467,1,0),(324,0,1),(15237,0,1),(25912,1,0),(11426,0,1),(774,0,1)];
- let shield_only=std::env::var("ASX_TEST_SUPPORT_SHIELD_ONLY").as_deref()==Ok("1");
+ let shield_only=std::env::var("AZSX_TEST_SUPPORT_SHIELD_ONLY").as_deref()==Ok("1");
  static INITIALIZED:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
  if !INITIALIZED.swap(true,Ordering::AcqRel)&&shield_only{*STATE.lock().unwrap()=(5,0,0.,0.);}
  let Ok(Some(p))=r.adapter.party(&r.local,server)else{return};if p.actors.len()!=2||p.clock<12.{return}
@@ -1222,12 +1222,12 @@ fn completion121_tick(r:&Runtime,server:u64){
   let Ok(game)=r.adapter.game_address(server)else{return};let io=io::Access{local:&r.local,adapter:r.adapter};
   if let Err(error)=r.adapter.fixture_event_pose(&io,game,0,p.actors[0].guid,p.actors[1].position){r.log.warn(&format!("Support121 fixture pose rejected: {error}"));return}
  }
- if p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return}
+ if p.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return}
  let (index,stage,began,before)=*STATE.lock().unwrap();if index>=if shield_only{6}else{CASES.len()}{
   if std::env::var("AZCOOP_TEST_SUPPORT121_FULL").as_deref()==Ok("1"){
    fatigue_tick(r,server);
    if FATIGUE_STAGE.load(Ordering::Acquire)>=8 && FATIGUE_STAGE.load(Ordering::Acquire)<20{
-    if std::env::var("ASX_TEST_COVERAGE").as_deref()==Ok("1") {
+    if std::env::var("AZSX_TEST_COVERAGE").as_deref()==Ok("1") {
      static GUARDIAN_DONE:AtomicBool=AtomicBool::new(false);
      if !GUARDIAN_DONE.load(Ordering::Acquire){
       if let Ok(game)=r.adapter.game_address(server){
@@ -1274,16 +1274,16 @@ fn completion121_tick(r:&Runtime,server:u64){
 fn marks121_tick(r:&Runtime,server:u64){
  if std::env::var("AZCOOP_TEST_MARKS121").as_deref()!=Ok("1"){return}
  static STATE:std::sync::Mutex<(u8,f32,u64)>=std::sync::Mutex::new((0,0.,0));
- let Ok(Some(p))=r.adapter.party(&r.local,server)else{return};if p.actors.len()!=2||p.clock<4.||p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return}
+ let Ok(Some(p))=r.adapter.party(&r.local,server)else{return};if p.actors.len()!=2||p.clock<4.||p.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return}
  let(stage,began,mut enemy)=*STATE.lock().unwrap();if stage>=7||p.clock<began+1.{return}let Ok(game)=r.adapter.game_address(server)else{return};let io=io::Access{local:&r.local,adapter:r.adapter};
  let result=(||->Result<(),String>{
-  if stage==0{let Some(id)=r.adapter.fixture_combat_enemy(&io,game,5)?else{return Ok(())};enemy=id;combat::fixture_mark(0,asx_gameplay::Mark::new(Some(enemy),0.2).unwrap());combat::fixture_mark(1,asx_gameplay::Mark::new(Some(enemy),0.35).unwrap());}
+  if stage==0{let Some(id)=r.adapter.fixture_combat_enemy(&io,game,5)?else{return Ok(())};enemy=id;combat::fixture_mark(0,azsx_gameplay::Mark::new(Some(enemy),0.2).unwrap());combat::fixture_mark(1,azsx_gameplay::Mark::new(Some(enemy),0.35).unwrap());}
   if (1..=3).contains(&stage){let e=r.adapter.combat_enemies(&r.local,game)?.into_iter().find(|e|e.id==enemy).ok_or("Missing marked enemy")?;r.log.info(&format!("marks121 native: stage={stage} marked={} vulnerability={}",e.marked,e.vulnerability));
-   if stage==1{combat::fixture_mark(1,asx_gameplay::Mark::default());}else if stage==2{combat::fixture_mark(0,asx_gameplay::Mark::default());}
+   if stage==1{combat::fixture_mark(1,azsx_gameplay::Mark::default());}else if stage==2{combat::fixture_mark(0,azsx_gameplay::Mark::default());}
   }
-  if stage==3{combat::fixture_talents(0,asx_gameplay::Talents{fortified:true,..Default::default()});r.adapter.attack_actor(&io,game,0,enemy,23922,1.)?;}
-  if stage==4{r.log.info(&format!("marks121 taunt: spell=23922 owner={:?}",combat::fixture_owner(enemy)));combat::fixture_talents(1,asx_gameplay::Talents{ardent_defender:true,..Default::default()});r.adapter.attack_actor(&io,game,1,enemy,853,1.)?;}
-  if stage==5{r.log.info(&format!("marks121 taunt: spell=853 owner={:?}",combat::fixture_owner(enemy)));combat::fixture_talents(0,asx_gameplay::Talents{dire_bear_form:true,..Default::default()});r.adapter.attack_actor(&io,game,0,enemy,5221,1.)?;}
+  if stage==3{combat::fixture_talents(0,azsx_gameplay::Talents{fortified:true,..Default::default()});r.adapter.attack_actor(&io,game,0,enemy,23922,1.)?;}
+  if stage==4{r.log.info(&format!("marks121 taunt: spell=23922 owner={:?}",combat::fixture_owner(enemy)));combat::fixture_talents(1,azsx_gameplay::Talents{ardent_defender:true,..Default::default()});r.adapter.attack_actor(&io,game,1,enemy,853,1.)?;}
+  if stage==5{r.log.info(&format!("marks121 taunt: spell=853 owner={:?}",combat::fixture_owner(enemy)));combat::fixture_talents(0,azsx_gameplay::Talents{dire_bear_form:true,..Default::default()});r.adapter.attack_actor(&io,game,0,enemy,5221,1.)?;}
   if stage==6{r.log.info(&format!("marks121 taunt: spell=5221 owner={:?}",combat::fixture_owner(enemy)));}
   *STATE.lock().unwrap()=(stage+1,p.clock,enemy);Ok(())
  })();if let Err(e)=result{r.log.warn(&format!("Marks121 fixture rejected: {e}"));*STATE.lock().unwrap()=(7,0.,0);}
@@ -1294,7 +1294,7 @@ fn remaining_ui_tick(r:&Runtime,server:u64){
  static WITNESSES:std::sync::Mutex<Vec<(String,u64)>>=std::sync::Mutex::new(Vec::new());
  static STATE:std::sync::Mutex<(u8,f32,u8)>=std::sync::Mutex::new((0,0.,0));
  let Ok(Some(party))=r.adapter.party(&r.local,server)else{return};
- if party.actors.len()!=2||party.clock<6.||party.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return}
+ if party.actors.len()!=2||party.clock<6.||party.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return}
  let Ok(game)=r.adapter.game_address(server)else{return};let io=io::Access{local:&r.local,adapter:r.adapter};
  let ids=WITNESSES.lock().map(|v|v.clone()).unwrap_or_default();
  if !ids.is_empty()&&party.clock<40.{let _=r.adapter.fixture_world_ui_hold(&io,game,&ids);}

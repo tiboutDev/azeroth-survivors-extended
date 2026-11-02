@@ -1,6 +1,6 @@
-# ASX bonus balance review
+# AZSX bonus balance review
 
-This review compares current ASX rules with the independent [native reference](../native-balance/NATIVE-BALANCE.md). The first pass, participant-weighted Sayge categories and the Alacrity/Renewal adjustments below are implemented. The native reference itself contains no ASX balance policy.
+This review compares current AZSX rules with the independent [native reference](../native-balance/NATIVE-BALANCE.md). The first pass, participant-weighted Sayge categories and the Alacrity/Renewal adjustments below are implemented. The native reference itself contains no AZSX balance policy.
 
 ## Implemented first pass
 

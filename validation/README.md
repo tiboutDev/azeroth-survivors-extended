@@ -4,14 +4,14 @@ This directory contains versioned artifact references consumed by build checks.
 It is separate from Cargo output and generated test reports. It is not a Rust
 source directory or a declaration that publication gates have passed.
 
-`asx-reproducible-build-xwin.json` identifies a technically reviewed pair of local
+`azsx-reproducible-build-xwin.json` identifies a technically reviewed pair of local
 builds for its recorded input fingerprint. It is a technical local-builder
 reference, not deployment/publication approval or Windows-native proof. Source
 changes require a new candidate and review. Preserve superseded references in
 private evidence. See [reproducibility](../docs/release/REPRODUCIBILITY.md).
 
 The Windows-native reproducer requires its own approved
-`asx-reproducible-build.json`. That reference is absent; the gate must remain
+`azsx-reproducible-build.json`. That reference is absent; the gate must remain
 unsatisfied until a real reference is established. A local xwin hash is not a
 substitute.
 

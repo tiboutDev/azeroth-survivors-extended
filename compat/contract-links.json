@@ -2,1499 +2,1499 @@
   "schema": 1,
   "contracts": {
     "official_native.actor": [
-      "ASX-01",
-      "ASX-02",
-      "ASX-03",
-      "ASX-04",
-      "ASX-05",
-      "ASX-06",
-      "ASX-07",
-      "ASX-08",
-      "ASX-09",
-      "ASX-10",
-      "ASX-11",
-      "ASX-12",
-      "ASX-13",
-      "ASX-14",
-      "ASX-16",
-      "ASX-17",
-      "ASX-18",
-      "ASX-19",
-      "ASX-21",
-      "ASX-22",
-      "ASX-23",
-      "ASX-24",
-      "ASX-25",
-      "ASX-26",
-      "ASX-27",
-      "ASX-28"
+      "AZSX-01",
+      "AZSX-02",
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-05",
+      "AZSX-06",
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-11",
+      "AZSX-12",
+      "AZSX-13",
+      "AZSX-14",
+      "AZSX-16",
+      "AZSX-17",
+      "AZSX-18",
+      "AZSX-19",
+      "AZSX-21",
+      "AZSX-22",
+      "AZSX-23",
+      "AZSX-24",
+      "AZSX-25",
+      "AZSX-26",
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.amulet_table": [
-      "ASX-22",
-      "ASX-26"
+      "AZSX-22",
+      "AZSX-26"
     ],
     "official_native.award_xp": [
-      "ASX-02"
+      "AZSX-02"
     ],
     "official_native.blessings.blessing_endless_entry": [
-      "ASX-13",
-      "ASX-26",
-      "ASX-28"
+      "AZSX-13",
+      "AZSX-26",
+      "AZSX-28"
     ],
     "official_native.blessings.blessing_entries": [
-      "ASX-13",
-      "ASX-26",
-      "ASX-28"
+      "AZSX-13",
+      "AZSX-26",
+      "AZSX-28"
     ],
     "official_native.blessings.blessing_event": [
-      "ASX-13",
-      "ASX-26",
-      "ASX-28"
+      "AZSX-13",
+      "AZSX-26",
+      "AZSX-28"
     ],
     "official_native.blessings.blessing_event_context": [
-      "ASX-13",
-      "ASX-26",
-      "ASX-28"
+      "AZSX-13",
+      "AZSX-26",
+      "AZSX-28"
     ],
     "official_native.blessings.blessing_fixture_definition": [
-      "ASX-13",
-      "ASX-26",
-      "ASX-28"
+      "AZSX-13",
+      "AZSX-26",
+      "AZSX-28"
     ],
     "official_native.blessings.blessing_fixture_targets": [
-      "ASX-13",
-      "ASX-26",
-      "ASX-28"
+      "AZSX-13",
+      "AZSX-26",
+      "AZSX-28"
     ],
     "official_native.blessings.blessing_fixture_victory": [
-      "ASX-13",
-      "ASX-26",
-      "ASX-28"
+      "AZSX-13",
+      "AZSX-26",
+      "AZSX-28"
     ],
     "official_native.blessings.blessing_pool_index": [
-      "ASX-14"
+      "AZSX-14"
     ],
     "official_native.blessings.blessing_spawn_entry": [
-      "ASX-13",
-      "ASX-26",
-      "ASX-28"
+      "AZSX-13",
+      "AZSX-26",
+      "AZSX-28"
     ],
     "official_native.blessings.blessing_stat_values": [
-      "ASX-13",
-      "ASX-28"
+      "AZSX-13",
+      "AZSX-28"
     ],
     "official_native.blessings.blessing_stats": [
-      "ASX-13",
-      "ASX-28"
+      "AZSX-13",
+      "AZSX-28"
     ],
     "official_native.blessings.fixture_spawn_encounter": [
-      "ASX-13",
-      "ASX-26",
-      "ASX-28"
+      "AZSX-13",
+      "AZSX-26",
+      "AZSX-28"
     ],
     "official_native.blessings.project_blessing_aura": [
-      "ASX-13",
-      "ASX-28"
+      "AZSX-13",
+      "AZSX-28"
     ],
     "official_native.bonus_tooltip.bonus_compact_size": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_tooltip.bonus_compact_style": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_tooltip.bonus_tooltip_entries": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_tooltip.kept_tooltip_attach": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_tooltip.kept_tooltip_body": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_tooltip.kept_tooltip_descriptor": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_tooltip.kept_tooltip_fixture_focus": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_tooltip.kept_tooltip_row": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_tooltip.kept_tooltip_target": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_tooltip.kept_tooltip_title": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_tooltip.supports_bonus_tooltips": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_tooltip.tooltip_bindings": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.append_reward_note": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_column_capture": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_column_draw": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_column_entries": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_column_spawner": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_header_draw": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_separator_capture": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_separator_draw": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_separator_entries": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_ui_context": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_ui_drawback": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_ui_entries": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_ui_no_action": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_ui_size": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.bonus_ui_status": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.draw_annotation": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.kept_bonus_ui_draw": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.reward_card_note": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22"
     ],
     "official_native.bonus_ui.reward_entries": [
-      "ASX-16",
-      "ASX-18",
-      "ASX-22",
-      "ASX-26"
+      "AZSX-16",
+      "AZSX-18",
+      "AZSX-22",
+      "AZSX-26"
     ],
     "official_native.combat.attack_actor": [
-      "ASX-09",
-      "ASX-10",
-      "ASX-26"
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-26"
     ],
     "official_native.combat.basic_fields": [
-      "ASX-10"
+      "AZSX-10"
     ],
     "official_native.combat.basic_frame": [
-      "ASX-10"
+      "AZSX-10"
     ],
     "official_native.combat.basic_resume": [
-      "ASX-10"
+      "AZSX-10"
     ],
     "official_native.combat.basic_resume_entry": [
-      "ASX-10"
+      "AZSX-10"
     ],
     "official_native.combat.combat_actor": [
-      "ASX-09",
-      "ASX-10",
-      "ASX-11",
-      "ASX-26"
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-11",
+      "AZSX-26"
     ],
     "official_native.combat.combat_descriptions": [
-      "ASX-10"
+      "AZSX-10"
     ],
     "official_native.combat.combat_enemies": [
-      "ASX-09",
-      "ASX-10",
-      "ASX-11",
-      "ASX-26"
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-11",
+      "AZSX-26"
     ],
     "official_native.combat.combat_entries": [
-      "ASX-09",
-      "ASX-10",
-      "ASX-11",
-      "ASX-26"
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-11",
+      "AZSX-26"
     ],
     "official_native.combat.combat_hp": [
-      "ASX-09",
-      "ASX-10",
-      "ASX-26"
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-26"
     ],
     "official_native.combat.combat_rows": [
-      "ASX-09",
-      "ASX-10",
-      "ASX-11",
-      "ASX-26"
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-11",
+      "AZSX-26"
     ],
     "official_native.combat.fixture_combat_enemy": [
-      "ASX-09",
-      "ASX-10",
-      "ASX-26"
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-26"
     ],
     "official_native.combat.hurt_actor": [
-      "ASX-09",
-      "ASX-10",
-      "ASX-26"
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-26"
     ],
     "official_native.combat.prepare_basic_target": [
-      "ASX-10"
+      "AZSX-10"
     ],
     "official_native.combat.restore_basic_origin": [
-      "ASX-10"
+      "AZSX-10"
     ],
     "official_native.combat.write_combat_mark": [
-      "ASX-09"
+      "AZSX-09"
     ],
     "official_native.combat_text.combat_text_entries": [
-      "ASX-24"
+      "AZSX-24"
     ],
     "official_native.combat_text.draw_native_heal_text": [
-      "ASX-24"
+      "AZSX-24"
     ],
     "official_native.combat_text.native_heal_texts": [
-      "ASX-24"
+      "AZSX-24"
     ],
     "official_native.duplicate_loot.loot_actor_gold": [
-      "ASX-03",
-      "ASX-21"
+      "AZSX-03",
+      "AZSX-21"
     ],
     "official_native.duplicate_loot.loot_bytes": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.duplicate_loot.loot_entries": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.duplicate_loot.loot_fixture_append": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.duplicate_loot.loot_fixture_dispatch": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.duplicate_loot.loot_fixture_entry": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.duplicate_loot.loot_hide_drop": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.duplicate_loot.loot_known": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.duplicate_loot.loot_offer": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.duplicate_loot.loot_packet": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.duplicate_loot.loot_send_entry": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.duplicate_loot.loot_ui_sink": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.duplicate_loot.loot_victory": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.duplicate_loot_enabled": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.enchantments.enchantment_ui_draw": [
-      "ASX-16"
+      "AZSX-16"
     ],
     "official_native.enchantments.restore_ring_stats": [
-      "ASX-16",
-      "ASX-22"
+      "AZSX-16",
+      "AZSX-22"
     ],
     "official_native.enchantments.ring_actor_owned": [
-      "ASX-16"
+      "AZSX-16"
     ],
     "official_native.enchantments.ring_card": [
-      "ASX-16"
+      "AZSX-16"
     ],
     "official_native.enchantments.ring_definition": [
-      "ASX-16"
+      "AZSX-16"
     ],
     "official_native.enchantments.ring_fixture_pick": [
-      "ASX-16"
+      "AZSX-16"
     ],
     "official_native.enchantments.ring_input_header": [
-      "ASX-16",
-      "ASX-22",
-      "ASX-27"
+      "AZSX-16",
+      "AZSX-22",
+      "AZSX-27"
     ],
     "official_native.enchantments.ring_owned": [
-      "ASX-16"
+      "AZSX-16"
     ],
     "official_native.enchantments.ring_selected": [
-      "ASX-16"
+      "AZSX-16"
     ],
     "official_native.enchantments.ring_stat_values": [
-      "ASX-16",
-      "ASX-22",
-      "ASX-27"
+      "AZSX-16",
+      "AZSX-22",
+      "AZSX-27"
     ],
     "official_native.enchantments.ring_stats": [
-      "ASX-16"
+      "AZSX-16"
     ],
     "official_native.enchantments.supports_enchantments": [
-      "ASX-16",
-      "ASX-22",
-      "ASX-27"
+      "AZSX-16",
+      "AZSX-22",
+      "AZSX-27"
     ],
     "official_native.event_placement.clamp_event_health": [
-      "ASX-27"
+      "AZSX-27"
     ],
     "official_native.event_placement.event_area": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.event_placement.event_ground": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.event_placement.event_ground_sample": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.event_placement.event_minimap": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.event_placement.event_placement_entries": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.event_placement.event_walkable": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.event_placement.height": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.event_placement.ui_context_entry": [
-      "ASX-17",
-      "ASX-27",
-      "ASX-28"
+      "AZSX-17",
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.event_placement.ui_context_result": [
-      "ASX-17",
-      "ASX-27",
-      "ASX-28"
+      "AZSX-17",
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.fatigue.fatigue_aura_entry": [
-      "ASX-12"
+      "AZSX-12"
     ],
     "official_native.fatigue.fatigue_aura_frame": [
-      "ASX-12"
+      "AZSX-12"
     ],
     "official_native.fatigue.project_fatigue_aura": [
-      "ASX-12"
+      "AZSX-12"
     ],
     "official_native.gems.amulet_card": [
-      "ASX-22",
-      "ASX-26"
+      "AZSX-22",
+      "AZSX-26"
     ],
     "official_native.gems.amulet_fixture_pick": [
-      "ASX-22"
+      "AZSX-22"
     ],
     "official_native.gems.amulet_key": [
-      "ASX-22"
+      "AZSX-22"
     ],
     "official_native.gems.amulet_owned": [
-      "ASX-22"
+      "AZSX-22"
     ],
     "official_native.gems.amulet_rank": [
-      "ASX-22"
+      "AZSX-22"
     ],
     "official_native.gems.amulet_selected": [
-      "ASX-22",
-      "ASX-26"
+      "AZSX-22",
+      "AZSX-26"
     ],
     "official_native.gems.gem_stats": [
-      "ASX-22"
+      "AZSX-22"
     ],
     "official_native.gems.gem_ui_draw": [
-      "ASX-22"
+      "AZSX-22"
     ],
     "official_native.goblin_rewards.goblin_amulet_key": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.goblin_rewards.goblin_amulet_pool": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.goblin_rewards.goblin_credit_marks": [
-      "ASX-21",
-      "ASX-26"
+      "AZSX-21",
+      "AZSX-26"
     ],
     "official_native.goblin_rewards.goblin_exclusion_keys": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.goblin_rewards.goblin_marks_amount": [
-      "ASX-21",
-      "ASX-26"
+      "AZSX-21",
+      "AZSX-26"
     ],
     "official_native.goblin_rewards.goblin_open_amulets": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.goblin_rewards.goblin_reward_actor": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.goblin_rewards.goblin_reward_entries": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.goblin_rewards.goblin_reward_ready": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.hud_actor": [
-      "ASX-01",
-      "ASX-02",
-      "ASX-03",
-      "ASX-04",
-      "ASX-05",
-      "ASX-06",
-      "ASX-07",
-      "ASX-08",
-      "ASX-09",
-      "ASX-10",
-      "ASX-11",
-      "ASX-12",
-      "ASX-13",
-      "ASX-14",
-      "ASX-16",
-      "ASX-17",
-      "ASX-18",
-      "ASX-19",
-      "ASX-21",
-      "ASX-22",
-      "ASX-23",
-      "ASX-24",
-      "ASX-25",
-      "ASX-26",
-      "ASX-27",
-      "ASX-28"
+      "AZSX-01",
+      "AZSX-02",
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-05",
+      "AZSX-06",
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-11",
+      "AZSX-12",
+      "AZSX-13",
+      "AZSX-14",
+      "AZSX-16",
+      "AZSX-17",
+      "AZSX-18",
+      "AZSX-19",
+      "AZSX-21",
+      "AZSX-22",
+      "AZSX-23",
+      "AZSX-24",
+      "AZSX-25",
+      "AZSX-26",
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.immunity_aggro.aggro_header": [
-      "ASX-10",
-      "ASX-11"
+      "AZSX-10",
+      "AZSX-11"
     ],
     "official_native.immunity_aggro.aggro_prepare": [
-      "ASX-10",
-      "ASX-11"
+      "AZSX-10",
+      "AZSX-11"
     ],
     "official_native.immunity_aggro.aggro_restore": [
-      "ASX-10",
-      "ASX-11"
+      "AZSX-10",
+      "AZSX-11"
     ],
     "official_native.immunity_aggro.aggro_snapshot": [
-      "ASX-10",
-      "ASX-11"
+      "AZSX-10",
+      "AZSX-11"
     ],
     "official_native.immunity_aggro.combat_immune": [
-      "ASX-10",
-      "ASX-11"
+      "AZSX-10",
+      "AZSX-11"
     ],
     "official_native.immunity_aggro.fixture_immunity": [
-      "ASX-10",
-      "ASX-11"
+      "AZSX-10",
+      "AZSX-11"
     ],
     "official_native.immunity_aggro.supports_immunity_aggro": [
-      "ASX-10",
-      "ASX-11"
+      "AZSX-10",
+      "AZSX-11"
     ],
     "official_native.menu_icons.capture": [
-      "ASX-18"
+      "AZSX-18"
     ],
     "official_native.menu_icons.draw": [
-      "ASX-18"
+      "AZSX-18"
     ],
     "official_native.menu_icons.members": [
-      "ASX-18"
+      "AZSX-18"
     ],
     "official_native.menu_icons.menu_bindings": [
-      "ASX-18"
+      "AZSX-18"
     ],
     "official_native.menu_icons.menu_entries": [
-      "ASX-18"
+      "AZSX-18"
     ],
     "official_native.menu_icons.refresh_status": [
-      "ASX-18"
+      "AZSX-18"
     ],
     "official_native.menu_icons.retain": [
-      "ASX-18"
+      "AZSX-18"
     ],
     "official_native.menu_icons.size_card": [
-      "ASX-18"
+      "AZSX-18"
     ],
     "official_native.menu_pause.menu_entry": [
-      "ASX-06",
-      "ASX-18"
+      "AZSX-06",
+      "AZSX-18"
     ],
     "official_native.menu_pause.menu_key_entry": [
-      "ASX-06",
-      "ASX-18"
+      "AZSX-06",
+      "AZSX-18"
     ],
     "official_native.menu_pause.menu_key_target": [
-      "ASX-06",
-      "ASX-18"
+      "AZSX-06",
+      "AZSX-18"
     ],
     "official_native.menu_pause.menu_opcode": [
-      "ASX-06",
-      "ASX-18"
+      "AZSX-06",
+      "AZSX-18"
     ],
     "official_native.menu_pause.menu_peer": [
-      "ASX-06",
-      "ASX-18"
+      "AZSX-06",
+      "AZSX-18"
     ],
     "official_native.menu_pause.menu_request": [
-      "ASX-06",
-      "ASX-18"
+      "AZSX-06",
+      "AZSX-18"
     ],
     "official_native.menu_pause.menu_send": [
-      "ASX-06",
-      "ASX-18"
+      "AZSX-06",
+      "AZSX-18"
     ],
     "official_native.menu_pause.menu_wire": [
-      "ASX-06",
-      "ASX-18"
+      "AZSX-06",
+      "AZSX-18"
     ],
     "official_native.menu_pause.pause_notice": [
-      "ASX-06",
-      "ASX-18"
+      "AZSX-06",
+      "AZSX-18"
     ],
     "official_native.native_marks_enabled": [
-      "ASX-21"
+      "AZSX-21"
     ],
     "official_native.normalize_xp": [
-      "ASX-02"
+      "AZSX-02"
     ],
     "official_native.observe": [
-      "ASX-01",
-      "ASX-02",
-      "ASX-03",
-      "ASX-04",
-      "ASX-05",
-      "ASX-06",
-      "ASX-07",
-      "ASX-08",
-      "ASX-09",
-      "ASX-10",
-      "ASX-11",
-      "ASX-12",
-      "ASX-13",
-      "ASX-14",
-      "ASX-16",
-      "ASX-17",
-      "ASX-18",
-      "ASX-19",
-      "ASX-21",
-      "ASX-22",
-      "ASX-23",
-      "ASX-24",
-      "ASX-25",
-      "ASX-26",
-      "ASX-27",
-      "ASX-28"
+      "AZSX-01",
+      "AZSX-02",
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-05",
+      "AZSX-06",
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-11",
+      "AZSX-12",
+      "AZSX-13",
+      "AZSX-14",
+      "AZSX-16",
+      "AZSX-17",
+      "AZSX-18",
+      "AZSX-19",
+      "AZSX-21",
+      "AZSX-22",
+      "AZSX-23",
+      "AZSX-24",
+      "AZSX-25",
+      "AZSX-26",
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.party": [
-      "ASX-01",
-      "ASX-02",
-      "ASX-03",
-      "ASX-04",
-      "ASX-05",
-      "ASX-06",
-      "ASX-07",
-      "ASX-08",
-      "ASX-09",
-      "ASX-10",
-      "ASX-11",
-      "ASX-12",
-      "ASX-13",
-      "ASX-14",
-      "ASX-16",
-      "ASX-17",
-      "ASX-18",
-      "ASX-19",
-      "ASX-21",
-      "ASX-22",
-      "ASX-23",
-      "ASX-24",
-      "ASX-25",
-      "ASX-26",
-      "ASX-27",
-      "ASX-28"
+      "AZSX-01",
+      "AZSX-02",
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-05",
+      "AZSX-06",
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-11",
+      "AZSX-12",
+      "AZSX-13",
+      "AZSX-14",
+      "AZSX-16",
+      "AZSX-17",
+      "AZSX-18",
+      "AZSX-19",
+      "AZSX-21",
+      "AZSX-22",
+      "AZSX-23",
+      "AZSX-24",
+      "AZSX-25",
+      "AZSX-26",
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.pause.new": [
-      "ASX-06",
-      "ASX-18"
+      "AZSX-06",
+      "AZSX-18"
     ],
     "official_native.pause.rva": [
-      "ASX-06",
-      "ASX-18"
+      "AZSX-06",
+      "AZSX-18"
     ],
     "official_native.presentation.party_build": [
-      "ASX-17"
+      "AZSX-17"
     ],
     "official_native.presentation.spell_presentation_entry": [
-      "ASX-17"
+      "AZSX-17"
     ],
     "official_native.presentation.spell_presentation_owner": [
-      "ASX-17"
+      "AZSX-17"
     ],
     "official_native.presentation.spell_presentation_strings": [
-      "ASX-17"
+      "AZSX-17"
     ],
     "official_native.racial_xp_bonus": [
-      "ASX-02"
+      "AZSX-02"
     ],
     "official_native.raid_markers.raid_markers": [
-      "ASX-25"
+      "AZSX-25"
     ],
     "official_native.raid_markers.set_raid_marker": [
-      "ASX-25"
+      "AZSX-25"
     ],
     "official_native.ring_table": [
-      "ASX-16"
+      "AZSX-16"
     ],
     "official_native.run_actor": [
-      "ASX-01",
-      "ASX-02",
-      "ASX-03",
-      "ASX-04",
-      "ASX-05",
-      "ASX-06",
-      "ASX-07",
-      "ASX-08",
-      "ASX-09",
-      "ASX-10",
-      "ASX-11",
-      "ASX-12",
-      "ASX-13",
-      "ASX-14",
-      "ASX-16",
-      "ASX-17",
-      "ASX-18",
-      "ASX-19",
-      "ASX-21",
-      "ASX-22",
-      "ASX-23",
-      "ASX-24",
-      "ASX-25",
-      "ASX-26",
-      "ASX-27",
-      "ASX-28"
+      "AZSX-01",
+      "AZSX-02",
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-05",
+      "AZSX-06",
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-11",
+      "AZSX-12",
+      "AZSX-13",
+      "AZSX-14",
+      "AZSX-16",
+      "AZSX-17",
+      "AZSX-18",
+      "AZSX-19",
+      "AZSX-21",
+      "AZSX-22",
+      "AZSX-23",
+      "AZSX-24",
+      "AZSX-25",
+      "AZSX-26",
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.run_source": [
-      "ASX-01",
-      "ASX-02",
-      "ASX-03",
-      "ASX-04",
-      "ASX-05",
-      "ASX-06",
-      "ASX-07",
-      "ASX-08",
-      "ASX-09",
-      "ASX-10",
-      "ASX-11",
-      "ASX-12",
-      "ASX-13",
-      "ASX-14",
-      "ASX-16",
-      "ASX-17",
-      "ASX-18",
-      "ASX-19",
-      "ASX-21",
-      "ASX-22",
-      "ASX-23",
-      "ASX-24",
-      "ASX-25",
-      "ASX-26",
-      "ASX-27",
-      "ASX-28"
+      "AZSX-01",
+      "AZSX-02",
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-05",
+      "AZSX-06",
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-11",
+      "AZSX-12",
+      "AZSX-13",
+      "AZSX-14",
+      "AZSX-16",
+      "AZSX-17",
+      "AZSX-18",
+      "AZSX-19",
+      "AZSX-21",
+      "AZSX-22",
+      "AZSX-23",
+      "AZSX-24",
+      "AZSX-25",
+      "AZSX-26",
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.scene_units.event_enemy_count": [
-      "ASX-28"
+      "AZSX-28"
     ],
     "official_native.scene_units.event_sayge": [
-      "ASX-28"
+      "AZSX-28"
     ],
     "official_native.scene_units.ritual_scene_entries": [
-      "ASX-28"
+      "AZSX-28"
     ],
     "official_native.scene_units.sayge_fields": [
-      "ASX-28"
+      "AZSX-28"
     ],
     "official_native.scene_units.send_owned_scene_packet": [
-      "ASX-28"
+      "AZSX-28"
     ],
     "official_native.scene_units.unit_block": [
-      "ASX-28"
+      "AZSX-28"
     ],
     "official_native.select": [
-      "ASX-01",
-      "ASX-20"
+      "AZSX-01",
+      "AZSX-20"
     ],
     "official_native.shared_xp": [
-      "ASX-02"
+      "AZSX-02"
     ],
     "official_native.shared_xp_input": [
-      "ASX-02"
+      "AZSX-02"
     ],
     "official_native.solo_run": [
-      "ASX-01",
-      "ASX-02",
-      "ASX-03",
-      "ASX-04",
-      "ASX-05",
-      "ASX-06",
-      "ASX-07",
-      "ASX-08",
-      "ASX-09",
-      "ASX-10",
-      "ASX-11",
-      "ASX-12",
-      "ASX-13",
-      "ASX-14",
-      "ASX-16",
-      "ASX-17",
-      "ASX-18",
-      "ASX-19",
-      "ASX-21",
-      "ASX-22",
-      "ASX-23",
-      "ASX-24",
-      "ASX-25",
-      "ASX-26",
-      "ASX-27",
-      "ASX-28"
+      "AZSX-01",
+      "AZSX-02",
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-05",
+      "AZSX-06",
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-11",
+      "AZSX-12",
+      "AZSX-13",
+      "AZSX-14",
+      "AZSX-16",
+      "AZSX-17",
+      "AZSX-18",
+      "AZSX-19",
+      "AZSX-21",
+      "AZSX-22",
+      "AZSX-23",
+      "AZSX-24",
+      "AZSX-25",
+      "AZSX-26",
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.stat_inputs.consumable_stats": [
-      "ASX-16",
-      "ASX-22",
-      "ASX-27"
+      "AZSX-16",
+      "AZSX-22",
+      "AZSX-27"
     ],
     "official_native.stat_inputs.restore_stat_input": [
-      "ASX-16",
-      "ASX-22",
-      "ASX-27"
+      "AZSX-16",
+      "AZSX-22",
+      "AZSX-27"
     ],
     "official_native.stat_inputs.temporary_stat_input": [
-      "ASX-16",
-      "ASX-22",
-      "ASX-27"
+      "AZSX-16",
+      "AZSX-22",
+      "AZSX-27"
     ],
     "official_native.support.advanced.emit_hybrid": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.advanced.fixture_retaliation_hit": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.advanced.hide_retaliation": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.advanced.native_effect": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.advanced.restore_retaliation": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.advanced.retaliate": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.advanced.support_emit_entries": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.credit_support": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.aura_field": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.aura_has_caster": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.aura_rows": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.aura_stride": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.capture_aura": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.deliver_elite_item": [
-      "ASX-05"
+      "AZSX-05"
     ],
     "official_native.support.effects.effect_owner": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.elite_entry": [
-      "ASX-05"
+      "AZSX-05"
     ],
     "official_native.support.effects.elite_game": [
-      "ASX-05"
+      "AZSX-05"
     ],
     "official_native.support.effects.fixture_break_shield": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.fixture_guardian": [
-      "ASX-05"
+      "AZSX-05"
     ],
     "official_native.support.effects.fixture_guardian_target": [
-      "ASX-05"
+      "AZSX-05"
     ],
     "official_native.support.effects.fixture_perk_loan": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.fixture_restore_perks": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.hide_fatigued_periodic": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.hide_foreign_periodic": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.hide_periodic": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.hurt_entry": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.native_hit_effect_entry": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.needs_guardian_item_supplement": [
-      "ASX-05"
+      "AZSX-05"
     ],
     "official_native.support.effects.periodic_entry": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.prepare_foreign_shield": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.rejuvenation_source_slots": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.restore_aura": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.restore_periodic": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.scaled_heal_effect": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.support_active": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.support_break_frame": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.support_enemies": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.support_overheal": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.support_proc_entries": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.support_query_origin": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.support_receipt": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.support_shield_break": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.effects.write_aura_rows": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.fixture_cast_actor": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.fixture_cast_resolved": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.fixture_support_definition": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.fixture_support_wounds": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.flush_entry": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.healing_total": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.route_support": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.scale_direct_heal_delivery": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.support_buff_slots": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.support_caster": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.support_delivery": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.support_entries": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.support_queue_count": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.support_row": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.support.support_spell": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.treasure_goblins.base_health": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.despawn_goblin": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.from_native": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_arena": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_array": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_clip": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_definition_entry": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_elite": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_entries": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_filter_recycle": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_final_motion": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_final_motion_entry": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_hold_motion": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_name": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_notice": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_outfit_entries": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_outfit_key": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_outfit_metadata": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_packet_probe": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_packet_probe_entry": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_recycle_entry": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_row": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_run": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_skin_entry": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_skin_path": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_skin_probe": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_snapshot": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.goblin_template": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.guid": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.pointer": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.treasure_goblins.spawn_goblin": [
-      "ASX-26"
+      "AZSX-26"
     ],
     "official_native.version": [
-      "ASX-01",
-      "ASX-20"
+      "AZSX-01",
+      "AZSX-20"
     ],
     "official_native.wallet.armory_gold_bonus": [
-      "ASX-03",
-      "ASX-04",
-      "ASX-27"
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-27"
     ],
     "official_native.wallet.chest_entry": [
-      "ASX-03",
-      "ASX-04"
+      "AZSX-03",
+      "AZSX-04"
     ],
     "official_native.wallet.chest_state": [
-      "ASX-03",
-      "ASX-04"
+      "AZSX-03",
+      "AZSX-04"
     ],
     "official_native.wallet.conversion_ready": [
-      "ASX-03",
-      "ASX-04"
+      "AZSX-03",
+      "AZSX-04"
     ],
     "official_native.wallet.convert_entry": [
-      "ASX-03",
-      "ASX-04"
+      "AZSX-03",
+      "AZSX-04"
     ],
     "official_native.wallet.currency_entry": [
-      "ASX-03",
-      "ASX-04",
-      "ASX-27"
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-27"
     ],
     "official_native.wallet.current_gold": [
-      "ASX-03",
-      "ASX-04",
-      "ASX-27"
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-27"
     ],
     "official_native.wallet.deliver_chests": [
-      "ASX-03",
-      "ASX-04"
+      "AZSX-03",
+      "AZSX-04"
     ],
     "official_native.wallet.fixture_armory_gold": [
-      "ASX-03",
-      "ASX-04",
-      "ASX-27"
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-27"
     ],
     "official_native.wallet.fixture_conversion_flag": [
-      "ASX-03",
-      "ASX-04"
+      "AZSX-03",
+      "AZSX-04"
     ],
     "official_native.wallet.fixture_reward_action": [
-      "ASX-03",
-      "ASX-04"
+      "AZSX-03",
+      "AZSX-04"
     ],
     "official_native.wallet.gold_entry": [
-      "ASX-03",
-      "ASX-04",
-      "ASX-27"
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-27"
     ],
     "official_native.wallet.gold_source": [
-      "ASX-03",
-      "ASX-04",
-      "ASX-27"
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-27"
     ],
     "official_native.wallet.is_currency": [
-      "ASX-03",
-      "ASX-04",
-      "ASX-27"
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-27"
     ],
     "official_native.wallet.item_choice_entry": [
-      "ASX-04",
-      "ASX-26"
+      "AZSX-04",
+      "AZSX-26"
     ],
     "official_native.wallet.present_pending_item": [
-      "ASX-04",
-      "ASX-26"
+      "AZSX-04",
+      "AZSX-26"
     ],
     "official_native.wallet.project_current_chest": [
-      "ASX-03",
-      "ASX-04"
+      "AZSX-03",
+      "AZSX-04"
     ],
     "official_native.wallet.project_current_wallet": [
-      "ASX-03",
-      "ASX-04",
-      "ASX-27"
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-27"
     ],
     "official_native.wallet.project_wallet": [
-      "ASX-03",
-      "ASX-04",
-      "ASX-27"
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-27"
     ],
     "official_native.wallet.racial_gold_bonus": [
-      "ASX-03",
-      "ASX-04",
-      "ASX-27"
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-27"
     ],
     "official_native.wallet.reward_choice_kind": [
-      "ASX-03",
-      "ASX-04"
+      "AZSX-03",
+      "AZSX-04"
     ],
     "official_native.wallet.swap_entry": [
-      "ASX-03",
-      "ASX-04",
-      "ASX-27"
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-27"
     ],
     "official_native.wallet.wallet_seed": [
-      "ASX-03",
-      "ASX-04",
-      "ASX-27"
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-27"
     ],
     "official_native.world_events.anchor": [
-      "ASX-28"
+      "AZSX-28"
     ],
     "official_native.world_events.event_aura_readback": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.event_broadcast": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.event_credit_gold": [
-      "ASX-03",
-      "ASX-27"
+      "AZSX-03",
+      "AZSX-27"
     ],
     "official_native.world_events.event_endless": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.event_notice": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.event_object": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.event_party": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.event_position": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.event_ritual_scene": [
-      "ASX-28"
+      "AZSX-28"
     ],
     "official_native.world_events.event_surface": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.event_test_stat_input": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.fixture_event_damage": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.fixture_event_pose": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.hide_event_object": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.is_empty": [
-      "ASX-28"
+      "AZSX-28"
     ],
     "official_native.world_events.len": [
-      "ASX-28"
+      "AZSX-28"
     ],
     "official_native.world_events.project_consumable_auras": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.remove_event_object": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.remove_ritual_scene": [
-      "ASX-28"
+      "AZSX-28"
     ],
     "official_native.world_events.take_created_event_packet": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_events.world_event_entries": [
-      "ASX-27",
-      "ASX-28"
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.world_party": [
-      "ASX-01",
-      "ASX-02",
-      "ASX-03",
-      "ASX-04",
-      "ASX-05",
-      "ASX-06",
-      "ASX-07",
-      "ASX-08",
-      "ASX-09",
-      "ASX-10",
-      "ASX-11",
-      "ASX-12",
-      "ASX-13",
-      "ASX-14",
-      "ASX-16",
-      "ASX-17",
-      "ASX-18",
-      "ASX-19",
-      "ASX-21",
-      "ASX-22",
-      "ASX-23",
-      "ASX-24",
-      "ASX-25",
-      "ASX-26",
-      "ASX-27",
-      "ASX-28"
+      "AZSX-01",
+      "AZSX-02",
+      "AZSX-03",
+      "AZSX-04",
+      "AZSX-05",
+      "AZSX-06",
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-11",
+      "AZSX-12",
+      "AZSX-13",
+      "AZSX-14",
+      "AZSX-16",
+      "AZSX-17",
+      "AZSX-18",
+      "AZSX-19",
+      "AZSX-21",
+      "AZSX-22",
+      "AZSX-23",
+      "AZSX-24",
+      "AZSX-25",
+      "AZSX-26",
+      "AZSX-27",
+      "AZSX-28"
     ],
     "official_native.pause.stop_body": [
-      "ASX-06"
+      "AZSX-06"
     ],
     "official_native.pause.pause_remote_motion": [
-      "ASX-06"
+      "AZSX-06"
     ],
     "official_native.stat_inputs.apply_consumable_speed": [
-      "ASX-27"
+      "AZSX-27"
     ],
     "official_native.combat.hurt_actor_tagged": [
-      "ASX-09",
-      "ASX-10",
-      "ASX-26"
+      "AZSX-09",
+      "AZSX-10",
+      "AZSX-26"
     ],
     "official_native.support.effects.call_native_heal": [
-      "ASX-07",
-      "ASX-08",
-      "ASX-12"
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-12"
     ],
     "official_native.combat_text.resolve_with_native_parts": [
-      "ASX-24"
+      "AZSX-24"
     ],
     "official_native.combat_text.append_native_heal_text": [
-      "ASX-24"
+      "AZSX-24"
     ],
     "official_native.enable_native_ui_logging": [
-      "ASX-01",
-      "ASX-18"
+      "AZSX-01",
+      "AZSX-18"
     ],
     "official_native.experience.downed_xp_continuation": [
-      "ASX-02"
+      "AZSX-02"
     ],
     "official_native.experience.downed_xp_entries": [
-      "ASX-02"
+      "AZSX-02"
     ],
     "official_native.support.spell_modifiers_entry": [
-      "ASX-07",
-      "ASX-08"
+      "AZSX-07",
+      "AZSX-08"
     ],
     "official_native.stat_inputs.apply_coop_area": [
-      "ASX-29"
+      "AZSX-29"
     ]
   },
   "evidence": {
     "official_native.actor": {
       "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
+        "crates/azsx-game/src/official_native.rs",
         "src/runtime/lifecycle.rs",
         "src/runtime/session/services.rs",
         "src/runtime/reward_services.rs"
@@ -1505,8 +1505,8 @@
     "official_native.amulet_table": {
       "reason": "Selected native amulet table serves gems and native goblin amulet rewards.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
-        "docs/compatibility/ASX-FEATURES.md"
+        "crates/azsx-game/src/official_native.rs",
+        "docs/compatibility/AZSX-FEATURES.md"
       ],
       "role": "native-operation",
       "shared": true
@@ -1514,8 +1514,8 @@
     "official_native.award_xp": {
       "reason": "Native XP award call shape and entry.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
-        "docs/compatibility/ASX-FEATURES.md"
+        "crates/azsx-game/src/official_native.rs",
+        "docs/compatibility/AZSX-FEATURES.md"
       ],
       "role": "native-operation",
       "shared": false
@@ -1523,7 +1523,7 @@
     "official_native.blessings.blessing_endless_entry": {
       "reason": "Native encounter seams and fixtures are shared by fortunes, event directors and map-specific goblin rewards.",
       "references": [
-        "crates/asx-game/src/official_native/blessings.rs",
+        "crates/azsx-game/src/official_native/blessings.rs",
         "src/runtime/blessings.rs",
         "src/runtime/encounters.rs",
         "src/runtime/event_services.rs"
@@ -1534,7 +1534,7 @@
     "official_native.blessings.blessing_entries": {
       "reason": "Native encounter seams and fixtures are shared by fortunes, event directors and map-specific goblin rewards.",
       "references": [
-        "crates/asx-game/src/official_native/blessings.rs",
+        "crates/azsx-game/src/official_native/blessings.rs",
         "src/runtime/blessings.rs",
         "src/runtime/encounters.rs",
         "src/runtime/event_services.rs"
@@ -1545,7 +1545,7 @@
     "official_native.blessings.blessing_event": {
       "reason": "Native encounter seams and fixtures are shared by fortunes, event directors and map-specific goblin rewards.",
       "references": [
-        "crates/asx-game/src/official_native/blessings.rs",
+        "crates/azsx-game/src/official_native/blessings.rs",
         "src/runtime/blessings.rs",
         "src/runtime/encounters.rs",
         "src/runtime/event_services.rs"
@@ -1556,7 +1556,7 @@
     "official_native.blessings.blessing_event_context": {
       "reason": "Native encounter seams and fixtures are shared by fortunes, event directors and map-specific goblin rewards.",
       "references": [
-        "crates/asx-game/src/official_native/blessings.rs",
+        "crates/azsx-game/src/official_native/blessings.rs",
         "src/runtime/blessings.rs",
         "src/runtime/encounters.rs",
         "src/runtime/event_services.rs"
@@ -1567,7 +1567,7 @@
     "official_native.blessings.blessing_fixture_definition": {
       "reason": "Native encounter seams and fixtures are shared by fortunes, event directors and map-specific goblin rewards.",
       "references": [
-        "crates/asx-game/src/official_native/blessings.rs",
+        "crates/azsx-game/src/official_native/blessings.rs",
         "src/runtime/blessings.rs",
         "src/runtime/encounters.rs",
         "src/runtime/event_services.rs"
@@ -1578,7 +1578,7 @@
     "official_native.blessings.blessing_fixture_targets": {
       "reason": "Native encounter seams and fixtures are shared by fortunes, event directors and map-specific goblin rewards.",
       "references": [
-        "crates/asx-game/src/official_native/blessings.rs",
+        "crates/azsx-game/src/official_native/blessings.rs",
         "src/runtime/blessings.rs",
         "src/runtime/encounters.rs",
         "src/runtime/event_services.rs"
@@ -1589,7 +1589,7 @@
     "official_native.blessings.blessing_fixture_victory": {
       "reason": "Native encounter seams and fixtures are shared by fortunes, event directors and map-specific goblin rewards.",
       "references": [
-        "crates/asx-game/src/official_native/blessings.rs",
+        "crates/azsx-game/src/official_native/blessings.rs",
         "src/runtime/blessings.rs",
         "src/runtime/encounters.rs",
         "src/runtime/event_services.rs"
@@ -1600,7 +1600,7 @@
     "official_native.blessings.blessing_pool_index": {
       "reason": "Filter the four utility trinkets at the native reward pool index seam.",
       "references": [
-        "crates/asx-game/src/official_native/blessings.rs",
+        "crates/azsx-game/src/official_native/blessings.rs",
         "src/runtime/blessings/services.rs"
       ],
       "role": "native-operation",
@@ -1609,7 +1609,7 @@
     "official_native.blessings.blessing_spawn_entry": {
       "reason": "Native encounter seams and fixtures are shared by fortunes, event directors and map-specific goblin rewards.",
       "references": [
-        "crates/asx-game/src/official_native/blessings.rs",
+        "crates/azsx-game/src/official_native/blessings.rs",
         "src/runtime/blessings.rs",
         "src/runtime/encounters.rs",
         "src/runtime/event_services.rs"
@@ -1620,7 +1620,7 @@
     "official_native.blessings.blessing_stat_values": {
       "reason": "Fortune stat/aura projection and Sayge replacement rewards share this boundary.",
       "references": [
-        "crates/asx-game/src/official_native/blessings.rs",
+        "crates/azsx-game/src/official_native/blessings.rs",
         "src/runtime/blessings/services.rs",
         "src/runtime/event_services.rs"
       ],
@@ -1630,7 +1630,7 @@
     "official_native.blessings.blessing_stats": {
       "reason": "Fortune stat/aura projection and Sayge replacement rewards share this boundary.",
       "references": [
-        "crates/asx-game/src/official_native/blessings.rs",
+        "crates/azsx-game/src/official_native/blessings.rs",
         "src/runtime/blessings/services.rs",
         "src/runtime/event_services.rs"
       ],
@@ -1640,7 +1640,7 @@
     "official_native.blessings.fixture_spawn_encounter": {
       "reason": "Native encounter seams and fixtures are shared by fortunes, event directors and map-specific goblin rewards.",
       "references": [
-        "crates/asx-game/src/official_native/blessings.rs",
+        "crates/azsx-game/src/official_native/blessings.rs",
         "src/runtime/blessings.rs",
         "src/runtime/encounters.rs",
         "src/runtime/event_services.rs"
@@ -1651,7 +1651,7 @@
     "official_native.blessings.project_blessing_aura": {
       "reason": "Fortune stat/aura projection and Sayge replacement rewards share this boundary.",
       "references": [
-        "crates/asx-game/src/official_native/blessings.rs",
+        "crates/azsx-game/src/official_native/blessings.rs",
         "src/runtime/blessings/services.rs",
         "src/runtime/event_services.rs"
       ],
@@ -1661,7 +1661,7 @@
     "official_native.bonus_tooltip.bonus_compact_size": {
       "reason": "Shared native kept-bonus tooltip rows, bodies and formatting for ring/gem card representations.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_tooltip.rs",
+        "crates/azsx-game/src/official_native/bonus_tooltip.rs",
         "src/runtime/bonus_tooltip.rs",
         "src/runtime/bonus_catalog.rs"
       ],
@@ -1671,7 +1671,7 @@
     "official_native.bonus_tooltip.bonus_compact_style": {
       "reason": "Shared native kept-bonus tooltip rows, bodies and formatting for ring/gem card representations.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_tooltip.rs",
+        "crates/azsx-game/src/official_native/bonus_tooltip.rs",
         "src/runtime/bonus_tooltip.rs",
         "src/runtime/bonus_catalog.rs"
       ],
@@ -1681,7 +1681,7 @@
     "official_native.bonus_tooltip.bonus_tooltip_entries": {
       "reason": "Shared native kept-bonus tooltip rows, bodies and formatting for ring/gem card representations.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_tooltip.rs",
+        "crates/azsx-game/src/official_native/bonus_tooltip.rs",
         "src/runtime/bonus_tooltip.rs",
         "src/runtime/bonus_catalog.rs"
       ],
@@ -1691,7 +1691,7 @@
     "official_native.bonus_tooltip.kept_tooltip_attach": {
       "reason": "Shared native kept-bonus tooltip rows, bodies and formatting for ring/gem card representations.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_tooltip.rs",
+        "crates/azsx-game/src/official_native/bonus_tooltip.rs",
         "src/runtime/bonus_tooltip.rs",
         "src/runtime/bonus_catalog.rs"
       ],
@@ -1701,7 +1701,7 @@
     "official_native.bonus_tooltip.kept_tooltip_body": {
       "reason": "Shared native kept-bonus tooltip rows, bodies and formatting for ring/gem card representations.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_tooltip.rs",
+        "crates/azsx-game/src/official_native/bonus_tooltip.rs",
         "src/runtime/bonus_tooltip.rs",
         "src/runtime/bonus_catalog.rs"
       ],
@@ -1711,7 +1711,7 @@
     "official_native.bonus_tooltip.kept_tooltip_descriptor": {
       "reason": "Shared native kept-bonus tooltip rows, bodies and formatting for ring/gem card representations.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_tooltip.rs",
+        "crates/azsx-game/src/official_native/bonus_tooltip.rs",
         "src/runtime/bonus_tooltip.rs",
         "src/runtime/bonus_catalog.rs"
       ],
@@ -1721,7 +1721,7 @@
     "official_native.bonus_tooltip.kept_tooltip_fixture_focus": {
       "reason": "Shared native kept-bonus tooltip rows, bodies and formatting for ring/gem card representations.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_tooltip.rs",
+        "crates/azsx-game/src/official_native/bonus_tooltip.rs",
         "src/runtime/bonus_tooltip.rs",
         "src/runtime/bonus_catalog.rs"
       ],
@@ -1731,7 +1731,7 @@
     "official_native.bonus_tooltip.kept_tooltip_row": {
       "reason": "Shared native kept-bonus tooltip rows, bodies and formatting for ring/gem card representations.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_tooltip.rs",
+        "crates/azsx-game/src/official_native/bonus_tooltip.rs",
         "src/runtime/bonus_tooltip.rs",
         "src/runtime/bonus_catalog.rs"
       ],
@@ -1741,7 +1741,7 @@
     "official_native.bonus_tooltip.kept_tooltip_target": {
       "reason": "Shared native kept-bonus tooltip rows, bodies and formatting for ring/gem card representations.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_tooltip.rs",
+        "crates/azsx-game/src/official_native/bonus_tooltip.rs",
         "src/runtime/bonus_tooltip.rs",
         "src/runtime/bonus_catalog.rs"
       ],
@@ -1751,7 +1751,7 @@
     "official_native.bonus_tooltip.kept_tooltip_title": {
       "reason": "Shared native kept-bonus tooltip rows, bodies and formatting for ring/gem card representations.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_tooltip.rs",
+        "crates/azsx-game/src/official_native/bonus_tooltip.rs",
         "src/runtime/bonus_tooltip.rs",
         "src/runtime/bonus_catalog.rs"
       ],
@@ -1761,7 +1761,7 @@
     "official_native.bonus_tooltip.supports_bonus_tooltips": {
       "reason": "Shared native kept-bonus tooltip rows, bodies and formatting for ring/gem card representations.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_tooltip.rs",
+        "crates/azsx-game/src/official_native/bonus_tooltip.rs",
         "src/runtime/bonus_tooltip.rs",
         "src/runtime/bonus_catalog.rs"
       ],
@@ -1771,7 +1771,7 @@
     "official_native.bonus_tooltip.tooltip_bindings": {
       "reason": "Shared native kept-bonus tooltip rows, bodies and formatting for ring/gem card representations.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_tooltip.rs",
+        "crates/azsx-game/src/official_native/bonus_tooltip.rs",
         "src/runtime/bonus_tooltip.rs",
         "src/runtime/bonus_catalog.rs"
       ],
@@ -1781,7 +1781,7 @@
     "official_native.bonus_ui.append_reward_note": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1792,7 +1792,7 @@
     "official_native.bonus_ui.bonus_column_capture": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1803,7 +1803,7 @@
     "official_native.bonus_ui.bonus_column_draw": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1814,7 +1814,7 @@
     "official_native.bonus_ui.bonus_column_entries": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1825,7 +1825,7 @@
     "official_native.bonus_ui.bonus_column_spawner": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1836,7 +1836,7 @@
     "official_native.bonus_ui.bonus_header_draw": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1847,7 +1847,7 @@
     "official_native.bonus_ui.bonus_separator_capture": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1858,7 +1858,7 @@
     "official_native.bonus_ui.bonus_separator_draw": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1869,7 +1869,7 @@
     "official_native.bonus_ui.bonus_separator_entries": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1880,7 +1880,7 @@
     "official_native.bonus_ui.bonus_ui_context": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1891,7 +1891,7 @@
     "official_native.bonus_ui.bonus_ui_drawback": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1902,7 +1902,7 @@
     "official_native.bonus_ui.bonus_ui_entries": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1913,7 +1913,7 @@
     "official_native.bonus_ui.bonus_ui_no_action": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1924,7 +1924,7 @@
     "official_native.bonus_ui.bonus_ui_size": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1935,7 +1935,7 @@
     "official_native.bonus_ui.bonus_ui_status": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1946,7 +1946,7 @@
     "official_native.bonus_ui.draw_annotation": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1957,7 +1957,7 @@
     "official_native.bonus_ui.kept_bonus_ui_draw": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1968,7 +1968,7 @@
     "official_native.bonus_ui.reward_card_note": {
       "reason": "Shared reward-card header, separator, annotation and retained bonus layout.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/bonus_ui.rs",
         "src/runtime/bonus_catalog.rs",
         "src/runtime/reward_cards.rs"
@@ -1979,7 +1979,7 @@
     "official_native.bonus_ui.reward_entries": {
       "reason": "The card/accept hooks are shared with goblin amulet reward scopes; never attribute them to jewelry alone.",
       "references": [
-        "crates/asx-game/src/official_native/bonus_ui.rs",
+        "crates/azsx-game/src/official_native/bonus_ui.rs",
         "src/runtime/reward_cards.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
@@ -1989,7 +1989,7 @@
     "official_native.combat.attack_actor": {
       "reason": "Combat hit/HP operations and fixtures are shared with retained spell casts and goblin death detection.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs",
         "src/runtime/treasure_goblins.rs"
       ],
@@ -1999,7 +1999,7 @@
     "official_native.combat.basic_fields": {
       "reason": "Native basic-action target ownership, origin restoration and taunt descriptions.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs"
       ],
       "role": "native-operation",
@@ -2008,7 +2008,7 @@
     "official_native.combat.basic_frame": {
       "reason": "Native basic-action target ownership, origin restoration and taunt descriptions.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs"
       ],
       "role": "native-operation",
@@ -2017,7 +2017,7 @@
     "official_native.combat.basic_resume": {
       "reason": "Native basic-action target ownership, origin restoration and taunt descriptions.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs"
       ],
       "role": "native-operation",
@@ -2026,7 +2026,7 @@
     "official_native.combat.basic_resume_entry": {
       "reason": "Native basic-action target ownership, origin restoration and taunt descriptions.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs"
       ],
       "role": "native-operation",
@@ -2035,7 +2035,7 @@
     "official_native.combat.combat_actor": {
       "reason": "Shared enemy/actor combat seams support marks, pursuit, immunity and goblin kill/taunt exclusion.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs",
         "src/runtime/treasure_goblins.rs"
       ],
@@ -2045,7 +2045,7 @@
     "official_native.combat.combat_descriptions": {
       "reason": "Native basic-action target ownership, origin restoration and taunt descriptions.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs"
       ],
       "role": "native-operation",
@@ -2054,7 +2054,7 @@
     "official_native.combat.combat_enemies": {
       "reason": "Shared enemy/actor combat seams support marks, pursuit, immunity and goblin kill/taunt exclusion.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs",
         "src/runtime/treasure_goblins.rs"
       ],
@@ -2064,7 +2064,7 @@
     "official_native.combat.combat_entries": {
       "reason": "Shared enemy/actor combat seams support marks, pursuit, immunity and goblin kill/taunt exclusion.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs",
         "src/runtime/treasure_goblins.rs"
       ],
@@ -2074,7 +2074,7 @@
     "official_native.combat.combat_hp": {
       "reason": "Combat hit/HP operations and fixtures are shared with retained spell casts and goblin death detection.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs",
         "src/runtime/treasure_goblins.rs"
       ],
@@ -2084,7 +2084,7 @@
     "official_native.combat.combat_rows": {
       "reason": "Shared enemy/actor combat seams support marks, pursuit, immunity and goblin kill/taunt exclusion.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs",
         "src/runtime/treasure_goblins.rs"
       ],
@@ -2094,7 +2094,7 @@
     "official_native.combat.fixture_combat_enemy": {
       "reason": "Combat hit/HP operations and fixtures are shared with retained spell casts and goblin death detection.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs",
         "src/runtime/treasure_goblins.rs"
       ],
@@ -2104,7 +2104,7 @@
     "official_native.combat.hurt_actor": {
       "reason": "Combat hit/HP operations and fixtures are shared with retained spell casts and goblin death detection.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs",
         "src/runtime/treasure_goblins.rs"
       ],
@@ -2114,7 +2114,7 @@
     "official_native.combat.prepare_basic_target": {
       "reason": "Native basic-action target ownership, origin restoration and taunt descriptions.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs"
       ],
       "role": "native-operation",
@@ -2123,7 +2123,7 @@
     "official_native.combat.restore_basic_origin": {
       "reason": "Native basic-action target ownership, origin restoration and taunt descriptions.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs"
       ],
       "role": "native-operation",
@@ -2132,7 +2132,7 @@
     "official_native.combat.write_combat_mark": {
       "reason": "Native strongest Hunter mark vulnerability and mark visuals.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs"
       ],
       "role": "native-operation",
@@ -2141,7 +2141,7 @@
     "official_native.combat_text.combat_text_entries": {
       "reason": "Native outgoing damage and allied direct/periodic healing text entries and draw queue.",
       "references": [
-        "crates/asx-game/src/official_native/combat_text.rs",
+        "crates/azsx-game/src/official_native/combat_text.rs",
         "src/runtime/combat_text.rs"
       ],
       "role": "native-operation",
@@ -2150,7 +2150,7 @@
     "official_native.combat_text.draw_native_heal_text": {
       "reason": "Native outgoing damage and allied direct/periodic healing text entries and draw queue.",
       "references": [
-        "crates/asx-game/src/official_native/combat_text.rs",
+        "crates/azsx-game/src/official_native/combat_text.rs",
         "src/runtime/combat_text.rs"
       ],
       "role": "native-operation",
@@ -2159,7 +2159,7 @@
     "official_native.combat_text.native_heal_texts": {
       "reason": "Native outgoing damage and allied direct/periodic healing text entries and draw queue.",
       "references": [
-        "crates/asx-game/src/official_native/combat_text.rs",
+        "crates/azsx-game/src/official_native/combat_text.rs",
         "src/runtime/combat_text.rs"
       ],
       "role": "native-operation",
@@ -2168,7 +2168,7 @@
     "official_native.duplicate_loot.loot_actor_gold": {
       "reason": "The retained loot-owner gold reader is also used by the active shared wallet; preserve both current and upstream-native compatibility.",
       "references": [
-        "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "crates/azsx-game/src/official_native/duplicate_loot.rs",
         "src/runtime/wallet.rs"
       ],
       "role": "native-operation",
@@ -2177,7 +2177,7 @@
     "official_native.duplicate_loot.loot_bytes": {
       "reason": "Retained duplicate-loot integration is disabled; native marks must remain authoritative.",
       "references": [
-        "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "crates/azsx-game/src/official_native/duplicate_loot.rs",
         "src/runtime/duplicate_loot.rs",
         "docs/compatibility/CLIENT-COMPATIBILITY.md"
       ],
@@ -2187,7 +2187,7 @@
     "official_native.duplicate_loot.loot_entries": {
       "reason": "Retained duplicate-loot integration is disabled; native marks must remain authoritative.",
       "references": [
-        "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "crates/azsx-game/src/official_native/duplicate_loot.rs",
         "src/runtime/duplicate_loot.rs",
         "docs/compatibility/CLIENT-COMPATIBILITY.md"
       ],
@@ -2197,7 +2197,7 @@
     "official_native.duplicate_loot.loot_fixture_append": {
       "reason": "Retained duplicate-loot integration is disabled; native marks must remain authoritative.",
       "references": [
-        "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "crates/azsx-game/src/official_native/duplicate_loot.rs",
         "src/runtime/duplicate_loot.rs",
         "docs/compatibility/CLIENT-COMPATIBILITY.md"
       ],
@@ -2207,7 +2207,7 @@
     "official_native.duplicate_loot.loot_fixture_dispatch": {
       "reason": "Retained duplicate-loot integration is disabled; native marks must remain authoritative.",
       "references": [
-        "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "crates/azsx-game/src/official_native/duplicate_loot.rs",
         "src/runtime/duplicate_loot.rs",
         "docs/compatibility/CLIENT-COMPATIBILITY.md"
       ],
@@ -2217,7 +2217,7 @@
     "official_native.duplicate_loot.loot_fixture_entry": {
       "reason": "Retained duplicate-loot integration is disabled; native marks must remain authoritative.",
       "references": [
-        "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "crates/azsx-game/src/official_native/duplicate_loot.rs",
         "src/runtime/duplicate_loot.rs",
         "docs/compatibility/CLIENT-COMPATIBILITY.md"
       ],
@@ -2227,7 +2227,7 @@
     "official_native.duplicate_loot.loot_hide_drop": {
       "reason": "Retained duplicate-loot integration is disabled; native marks must remain authoritative.",
       "references": [
-        "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "crates/azsx-game/src/official_native/duplicate_loot.rs",
         "src/runtime/duplicate_loot.rs",
         "docs/compatibility/CLIENT-COMPATIBILITY.md"
       ],
@@ -2237,7 +2237,7 @@
     "official_native.duplicate_loot.loot_known": {
       "reason": "Retained duplicate-loot integration is disabled; native marks must remain authoritative.",
       "references": [
-        "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "crates/azsx-game/src/official_native/duplicate_loot.rs",
         "src/runtime/duplicate_loot.rs",
         "docs/compatibility/CLIENT-COMPATIBILITY.md"
       ],
@@ -2247,7 +2247,7 @@
     "official_native.duplicate_loot.loot_offer": {
       "reason": "Retained duplicate-loot integration is disabled; native marks must remain authoritative.",
       "references": [
-        "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "crates/azsx-game/src/official_native/duplicate_loot.rs",
         "src/runtime/duplicate_loot.rs",
         "docs/compatibility/CLIENT-COMPATIBILITY.md"
       ],
@@ -2257,7 +2257,7 @@
     "official_native.duplicate_loot.loot_packet": {
       "reason": "Retained duplicate-loot integration is disabled; native marks must remain authoritative.",
       "references": [
-        "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "crates/azsx-game/src/official_native/duplicate_loot.rs",
         "src/runtime/duplicate_loot.rs",
         "docs/compatibility/CLIENT-COMPATIBILITY.md"
       ],
@@ -2267,7 +2267,7 @@
     "official_native.duplicate_loot.loot_send_entry": {
       "reason": "Retained duplicate-loot integration is disabled; native marks must remain authoritative.",
       "references": [
-        "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "crates/azsx-game/src/official_native/duplicate_loot.rs",
         "src/runtime/duplicate_loot.rs",
         "docs/compatibility/CLIENT-COMPATIBILITY.md"
       ],
@@ -2277,7 +2277,7 @@
     "official_native.duplicate_loot.loot_ui_sink": {
       "reason": "Retained duplicate-loot integration is disabled; native marks must remain authoritative.",
       "references": [
-        "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "crates/azsx-game/src/official_native/duplicate_loot.rs",
         "src/runtime/duplicate_loot.rs",
         "docs/compatibility/CLIENT-COMPATIBILITY.md"
       ],
@@ -2287,7 +2287,7 @@
     "official_native.duplicate_loot.loot_victory": {
       "reason": "Retained duplicate-loot integration is disabled; native marks must remain authoritative.",
       "references": [
-        "crates/asx-game/src/official_native/duplicate_loot.rs",
+        "crates/azsx-game/src/official_native/duplicate_loot.rs",
         "src/runtime/duplicate_loot.rs",
         "docs/compatibility/CLIENT-COMPATIBILITY.md"
       ],
@@ -2297,8 +2297,8 @@
     "official_native.duplicate_loot_enabled": {
       "reason": "Current selected client keeps duplicate-loot gold compensation disabled.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
-        "docs/compatibility/ASX-FEATURES.md"
+        "crates/azsx-game/src/official_native.rs",
+        "docs/compatibility/AZSX-FEATURES.md"
       ],
       "role": "native-operation",
       "shared": false
@@ -2306,7 +2306,7 @@
     "official_native.enchantments.enchantment_ui_draw": {
       "reason": "Per-ring identity, upgrade selection, ranked stat loan and annotation.",
       "references": [
-        "crates/asx-game/src/official_native/enchantments.rs",
+        "crates/azsx-game/src/official_native/enchantments.rs",
         "src/runtime/enchantments.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2316,7 +2316,7 @@
     "official_native.enchantments.restore_ring_stats": {
       "reason": "Shared jewelry service restores both ring and gem stat loans.",
       "references": [
-        "crates/asx-game/src/official_native/enchantments.rs",
+        "crates/azsx-game/src/official_native/enchantments.rs",
         "src/runtime/reward_services.rs"
       ],
       "role": "native-operation",
@@ -2325,7 +2325,7 @@
     "official_native.enchantments.ring_actor_owned": {
       "reason": "Per-ring identity, upgrade selection, ranked stat loan and annotation.",
       "references": [
-        "crates/asx-game/src/official_native/enchantments.rs",
+        "crates/azsx-game/src/official_native/enchantments.rs",
         "src/runtime/enchantments.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2335,7 +2335,7 @@
     "official_native.enchantments.ring_card": {
       "reason": "Per-ring identity, upgrade selection, ranked stat loan and annotation.",
       "references": [
-        "crates/asx-game/src/official_native/enchantments.rs",
+        "crates/azsx-game/src/official_native/enchantments.rs",
         "src/runtime/enchantments.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2345,7 +2345,7 @@
     "official_native.enchantments.ring_definition": {
       "reason": "Per-ring identity, upgrade selection, ranked stat loan and annotation.",
       "references": [
-        "crates/asx-game/src/official_native/enchantments.rs",
+        "crates/azsx-game/src/official_native/enchantments.rs",
         "src/runtime/enchantments.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2355,7 +2355,7 @@
     "official_native.enchantments.ring_fixture_pick": {
       "reason": "Per-ring identity, upgrade selection, ranked stat loan and annotation.",
       "references": [
-        "crates/asx-game/src/official_native/enchantments.rs",
+        "crates/azsx-game/src/official_native/enchantments.rs",
         "src/runtime/enchantments.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2365,9 +2365,9 @@
     "official_native.enchantments.ring_input_header": {
       "reason": "Jewelry capability/stat input access is reused by gems and consumable rebuild validation.",
       "references": [
-        "crates/asx-game/src/official_native/enchantments.rs",
-        "crates/asx-game/src/official_native/gems.rs",
-        "crates/asx-game/src/official_native/stat_inputs.rs",
+        "crates/azsx-game/src/official_native/enchantments.rs",
+        "crates/azsx-game/src/official_native/gems.rs",
+        "crates/azsx-game/src/official_native/stat_inputs.rs",
         "src/runtime/supplies.rs"
       ],
       "role": "native-operation",
@@ -2376,7 +2376,7 @@
     "official_native.enchantments.ring_owned": {
       "reason": "Per-ring identity, upgrade selection, ranked stat loan and annotation.",
       "references": [
-        "crates/asx-game/src/official_native/enchantments.rs",
+        "crates/azsx-game/src/official_native/enchantments.rs",
         "src/runtime/enchantments.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2386,7 +2386,7 @@
     "official_native.enchantments.ring_selected": {
       "reason": "Per-ring identity, upgrade selection, ranked stat loan and annotation.",
       "references": [
-        "crates/asx-game/src/official_native/enchantments.rs",
+        "crates/azsx-game/src/official_native/enchantments.rs",
         "src/runtime/enchantments.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2396,9 +2396,9 @@
     "official_native.enchantments.ring_stat_values": {
       "reason": "Jewelry capability/stat input access is reused by gems and consumable rebuild validation.",
       "references": [
-        "crates/asx-game/src/official_native/enchantments.rs",
-        "crates/asx-game/src/official_native/gems.rs",
-        "crates/asx-game/src/official_native/stat_inputs.rs",
+        "crates/azsx-game/src/official_native/enchantments.rs",
+        "crates/azsx-game/src/official_native/gems.rs",
+        "crates/azsx-game/src/official_native/stat_inputs.rs",
         "src/runtime/supplies.rs"
       ],
       "role": "native-operation",
@@ -2407,7 +2407,7 @@
     "official_native.enchantments.ring_stats": {
       "reason": "Per-ring identity, upgrade selection, ranked stat loan and annotation.",
       "references": [
-        "crates/asx-game/src/official_native/enchantments.rs",
+        "crates/azsx-game/src/official_native/enchantments.rs",
         "src/runtime/enchantments.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2417,9 +2417,9 @@
     "official_native.enchantments.supports_enchantments": {
       "reason": "Jewelry capability/stat input access is reused by gems and consumable rebuild validation.",
       "references": [
-        "crates/asx-game/src/official_native/enchantments.rs",
-        "crates/asx-game/src/official_native/gems.rs",
-        "crates/asx-game/src/official_native/stat_inputs.rs",
+        "crates/azsx-game/src/official_native/enchantments.rs",
+        "crates/azsx-game/src/official_native/gems.rs",
+        "crates/azsx-game/src/official_native/stat_inputs.rs",
         "src/runtime/supplies.rs"
       ],
       "role": "native-operation",
@@ -2428,7 +2428,7 @@
     "official_native.event_placement.clamp_event_health": {
       "reason": "Consumable stat rebuild and expiry preserve current health bounds.",
       "references": [
-        "crates/asx-game/src/official_native/event_placement.rs",
+        "crates/azsx-game/src/official_native/event_placement.rs",
         "src/runtime/event_services.rs",
         "src/runtime/supplies.rs"
       ],
@@ -2438,7 +2438,7 @@
     "official_native.event_placement.event_area": {
       "reason": "Shared map-wide placement and native minimap geometry for supplies and Sayge.",
       "references": [
-        "crates/asx-game/src/official_native/event_placement.rs",
+        "crates/azsx-game/src/official_native/event_placement.rs",
         "src/runtime/world_events.rs",
         "src/runtime/event_services.rs"
       ],
@@ -2448,7 +2448,7 @@
     "official_native.event_placement.event_ground": {
       "reason": "Shared map-wide placement and native minimap geometry for supplies and Sayge.",
       "references": [
-        "crates/asx-game/src/official_native/event_placement.rs",
+        "crates/azsx-game/src/official_native/event_placement.rs",
         "src/runtime/world_events.rs",
         "src/runtime/event_services.rs"
       ],
@@ -2458,7 +2458,7 @@
     "official_native.event_placement.event_ground_sample": {
       "reason": "Shared map-wide placement and native minimap geometry for supplies and Sayge.",
       "references": [
-        "crates/asx-game/src/official_native/event_placement.rs",
+        "crates/azsx-game/src/official_native/event_placement.rs",
         "src/runtime/world_events.rs",
         "src/runtime/event_services.rs"
       ],
@@ -2468,7 +2468,7 @@
     "official_native.event_placement.event_minimap": {
       "reason": "Shared map-wide placement and native minimap geometry for supplies and Sayge.",
       "references": [
-        "crates/asx-game/src/official_native/event_placement.rs",
+        "crates/azsx-game/src/official_native/event_placement.rs",
         "src/runtime/world_events.rs",
         "src/runtime/event_services.rs"
       ],
@@ -2478,7 +2478,7 @@
     "official_native.event_placement.event_placement_entries": {
       "reason": "Shared map-wide placement and native minimap geometry for supplies and Sayge.",
       "references": [
-        "crates/asx-game/src/official_native/event_placement.rs",
+        "crates/azsx-game/src/official_native/event_placement.rs",
         "src/runtime/world_events.rs",
         "src/runtime/event_services.rs"
       ],
@@ -2488,7 +2488,7 @@
     "official_native.event_placement.event_walkable": {
       "reason": "Shared map-wide placement and native minimap geometry for supplies and Sayge.",
       "references": [
-        "crates/asx-game/src/official_native/event_placement.rs",
+        "crates/azsx-game/src/official_native/event_placement.rs",
         "src/runtime/world_events.rs",
         "src/runtime/event_services.rs"
       ],
@@ -2498,7 +2498,7 @@
     "official_native.event_placement.height": {
       "reason": "Shared map-wide placement and native minimap geometry for supplies and Sayge.",
       "references": [
-        "crates/asx-game/src/official_native/event_placement.rs",
+        "crates/azsx-game/src/official_native/event_placement.rs",
         "src/runtime/world_events.rs",
         "src/runtime/event_services.rs"
       ],
@@ -2508,7 +2508,7 @@
     "official_native.event_placement.ui_context_entry": {
       "reason": "Native cosmetic source context is shared by participant and event UI.",
       "references": [
-        "crates/asx-game/src/official_native/event_placement.rs",
+        "crates/azsx-game/src/official_native/event_placement.rs",
         "src/runtime/ui_context.rs"
       ],
       "role": "native-operation",
@@ -2517,7 +2517,7 @@
     "official_native.event_placement.ui_context_result": {
       "reason": "Native cosmetic source context is shared by participant and event UI.",
       "references": [
-        "crates/asx-game/src/official_native/event_placement.rs",
+        "crates/azsx-game/src/official_native/event_placement.rs",
         "src/runtime/ui_context.rs"
       ],
       "role": "native-operation",
@@ -2526,7 +2526,7 @@
     "official_native.fatigue.fatigue_aura_entry": {
       "reason": "Native harmful aura entry and frame projection for Resurrection Sickness.",
       "references": [
-        "crates/asx-game/src/official_native/fatigue.rs",
+        "crates/azsx-game/src/official_native/fatigue.rs",
         "src/runtime/fatigue.rs"
       ],
       "role": "native-operation",
@@ -2535,7 +2535,7 @@
     "official_native.fatigue.fatigue_aura_frame": {
       "reason": "Native harmful aura entry and frame projection for Resurrection Sickness.",
       "references": [
-        "crates/asx-game/src/official_native/fatigue.rs",
+        "crates/azsx-game/src/official_native/fatigue.rs",
         "src/runtime/fatigue.rs"
       ],
       "role": "native-operation",
@@ -2544,7 +2544,7 @@
     "official_native.fatigue.project_fatigue_aura": {
       "reason": "Native harmful aura entry and frame projection for Resurrection Sickness.",
       "references": [
-        "crates/asx-game/src/official_native/fatigue.rs",
+        "crates/azsx-game/src/official_native/fatigue.rs",
         "src/runtime/fatigue.rs"
       ],
       "role": "native-operation",
@@ -2553,7 +2553,7 @@
     "official_native.gems.amulet_card": {
       "reason": "Native amulet choice readers are shared by gem selection and goblin reward acceptance.",
       "references": [
-        "crates/asx-game/src/official_native/gems.rs",
+        "crates/azsx-game/src/official_native/gems.rs",
         "src/runtime/reward_services.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
@@ -2563,7 +2563,7 @@
     "official_native.gems.amulet_fixture_pick": {
       "reason": "Amulet identity, fixed gem stat loan and card display.",
       "references": [
-        "crates/asx-game/src/official_native/gems.rs",
+        "crates/azsx-game/src/official_native/gems.rs",
         "src/runtime/gems.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2573,7 +2573,7 @@
     "official_native.gems.amulet_key": {
       "reason": "Amulet identity, fixed gem stat loan and card display.",
       "references": [
-        "crates/asx-game/src/official_native/gems.rs",
+        "crates/azsx-game/src/official_native/gems.rs",
         "src/runtime/gems.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2583,7 +2583,7 @@
     "official_native.gems.amulet_owned": {
       "reason": "Amulet identity, fixed gem stat loan and card display.",
       "references": [
-        "crates/asx-game/src/official_native/gems.rs",
+        "crates/azsx-game/src/official_native/gems.rs",
         "src/runtime/gems.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2593,7 +2593,7 @@
     "official_native.gems.amulet_rank": {
       "reason": "Amulet identity, fixed gem stat loan and card display.",
       "references": [
-        "crates/asx-game/src/official_native/gems.rs",
+        "crates/azsx-game/src/official_native/gems.rs",
         "src/runtime/gems.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2603,7 +2603,7 @@
     "official_native.gems.amulet_selected": {
       "reason": "Native amulet choice readers are shared by gem selection and goblin reward acceptance.",
       "references": [
-        "crates/asx-game/src/official_native/gems.rs",
+        "crates/azsx-game/src/official_native/gems.rs",
         "src/runtime/reward_services.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
@@ -2613,7 +2613,7 @@
     "official_native.gems.gem_stats": {
       "reason": "Amulet identity, fixed gem stat loan and card display.",
       "references": [
-        "crates/asx-game/src/official_native/gems.rs",
+        "crates/azsx-game/src/official_native/gems.rs",
         "src/runtime/gems.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2623,7 +2623,7 @@
     "official_native.gems.gem_ui_draw": {
       "reason": "Amulet identity, fixed gem stat loan and card display.",
       "references": [
-        "crates/asx-game/src/official_native/gems.rs",
+        "crates/azsx-game/src/official_native/gems.rs",
         "src/runtime/gems.rs",
         "src/runtime/reward_services.rs"
       ],
@@ -2633,7 +2633,7 @@
     "official_native.goblin_rewards.goblin_amulet_key": {
       "reason": "Native goblin amulet choice delivery, scope, participant eligibility and exclusions.",
       "references": [
-        "crates/asx-game/src/official_native/goblin_rewards.rs",
+        "crates/azsx-game/src/official_native/goblin_rewards.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
       "role": "native-operation",
@@ -2642,7 +2642,7 @@
     "official_native.goblin_rewards.goblin_amulet_pool": {
       "reason": "Native goblin amulet choice delivery, scope, participant eligibility and exclusions.",
       "references": [
-        "crates/asx-game/src/official_native/goblin_rewards.rs",
+        "crates/azsx-game/src/official_native/goblin_rewards.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
       "role": "native-operation",
@@ -2651,7 +2651,7 @@
     "official_native.goblin_rewards.goblin_credit_marks": {
       "reason": "Goblin rewards read native map/difficulty marks and credit personal upstream-native progression.",
       "references": [
-        "crates/asx-game/src/official_native/goblin_rewards.rs",
+        "crates/azsx-game/src/official_native/goblin_rewards.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
       "role": "native-operation",
@@ -2660,7 +2660,7 @@
     "official_native.goblin_rewards.goblin_exclusion_keys": {
       "reason": "Native goblin amulet choice delivery, scope, participant eligibility and exclusions.",
       "references": [
-        "crates/asx-game/src/official_native/goblin_rewards.rs",
+        "crates/azsx-game/src/official_native/goblin_rewards.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
       "role": "native-operation",
@@ -2669,7 +2669,7 @@
     "official_native.goblin_rewards.goblin_marks_amount": {
       "reason": "Goblin rewards read native map/difficulty marks and credit personal upstream-native progression.",
       "references": [
-        "crates/asx-game/src/official_native/goblin_rewards.rs",
+        "crates/azsx-game/src/official_native/goblin_rewards.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
       "role": "native-operation",
@@ -2678,7 +2678,7 @@
     "official_native.goblin_rewards.goblin_open_amulets": {
       "reason": "Native goblin amulet choice delivery, scope, participant eligibility and exclusions.",
       "references": [
-        "crates/asx-game/src/official_native/goblin_rewards.rs",
+        "crates/azsx-game/src/official_native/goblin_rewards.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
       "role": "native-operation",
@@ -2687,7 +2687,7 @@
     "official_native.goblin_rewards.goblin_reward_actor": {
       "reason": "Native goblin amulet choice delivery, scope, participant eligibility and exclusions.",
       "references": [
-        "crates/asx-game/src/official_native/goblin_rewards.rs",
+        "crates/azsx-game/src/official_native/goblin_rewards.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
       "role": "native-operation",
@@ -2696,7 +2696,7 @@
     "official_native.goblin_rewards.goblin_reward_entries": {
       "reason": "Native goblin amulet choice delivery, scope, participant eligibility and exclusions.",
       "references": [
-        "crates/asx-game/src/official_native/goblin_rewards.rs",
+        "crates/azsx-game/src/official_native/goblin_rewards.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
       "role": "native-operation",
@@ -2705,7 +2705,7 @@
     "official_native.goblin_rewards.goblin_reward_ready": {
       "reason": "Native goblin amulet choice delivery, scope, participant eligibility and exclusions.",
       "references": [
-        "crates/asx-game/src/official_native/goblin_rewards.rs",
+        "crates/azsx-game/src/official_native/goblin_rewards.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
       "role": "native-operation",
@@ -2714,7 +2714,7 @@
     "official_native.hud_actor": {
       "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
+        "crates/azsx-game/src/official_native.rs",
         "src/runtime/lifecycle.rs",
         "src/runtime/session/services.rs",
         "src/runtime/reward_services.rs"
@@ -2725,7 +2725,7 @@
     "official_native.immunity_aggro.aggro_header": {
       "reason": "Immunity candidate exclusion and restoration must preserve fresh taunts and native special targeting.",
       "references": [
-        "crates/asx-game/src/official_native/immunity_aggro.rs",
+        "crates/azsx-game/src/official_native/immunity_aggro.rs",
         "src/runtime/combat.rs",
         "docs/features/FEATURE-RULES.md"
       ],
@@ -2735,7 +2735,7 @@
     "official_native.immunity_aggro.aggro_prepare": {
       "reason": "Immunity candidate exclusion and restoration must preserve fresh taunts and native special targeting.",
       "references": [
-        "crates/asx-game/src/official_native/immunity_aggro.rs",
+        "crates/azsx-game/src/official_native/immunity_aggro.rs",
         "src/runtime/combat.rs",
         "docs/features/FEATURE-RULES.md"
       ],
@@ -2745,7 +2745,7 @@
     "official_native.immunity_aggro.aggro_restore": {
       "reason": "Immunity candidate exclusion and restoration must preserve fresh taunts and native special targeting.",
       "references": [
-        "crates/asx-game/src/official_native/immunity_aggro.rs",
+        "crates/azsx-game/src/official_native/immunity_aggro.rs",
         "src/runtime/combat.rs",
         "docs/features/FEATURE-RULES.md"
       ],
@@ -2755,7 +2755,7 @@
     "official_native.immunity_aggro.aggro_snapshot": {
       "reason": "Immunity candidate exclusion and restoration must preserve fresh taunts and native special targeting.",
       "references": [
-        "crates/asx-game/src/official_native/immunity_aggro.rs",
+        "crates/azsx-game/src/official_native/immunity_aggro.rs",
         "src/runtime/combat.rs",
         "docs/features/FEATURE-RULES.md"
       ],
@@ -2765,7 +2765,7 @@
     "official_native.immunity_aggro.combat_immune": {
       "reason": "Immunity candidate exclusion and restoration must preserve fresh taunts and native special targeting.",
       "references": [
-        "crates/asx-game/src/official_native/immunity_aggro.rs",
+        "crates/azsx-game/src/official_native/immunity_aggro.rs",
         "src/runtime/combat.rs",
         "docs/features/FEATURE-RULES.md"
       ],
@@ -2775,7 +2775,7 @@
     "official_native.immunity_aggro.fixture_immunity": {
       "reason": "Immunity candidate exclusion and restoration must preserve fresh taunts and native special targeting.",
       "references": [
-        "crates/asx-game/src/official_native/immunity_aggro.rs",
+        "crates/azsx-game/src/official_native/immunity_aggro.rs",
         "src/runtime/combat.rs",
         "docs/features/FEATURE-RULES.md"
       ],
@@ -2785,7 +2785,7 @@
     "official_native.immunity_aggro.supports_immunity_aggro": {
       "reason": "Immunity candidate exclusion and restoration must preserve fresh taunts and native special targeting.",
       "references": [
-        "crates/asx-game/src/official_native/immunity_aggro.rs",
+        "crates/azsx-game/src/official_native/immunity_aggro.rs",
         "src/runtime/combat.rs",
         "docs/features/FEATURE-RULES.md"
       ],
@@ -2795,7 +2795,7 @@
     "official_native.menu_icons.capture": {
       "reason": "Native lobby/menu class presentation and retained participant cards.",
       "references": [
-        "crates/asx-game/src/official_native/menu_icons.rs",
+        "crates/azsx-game/src/official_native/menu_icons.rs",
         "src/runtime/menu_ui.rs"
       ],
       "role": "native-operation",
@@ -2804,7 +2804,7 @@
     "official_native.menu_icons.draw": {
       "reason": "Native lobby/menu class presentation and retained participant cards.",
       "references": [
-        "crates/asx-game/src/official_native/menu_icons.rs",
+        "crates/azsx-game/src/official_native/menu_icons.rs",
         "src/runtime/menu_ui.rs"
       ],
       "role": "native-operation",
@@ -2813,7 +2813,7 @@
     "official_native.menu_icons.members": {
       "reason": "Native lobby/menu class presentation and retained participant cards.",
       "references": [
-        "crates/asx-game/src/official_native/menu_icons.rs",
+        "crates/azsx-game/src/official_native/menu_icons.rs",
         "src/runtime/menu_ui.rs"
       ],
       "role": "native-operation",
@@ -2822,7 +2822,7 @@
     "official_native.menu_icons.menu_bindings": {
       "reason": "Native lobby/menu class presentation and retained participant cards.",
       "references": [
-        "crates/asx-game/src/official_native/menu_icons.rs",
+        "crates/azsx-game/src/official_native/menu_icons.rs",
         "src/runtime/menu_ui.rs"
       ],
       "role": "native-operation",
@@ -2831,7 +2831,7 @@
     "official_native.menu_icons.menu_entries": {
       "reason": "Native lobby/menu class presentation and retained participant cards.",
       "references": [
-        "crates/asx-game/src/official_native/menu_icons.rs",
+        "crates/azsx-game/src/official_native/menu_icons.rs",
         "src/runtime/menu_ui.rs"
       ],
       "role": "native-operation",
@@ -2840,7 +2840,7 @@
     "official_native.menu_icons.refresh_status": {
       "reason": "Native lobby/menu class presentation and retained participant cards.",
       "references": [
-        "crates/asx-game/src/official_native/menu_icons.rs",
+        "crates/azsx-game/src/official_native/menu_icons.rs",
         "src/runtime/menu_ui.rs"
       ],
       "role": "native-operation",
@@ -2849,7 +2849,7 @@
     "official_native.menu_icons.retain": {
       "reason": "Native lobby/menu class presentation and retained participant cards.",
       "references": [
-        "crates/asx-game/src/official_native/menu_icons.rs",
+        "crates/azsx-game/src/official_native/menu_icons.rs",
         "src/runtime/menu_ui.rs"
       ],
       "role": "native-operation",
@@ -2858,7 +2858,7 @@
     "official_native.menu_icons.size_card": {
       "reason": "Native lobby/menu class presentation and retained participant cards.",
       "references": [
-        "crates/asx-game/src/official_native/menu_icons.rs",
+        "crates/azsx-game/src/official_native/menu_icons.rs",
         "src/runtime/menu_ui.rs"
       ],
       "role": "native-operation",
@@ -2867,7 +2867,7 @@
     "official_native.menu_pause.menu_entry": {
       "reason": "Native Escape/menu ownership, group pause wire and waiting presentation share this route.",
       "references": [
-        "crates/asx-game/src/official_native/menu_pause.rs",
+        "crates/azsx-game/src/official_native/menu_pause.rs",
         "src/runtime/menu_pause.rs",
         "src/runtime/pause.rs"
       ],
@@ -2877,7 +2877,7 @@
     "official_native.menu_pause.menu_key_entry": {
       "reason": "Native Escape/menu ownership, group pause wire and waiting presentation share this route.",
       "references": [
-        "crates/asx-game/src/official_native/menu_pause.rs",
+        "crates/azsx-game/src/official_native/menu_pause.rs",
         "src/runtime/menu_pause.rs",
         "src/runtime/pause.rs"
       ],
@@ -2887,7 +2887,7 @@
     "official_native.menu_pause.menu_key_target": {
       "reason": "Native Escape/menu ownership, group pause wire and waiting presentation share this route.",
       "references": [
-        "crates/asx-game/src/official_native/menu_pause.rs",
+        "crates/azsx-game/src/official_native/menu_pause.rs",
         "src/runtime/menu_pause.rs",
         "src/runtime/pause.rs"
       ],
@@ -2897,7 +2897,7 @@
     "official_native.menu_pause.menu_opcode": {
       "reason": "Native Escape/menu ownership, group pause wire and waiting presentation share this route.",
       "references": [
-        "crates/asx-game/src/official_native/menu_pause.rs",
+        "crates/azsx-game/src/official_native/menu_pause.rs",
         "src/runtime/menu_pause.rs",
         "src/runtime/pause.rs"
       ],
@@ -2907,7 +2907,7 @@
     "official_native.menu_pause.menu_peer": {
       "reason": "Native Escape/menu ownership, group pause wire and waiting presentation share this route.",
       "references": [
-        "crates/asx-game/src/official_native/menu_pause.rs",
+        "crates/azsx-game/src/official_native/menu_pause.rs",
         "src/runtime/menu_pause.rs",
         "src/runtime/pause.rs"
       ],
@@ -2917,7 +2917,7 @@
     "official_native.menu_pause.menu_request": {
       "reason": "Native Escape/menu ownership, group pause wire and waiting presentation share this route.",
       "references": [
-        "crates/asx-game/src/official_native/menu_pause.rs",
+        "crates/azsx-game/src/official_native/menu_pause.rs",
         "src/runtime/menu_pause.rs",
         "src/runtime/pause.rs"
       ],
@@ -2927,7 +2927,7 @@
     "official_native.menu_pause.menu_send": {
       "reason": "Native Escape/menu ownership, group pause wire and waiting presentation share this route.",
       "references": [
-        "crates/asx-game/src/official_native/menu_pause.rs",
+        "crates/azsx-game/src/official_native/menu_pause.rs",
         "src/runtime/menu_pause.rs",
         "src/runtime/pause.rs"
       ],
@@ -2937,7 +2937,7 @@
     "official_native.menu_pause.menu_wire": {
       "reason": "Native Escape/menu ownership, group pause wire and waiting presentation share this route.",
       "references": [
-        "crates/asx-game/src/official_native/menu_pause.rs",
+        "crates/azsx-game/src/official_native/menu_pause.rs",
         "src/runtime/menu_pause.rs",
         "src/runtime/pause.rs"
       ],
@@ -2947,7 +2947,7 @@
     "official_native.menu_pause.pause_notice": {
       "reason": "Native Escape/menu ownership, group pause wire and waiting presentation share this route.",
       "references": [
-        "crates/asx-game/src/official_native/menu_pause.rs",
+        "crates/azsx-game/src/official_native/menu_pause.rs",
         "src/runtime/menu_pause.rs",
         "src/runtime/pause.rs"
       ],
@@ -2957,8 +2957,8 @@
     "official_native.native_marks_enabled": {
       "reason": "Current selected client retains upstream personal marks.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
-        "docs/compatibility/ASX-FEATURES.md"
+        "crates/azsx-game/src/official_native.rs",
+        "docs/compatibility/AZSX-FEATURES.md"
       ],
       "role": "native-operation",
       "shared": false
@@ -2966,8 +2966,8 @@
     "official_native.normalize_xp": {
       "reason": "Native XP normalization and rounding.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
-        "docs/compatibility/ASX-FEATURES.md"
+        "crates/azsx-game/src/official_native.rs",
+        "docs/compatibility/AZSX-FEATURES.md"
       ],
       "role": "native-operation",
       "shared": false
@@ -2975,7 +2975,7 @@
     "official_native.observe": {
       "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
+        "crates/azsx-game/src/official_native.rs",
         "src/runtime/lifecycle.rs",
         "src/runtime/session/services.rs",
         "src/runtime/reward_services.rs"
@@ -2986,7 +2986,7 @@
     "official_native.party": {
       "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
+        "crates/azsx-game/src/official_native.rs",
         "src/runtime/lifecycle.rs",
         "src/runtime/session/services.rs",
         "src/runtime/reward_services.rs"
@@ -2997,7 +2997,7 @@
     "official_native.pause.new": {
       "reason": "Native pause layout construction and address translation back the pause/menu authority and retained UI.",
       "references": [
-        "crates/asx-game/src/official_native/pause.rs",
+        "crates/azsx-game/src/official_native/pause.rs",
         "src/runtime/pause.rs",
         "src/presentation/pause.rs"
       ],
@@ -3007,7 +3007,7 @@
     "official_native.pause.rva": {
       "reason": "Native pause layout construction and address translation back the pause/menu authority and retained UI.",
       "references": [
-        "crates/asx-game/src/official_native/pause.rs",
+        "crates/azsx-game/src/official_native/pause.rs",
         "src/runtime/pause.rs",
         "src/presentation/pause.rs"
       ],
@@ -3017,7 +3017,7 @@
     "official_native.presentation.party_build": {
       "reason": "Native party build decoding and source-owner spell tooltip formatting.",
       "references": [
-        "crates/asx-game/src/official_native/presentation.rs",
+        "crates/azsx-game/src/official_native/presentation.rs",
         "src/runtime/party_ui.rs",
         "src/runtime/ui_context.rs"
       ],
@@ -3027,7 +3027,7 @@
     "official_native.presentation.spell_presentation_entry": {
       "reason": "Native party build decoding and source-owner spell tooltip formatting.",
       "references": [
-        "crates/asx-game/src/official_native/presentation.rs",
+        "crates/azsx-game/src/official_native/presentation.rs",
         "src/runtime/party_ui.rs",
         "src/runtime/ui_context.rs"
       ],
@@ -3037,7 +3037,7 @@
     "official_native.presentation.spell_presentation_owner": {
       "reason": "Native party build decoding and source-owner spell tooltip formatting.",
       "references": [
-        "crates/asx-game/src/official_native/presentation.rs",
+        "crates/azsx-game/src/official_native/presentation.rs",
         "src/runtime/party_ui.rs",
         "src/runtime/ui_context.rs"
       ],
@@ -3047,7 +3047,7 @@
     "official_native.presentation.spell_presentation_strings": {
       "reason": "Native party build decoding and source-owner spell tooltip formatting.",
       "references": [
-        "crates/asx-game/src/official_native/presentation.rs",
+        "crates/azsx-game/src/official_native/presentation.rs",
         "src/runtime/party_ui.rs",
         "src/runtime/ui_context.rs"
       ],
@@ -3057,8 +3057,8 @@
     "official_native.racial_xp_bonus": {
       "reason": "Racial contribution to shared XP.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
-        "docs/compatibility/ASX-FEATURES.md"
+        "crates/azsx-game/src/official_native.rs",
+        "docs/compatibility/AZSX-FEATURES.md"
       ],
       "role": "native-operation",
       "shared": false
@@ -3066,7 +3066,7 @@
     "official_native.raid_markers.raid_markers": {
       "reason": "Native participant marker reads and assignments preserve manual reservations.",
       "references": [
-        "crates/asx-game/src/official_native/raid_markers.rs",
+        "crates/azsx-game/src/official_native/raid_markers.rs",
         "src/runtime/raid_markers.rs"
       ],
       "role": "native-operation",
@@ -3075,7 +3075,7 @@
     "official_native.raid_markers.set_raid_marker": {
       "reason": "Native participant marker reads and assignments preserve manual reservations.",
       "references": [
-        "crates/asx-game/src/official_native/raid_markers.rs",
+        "crates/azsx-game/src/official_native/raid_markers.rs",
         "src/runtime/raid_markers.rs"
       ],
       "role": "native-operation",
@@ -3084,8 +3084,8 @@
     "official_native.ring_table": {
       "reason": "Selected native ring definition table.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
-        "docs/compatibility/ASX-FEATURES.md"
+        "crates/azsx-game/src/official_native.rs",
+        "docs/compatibility/AZSX-FEATURES.md"
       ],
       "role": "native-operation",
       "shared": false
@@ -3093,7 +3093,7 @@
     "official_native.run_actor": {
       "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
+        "crates/azsx-game/src/official_native.rs",
         "src/runtime/lifecycle.rs",
         "src/runtime/session/services.rs",
         "src/runtime/reward_services.rs"
@@ -3104,7 +3104,7 @@
     "official_native.run_source": {
       "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
+        "crates/azsx-game/src/official_native.rs",
         "src/runtime/lifecycle.rs",
         "src/runtime/session/services.rs",
         "src/runtime/reward_services.rs"
@@ -3115,7 +3115,7 @@
     "official_native.scene_units.event_enemy_count": {
       "reason": "Native Sayge/candle scene construction and owned scene replication.",
       "references": [
-        "crates/asx-game/src/official_native/scene_units.rs",
+        "crates/azsx-game/src/official_native/scene_units.rs",
         "src/runtime/event_services.rs",
         "src/runtime/rituals.rs",
         "src/runtime/world_events/coop.rs"
@@ -3126,7 +3126,7 @@
     "official_native.scene_units.event_sayge": {
       "reason": "Native Sayge/candle scene construction and owned scene replication.",
       "references": [
-        "crates/asx-game/src/official_native/scene_units.rs",
+        "crates/azsx-game/src/official_native/scene_units.rs",
         "src/runtime/event_services.rs",
         "src/runtime/rituals.rs",
         "src/runtime/world_events/coop.rs"
@@ -3137,7 +3137,7 @@
     "official_native.scene_units.ritual_scene_entries": {
       "reason": "Native Sayge/candle scene construction and owned scene replication.",
       "references": [
-        "crates/asx-game/src/official_native/scene_units.rs",
+        "crates/azsx-game/src/official_native/scene_units.rs",
         "src/runtime/event_services.rs",
         "src/runtime/rituals.rs",
         "src/runtime/world_events/coop.rs"
@@ -3148,7 +3148,7 @@
     "official_native.scene_units.sayge_fields": {
       "reason": "Native Sayge/candle scene construction and owned scene replication.",
       "references": [
-        "crates/asx-game/src/official_native/scene_units.rs",
+        "crates/azsx-game/src/official_native/scene_units.rs",
         "src/runtime/event_services.rs",
         "src/runtime/rituals.rs",
         "src/runtime/world_events/coop.rs"
@@ -3159,7 +3159,7 @@
     "official_native.scene_units.send_owned_scene_packet": {
       "reason": "Native Sayge/candle scene construction and owned scene replication.",
       "references": [
-        "crates/asx-game/src/official_native/scene_units.rs",
+        "crates/azsx-game/src/official_native/scene_units.rs",
         "src/runtime/event_services.rs",
         "src/runtime/rituals.rs",
         "src/runtime/world_events/coop.rs"
@@ -3170,7 +3170,7 @@
     "official_native.scene_units.unit_block": {
       "reason": "Native Sayge/candle scene construction and owned scene replication.",
       "references": [
-        "crates/asx-game/src/official_native/scene_units.rs",
+        "crates/azsx-game/src/official_native/scene_units.rs",
         "src/runtime/event_services.rs",
         "src/runtime/rituals.rs",
         "src/runtime/world_events/coop.rs"
@@ -3181,8 +3181,8 @@
     "official_native.select": {
       "reason": "Selector identity must agree with launcher/import registry; this is not a native installer hook.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
-        "docs/compatibility/ASX-FEATURES.md"
+        "crates/azsx-game/src/official_native.rs",
+        "docs/compatibility/AZSX-FEATURES.md"
       ],
       "role": "native-operation",
       "shared": true
@@ -3190,8 +3190,8 @@
     "official_native.shared_xp": {
       "reason": "Shared native XP entry.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
-        "docs/compatibility/ASX-FEATURES.md"
+        "crates/azsx-game/src/official_native.rs",
+        "docs/compatibility/AZSX-FEATURES.md"
       ],
       "role": "native-operation",
       "shared": false
@@ -3199,8 +3199,8 @@
     "official_native.shared_xp_input": {
       "reason": "Copied native shared-XP producer input.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
-        "docs/compatibility/ASX-FEATURES.md"
+        "crates/azsx-game/src/official_native.rs",
+        "docs/compatibility/AZSX-FEATURES.md"
       ],
       "role": "native-operation",
       "shared": false
@@ -3208,7 +3208,7 @@
     "official_native.solo_run": {
       "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
+        "crates/azsx-game/src/official_native.rs",
         "src/runtime/lifecycle.rs",
         "src/runtime/session/services.rs",
         "src/runtime/reward_services.rs"
@@ -3219,7 +3219,7 @@
     "official_native.stat_inputs.consumable_stats": {
       "reason": "Owned temporary native stat inputs and restoration are shared across jewelry and consumables.",
       "references": [
-        "crates/asx-game/src/official_native/stat_inputs.rs",
+        "crates/azsx-game/src/official_native/stat_inputs.rs",
         "src/runtime/reward_services.rs",
         "src/runtime/event_services.rs"
       ],
@@ -3229,7 +3229,7 @@
     "official_native.stat_inputs.restore_stat_input": {
       "reason": "Owned temporary native stat inputs and restoration are shared across jewelry and consumables.",
       "references": [
-        "crates/asx-game/src/official_native/stat_inputs.rs",
+        "crates/azsx-game/src/official_native/stat_inputs.rs",
         "src/runtime/reward_services.rs",
         "src/runtime/event_services.rs"
       ],
@@ -3239,7 +3239,7 @@
     "official_native.stat_inputs.temporary_stat_input": {
       "reason": "Owned temporary native stat inputs and restoration are shared across jewelry and consumables.",
       "references": [
-        "crates/asx-game/src/official_native/stat_inputs.rs",
+        "crates/azsx-game/src/official_native/stat_inputs.rs",
         "src/runtime/reward_services.rs",
         "src/runtime/event_services.rs"
       ],
@@ -3249,7 +3249,7 @@
     "official_native.support.advanced.emit_hybrid": {
       "reason": "Hybrid allied delivery and retaliation share native effect budgets, caster attribution and retained outgoing modifiers.",
       "references": [
-        "crates/asx-game/src/official_native/support/advanced.rs",
+        "crates/azsx-game/src/official_native/support/advanced.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3259,7 +3259,7 @@
     "official_native.support.advanced.fixture_retaliation_hit": {
       "reason": "Hybrid allied delivery and retaliation share native effect budgets, caster attribution and retained outgoing modifiers.",
       "references": [
-        "crates/asx-game/src/official_native/support/advanced.rs",
+        "crates/azsx-game/src/official_native/support/advanced.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3269,7 +3269,7 @@
     "official_native.support.advanced.hide_retaliation": {
       "reason": "Hybrid allied delivery and retaliation share native effect budgets, caster attribution and retained outgoing modifiers.",
       "references": [
-        "crates/asx-game/src/official_native/support/advanced.rs",
+        "crates/azsx-game/src/official_native/support/advanced.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3279,7 +3279,7 @@
     "official_native.support.advanced.native_effect": {
       "reason": "Hybrid allied delivery and retaliation share native effect budgets, caster attribution and retained outgoing modifiers.",
       "references": [
-        "crates/asx-game/src/official_native/support/advanced.rs",
+        "crates/azsx-game/src/official_native/support/advanced.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3289,7 +3289,7 @@
     "official_native.support.advanced.restore_retaliation": {
       "reason": "Hybrid allied delivery and retaliation share native effect budgets, caster attribution and retained outgoing modifiers.",
       "references": [
-        "crates/asx-game/src/official_native/support/advanced.rs",
+        "crates/azsx-game/src/official_native/support/advanced.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3299,7 +3299,7 @@
     "official_native.support.advanced.retaliate": {
       "reason": "Hybrid allied delivery and retaliation share native effect budgets, caster attribution and retained outgoing modifiers.",
       "references": [
-        "crates/asx-game/src/official_native/support/advanced.rs",
+        "crates/azsx-game/src/official_native/support/advanced.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3309,7 +3309,7 @@
     "official_native.support.advanced.support_emit_entries": {
       "reason": "Hybrid allied delivery and retaliation share native effect budgets, caster attribution and retained outgoing modifiers.",
       "references": [
-        "crates/asx-game/src/official_native/support/advanced.rs",
+        "crates/azsx-game/src/official_native/support/advanced.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3319,7 +3319,7 @@
     "official_native.support.credit_support": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3329,7 +3329,7 @@
     "official_native.support.effects.aura_field": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3339,7 +3339,7 @@
     "official_native.support.effects.aura_has_caster": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3349,7 +3349,7 @@
     "official_native.support.effects.aura_rows": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3359,7 +3359,7 @@
     "official_native.support.effects.aura_stride": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3369,7 +3369,7 @@
     "official_native.support.effects.capture_aura": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3379,9 +3379,9 @@
     "official_native.support.effects.deliver_elite_item": {
       "reason": "Guardian native reward seam and retired supplement guard; current client must not double-grant.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/elites.rs",
-        "crates/asx-game/tests/current/client_binding.rs"
+        "crates/azsx-game/tests/current/client_binding.rs"
       ],
       "role": "native-operation",
       "shared": false
@@ -3389,7 +3389,7 @@
     "official_native.support.effects.effect_owner": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3399,9 +3399,9 @@
     "official_native.support.effects.elite_entry": {
       "reason": "Guardian native reward seam and retired supplement guard; current client must not double-grant.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/elites.rs",
-        "crates/asx-game/tests/current/client_binding.rs"
+        "crates/azsx-game/tests/current/client_binding.rs"
       ],
       "role": "native-operation",
       "shared": false
@@ -3409,9 +3409,9 @@
     "official_native.support.effects.elite_game": {
       "reason": "Guardian native reward seam and retired supplement guard; current client must not double-grant.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/elites.rs",
-        "crates/asx-game/tests/current/client_binding.rs"
+        "crates/azsx-game/tests/current/client_binding.rs"
       ],
       "role": "native-operation",
       "shared": false
@@ -3419,7 +3419,7 @@
     "official_native.support.effects.fixture_break_shield": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3429,9 +3429,9 @@
     "official_native.support.effects.fixture_guardian": {
       "reason": "Guardian native reward seam and retired supplement guard; current client must not double-grant.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/elites.rs",
-        "crates/asx-game/tests/current/client_binding.rs"
+        "crates/azsx-game/tests/current/client_binding.rs"
       ],
       "role": "diagnostic",
       "shared": false
@@ -3439,9 +3439,9 @@
     "official_native.support.effects.fixture_guardian_target": {
       "reason": "Guardian native reward seam and retired supplement guard; current client must not double-grant.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/elites.rs",
-        "crates/asx-game/tests/current/client_binding.rs"
+        "crates/azsx-game/tests/current/client_binding.rs"
       ],
       "role": "diagnostic",
       "shared": false
@@ -3449,7 +3449,7 @@
     "official_native.support.effects.fixture_perk_loan": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3459,7 +3459,7 @@
     "official_native.support.effects.fixture_restore_perks": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3469,7 +3469,7 @@
     "official_native.support.effects.hide_fatigued_periodic": {
       "reason": "Periodic heal attribution and fatigue scaling share this native periodic-hiding operation.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs"
       ],
       "role": "native-operation",
@@ -3478,7 +3478,7 @@
     "official_native.support.effects.hide_foreign_periodic": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3488,7 +3488,7 @@
     "official_native.support.effects.hide_periodic": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3498,7 +3498,7 @@
     "official_native.support.effects.hurt_entry": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3508,7 +3508,7 @@
     "official_native.support.effects.native_hit_effect_entry": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3518,9 +3518,9 @@
     "official_native.support.effects.needs_guardian_item_supplement": {
       "reason": "Guardian native reward seam and retired supplement guard; current client must not double-grant.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/elites.rs",
-        "crates/asx-game/tests/current/client_binding.rs"
+        "crates/azsx-game/tests/current/client_binding.rs"
       ],
       "role": "native-operation",
       "shared": false
@@ -3528,7 +3528,7 @@
     "official_native.support.effects.periodic_entry": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3538,7 +3538,7 @@
     "official_native.support.effects.prepare_foreign_shield": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3548,7 +3548,7 @@
     "official_native.support.effects.rejuvenation_source_slots": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3558,7 +3558,7 @@
     "official_native.support.effects.restore_aura": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3568,7 +3568,7 @@
     "official_native.support.effects.restore_periodic": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3578,7 +3578,7 @@
     "official_native.support.effects.scaled_heal_effect": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3588,7 +3588,7 @@
     "official_native.support.effects.support_active": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3598,7 +3598,7 @@
     "official_native.support.effects.support_break_frame": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3608,7 +3608,7 @@
     "official_native.support.effects.support_enemies": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3618,7 +3618,7 @@
     "official_native.support.effects.support_overheal": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3628,7 +3628,7 @@
     "official_native.support.effects.support_proc_entries": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3638,7 +3638,7 @@
     "official_native.support.effects.support_query_origin": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3648,7 +3648,7 @@
     "official_native.support.effects.support_receipt": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3658,7 +3658,7 @@
     "official_native.support.effects.support_shield_break": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3668,7 +3668,7 @@
     "official_native.support.effects.write_aura_rows": {
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
-        "crates/asx-game/src/official_native/support/effects.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3678,7 +3678,7 @@
     "official_native.support.fixture_cast_actor": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3688,7 +3688,7 @@
     "official_native.support.fixture_cast_resolved": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3698,7 +3698,7 @@
     "official_native.support.fixture_support_definition": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3708,7 +3708,7 @@
     "official_native.support.fixture_support_wounds": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3718,7 +3718,7 @@
     "official_native.support.flush_entry": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3728,7 +3728,7 @@
     "official_native.support.healing_total": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3738,7 +3738,7 @@
     "official_native.support.route_support": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3748,7 +3748,7 @@
     "official_native.support.scale_direct_heal_delivery": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3758,7 +3758,7 @@
     "official_native.support.support_buff_slots": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3768,7 +3768,7 @@
     "official_native.support.support_caster": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3778,7 +3778,7 @@
     "official_native.support.support_delivery": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3788,7 +3788,7 @@
     "official_native.support.support_entries": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3798,7 +3798,7 @@
     "official_native.support.support_queue_count": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3808,7 +3808,7 @@
     "official_native.support.support_row": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3818,7 +3818,7 @@
     "official_native.support.support_spell": {
       "reason": "Allied direct/periodic delivery, caster rows, outgoing scaling and native accounting are common support infrastructure.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3828,7 +3828,7 @@
     "official_native.treasure_goblins.base_health": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3839,7 +3839,7 @@
     "official_native.treasure_goblins.despawn_goblin": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3850,7 +3850,7 @@
     "official_native.treasure_goblins.from_native": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3861,7 +3861,7 @@
     "official_native.treasure_goblins.goblin_arena": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3872,7 +3872,7 @@
     "official_native.treasure_goblins.goblin_array": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3883,7 +3883,7 @@
     "official_native.treasure_goblins.goblin_clip": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3894,7 +3894,7 @@
     "official_native.treasure_goblins.goblin_definition_entry": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3905,7 +3905,7 @@
     "official_native.treasure_goblins.goblin_elite": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3916,7 +3916,7 @@
     "official_native.treasure_goblins.goblin_entries": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3927,7 +3927,7 @@
     "official_native.treasure_goblins.goblin_filter_recycle": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3938,7 +3938,7 @@
     "official_native.treasure_goblins.goblin_final_motion": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3949,7 +3949,7 @@
     "official_native.treasure_goblins.goblin_final_motion_entry": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3960,7 +3960,7 @@
     "official_native.treasure_goblins.goblin_hold_motion": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3971,7 +3971,7 @@
     "official_native.treasure_goblins.goblin_name": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3982,7 +3982,7 @@
     "official_native.treasure_goblins.goblin_notice": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -3993,7 +3993,7 @@
     "official_native.treasure_goblins.goblin_outfit_entries": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4004,7 +4004,7 @@
     "official_native.treasure_goblins.goblin_outfit_key": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4015,7 +4015,7 @@
     "official_native.treasure_goblins.goblin_outfit_metadata": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4026,7 +4026,7 @@
     "official_native.treasure_goblins.goblin_packet_probe": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4037,7 +4037,7 @@
     "official_native.treasure_goblins.goblin_packet_probe_entry": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4048,7 +4048,7 @@
     "official_native.treasure_goblins.goblin_recycle_entry": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4059,7 +4059,7 @@
     "official_native.treasure_goblins.goblin_row": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4070,7 +4070,7 @@
     "official_native.treasure_goblins.goblin_run": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4081,7 +4081,7 @@
     "official_native.treasure_goblins.goblin_skin_entry": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4092,7 +4092,7 @@
     "official_native.treasure_goblins.goblin_skin_path": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4103,7 +4103,7 @@
     "official_native.treasure_goblins.goblin_skin_probe": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4114,7 +4114,7 @@
     "official_native.treasure_goblins.goblin_snapshot": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4125,7 +4125,7 @@
     "official_native.treasure_goblins.goblin_template": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4136,7 +4136,7 @@
     "official_native.treasure_goblins.guid": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4147,7 +4147,7 @@
     "official_native.treasure_goblins.pointer": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4158,7 +4158,7 @@
     "official_native.treasure_goblins.spawn_goblin": {
       "reason": "Optional native goblin definition, appearance, flee movement, arena, lifetime and replication.",
       "references": [
-        "crates/asx-game/src/official_native/treasure_goblins.rs",
+        "crates/azsx-game/src/official_native/treasure_goblins.rs",
         "src/runtime/treasure_goblins.rs",
         "src/runtime/treasure_goblins/appearance.rs",
         "src/runtime/treasure_goblins/motion.rs"
@@ -4169,8 +4169,8 @@
     "official_native.version": {
       "reason": "Reviewed native version identity is shared with distribution compatibility metadata.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
-        "docs/compatibility/ASX-FEATURES.md"
+        "crates/azsx-game/src/official_native.rs",
+        "docs/compatibility/AZSX-FEATURES.md"
       ],
       "role": "native-operation",
       "shared": true
@@ -4178,7 +4178,7 @@
     "official_native.wallet.armory_gold_bonus": {
       "reason": "Common wallet/actor gold boundary covers cache transactions, strongest bonuses and cooperative material sales.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/event_services.rs"
       ],
@@ -4188,7 +4188,7 @@
     "official_native.wallet.chest_entry": {
       "reason": "Shared cache price/opened count, debit and individual native item delivery.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs"
       ],
       "role": "native-operation",
@@ -4197,7 +4197,7 @@
     "official_native.wallet.chest_state": {
       "reason": "Shared cache price/opened count, debit and individual native item delivery.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs"
       ],
       "role": "native-operation",
@@ -4206,7 +4206,7 @@
     "official_native.wallet.conversion_ready": {
       "reason": "Native skip/reroll/conversion and shared reward economy.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs"
       ],
       "role": "native-operation",
@@ -4215,7 +4215,7 @@
     "official_native.wallet.convert_entry": {
       "reason": "Native skip/reroll/conversion and shared reward economy.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs"
       ],
       "role": "native-operation",
@@ -4224,7 +4224,7 @@
     "official_native.wallet.currency_entry": {
       "reason": "Common wallet/actor gold boundary covers cache transactions, strongest bonuses and cooperative material sales.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/event_services.rs"
       ],
@@ -4234,7 +4234,7 @@
     "official_native.wallet.current_gold": {
       "reason": "Common wallet/actor gold boundary covers cache transactions, strongest bonuses and cooperative material sales.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/event_services.rs"
       ],
@@ -4244,7 +4244,7 @@
     "official_native.wallet.deliver_chests": {
       "reason": "Shared cache price/opened count, debit and individual native item delivery.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs"
       ],
       "role": "native-operation",
@@ -4253,7 +4253,7 @@
     "official_native.wallet.fixture_armory_gold": {
       "reason": "Common wallet/actor gold boundary covers cache transactions, strongest bonuses and cooperative material sales.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/event_services.rs"
       ],
@@ -4263,7 +4263,7 @@
     "official_native.wallet.fixture_conversion_flag": {
       "reason": "Native skip/reroll/conversion and shared reward economy.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs"
       ],
       "role": "diagnostic",
@@ -4272,7 +4272,7 @@
     "official_native.wallet.fixture_reward_action": {
       "reason": "Native skip/reroll/conversion and shared reward economy.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs"
       ],
       "role": "diagnostic",
@@ -4281,7 +4281,7 @@
     "official_native.wallet.gold_entry": {
       "reason": "Common wallet/actor gold boundary covers cache transactions, strongest bonuses and cooperative material sales.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/event_services.rs"
       ],
@@ -4291,7 +4291,7 @@
     "official_native.wallet.gold_source": {
       "reason": "Common wallet/actor gold boundary covers cache transactions, strongest bonuses and cooperative material sales.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/event_services.rs"
       ],
@@ -4301,7 +4301,7 @@
     "official_native.wallet.is_currency": {
       "reason": "Common wallet/actor gold boundary covers cache transactions, strongest bonuses and cooperative material sales.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/event_services.rs"
       ],
@@ -4311,7 +4311,7 @@
     "official_native.wallet.item_choice_entry": {
       "reason": "Earned native item presenter is shared with optional goblin reward scopes.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
@@ -4321,7 +4321,7 @@
     "official_native.wallet.present_pending_item": {
       "reason": "Earned native item presenter is shared with optional goblin reward scopes.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/treasure_goblins/rewards.rs"
       ],
@@ -4331,7 +4331,7 @@
     "official_native.wallet.project_current_chest": {
       "reason": "Shared cache price/opened count, debit and individual native item delivery.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs"
       ],
       "role": "native-operation",
@@ -4340,7 +4340,7 @@
     "official_native.wallet.project_current_wallet": {
       "reason": "Common wallet/actor gold boundary covers cache transactions, strongest bonuses and cooperative material sales.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/event_services.rs"
       ],
@@ -4350,7 +4350,7 @@
     "official_native.wallet.project_wallet": {
       "reason": "Common wallet/actor gold boundary covers cache transactions, strongest bonuses and cooperative material sales.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/event_services.rs"
       ],
@@ -4360,7 +4360,7 @@
     "official_native.wallet.racial_gold_bonus": {
       "reason": "Common wallet/actor gold boundary covers cache transactions, strongest bonuses and cooperative material sales.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/event_services.rs"
       ],
@@ -4370,7 +4370,7 @@
     "official_native.wallet.reward_choice_kind": {
       "reason": "Native skip/reroll/conversion and shared reward economy.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs"
       ],
       "role": "native-operation",
@@ -4379,7 +4379,7 @@
     "official_native.wallet.swap_entry": {
       "reason": "Common wallet/actor gold boundary covers cache transactions, strongest bonuses and cooperative material sales.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/event_services.rs"
       ],
@@ -4389,7 +4389,7 @@
     "official_native.wallet.wallet_seed": {
       "reason": "Common wallet/actor gold boundary covers cache transactions, strongest bonuses and cooperative material sales.",
       "references": [
-        "crates/asx-game/src/official_native/wallet.rs",
+        "crates/azsx-game/src/official_native/wallet.rs",
         "src/runtime/wallet.rs",
         "src/runtime/event_services.rs"
       ],
@@ -4399,7 +4399,7 @@
     "official_native.world_events.anchor": {
       "reason": "Owned persistent Sayge scene handles and teardown.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/rituals.rs"
       ],
@@ -4409,7 +4409,7 @@
     "official_native.world_events.event_aura_readback": {
       "reason": "Supply objects/consumables and shared scene cleanup/projection participate in cooperative event lifecycle.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4419,7 +4419,7 @@
     "official_native.world_events.event_broadcast": {
       "reason": "Shared authoritative event context, announcement, placement and controlled test operations.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4429,7 +4429,7 @@
     "official_native.world_events.event_credit_gold": {
       "reason": "Solo material sales retain the selected hooked native gold award route and measured receipt.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/supplies.rs"
       ],
@@ -4439,7 +4439,7 @@
     "official_native.world_events.event_endless": {
       "reason": "Shared authoritative event context, announcement, placement and controlled test operations.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4449,7 +4449,7 @@
     "official_native.world_events.event_notice": {
       "reason": "Shared authoritative event context, announcement, placement and controlled test operations.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4459,7 +4459,7 @@
     "official_native.world_events.event_object": {
       "reason": "Supply objects/consumables and shared scene cleanup/projection participate in cooperative event lifecycle.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4469,7 +4469,7 @@
     "official_native.world_events.event_party": {
       "reason": "Shared authoritative event context, announcement, placement and controlled test operations.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4479,7 +4479,7 @@
     "official_native.world_events.event_position": {
       "reason": "Shared authoritative event context, announcement, placement and controlled test operations.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4489,7 +4489,7 @@
     "official_native.world_events.event_ritual_scene": {
       "reason": "Owned persistent Sayge scene handles and teardown.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/rituals.rs"
       ],
@@ -4499,7 +4499,7 @@
     "official_native.world_events.event_surface": {
       "reason": "Shared authoritative event context, announcement, placement and controlled test operations.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4509,7 +4509,7 @@
     "official_native.world_events.event_test_stat_input": {
       "reason": "Supply objects/consumables and shared scene cleanup/projection participate in cooperative event lifecycle.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4519,7 +4519,7 @@
     "official_native.world_events.fixture_event_damage": {
       "reason": "Shared authoritative event context, announcement, placement and controlled test operations.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4529,7 +4529,7 @@
     "official_native.world_events.fixture_event_pose": {
       "reason": "Shared authoritative event context, announcement, placement and controlled test operations.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4539,7 +4539,7 @@
     "official_native.world_events.hide_event_object": {
       "reason": "Supply objects/consumables and shared scene cleanup/projection participate in cooperative event lifecycle.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4549,7 +4549,7 @@
     "official_native.world_events.is_empty": {
       "reason": "Owned persistent Sayge scene handles and teardown.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/rituals.rs"
       ],
@@ -4559,7 +4559,7 @@
     "official_native.world_events.len": {
       "reason": "Owned persistent Sayge scene handles and teardown.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/rituals.rs"
       ],
@@ -4569,7 +4569,7 @@
     "official_native.world_events.project_consumable_auras": {
       "reason": "Supply objects/consumables and shared scene cleanup/projection participate in cooperative event lifecycle.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4579,7 +4579,7 @@
     "official_native.world_events.remove_event_object": {
       "reason": "Supply objects/consumables and shared scene cleanup/projection participate in cooperative event lifecycle.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4589,7 +4589,7 @@
     "official_native.world_events.remove_ritual_scene": {
       "reason": "Owned persistent Sayge scene handles and teardown.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/rituals.rs"
       ],
@@ -4599,7 +4599,7 @@
     "official_native.world_events.take_created_event_packet": {
       "reason": "Supply objects/consumables and shared scene cleanup/projection participate in cooperative event lifecycle.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4609,7 +4609,7 @@
     "official_native.world_events.world_event_entries": {
       "reason": "Shared authoritative event context, announcement, placement and controlled test operations.",
       "references": [
-        "crates/asx-game/src/official_native/world_events.rs",
+        "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
         "src/runtime/world_events/coop.rs"
       ],
@@ -4619,7 +4619,7 @@
     "official_native.world_party": {
       "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
+        "crates/azsx-game/src/official_native.rs",
         "src/runtime/lifecycle.rs",
         "src/runtime/session/services.rs",
         "src/runtime/reward_services.rs"
@@ -4630,7 +4630,7 @@
     "official_native.pause.stop_body": {
       "reason": "Host pause-edge visual stop for other current participants through the existing selected native movement packet sender; authoritative poses and local actor are preserved.",
       "references": [
-        "crates/asx-game/src/official_native/pause.rs",
+        "crates/azsx-game/src/official_native/pause.rs",
         "src/runtime/session.rs",
         "src/runtime/session/services.rs",
         "docs/features/COOP-PAUSE.md"
@@ -4641,7 +4641,7 @@
     "official_native.pause.pause_remote_motion": {
       "reason": "Host pause-edge visual stop for other current participants through the existing selected native movement packet sender; authoritative poses and local actor are preserved.",
       "references": [
-        "crates/asx-game/src/official_native/pause.rs",
+        "crates/azsx-game/src/official_native/pause.rs",
         "src/runtime/session.rs",
         "src/runtime/session/services.rs",
         "docs/features/COOP-PAUSE.md"
@@ -4652,7 +4652,7 @@
     "official_native.stat_inputs.apply_consumable_speed": {
       "reason": "Personal Swiftness supplies add to the selected native movement output after baseline reconstruction; gameplay tier and cosmetic quality remain independent.",
       "references": [
-        "crates/asx-game/src/official_native/stat_inputs.rs",
+        "crates/azsx-game/src/official_native/stat_inputs.rs",
         "src/runtime/supplies.rs",
         "docs/features/FEATURE-RULES.md"
       ],
@@ -4662,7 +4662,7 @@
     "official_native.combat.hurt_actor_tagged": {
       "reason": "Preserve both native Hurt source words through delayed taunt redirection and fallback; retain actor transactions, defensive isolation and identity checks.",
       "references": [
-        "crates/asx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
         "src/runtime/combat.rs",
         "src/runtime/treasure_goblins.rs"
       ],
@@ -4672,7 +4672,7 @@
     "official_native.support.effects.call_native_heal": {
       "reason": "Synthetic healing and meter calls provide the reviewed fifth native source descriptor while retaining active-actor and spell attribution.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -4682,7 +4682,7 @@
     "official_native.combat_text.resolve_with_native_parts": {
       "reason": "Selected native query predicate plus GUID/entity map lookup; retain query ownership and exact pointer-wrapper ABI for healing text.",
       "references": [
-        "crates/asx-game/src/official_native/combat_text.rs",
+        "crates/azsx-game/src/official_native/combat_text.rs",
         "src/runtime/combat_text.rs"
       ],
       "role": "native-operation",
@@ -4691,7 +4691,7 @@
     "official_native.combat_text.append_native_heal_text": {
       "reason": "Native outgoing damage and allied direct/periodic healing text entries and draw queue.",
       "references": [
-        "crates/asx-game/src/official_native/combat_text.rs",
+        "crates/azsx-game/src/official_native/combat_text.rs",
         "src/runtime/combat_text.rs"
       ],
       "role": "native-operation",
@@ -4700,7 +4700,7 @@
     "official_native.enable_native_ui_logging": {
       "reason": "Opt-in native stdout event logging independent of Game autostart; validate only the selected sink boolean and preserve all other bytes.",
       "references": [
-        "crates/asx-game/src/official_native.rs",
+        "crates/azsx-game/src/official_native.rs",
         "src/runtime/pause/services.rs"
       ],
       "role": "native-operation",
@@ -4709,7 +4709,7 @@
     "official_native.experience.downed_xp_continuation": {
       "reason": "Native dead-actor shared XP and whole-level receipt guards; pending choices remain native.",
       "references": [
-        "crates/asx-game/src/official_native/experience.rs",
+        "crates/azsx-game/src/official_native/experience.rs",
         "src/runtime/experience.rs"
       ],
       "role": "native-operation",
@@ -4718,7 +4718,7 @@
     "official_native.experience.downed_xp_entries": {
       "reason": "Native dead-actor shared XP and whole-level receipt guards; pending choices remain native.",
       "references": [
-        "crates/asx-game/src/official_native/experience.rs",
+        "crates/azsx-game/src/official_native/experience.rs",
         "src/runtime/experience.rs"
       ],
       "role": "native-operation",
@@ -4727,7 +4727,7 @@
     "official_native.support.spell_modifiers_entry": {
       "reason": "Native spell modifier resolver retained for borrowed support abilities, without spell customization.",
       "references": [
-        "crates/asx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/io.rs"
       ],
       "role": "native-operation",
@@ -4736,9 +4736,9 @@
     "official_native.stat_inputs.apply_coop_area": {
       "reason": "Scale only the positive global area bonus after an authoritative complete rebuild; preserve native baseline and received snapshots.",
       "references": [
-        "crates/asx-game/src/official_native/stat_inputs.rs",
+        "crates/azsx-game/src/official_native/stat_inputs.rs",
         "src/runtime/run_stats.rs",
-        "crates/asx-game/tests/current/jewelry.rs",
+        "crates/azsx-game/tests/current/jewelry.rs",
         "docs/features/FEATURE-RULES.md"
       ],
       "role": "native-operation",
@@ -4812,6 +4812,6 @@
     "official_native.world_events.guid": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file.",
     "official_native.world_events.q": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file.",
     "official_native.world_update": "Unresolved shared reader, native context, transport or retained integration; preserve domain attribution and the explicit owners elsewhere in this source file.",
-    "official_native.ui_identity.native_ui_participants": "Bounded native UI aliases shared by healing and event presentation; independent ASXUI does not consume this reader."
+    "official_native.ui_identity.native_ui_participants": "Bounded native UI aliases shared by healing and event presentation; independent AZSXUI does not consume this reader."
   }
 }

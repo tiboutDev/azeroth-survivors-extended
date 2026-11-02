@@ -23,7 +23,7 @@ def assess(host,native,logs):
  checks=dict(native_roles=set(expected)=={'elite','guardian','boss'},self_hots=all(f'remaining UI self HoT: caster={slot} spell={139 if slot==0 else 774} result=Ok(true)'in host for slot in(0,1)))
  names=[]
  for slot,(output,text)in enumerate(zip(native,logs)):
-  rows={int(guid):dict(rank=None if rank=='None'else int(rank[5:-1]),name=name)for guid,rank,name in re.findall(r'ASX plate witness: guid=(\d+) rank=(Some\([1-4]\)|None) name=Some\("([^"\n]+)"\) retained=true',text)}
+  rows={int(guid):dict(rank=None if rank=='None'else int(rank[5:-1]),name=name)for guid,rank,name in re.findall(r'AZSX plate witness: guid=(\d+) rank=(Some\([1-4]\)|None) name=Some\("([^"\n]+)"\) retained=true',text)}
   names.append(rows)
   for role in('elite','guardian','boss'):checks[f'{role}_name_slot_{slot}']=role in expected and expected[role]in rows
   checks[f'hot_world_text_slot_{slot}']=hot_text_observed(text)

@@ -1,21 +1,21 @@
-# ASX development
+# AZSX development
 
-Use the [expected-behavior acceptance reference](../compatibility/ASX-BEHAVIOR.md) to plan and
+Use the [expected-behavior acceptance reference](../compatibility/AZSX-BEHAVIOR.md) to plan and
 record feature-level verification; update affected criteria with semantic changes.
 
-ASX extends the official native 0.138.0 engine. Player documentation starts at the
+AZSX extends the official native 0.138.0 engine. Player documentation starts at the
 [project home](../../README.md). For engineering work, read the [testing policy](TESTING.md),
-[feature inventory](../compatibility/ASX-FEATURES.md) and [adapter boundary](../compatibility/CLIENT-ADAPTER.md).
+[feature inventory](../compatibility/AZSX-FEATURES.md) and [adapter boundary](../compatibility/CLIENT-ADAPTER.md).
 
 ## Source organization
 
 | Area | Location | Responsibility |
 | --- | --- | --- |
-| Rules | `crates/asx-gameplay/src/` | Native-independent decisions and state transitions |
+| Rules | `crates/azsx-gameplay/src/` | Native-independent decisions and state transitions |
 | Official orchestration | `src/runtime.rs`, `src/runtime/` | Activation, lifecycle and feature coordination |
-| Selected native access | `crates/asx-game/src/official.rs`, `official_native/`, version descriptors | Exact-build selection, bounded memory IO and native call contracts |
+| Selected native access | `crates/azsx-game/src/official.rs`, `official_native/`, version descriptors | Exact-build selection, bounded memory IO and native call contracts |
 | Presentation | `native-ui/`, official party/menu/reward modules | Retained native children, owner text and reward presentation |
-| Distribution | `asx/`, `tools/build/asx_*.py` | Native-folder launcher, packaging and transactional updates |
+| Distribution | `azsx/`, `tools/build/azsx_*.py` | Native-folder launcher, packaging and transactional updates |
 | Windows resources | `resources/windows/`, `build.rs` | DLL version resource and the system avrt export-forwarding list |
 | Build references | `validation/` | Controlled artifact identities and reproducibility inputs |
 
@@ -28,13 +28,13 @@ workspace notes and generated caches are covered by [local storage](LOCAL-STORAG
 The [Rust architecture decisions](RUST-ARCHITECTURE.md) describe workspace
 conventions and current-build data.
 
-The internal crates use the project's `asx-` prefix. `asx-gameplay`
-contains portable rules; `asx-game` contains selected native integration. Those
+The internal crates use the project's `azsx-` prefix. `azsx-gameplay`
+contains portable rules; `azsx-game` contains selected native integration. Those
 active packages are not the retired custom Coop engine. The separate `avrt-probe` checks Windows DLL exports. Cargo package
 names use hyphens and Rust imports use underscores.
 
 `native-ui/official-party.lua` is the retained in-game Lua presentation shipped
-by the ASX packager. `asx/` contains the Python launcher, removal/update handling
+by the AZSX packager. `azsx/` contains the Python launcher, removal/update handling
 and distribution metadata, not a second Rust engine. The old `launcher/` and
 unused port-review profiles are retired. `resources/windows/version.rc` is the readable Windows
 resource source; `version.res` is its committed compiled form consumed by
@@ -86,7 +86,7 @@ small historical name catalog without linking the old engine. Root tests use a
 shared test lock independently of the retired breakpoint implementation.
 
 Shared types are re-exported directly from `official_native`. The exact current
-descriptor is `crates/asx-game/src/bindings/official138.rs`; inherited constants
+descriptor is `crates/azsx-game/src/bindings/official138.rs`; inherited constants
 and translators are resolved in its generated manifest. Historical descriptor
 modules remain test-only references; production does not chain their translations.
 Historical readers and their exclusive tools/tests are retired. The current
@@ -121,7 +121,7 @@ and at most two clients. It rejects retired/no-mode inputs before Windows setup.
 Tests of parser/dispatch logic do not prove gameplay fixtures succeeded live.
 
 Run publication hygiene, portable/native checks and reproducibility checks
-manually as appropriate. Reproducibility requires its own reviewed ASX artifact
+manually as appropriate. Reproducibility requires its own reviewed AZSX artifact
 reference. No checks run automatically on push, and source cleanup does not
 establish publication readiness.
 
@@ -166,7 +166,7 @@ artifact reference. Commit and push require explicit authorization.
 
 ### Client registry consumers
 
-`asx/supported-games.json` is the executable identity and native archive inventory
+`azsx/supported-games.json` is the executable identity and native archive inventory
 source for private imports. `tools/dev/client_registry.py` validates that inventory
 and requires an unambiguous selected build. Developer tools must consume these
 values rather than copy version strings, hashes or archive lists. This registry
@@ -185,7 +185,7 @@ accessors. Native gold invocation is selected-adapter-owned; the service preserv
 identity checks and observes the actual post-callback receipt. Goblin machine
 context hooks, appearance, movement interception and reward-entry hooks remain
 explicit native integration modules. This extraction does not claim that every
-ASX coordinator has migrated away from Runtime.
+AZSX coordinator has migrated away from Runtime.
 
 State reservations, per-recipient acknowledgements and stat-input restoration
 keep their original order. Services do not expose backing containers or arbitrary

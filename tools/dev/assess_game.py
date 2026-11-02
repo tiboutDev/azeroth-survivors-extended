@@ -11,7 +11,7 @@ import pefile
 
 ROOT = Path(__file__).resolve().parents[2]
 old = pefile.PE(str(ROOT / 'runtime/native/AzerothSurvivors.exe'), fast_load=True)
-source = Path(os.environ["ASX_LEGACY_GAME"])
+source = Path(os.environ["AZSX_LEGACY_GAME"])
 new = pefile.PE(str(source), fast_load=True)
 profile = json.loads((ROOT / 'runtime/native/reconstruction/release-19260245.json').read_text())
 md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)

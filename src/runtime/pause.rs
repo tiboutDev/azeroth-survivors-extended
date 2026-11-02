@@ -15,7 +15,7 @@ static UI_EVENT_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 #[cfg(test)]static UI_EVENT_TEST_LOCK:std::sync::Mutex<()>=std::sync::Mutex::new(());
 crate::context_stub!(ui_hud_entry, 0, ui_hud, UI_HUD_ORIGINAL);
 crate::context_stub_rw!(ui_event_entry, 0, ui_event, UI_EVENT_ORIGINAL);
-fn publish_pause(view: asx_gameplay::official::PausePresentation) {
+fn publish_pause(view: azsx_gameplay::official::PausePresentation) {
     if !HOST_PAUSE_AUTHORITY.load(Ordering::Acquire) {
         PAUSED.store(view.active, Ordering::Release);
     }
@@ -29,9 +29,9 @@ fn publish_pause(view: asx_gameplay::official::PausePresentation) {
         epoch: 0,
     });
 }
-fn native_pause_transition(owned:&AtomicBool,active:bool,phase:asx_gameplay::Phase)->Option<bool>{
+fn native_pause_transition(owned:&AtomicBool,active:bool,phase:azsx_gameplay::Phase)->Option<bool>{
  if active {return (!owned.swap(true,Ordering::AcqRel)).then_some(true)}
- if phase!=asx_gameplay::Phase::Choosing&&owned.swap(false,Ordering::AcqRel){Some(false)}else{None}
+ if phase!=azsx_gameplay::Phase::Choosing&&owned.swap(false,Ordering::AcqRel){Some(false)}else{None}
 }
 unsafe fn native_input_pause(receiver:u64,active:bool){
  let Some(runtime)=services::available()else{return};
@@ -124,7 +124,7 @@ mod pause_regression_tests {
  #[test]fn complete_group_state_alone_resumes_guests_and_host_ui_cannot_release_the_barrier(){
   let _guard=crate::test_support::TEST_LOCK.lock().unwrap();
   HOST_PAUSE_AUTHORITY.store(false,Ordering::Release);
-  let view=asx_gameplay::official::PausePresentation{active:true,visible:true,..Default::default()};
+  let view=azsx_gameplay::official::PausePresentation{active:true,visible:true,..Default::default()};
   publish_pause(view);assert!(PAUSED.load(Ordering::Acquire));
   for event in [serde_json::json!({"type":"picked"}),serde_json::json!({"type":"ready"}),serde_json::json!({"type":"choices","why":"cache"})]{assert!(!pause_session_ended(&event));assert!(PAUSED.load(Ordering::Acquire));}
   publish_pause(Default::default());assert!(!PAUSED.load(Ordering::Acquire));
@@ -137,7 +137,7 @@ mod pause_regression_tests {
 
 #[cfg(test)]mod native_pause_tests{
  use super::*;
- #[test]fn group_pause_owns_native_transition_until_everyone_has_finished(){use asx_gameplay::Phase::*;let owned=AtomicBool::new(false);assert_eq!(native_pause_transition(&owned,false,Playing),None);assert_eq!(native_pause_transition(&owned,true,Playing),Some(true));assert_eq!(native_pause_transition(&owned,true,Choosing),None);assert_eq!(native_pause_transition(&owned,false,Choosing),None);assert_eq!(native_pause_transition(&owned,false,Playing),Some(false));assert_eq!(native_pause_transition(&owned,false,Playing),None);for phase in [Downed,Inactive]{assert_eq!(native_pause_transition(&owned,true,phase),Some(true));assert_eq!(native_pause_transition(&owned,false,phase),Some(false));}}
+ #[test]fn group_pause_owns_native_transition_until_everyone_has_finished(){use azsx_gameplay::Phase::*;let owned=AtomicBool::new(false);assert_eq!(native_pause_transition(&owned,false,Playing),None);assert_eq!(native_pause_transition(&owned,true,Playing),Some(true));assert_eq!(native_pause_transition(&owned,true,Choosing),None);assert_eq!(native_pause_transition(&owned,false,Choosing),None);assert_eq!(native_pause_transition(&owned,false,Playing),Some(false));assert_eq!(native_pause_transition(&owned,false,Playing),None);for phase in [Downed,Inactive]{assert_eq!(native_pause_transition(&owned,true,phase),Some(true));assert_eq!(native_pause_transition(&owned,false,phase),Some(false));}}
  unsafe extern "system" fn event(receiver:u64,ptr:*const u8,len:usize){assert_eq!(receiver,0x12340);assert_eq!(std::slice::from_raw_parts(ptr,len),b"{\"type\":\"unpaused\"}");}
  #[test]fn native_notification_preserves_recipient_and_borrowed_event(){let _guard=UI_EVENT_TEST_LOCK.lock().unwrap();let old=UI_EVENT_ORIGINAL.swap(event as *const ()as usize,Ordering::AcqRel);unsafe{native_pause_emit(0x12340,b"{\"type\":\"unpaused\"}")};UI_EVENT_ORIGINAL.store(old,Ordering::Release);}
 }

@@ -29,7 +29,7 @@ fn world_pass_forwards_native_game_and_only_zeroes_paused_time() {
 #[test]
 fn both_host_pause_producers_share_one_visual_stop_per_pause_edge(){
     let _guard=TEST_LOCK.lock().unwrap();let prior=pause::set_active(false);
-    let runtime=world_fake(true,Ok(None));let reason=Some(asx_gameplay::official::PauseReason::Menus{players:vec![]});
+    let runtime=world_fake(true,Ok(None));let reason=Some(azsx_gameplay::official::PauseReason::Menus{players:vec![]});
     set_host_pause(&runtime,100,&reason);set_host_pause(&runtime,100,&reason);
     assert_eq!(*runtime.calls.borrow(),["pause-log","visual-stop"]);
     set_host_pause(&runtime,100,&None);set_host_pause(&runtime,100,&reason);
@@ -86,23 +86,23 @@ fn moved_command_stub_preserves_register_and_stack_arguments() {
 
 struct WorldFake {
     enabled: bool,
-    observation: RefCell<Result<Option<asx_gameplay::official::PauseReason>, String>>,
+    observation: RefCell<Result<Option<azsx_gameplay::official::PauseReason>, String>>,
     calls: RefCell<Vec<&'static str>>,
     warnings: Cell<u32>,
 }
 impl WorldControl for WorldFake {
     fn rules_enabled(&self) -> bool { self.enabled }
-    fn observe_world(&self, _: u64) -> Result<Option<asx_gameplay::official::PauseReason>, String> {
+    fn observe_world(&self, _: u64) -> Result<Option<azsx_gameplay::official::PauseReason>, String> {
         self.calls.borrow_mut().push("observe");
         self.observation.borrow().clone()
     }
     fn stop_remote_motion(&self,_:u64){self.calls.borrow_mut().push("visual-stop");}
     fn capture_world(&self, _: u64) { self.calls.borrow_mut().push("capture"); }
     fn finish_world(&self, _: u64) { self.calls.borrow_mut().push("finish"); }
-    fn log_group_pause(&self, _: &Option<asx_gameplay::official::PauseReason>) { self.calls.borrow_mut().push("pause-log"); }
+    fn log_group_pause(&self, _: &Option<azsx_gameplay::official::PauseReason>) { self.calls.borrow_mut().push("pause-log"); }
     fn warn(&self, _: &str) { self.warnings.set(self.warnings.get() + 1); }
 }
-fn world_fake(enabled: bool, observation: Result<Option<asx_gameplay::official::PauseReason>, String>) -> WorldFake {
+fn world_fake(enabled: bool, observation: Result<Option<azsx_gameplay::official::PauseReason>, String>) -> WorldFake {
     WorldFake { enabled, observation: RefCell::new(observation), calls: RefCell::new(Vec::new()), warnings: Cell::new(0) }
 }
 
@@ -112,7 +112,7 @@ fn world_control_preserves_observe_capture_native_finish_order_and_host_gate() {
     let prior_active = pause::set_active(false);
     let prior_host = pause::host_authority();
     pause::set_host_authority(true);
-    let runtime = world_fake(true, Ok(Some(asx_gameplay::official::PauseReason::Menus { players: vec![] })));
+    let runtime = world_fake(true, Ok(Some(azsx_gameplay::official::PauseReason::Menus { players: vec![] })));
     let delta = pre_world(Some(&runtime), 100, 0.25);
     assert_eq!(delta, 0.0);
     runtime.calls.borrow_mut().push("native");
@@ -198,22 +198,22 @@ fn new_context() -> crate::stub::Context { unsafe { std::mem::zeroed() } }
 
 struct UpdateFake {
     enabled: bool,
-    role: Cell<asx_game::official::Role>,
+    role: Cell<azsx_game::official::Role>,
     events: RefCell<Vec<&'static str>>,
 }
 impl WorldControl for UpdateFake {
     fn rules_enabled(&self) -> bool { self.enabled }
-    fn observe_world(&self, _:u64)->Result<Option<asx_gameplay::official::PauseReason>,String>{unreachable!()}
+    fn observe_world(&self, _:u64)->Result<Option<azsx_gameplay::official::PauseReason>,String>{unreachable!()}
     fn capture_world(&self,_:u64){unreachable!()}
     fn finish_world(&self,_:u64){unreachable!()}
-    fn log_group_pause(&self,_:&Option<asx_gameplay::official::PauseReason>){unreachable!()}
+    fn log_group_pause(&self,_:&Option<azsx_gameplay::official::PauseReason>){unreachable!()}
     fn warn(&self,_:&str){unreachable!()}
 }
 impl WorldServices for UpdateFake {
     fn duplicate_enabled(&self)->bool{true}
-    fn observe_role(&self,_:u64)->Result<asx_game::official::Observation,String>{
+    fn observe_role(&self,_:u64)->Result<azsx_game::official::Observation,String>{
         self.events.borrow_mut().push("role");
-        Ok(asx_game::official::Observation{role:self.role.get(),guest_game_stream:None,remote_connections:0})
+        Ok(azsx_game::official::Observation{role:self.role.get(),guest_game_stream:None,remote_connections:0})
     }
     fn begin_duplicates(&self,_:u64){self.events.borrow_mut().push("dup-begin");}
     fn refresh_host(&self,_:u64){self.events.borrow_mut().push("refresh");}
@@ -228,7 +228,7 @@ impl WorldServices for UpdateFake {
 #[test]
 fn update_observes_role_again_after_native_before_host_work() {
     let _guard=TEST_LOCK.lock().unwrap();
-    use asx_game::official::Role::{Guest,Host};
+    use azsx_game::official::Role::{Guest,Host};
     let old=pause::host_authority();
     let fake=UpdateFake{enabled:true,role:Cell::new(Guest),events:RefCell::new(vec![])};
     update_pass(Some(&fake),10,||{
@@ -249,7 +249,7 @@ fn update_observes_role_again_after_native_before_host_work() {
 fn disabled_session_rules_keep_native_update_and_observation_diagnostics_only() {
     let _guard=TEST_LOCK.lock().unwrap();
     let old=pause::host_authority();
-    let fake=UpdateFake{enabled:false,role:Cell::new(asx_game::official::Role::Host),events:RefCell::new(vec![])};
+    let fake=UpdateFake{enabled:false,role:Cell::new(azsx_game::official::Role::Host),events:RefCell::new(vec![])};
     update_pass(Some(&fake),10,||fake.events.borrow_mut().push("native"));
     assert_eq!(*fake.events.borrow(),["native","diagnostic"]);
     assert_eq!(pause::host_authority(),old);
@@ -257,7 +257,7 @@ fn disabled_session_rules_keep_native_update_and_observation_diagnostics_only() 
 
 struct HudFake {
     enabled: bool, captures: Cell<usize>, cache_updates: Cell<usize>,
-    written: RefCell<Vec<serde_json::Value>>, views: RefCell<Vec<asx_gameplay::official::PausePresentation>>,
+    written: RefCell<Vec<serde_json::Value>>, views: RefCell<Vec<azsx_gameplay::official::PausePresentation>>,
 }
 impl HudServices for HudFake {
     fn rules_enabled(&self)->bool{self.enabled}
@@ -267,14 +267,14 @@ impl HudServices for HudFake {
     }
     fn capture_party(&self,_:u32,_:&serde_json::Value){self.captures.set(self.captures.get()+1);}
     fn effect_owner(&self,_:u64)->Option<(u32,u64)>{Some((1,200))}
-    fn hud_phase(&self,_:&serde_json::Value)->Result<asx_gameplay::Phase,String>{Ok(asx_gameplay::Phase::Playing)}
-    fn update_pause_party(&self,game:u64,owner:Option<(u32,u64)>,phase:Option<asx_gameplay::Phase>)
-        ->(Option<asx_gameplay::official::PauseReason>,Vec<(u32,u64)>){
-        assert_eq!((game,owner,phase),(10,Some((1,200)),Some(asx_gameplay::Phase::Playing)));
+    fn hud_phase(&self,_:&serde_json::Value)->Result<azsx_gameplay::Phase,String>{Ok(azsx_gameplay::Phase::Playing)}
+    fn update_pause_party(&self,game:u64,owner:Option<(u32,u64)>,phase:Option<azsx_gameplay::Phase>)
+        ->(Option<azsx_gameplay::official::PauseReason>,Vec<(u32,u64)>){
+        assert_eq!((game,owner,phase),(10,Some((1,200)),Some(azsx_gameplay::Phase::Playing)));
         self.cache_updates.set(self.cache_updates.get()+1);
-        (Some(asx_gameplay::official::PauseReason::Menus{players:vec![1]}),vec![(1,100),(2,200)])
+        (Some(azsx_gameplay::official::PauseReason::Menus{players:vec![1]}),vec![(1,100),(2,200)])
     }
-    fn decorate_pause(&self,value:&mut serde_json::Value,view:&asx_gameplay::official::PausePresentation){
+    fn decorate_pause(&self,value:&mut serde_json::Value,view:&azsx_gameplay::official::PausePresentation){
         self.views.borrow_mut().push(view.clone());value["pause_active"]=view.active.into();
     }
     fn replace_hud(&self,output:u64,value:&serde_json::Value)->Result<(),String>{

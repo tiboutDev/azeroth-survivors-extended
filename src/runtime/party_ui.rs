@@ -1,6 +1,6 @@
 //! Cosmetic builds over native addon lines. No simulation, socket or CVar state.
 use super::*;
-use asx_game::official::PartyBuild;
+use azsx_game::official::PartyBuild;
 use std::collections::BTreeMap;
 #[derive(Default)]
 struct State {
@@ -55,7 +55,7 @@ fn hex(bytes: &[u8]) -> String {
     out
 }
 // Reuse already captured native item text; never recapture a local spell build.
-fn item_text(icon:&asx_game::official::PartyIcon,own:u64,notes:&BTreeMap<(u64,u32),String>)->String{
+fn item_text(icon:&azsx_game::official::PartyIcon,own:u64,notes:&BTreeMap<(u64,u32),String>)->String{
     match notes.get(&(own,icon.id)){Some(note)=>format!("{}\n\n{note}",icon.text),None=>icon.text.clone()}
 }
 #[cfg(test)]
@@ -92,7 +92,7 @@ fn wire_extra(state: &mut State, own: u64, heartbeat: u64, extra:&str) -> Option
         if let Some(row)=super::crystals::member_wire((*slot,*id)){text.push_str(&row);}
         let fatigue = fatigue::view(*slot, *id);
         text.push_str(&format!("F|{id}|{}|{}\n", fatigue.stacks, fatigue.remaining.ceil() as u32));
-        // Only the five local items are needed by ASXUI; local spells remain omitted.
+        // Only the five local items are needed by AZSXUI; local spells remain omitted.
         if *id == own { if let Some(build)=build{text.push_str(&local_equipment_notes(build, own,&state.enchantments));}text.push_str(&drop_wire(state,own)); continue; }
         let Some(build)=build else{continue};
         for (kind, icons) in [("S", &build.spells), ("I", &build.items)] {
@@ -122,7 +122,7 @@ fn wire_extra(state: &mut State, own: u64, heartbeat: u64, extra:&str) -> Option
             return Some(packed.clone());
         }
     }
-    let packed = hex(&asx_gameplay::party_text::pack(text.as_bytes())?);
+    let packed = hex(&azsx_gameplay::party_text::pack(text.as_bytes())?);
     state.encoded.insert(own, (text, packed.clone()));
     Some(packed)
 }
@@ -133,7 +133,7 @@ pub fn roster(value: &serde_json::Value) {
     let mut names = BTreeMap::new();
     let valid = value["members"]
         .as_array()
-        .filter(|a| a.len() <= asx_game::official::NATIVE_PLAYERS)
+        .filter(|a| a.len() <= azsx_game::official::NATIVE_PLAYERS)
         .is_some_and(|rows| {
             rows.iter().all(|row| {
                 let id = row["id"]
@@ -152,7 +152,7 @@ pub fn roster(value: &serde_json::Value) {
             })
         });
     #[cfg(feature="test-hooks")]
-    if std::env::var("ASX_TEST_HUD_OWNERS").as_deref()==Ok("1"){if let Some(r)=RUNTIME.get(){static SAMPLES:AtomicUsize=AtomicUsize::new(0);if SAMPLES.fetch_add(1,Ordering::Relaxed)<4{r.log.info(&format!("party roster diagnostic: valid={valid} identities={:?}",names.keys().collect::<Vec<_>>()));}}}
+    if std::env::var("AZSX_TEST_HUD_OWNERS").as_deref()==Ok("1"){if let Some(r)=RUNTIME.get(){static SAMPLES:AtomicUsize=AtomicUsize::new(0);if SAMPLES.fetch_add(1,Ordering::Relaxed)<4{r.log.info(&format!("party roster diagnostic: valid={valid} identities={:?}",names.keys().collect::<Vec<_>>()));}}}
     if let Ok(mut state) = STATE.lock() {
         let s = state.get_or_insert_with(State::default);
         s.names = if valid { names } else { BTreeMap::new() };
@@ -161,12 +161,12 @@ pub fn roster(value: &serde_json::Value) {
 /// Resolve pause participants by the current native actor GUID, never by row
 /// order, class or a cached build. No native calls while borrowing this cache.
 pub fn pause_view(
-    reason: Option<asx_gameplay::official::PauseReason>,
-    phase: asx_gameplay::Phase,
+    reason: Option<azsx_gameplay::official::PauseReason>,
+    phase: azsx_gameplay::Phase,
     identities: &[(u32, u64)],
-) -> asx_gameplay::official::PausePresentation {
+) -> azsx_gameplay::official::PausePresentation {
     let state = if reason.is_some() { STATE.lock().ok() } else { None };
-    asx_gameplay::official::pause_presentation(reason, phase, |slot| {
+    azsx_gameplay::official::pause_presentation(reason, phase, |slot| {
         let guid = identities.iter().find(|(id, _)| *id == slot)?.1;
         state.as_ref()?.as_ref()?.names.get(&guid).cloned()
     })
@@ -192,7 +192,7 @@ pub fn capture(r: &Runtime, actor: u32, value: &serde_json::Value) {
     };
     let parsed=r.adapter.party_build(value);
     #[cfg(feature="test-hooks")]
-    if let Err(error)=&parsed{static SAMPLES:AtomicUsize=AtomicUsize::new(0);if std::env::var("ASX_TEST_HUD_OWNERS").as_deref()==Ok("1")&&SAMPLES.fetch_add(1,Ordering::Relaxed)<4{r.log.warn(&format!("party build diagnostic rejected: actor={actor} reason={error} value={value}"));}}
+    if let Err(error)=&parsed{static SAMPLES:AtomicUsize=AtomicUsize::new(0);if std::env::var("AZSX_TEST_HUD_OWNERS").as_deref()==Ok("1")&&SAMPLES.fetch_add(1,Ordering::Relaxed)<4{r.log.warn(&format!("party build diagnostic rejected: actor={actor} reason={error} value={value}"));}}
     let Ok(build) = parsed else {
         if let Ok(mut state) = STATE.lock() {
             if let Some(state) = state.as_mut() {
@@ -223,7 +223,7 @@ pub fn capture(r: &Runtime, actor: u32, value: &serde_json::Value) {
         s.clock = party.clock;
         s.builds.insert(owner.guid, build);
         #[cfg(feature = "test-hooks")]
-        if changed && std::env::var("ASX_TEST_HUD_OWNERS").as_deref() == Ok("1") && {static SAMPLES:AtomicUsize=AtomicUsize::new(0);SAMPLES.fetch_add(1,Ordering::Relaxed)<16} {
+        if changed && std::env::var("AZSX_TEST_HUD_OWNERS").as_deref() == Ok("1") && {static SAMPLES:AtomicUsize=AtomicUsize::new(0);SAMPLES.fetch_add(1,Ordering::Relaxed)<16} {
             r.log.info(&format!(
                 "official party build: actor={} guid={} abilities={} jewelry={}",
                 actor, owner.guid, value["abilities"], value["jewelry"]
@@ -255,7 +255,7 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
                 return;
             };
             #[cfg(feature="test-hooks")]
-            if std::env::var("ASX_TEST_HUD_OWNERS").as_deref()==Ok("1"){static SAMPLE:AtomicUsize=AtomicUsize::new(0);if {let n=SAMPLE.fetch_add(1,Ordering::Relaxed);n<800&&n%100==0}{if let Ok(s)=STATE.lock(){if let Some(s)=s.as_ref(){r.log.info(&format!("party cache diagnostic: ids={:?} names={:?} builds={:?}",s.ids,s.names,s.builds.keys().collect::<Vec<_>>()));}}}}
+            if std::env::var("AZSX_TEST_HUD_OWNERS").as_deref()==Ok("1"){static SAMPLE:AtomicUsize=AtomicUsize::new(0);if {let n=SAMPLE.fetch_add(1,Ordering::Relaxed);n<800&&n%100==0}{if let Ok(s)=STATE.lock(){if let Some(s)=s.as_ref(){r.log.info(&format!("party cache diagnostic: ids={:?} names={:?} builds={:?}",s.ids,s.names,s.builds.keys().collect::<Vec<_>>()));}}}}
             refresh_enchantments(r,game as u64);
             let solo=r.solo.lock().ok().and_then(|p|p.clone());
             let payload = if let Some(p)=solo {
@@ -280,7 +280,7 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
                         text.push_str(&format!("|{}|{}\n",(map.ping[0]*100.).round()as i32,(map.ping[1]*100.).round()as i32));
                         for marker in super::world_events::markers(game as u64){text.push_str(&format!("P|{}|{}|{}|{}|{}|{}\n",actor.guid,marker.id,marker.kind,(marker.position[0]*100.).round()as i32,(marker.position[1]*100.).round()as i32,marker.remaining.ceil()as u32));}
                     }
-                    hex(&asx_gameplay::party_text::pack(text.as_bytes()).unwrap_or_default())
+                    hex(&azsx_gameplay::party_text::pack(text.as_bytes()).unwrap_or_default())
                 })
             }else{
               let event_text=event_text(r,game as u64,slot);
@@ -345,7 +345,7 @@ fn event_text(r:&Runtime,game:u64,slot:u32)->String{
  let Some(party)=r.extension_party()else{return String::new()};
  let Some(actor)=party.actors.iter().find(|a|a.slot==slot)else{return String::new()};let owner=actor.guid;let mut text=String::new();
  #[cfg(feature="test-hooks")]
- if std::env::var("ASX_TEST_COOP_UI").as_deref()==Ok("1") {static SAMPLES:AtomicUsize=AtomicUsize::new(0);let n=SAMPLES.fetch_add(1,Ordering::Relaxed);if n<3000&&n%100==0{r.log.info(&format!("coop economy diagnostic: slot={slot} owner={owner} xp={:?} gold={:?} actors={:?}",super::xp_hooks::services::effective_multiplier(r),super::wallet::effective_multiplier(r,game,actor),party.actors.iter().map(|a|(a.slot,a.xp_multiplier,a.gold_multiplier)).collect::<Vec<_>>()));}}
+ if std::env::var("AZSX_TEST_COOP_UI").as_deref()==Ok("1") {static SAMPLES:AtomicUsize=AtomicUsize::new(0);let n=SAMPLES.fetch_add(1,Ordering::Relaxed);if n<3000&&n%100==0{r.log.info(&format!("coop economy diagnostic: slot={slot} owner={owner} xp={:?} gold={:?} actors={:?}",super::xp_hooks::services::effective_multiplier(r),super::wallet::effective_multiplier(r,game,actor),party.actors.iter().map(|a|(a.slot,a.xp_multiplier,a.gold_multiplier)).collect::<Vec<_>>()));}}
  text.push_str(&economy_wire(owner,super::xp_hooks::services::effective_multiplier(r),super::wallet::effective_multiplier(r,game,actor)));
  if let Some((event,held,inside))=super::world_events::coop::view(game,owner){text.push_str(&format!("R|{owner}|{event}|{held}|{}|{}\n",u8::from(inside),u8::from(super::world_events::coop::all_inside(game))));}
  for(c,remaining,index)in super::supplies::buffs(game,owner){if index<32&&remaining>0.{text.push_str(&format!("C|{owner}|{}|{}|{}|{index}|{}|{}|{}\n",c.family as u8,c.tier,remaining.ceil()as u32,hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}
@@ -419,7 +419,7 @@ mod tests {
     }
     #[test]
     fn recipients_get_remote_builds_local_metadata_and_fresh_heartbeats() {
-        use asx_game::official::PartyIcon;
+        use azsx_game::official::PartyIcon;
         let mut state = State { epoch: 7, ids: vec![(0, 11), (1, 22)], ..Default::default() };
         for id in [11, 22] {
             state.names.insert(id, format!("Owner {id}"));
@@ -455,14 +455,14 @@ mod tests {
     }
     #[test]
     fn item_annotations_preserve_owner_text_and_do_not_cross_item_or_actor_identity(){
-        let icon=asx_game::official::PartyIcon{category:Some("ring"),id:3,rank:4,name:"Owner ring".into(),icon:"INV_Ring".into(),text:"Exact native owner effect".into(),spell_tip:None};
+        let icon=azsx_game::official::PartyIcon{category:Some("ring"),id:3,rank:4,name:"Owner ring".into(),icon:"INV_Ring".into(),text:"Exact native owner effect".into(),spell_tip:None};
         let notes=BTreeMap::from([((11,3),"Enchantment: Lesser Might\n+9% damage".into())]);
         assert_eq!(item_text(&icon,11,&notes),"Exact native owner effect\n\nEnchantment: Lesser Might\n+9% damage");
-        assert_eq!(item_text(&icon,22,&notes),icon.text);let other=asx_game::official::PartyIcon{id:4,..icon.clone()};assert_eq!(item_text(&other,11,&notes),icon.text);
+        assert_eq!(item_text(&icon,22,&notes),icon.text);let other=azsx_game::official::PartyIcon{id:4,..icon.clone()};assert_eq!(item_text(&other,11,&notes),icon.text);
     }
     #[test]
     fn local_equipment_is_bounded_native_text_and_explicitly_empty() {
-        use asx_game::official::PartyIcon;
+        use azsx_game::official::PartyIcon;
         let icon=PartyIcon { category:None, id:42, rank:2, name:"Native|Ring".into(), icon:"INV_Test".into(), text:"Native text\n+10 damage".into(), spell_tip:None };
         let mut build=PartyBuild { spells:vec![icon.clone()], items:vec![icon.clone()] };
         let text=local_equipment(&build,11);
@@ -525,7 +525,7 @@ unsafe extern "system" fn spell_presentation(
                 return;
             };
             #[cfg(feature = "test-hooks")]
-            if std::env::var("ASX_TEST_HUD_OWNERS").as_deref() == Ok("1") || std::env::var("AZCOOP_TEST_NATIVE_TIPS121").as_deref()==Ok("1") {
+            if std::env::var("AZSX_TEST_HUD_OWNERS").as_deref() == Ok("1") || std::env::var("AZCOOP_TEST_NATIVE_TIPS121").as_deref()==Ok("1") {
                 let changed = TIP_SAMPLES.lock().ok().is_some_and(|mut cache| {
                     if cache.len() > 128 {
                         cache.clear();
@@ -546,7 +546,7 @@ unsafe extern "system" fn spell_presentation(
                     .map(|(_, s)| s.clone())
                     .unwrap_or_default()
             };
-            let tip = asx_game::official::SpellTip {
+            let tip = azsx_game::official::SpellTip {
                 title: get(0),
                 body: get(24),
                 rank: get(72),
@@ -585,10 +585,10 @@ pub fn spell_hook(adapter: Adapter) -> crate::install::HookSpec {
 
 #[cfg(feature="test-hooks")]
 pub(super) fn fixture_economy(r:&Runtime,server:u64){
- if std::env::var("ASX_TEST_COOP_UI").as_deref()!=Ok("1"){return}
- if r.adapter.observe(&r.local,server).ok().is_none_or(|s|s.role!=asx_game::official::Role::Host){return}
+ if std::env::var("AZSX_TEST_COOP_UI").as_deref()!=Ok("1"){return}
+ if r.adapter.observe(&r.local,server).ok().is_none_or(|s|s.role!=azsx_game::official::Role::Host){return}
  let Some(p)=r.extension_party()else{return};
- if p.actors.len()!=2||p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return}
+ if p.actors.len()!=2||p.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return}
  static STAGE:AtomicUsize=AtomicUsize::new(0);let stage=STAGE.load(Ordering::Acquire);
  if stage>=4{return}
  if stage==3{
@@ -602,7 +602,7 @@ pub(super) fn fixture_economy(r:&Runtime,server:u64){
  if p.clock<[2.,6.,10.][stage]{return}
  if STAGE.compare_exchange(stage,stage+1,Ordering::AcqRel,Ordering::Acquire).is_err(){return}
  let xp=if stage==2{2500}else{1000};let gold=if stage==0{2000}else{3000};
- let rewards=p.actors.iter().map(|a|((a.slot,a.guid),asx_gameplay::blessings::Blessing{boss:1,category:if a.slot==0{1}else{2},rarity:0,amount:if a.slot==0{xp}else{gold}})).collect::<Vec<_>>();
+ let rewards=p.actors.iter().map(|a|((a.slot,a.guid),azsx_gameplay::blessings::Blessing{boss:1,category:if a.slot==0{1}else{2},rarity:0,amount:if a.slot==0{xp}else{gold}})).collect::<Vec<_>>();
  match blessings::ritual_rewards(r,r.adapter.game_address(server).unwrap(),&rewards){
   Ok(())=>r.log.info(&format!("coop economy fixture: stage={} xp={xp} gold={gold}",stage+1)),
   Err(e)=>r.log.warn(&format!("Coop economy fixture rejected: {e}")),

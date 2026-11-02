@@ -2,8 +2,8 @@
 #[cfg(feature = "test-hooks")]
 use super::super::duplicate_loot;
 use super::super::{io, Runtime, RUNTIME};
-use asx_game::official::PartyObservation;
-use asx_gameplay::blessings::Blessing;
+use azsx_game::official::PartyObservation;
+use azsx_gameplay::blessings::Blessing;
 
 pub(in crate::runtime) trait Services {
     fn extension_party(&self) -> Option<PartyObservation>;

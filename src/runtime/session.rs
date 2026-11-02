@@ -53,7 +53,7 @@ fn pre_world(runtime: Option<&dyn WorldControl>, game: u64, dt: f32) -> f32 {
 }
 
 // Both world observation and post-server refresh can own the first pause edge.
-fn set_host_pause(runtime:&dyn WorldControl,game:u64,reason:&Option<asx_gameplay::official::PauseReason>){
+fn set_host_pause(runtime:&dyn WorldControl,game:u64,reason:&Option<azsx_gameplay::official::PauseReason>){
     let active=reason.is_some();
     if pause::set_active(active)!=active{
         runtime.log_group_pause(reason);
@@ -121,7 +121,7 @@ fn update_pass(runtime: Option<&dyn WorldServices>, server_address: u64, native:
     }
     if let Some(runtime) = runtime.filter(|runtime| runtime.rules_enabled()) {
         if let Ok(state) = runtime.observe_role(server_address) {
-            pause::set_host_authority(state.role == asx_game::official::Role::Host);
+            pause::set_host_authority(state.role == azsx_game::official::Role::Host);
             super::menu_pause::observe_role(state.role);
         }
     }
@@ -130,7 +130,7 @@ fn update_pass(runtime: Option<&dyn WorldServices>, server_address: u64, native:
     }
     native();
     if let Some(runtime) = runtime.filter(|runtime| runtime.rules_enabled()) {
-        if runtime.observe_role(server_address).is_ok_and(|state| state.role == asx_game::official::Role::Host) {
+        if runtime.observe_role(server_address).is_ok_and(|state| state.role == azsx_game::official::Role::Host) {
             runtime.refresh_host(server_address);
         }
     }

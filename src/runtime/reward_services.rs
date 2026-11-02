@@ -4,8 +4,8 @@
 //! completes before returning; callers retain only copied observations or an
 //! owned stat loan, never a runtime lock across a reentrant native rebuild.
 use super::{io, Runtime};
-use asx_game::official::{AmuletChoice, RingChoice, RingStatLoan, SupportCalls};
-use asx_gameplay::{enchantments::RankedEnchantment, gems::Gem};
+use azsx_game::official::{AmuletChoice, RingChoice, RingStatLoan, SupportCalls};
+use azsx_gameplay::{enchantments::RankedEnchantment, gems::Gem};
 
 pub(super) trait Services {
     fn amulet_card(&self, game: u64, output: u64) -> Result<Option<AmuletChoice>, String>;

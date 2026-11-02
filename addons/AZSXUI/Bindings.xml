@@ -1,0 +1,4 @@
+<Bindings>
+  <Binding name="AZSXUI_CAMERA_TOGGLE" header="AZSXUI">AZSXUI_CameraToggle()</Binding>
+  <Binding name="AZSXUI_CAMERA_INSPECT">AZSXUI_CameraInspect()</Binding>
+</Bindings>

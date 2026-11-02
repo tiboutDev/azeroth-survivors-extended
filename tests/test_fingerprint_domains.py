@@ -1,6 +1,6 @@
 import json,tempfile,unittest
 from pathlib import Path
-from tools.dev import artifact_record,asx_dev
+from tools.dev import artifact_record,azsx_dev
 class FingerprintDomains(unittest.TestCase):
  def test_ui_and_validation_changes_do_not_invalidate_compiled_dll(self):
   with tempfile.TemporaryDirectory()as folder:
@@ -18,10 +18,10 @@ class FingerprintDomains(unittest.TestCase):
    with self.assertRaises(ValueError):artifact_record.verify(record,dll,root,'normal')
  def test_independent_addon_changes_invalidate_ui_but_not_compilation(self):
   with tempfile.TemporaryDirectory()as folder:
-   root=Path(folder);addon=root/'addons/ASXUI';addon.mkdir(parents=True)
+   root=Path(folder);addon=root/'addons/AZSXUI';addon.mkdir(parents=True)
    lua=addon/'Minimap.lua';lua.write_text('old')
    compiled=artifact_record.inputs(root);before=artifact_record.ui_fingerprint(root)
-   self.assertIn('addons/ASXUI/Minimap.lua',artifact_record.ui_inputs(root))
+   self.assertIn('addons/AZSXUI/Minimap.lua',artifact_record.ui_inputs(root))
    lua.write_text('new')
    self.assertNotEqual(before,artifact_record.ui_fingerprint(root))
    self.assertEqual(compiled,artifact_record.inputs(root))
@@ -46,7 +46,7 @@ class FingerprintDomains(unittest.TestCase):
    with self.assertRaises(ValueError):artifact_record.verify(record,dll,root,'normal')
  def test_ui_change_refuses_reuse_of_solo_proof(self):
   suite=dict(solo_prerequisite='solo');record=dict(dll_sha256='dll',source_fingerprint='compile',ui_fingerprint='new',validation_fingerprint='test',prerequisite_fingerprint='solo-test')
-  receipt=dict(suite='solo',passed=True,dll_sha256='dll',source_fingerprint='compile',ui_fingerprint='old',validation_fingerprint='solo-test',version=asx_dev.VERSION)
-  with self.assertRaises(ValueError):asx_dev.prerequisite(suite,record,[receipt])
-  receipt['ui_fingerprint']='new';asx_dev.prerequisite(suite,record,[receipt])
+  receipt=dict(suite='solo',passed=True,dll_sha256='dll',source_fingerprint='compile',ui_fingerprint='old',validation_fingerprint='solo-test',version=azsx_dev.VERSION)
+  with self.assertRaises(ValueError):azsx_dev.prerequisite(suite,record,[receipt])
+  receipt['ui_fingerprint']='new';azsx_dev.prerequisite(suite,record,[receipt])
 if __name__=='__main__':unittest.main()

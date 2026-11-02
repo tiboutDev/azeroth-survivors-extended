@@ -1,6 +1,6 @@
 //! Composition of feature descriptions for shared UI; no native widgets or hooks.
 use super::*;
-use asx_gameplay::kept_bonus::KeptBonus;
+use azsx_gameplay::kept_bonus::KeptBonus;
 pub struct Block{pub bonus:KeptBonus,pub prefix:usize,pub retained:bool,pub values:Vec<(String,bool)>,pub status:Option<String>}
 pub fn annotation(content:&str)->Option<Block>{
  if let Some((gem,prefix))=gems::annotation(content){return Some(Block{bonus:KeptBonus::Gem(gem),prefix,retained:content[prefix..].trim_start().starts_with("Active gem:"),values:vec![(gem.text().into(),false)],status:content.lines().rev().find(|s|matches!(*s,"Sets your gem for this run"|"Gem retained")).map(str::to_owned)})}

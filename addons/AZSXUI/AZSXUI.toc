@@ -1,0 +1,14 @@
+## Interface: 11200
+## Title: AZSXUI
+## Notes: Native nameplate styling, world numbers, minimap markers and configurable AZSX event widgets.
+## Author: AZSX contributors
+## Version: 0.1.0
+## SavedVariables: AZSXUIDB, ASXUIDB
+AZSXUI.lua
+Theme.lua
+Minimap.lua
+Events.lua
+Buffs.lua
+Hud.lua
+Frames.lua
+Camera.lua

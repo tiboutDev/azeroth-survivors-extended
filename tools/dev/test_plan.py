@@ -1,4 +1,4 @@
-"""Select current ASX checks. Never builds a DLL, deploys or launches a game.
+"""Select current AZSX checks. Never builds a DLL, deploys or launches a game.
 Unknown executable changes select the full portable gate.
 """
 import argparse,json,os,subprocess,time,uuid
@@ -7,40 +7,40 @@ ROOT=Path(__file__).resolve().parents[2]
 def cargo(*args):return ['cargo',*args,'--locked']
 def py(pattern):return ['python3','-m','unittest','discover','-s','tests','-p',pattern,'-v']
 ARCH=py('test_gameplay_boundary.py')
-SOURCE=py('test_asx_source_boundary.py')
-NATIVE=cargo('test','-p','asx-game','--test','client_binding','--test','jewelry','--test','enemies','--test','presentation')
+SOURCE=py('test_azsx_source_boundary.py')
+NATIVE=cargo('test','-p','azsx-game','--test','client_binding','--test','jewelry','--test','enemies','--test','presentation')
 PROFILES={
- 'gems':[cargo('test','-p','asx-gameplay','--lib','gems::'),NATIVE,py('test_gem_evidence.py'),ARCH],
- 'crystals':[cargo('test','-p','asx-gameplay','--lib','crystals::'),cargo('test','-p','asx-game','--lib','crystal'),['uv','run','--with','lupa==2.6','python3','tests/test_crystals_lua.py'],NATIVE,ARCH],
- 'enchantments':[cargo('test','-p','asx-gameplay','--lib','enchantments::'),NATIVE,py('test_enchantment_evidence.py'),ARCH],
- 'fatigue':[cargo('test','-p','asx-gameplay','--lib','resurrection_fatigue::'),NATIVE,ARCH],
- 'asxui':[['uv','run','--with','lupa==2.6','--with','fonttools','python','-m','unittest','discover','-s','tests','-p','test_asxui*.py','-v']],
- 'asx-install':[py('test_asx.py'),py('test_asx_publication.py'),py('test_asx_launcher_menu.py')],
- 'official-party-ui':[cargo('test','-p','asx-gameplay','--lib','healing_text::'),cargo('test','-p','asx-gameplay','--lib','raid_markers::'),cargo('test','-p','asx-game','--lib','combat_text::'),cargo('test','-p','asx-gameplay','--lib','menu_projection::'),cargo('test','-p','asx-gameplay','--lib','party_text::'),['uv','run','--with','lupa==2.6','python3','tests/test_official_party_lua.py'],NATIVE],
- 'official':[cargo('test','-p','asx-gameplay','--test','official','--test','support','--test','immunity_aggro'),cargo('test','-p','asx-gameplay','--lib','official::menu_owner_tests'),cargo('test','-p','asx-game','--lib','official_native::'),NATIVE,py('test_extension_completion_evidence.py'),py('test_client_binding.py'),py('test_pause_evidence.py'),py('test_escape_evidence.py'),py('test_coop_ui_evidence.py'),py('test_progression_evidence.py'),py('test_pause_motion.py'),py('test_reward_wallet_evidence.py'),py('test_immunity_aggro_evidence.py'),ARCH,SOURCE],
- 'rules':[cargo('test','-p','asx-gameplay'),ARCH],
- 'combat':[cargo('test','-p','asx-gameplay','--test','combat','--test','immunity_aggro'),NATIVE,ARCH],
- 'support':[cargo('test','-p','asx-gameplay','--test','support','--test','periodic'),NATIVE,ARCH],
- 'periodic':[cargo('test','-p','asx-gameplay','--test','periodic','--test','support'),ARCH],
+ 'gems':[cargo('test','-p','azsx-gameplay','--lib','gems::'),NATIVE,py('test_gem_evidence.py'),ARCH],
+ 'crystals':[cargo('test','-p','azsx-gameplay','--lib','crystals::'),cargo('test','-p','azsx-game','--lib','crystal'),['uv','run','--with','lupa==2.6','python3','tests/test_crystals_lua.py'],NATIVE,ARCH],
+ 'enchantments':[cargo('test','-p','azsx-gameplay','--lib','enchantments::'),NATIVE,py('test_enchantment_evidence.py'),ARCH],
+ 'fatigue':[cargo('test','-p','azsx-gameplay','--lib','resurrection_fatigue::'),NATIVE,ARCH],
+ 'azsxui':[['uv','run','--with','lupa==2.6','--with','fonttools','python','-m','unittest','discover','-s','tests','-p','test_azsxui*.py','-v']],
+ 'azsx-install':[py('test_azsx.py'),py('test_azsx_publication.py'),py('test_azsx_launcher_menu.py')],
+ 'official-party-ui':[cargo('test','-p','azsx-gameplay','--lib','healing_text::'),cargo('test','-p','azsx-gameplay','--lib','raid_markers::'),cargo('test','-p','azsx-game','--lib','combat_text::'),cargo('test','-p','azsx-gameplay','--lib','menu_projection::'),cargo('test','-p','azsx-gameplay','--lib','party_text::'),['uv','run','--with','lupa==2.6','python3','tests/test_official_party_lua.py'],NATIVE],
+ 'official':[cargo('test','-p','azsx-gameplay','--test','official','--test','support','--test','immunity_aggro'),cargo('test','-p','azsx-gameplay','--lib','official::menu_owner_tests'),cargo('test','-p','azsx-game','--lib','official_native::'),NATIVE,py('test_extension_completion_evidence.py'),py('test_client_binding.py'),py('test_pause_evidence.py'),py('test_escape_evidence.py'),py('test_coop_ui_evidence.py'),py('test_progression_evidence.py'),py('test_pause_motion.py'),py('test_reward_wallet_evidence.py'),py('test_immunity_aggro_evidence.py'),ARCH,SOURCE],
+ 'rules':[cargo('test','-p','azsx-gameplay'),ARCH],
+ 'combat':[cargo('test','-p','azsx-gameplay','--test','combat','--test','immunity_aggro'),NATIVE,ARCH],
+ 'support':[cargo('test','-p','azsx-gameplay','--test','support','--test','periodic'),NATIVE,ARCH],
+ 'periodic':[cargo('test','-p','azsx-gameplay','--test','periodic','--test','support'),ARCH],
  'tooling':[['cargo','test','--locked','--manifest-path','tools/dev/native-inventory/Cargo.toml'],py('test_compat_workflow.py'),py('test_contract_attribution.py'),py('test_client_registry.py'),py('test_test_plan.py'),py('test_offline_comparison.py'),py('test_native_balance.py'),py('test_native_balance_math.py'),py('test_native_world_balance.py'),SOURCE,py('test_trial_limits.py'),py('test_startup_profile.py'),py('test_native_exit_evidence.py'),py('test_background_trials.py'),py('test_native_runtime_import.py'),py('test_build_only.py'),py('test_fingerprint_domains.py'),py('test_staging_bundle.py'),py('test_coverage_evidence.py'),py('test_remaining_ui_evidence.py')],
  'diagnostics':[py('test_compat_workflow.py'),py('test_contract_attribution.py'),py('test_client_registry.py'),py('test_build_only.py'),py('test_fingerprint_domains.py'),py('test_staging_bundle.py'),py('test_coverage_evidence.py'),py('test_remaining_ui_evidence.py'),['uv','run','--with','lupa==2.6','python3','tests/test_diagnostic_observer.py']],
- 'full':[['cargo','test','--locked','--manifest-path','tools/dev/native-inventory/Cargo.toml'],cargo('test','-p','asx-gameplay','-p','asx-game'),py('test_*.py'),cargo('clippy','-p','asx-gameplay','-p','asx-game','--all-features')]
+ 'full':[['cargo','test','--locked','--manifest-path','tools/dev/native-inventory/Cargo.toml'],cargo('test','-p','azsx-gameplay','-p','azsx-game'),['uv','run','--with','lupa==2.6','--with','fonttools','--with','cryptography','--with','capstone','--with','pefile','python','-m','unittest','discover','-s','tests','-p','test_*.py','-v'],cargo('clippy','-p','azsx-gameplay','-p','azsx-game','--all-features')]
 }
 def choose(files):
  selected=set()
- tooling={'tools/dev/native_world_balance.py','tests/test_native_world_balance.py','tools/dev/native_balance.py','tools/dev/native_balance_math.py','tools/dev/native_balance_reference.py','tools/dev/native_balance_calculate.py','tests/test_native_balance.py','tests/test_native_balance_math.py','tools/dev/compare_official.py','tests/test_offline_comparison.py','tools/dev/check.sh','tools/dev/test_plan.py','tools/dev/trial_limits.py','tools/dev/startup_profile.py','tools/dev/assess_startup_profile.py','tools/dev/native_profile_codec.py','tools/dev/native_exit_evidence.py','tools/dev/disposable115_party.py','tools/dev/background_desktop.py','tools/dev/extensions_trial.py','tools/dev/asx_install_trial.py','tests/test_test_plan.py','tests/test_asx_source_boundary.py','tests/test_trial_limits.py','tests/test_startup_profile.py','tests/test_native_exit_evidence.py','tests/test_background_trials.py','tools/dev/native_runtime_import.py','tools/dev/import_official.py','tools/dev/build-windows.sh','tools/dev/build-chest-fixture.sh','tests/test_native_runtime_import.py','tests/test_build_only.py'}
+ tooling={'tools/dev/native_world_balance.py','tests/test_native_world_balance.py','tools/dev/native_balance.py','tools/dev/native_balance_math.py','tools/dev/native_balance_reference.py','tools/dev/native_balance_calculate.py','tests/test_native_balance.py','tests/test_native_balance_math.py','tools/dev/compare_official.py','tests/test_offline_comparison.py','tools/dev/check.sh','tools/dev/test_plan.py','tools/dev/trial_limits.py','tools/dev/startup_profile.py','tools/dev/assess_startup_profile.py','tools/dev/native_profile_codec.py','tools/dev/native_exit_evidence.py','tools/dev/disposable115_party.py','tools/dev/background_desktop.py','tools/dev/extensions_trial.py','tools/dev/azsx_install_trial.py','tests/test_test_plan.py','tests/test_azsx_source_boundary.py','tests/test_trial_limits.py','tests/test_startup_profile.py','tests/test_native_exit_evidence.py','tests/test_background_trials.py','tools/dev/native_runtime_import.py','tools/dev/import_official.py','tools/dev/build-windows.sh','tools/dev/build-chest-fixture.sh','tests/test_native_runtime_import.py','tests/test_build_only.py'}
  for name in files:
   if name.endswith('.md')or name.startswith('docs/'):continue
   if name in tooling:selected.add('tooling')
-  elif name in ('Cargo.toml','Cargo.lock','asx/supported-games.json')or name.startswith('crates/asx-game/src/bindings/'):return ['full']
-  elif name.startswith(('addons/ASXUI/','tests/test_asxui'))or name in ('tests/test_asxui.py','tests/test_asxui_font.py','tools/build/asxui_font.py','tools/dev/asxui_hud_trial.py','tools/dev/fixtures/asxui-hud-live.lua','tools/dev/fixtures/asxui-hud-probe.lua','tools/dev/asxui_probe_trial.py','tools/dev/fixtures/asxui-api-probe.lua','tools/dev/asx_api_trial.py','tools/dev/fixtures/asx-api-live-audit.lua'):selected.add('asxui')
-  elif name.startswith('asx/')or name in ('tests/test_asx.py','tests/test_asx_publication.py','tests/test_asx_launcher_menu.py','tools/build/asx_package.py','tools/build/asx_verify_publication.py'):selected.add('asx-install')
-  elif name in ('native-ui/official-party.lua','src/runtime/party_ui.rs','src/runtime/menu_ui.rs','crates/asx-gameplay/src/party_text.rs','crates/asx-gameplay/src/menu_projection.rs','tests/test_official_party_lua.py','tools/dev/requirements-ui.txt','src/runtime/bonus_ui.rs','src/runtime/bonus_catalog.rs','src/runtime/bonus_tooltip.rs','src/runtime/combat_text.rs','src/runtime/nameplates.rs','crates/asx-game/src/official_native/nameplates.rs','src/runtime/raid_markers.rs','crates/asx-gameplay/src/raid_markers.rs','crates/asx-game/src/official_native/combat_text.rs','crates/asx-game/src/official_native/raid_markers.rs','crates/asx-game/src/official_native/bonus_ui.rs','crates/asx-game/src/official_native/bonus_tooltip.rs','crates/asx-game/tests/current/presentation.rs'):selected.add('official-party-ui')
-  elif name in ('crates/asx-gameplay/src/crystals.rs','src/runtime/crystals.rs','tests/test_crystals_lua.py'):selected.add('crystals')
-  elif name in ('crates/asx-gameplay/src/gems.rs','crates/asx-game/src/official_native/gems.rs','src/runtime/gems.rs','tools/dev/gem_evidence.py','tests/test_gem_evidence.py'):selected.add('gems')
-  elif name in ('crates/asx-gameplay/src/enchantments.rs','crates/asx-game/src/official_native/enchantments.rs','crates/asx-game/tests/current/jewelry.rs','src/runtime/enchantments.rs','tools/dev/enchantment_evidence.py','tests/test_enchantment_evidence.py'):selected.add('enchantments')
-  elif name.startswith(('crates/asx-game/src/official_native','src/runtime/','src/presentation/'))or name in ('crates/asx-game/src/official.rs','src/runtime.rs','tests/test_client_binding.py'):selected.add('official')
-  elif name.startswith('crates/asx-gameplay/'):selected.add('rules')
+  elif name in ('Cargo.toml','Cargo.lock','azsx/supported-games.json')or name.startswith('crates/azsx-game/src/bindings/'):return ['full']
+  elif name.startswith(('addons/AZSXUI/','tests/test_azsxui'))or name in ('tests/test_azsxui.py','tests/test_azsxui_font.py','tools/build/azsxui_font.py','tools/dev/azsxui_hud_trial.py','tools/dev/fixtures/azsxui-hud-live.lua','tools/dev/fixtures/azsxui-hud-probe.lua','tools/dev/azsxui_probe_trial.py','tools/dev/fixtures/azsxui-api-probe.lua','tools/dev/azsx_api_trial.py','tools/dev/fixtures/azsx-api-live-audit.lua'):selected.add('azsxui')
+  elif name.startswith('azsx/')or name in ('tests/test_azsx.py','tests/test_azsx_publication.py','tests/test_azsx_launcher_menu.py','tools/build/azsx_package.py','tools/build/azsx_verify_publication.py'):selected.add('azsx-install')
+  elif name in ('native-ui/official-party.lua','src/runtime/party_ui.rs','src/runtime/menu_ui.rs','crates/azsx-gameplay/src/party_text.rs','crates/azsx-gameplay/src/menu_projection.rs','tests/test_official_party_lua.py','tools/dev/requirements-ui.txt','src/runtime/bonus_ui.rs','src/runtime/bonus_catalog.rs','src/runtime/bonus_tooltip.rs','src/runtime/combat_text.rs','src/runtime/nameplates.rs','crates/azsx-game/src/official_native/nameplates.rs','src/runtime/raid_markers.rs','crates/azsx-gameplay/src/raid_markers.rs','crates/azsx-game/src/official_native/combat_text.rs','crates/azsx-game/src/official_native/raid_markers.rs','crates/azsx-game/src/official_native/bonus_ui.rs','crates/azsx-game/src/official_native/bonus_tooltip.rs','crates/azsx-game/tests/current/presentation.rs'):selected.add('official-party-ui')
+  elif name in ('crates/azsx-gameplay/src/crystals.rs','src/runtime/crystals.rs','tests/test_crystals_lua.py'):selected.add('crystals')
+  elif name in ('crates/azsx-gameplay/src/gems.rs','crates/azsx-game/src/official_native/gems.rs','src/runtime/gems.rs','tools/dev/gem_evidence.py','tests/test_gem_evidence.py'):selected.add('gems')
+  elif name in ('crates/azsx-gameplay/src/enchantments.rs','crates/azsx-game/src/official_native/enchantments.rs','crates/azsx-game/tests/current/jewelry.rs','src/runtime/enchantments.rs','tools/dev/enchantment_evidence.py','tests/test_enchantment_evidence.py'):selected.add('enchantments')
+  elif name.startswith(('crates/azsx-game/src/official_native','src/runtime/','src/presentation/'))or name in ('crates/azsx-game/src/official.rs','src/runtime.rs','tests/test_client_binding.py'):selected.add('official')
+  elif name.startswith('crates/azsx-gameplay/'):selected.add('rules')
   else:return ['full']
  return sorted(selected)
 def changed(base=None):

@@ -1,8 +1,8 @@
 use super::*;
 use super::super::{finish, reset, view, State, STATE};
 use crate::test_support::TEST_LOCK;
-use asx_game::official::{ActorObservation, PartyObservation};
-use asx_gameplay::Phase;
+use azsx_game::official::{ActorObservation, PartyObservation};
+use azsx_gameplay::Phase;
 use std::cell::{Cell, RefCell};
 
 struct Fake {

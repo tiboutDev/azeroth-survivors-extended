@@ -1,6 +1,6 @@
 //! Owned observations and cache mutations at feature lifetime boundaries.
 use super::super::Runtime;
-use asx_game::official::PartyObservation;
+use azsx_game::official::PartyObservation;
 
 pub(in crate::runtime) trait Services {
     fn solo_run(&self, game: u64) -> Result<Option<PartyObservation>, String>;

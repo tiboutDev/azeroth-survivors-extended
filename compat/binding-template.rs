@@ -40,7 +40,7 @@ pub(crate) fn extension_bytes(old117: u64) -> &'static [u8] {
         .map(|(_, b)| *b)
         .expect("Unreviewed {{CLIENT_VERSION}} extension bytes")
 }
-// Only reviewed ASX-consumed field spans are translated; padding gaps are excluded.
+// Only reviewed AZSX-consumed field spans are translated; padding gaps are excluded.
 // Resolved against the reviewed current image; no historical descriptor calls.
 fn translated(spans: &[(u64, u64, u64)], offset: u64) -> u64 {
     let &(start, _, native) = spans
@@ -99,6 +99,7 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 // Native UI Input::Pause(bool) and the existing reliable input stream.
 {{MENU_INPUT}}
 {{MENU_INPUT_APPLY}}
+{{MENU_TITLE_RESULT}}
 {{MENU_UI_QUEUE}}
 {{MENU_ESCAPE_QUEUE_RETURN}}
 {{MENU_SEND}}
@@ -158,7 +159,7 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 {{BONUS_NODE_ALIGN_ITEMS}}
 {{BONUS_ALIGN_START}}
 
-// Optional Treasure Goblin contacts; checked separately from required ASX activation.
+// Optional Treasure Goblin contacts; checked separately from required AZSX activation.
 {{GOBLIN_SPAWN}}
 {{GOBLIN_DEFINITION}}
 {{GOBLIN_PACKET_SEND}}
@@ -342,3 +343,10 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 {{DOWNED_XP_PENDING_FIELD}}
 
 {{DOWNED_XP_HOST_REWARD_SLOT}}
+
+{{ADDON_API_READER}}
+{{ADDON_API_READER_BYTES}}
+
+{{LOBBY_SUBMIT}}
+{{LOBBY_SUBMIT_BYTES}}
+{{LOBBY_NAME}}

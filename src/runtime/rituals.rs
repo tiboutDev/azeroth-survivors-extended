@@ -1,8 +1,8 @@
 //! Solo-first Darkmoon trial over a native scene object and the existing Fortune effects.
 use super::event_services::Services;
 use super::RUNTIME;
-use asx_game::official::{RitualScene};
-use asx_gameplay::{Phase,rituals::{Ritual,Outcome},blessings::Blessing};
+use azsx_game::official::{RitualScene};
+use azsx_gameplay::{Phase,rituals::{Ritual,Outcome},blessings::Blessing};
 use std::sync::{Mutex,atomic::{AtomicBool,Ordering}};
 static ENABLED:AtomicBool=AtomicBool::new(false);
 static CONTACTS_VERIFIED:AtomicBool=AtomicBool::new(false);
@@ -10,9 +10,9 @@ struct State{game:u64,owner:u64,clock:f32,encounters:u32,next:Option<f32>,attemp
 static STATE:Mutex<Option<State>>=Mutex::new(None);
 impl State {fn draw(&mut self,n:u32)->u32{loop{self.rng=self.rng.wrapping_add(0x9e3779b97f4a7c15);let mut z=self.rng;z=(z^(z>>30)).wrapping_mul(0xbf58476d1ce4e5b9);z=(z^(z>>27)).wrapping_mul(0x94d049bb133111eb);z^=z>>31;let max=u64::MAX-u64::MAX%u64::from(n);if z<max{return(z%u64::from(n))as u32}}}}
 /// The field serializer is shared with the wallet hook. Verify exact original
-/// bytes before any ASX detour is installed, never mistake our own hook for drift.
+/// bytes before any AZSX detour is installed, never mistake our own hook for drift.
 pub fn verify_before_hooks(r:&dyn Services){
- if std::env::var("ASX_DARKMOON_TRIALS").as_deref()==Ok("0"){return}
+ if std::env::var("AZSX_DARKMOON_TRIALS").as_deref()==Ok("0"){return}
  if let Err(e)=r.events_verify_ritual(){r.events_warn(&format!("Sayge's Trial unavailable: {e}; boss Fortunes retained."));return}
  CONTACTS_VERIFIED.store(true,Ordering::Release);
 }
@@ -25,7 +25,7 @@ pub fn enabled()->bool{ENABLED.load(Ordering::Acquire)}
 pub fn replaces_boss_fortunes(game:u64)->bool{enabled()&&(super::world_events::coop::owns(game)||RUNTIME.get().is_some_and(|r|r.events_solo_run(game).ok().flatten().is_some()))}
 pub fn reset(){let old=STATE.lock().ok().and_then(|mut s|s.take());if let(Some(r),Some(s))=(RUNTIME.get(),old){cleanup(r,&s);}}
 fn cleanup(r:&dyn Services,s:&State){if let Some(o)=s.object.as_ref(){if r.events_solo_run(s.game).ok().flatten().is_some_and(|p|p.actors.first().is_some_and(|a|a.guid==s.owner)){let _=unsafe{r.events_remove_ritual_scene(s.game, o)};}}}
-fn initialize(r:&dyn Services,game:u64)->Result<Option<asx_game::official::PartyObservation>,String>{
+fn initialize(r:&dyn Services,game:u64)->Result<Option<azsx_game::official::PartyObservation>,String>{
  let Some(p)=r.events_solo_run(game)?else{return Ok(None)};let Some(a)=p.actors.first()else{return Ok(None)};
  let old={let mut state=STATE.lock().map_err(|_|"Ritual state unavailable")?;if state.as_ref().is_none_or(|s|s.game!=game||s.owner!=a.guid||p.clock<s.clock){let old=state.take();*state=Some(State{game,owner:a.guid,clock:p.clock,encounters:0,next:None,attempts:0,object:None,ritual:None,previous:None,rng:game^a.guid^std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos()as u64,fixture:0});old}else{None}};
  if let Some(old)=old{cleanup(r,&old);}Ok(Some(p))
@@ -55,7 +55,7 @@ fn tick(r:&dyn Services,game:u64)->Result<(),String>{
  let (remove,outcome,reward,spawn)={let mut state=STATE.lock().map_err(|_|"Ritual state unavailable")?;let s=state.as_mut().ok_or("Ritual state missing")?;s.clock=now;
   let ended=a.phase==Phase::Inactive||a.hp<=0.;let outcome=if ended{Outcome::Expired}else{s.ritual.as_mut().map_or(Outcome::Pending,|v|v.advance(now,a.position,a.phase==Phase::Playing))};
   let mut reward=None;
-  if outcome==Outcome::Success {let stage=s.ritual.as_ref().ok_or("Ritual identity missing")?.encounter;let category=asx_gameplay::blessings::roll_category(1,|n|s.draw(n));let power=s.draw(100000);let next=asx_gameplay::rituals::roll(stage,s.previous,category,power);s.previous=Some(next);reward=Some(next.1);}
+  if outcome==Outcome::Success {let stage=s.ritual.as_ref().ok_or("Ritual identity missing")?.encounter;let category=azsx_gameplay::blessings::roll_category(1,|n|s.draw(n));let power=s.draw(100000);let next=azsx_gameplay::rituals::roll(stage,s.previous,category,power);s.previous=Some(next);reward=Some(next.1);}
   let remove=if outcome!=Outcome::Pending{s.ritual=None;s.object.take()}else{None};
   let spawn=!ended&&a.phase==Phase::Playing&&s.ritual.is_none()&&s.next.is_some_and(|due|now>=due);
   if spawn{s.next=None;s.attempts=s.attempts.saturating_add(1);}
@@ -93,12 +93,12 @@ fn tick(r:&dyn Services,game:u64)->Result<(),String>{
  #[cfg(feature="test-hooks")]if fixture_enabled(){fixture(r,game,&p)?;}
  Ok(())
 }
-fn ui_fixture()->bool{cfg!(feature="test-hooks")&&std::env::var("ASX_TEST_RITUAL_UI").as_deref()==Ok("1")}
-fn persistence_fixture()->bool{cfg!(feature="test-hooks")&&std::env::var("ASX_TEST_RITUAL_PERSISTENCE").as_deref()==Ok("1")}
-fn polish_fixture()->bool{cfg!(feature="test-hooks")&&std::env::var("ASX_TEST_EVENT_POLISH").as_deref()==Ok("1")}
-#[cfg(feature="test-hooks")]fn fixture_enabled()->bool{std::env::var("ASX_TEST_DARKMOON_TRIAL").as_deref()==Ok("1")}
+fn ui_fixture()->bool{cfg!(feature="test-hooks")&&std::env::var("AZSX_TEST_RITUAL_UI").as_deref()==Ok("1")}
+fn persistence_fixture()->bool{cfg!(feature="test-hooks")&&std::env::var("AZSX_TEST_RITUAL_PERSISTENCE").as_deref()==Ok("1")}
+fn polish_fixture()->bool{cfg!(feature="test-hooks")&&std::env::var("AZSX_TEST_EVENT_POLISH").as_deref()==Ok("1")}
+#[cfg(feature="test-hooks")]fn fixture_enabled()->bool{std::env::var("AZSX_TEST_DARKMOON_TRIAL").as_deref()==Ok("1")}
 #[cfg(not(feature="test-hooks"))]fn fixture_enabled()->bool{false}
-#[cfg(feature="test-hooks")]fn fixture(r:&dyn Services,game:u64,p:&asx_game::official::PartyObservation)->Result<(),String>{
+#[cfg(feature="test-hooks")]fn fixture(r:&dyn Services,game:u64,p:&azsx_game::official::PartyObservation)->Result<(),String>{
  if p.actors.iter().any(|a|a.phase!=Phase::Playing){return Ok(())}
  let observed_targets=if super::scenario_steps::enabled(){r.events_blessing_fixture_targets(game)?}else{vec![]};
  let action={let mut s=STATE.lock().map_err(|_|"Ritual fixture state")?;let s=s.as_mut().ok_or("Ritual fixture missing")?;if polish_fixture()&&s.fixture>=2{return Ok(())}let due=match s.fixture{0=>8.,1=>10.,2=>85.,3=>87.,_=>return Ok(())};let ready=if super::scenario_steps::enabled(){s.fixture==0||(s.fixture==1&&!observed_targets.is_empty())}else{p.clock>=due};if !ready{return Ok(())}let action=s.fixture;s.fixture+=1;action};

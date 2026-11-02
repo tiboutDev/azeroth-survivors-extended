@@ -24,7 +24,7 @@ def instrument_lua(source):
     # Applied only to a disposable profile. Prefix remains compatible with activation.
     source=source.replace('local rows, built, hovered = {}, 0, nil', r'''local rows, built, hovered = {}, 0, nil
 local perf={updates=0,events=0,refreshes=0,ms=0,max=0,first=0,decode_ms=0,decodes=0,pin_ms=0,pin_frames=0,animation_ms=0}
-function ASXStartupPerformance()return perf end
+function AZSXStartupPerformance()return perf end
 local perfClock=debugprofilestop
 assert(type(perfClock)=="function", "Native profiling clock unavailable")''',1)
     source=source.replace('local nextModel=decode(wire)', 'local stamp=perfClock();local nextModel=decode(wire);perf.decode_ms=perf.decode_ms+perfClock()-stamp;perf.decodes=perf.decodes+1',1)
@@ -35,15 +35,15 @@ assert(type(perfClock)=="function", "Native profiling clock unavailable")''',1)
     source=source.replace('    updateRitualBar(now)', '    local animationStamp=perfClock();updateRitualBar(now);perf.animation_ms=perf.animation_ms+perfClock()-animationStamp',1)
     return source
 
-OVERLAY = r'''local f=CreateFrame("Frame","ASXStartupPerformancePanel",UIParent)
+OVERLAY = r'''local f=CreateFrame("Frame","AZSXStartupPerformancePanel",UIParent)
 local label=f:CreateFontString(nil,"OVERLAY","GameFontNormalSmall")
 label:SetPoint("TOPRIGHT",UIParent,"TOPRIGHT",-12,-15)
 label:SetWidth(350);label:SetHeight(120);label:SetJustifyH("LEFT")
 local last=-100
 f:SetScript("OnUpdate",function()
  local now=GetTime();if now-last<2 then return end;last=now
- local p=ASXStartupPerformance and ASXStartupPerformance()
+ local p=AZSXStartupPerformance and AZSXStartupPerformance()
  if not p then label:SetText("STARTUP PROFILE MISSING");return end
- label:SetText(string.format("ASX PROFILE t=%.1f fps=%.1f\nupdates=%d events=%d refresh=%d\nrefresh ms=%.3f max=%.3f first=%.3f\ndecode ms=%.3f count=%d",now,GetFramerate(),p.updates,p.events,p.refreshes,p.ms,p.max,p.first,p.decode_ms,p.decodes))
+ label:SetText(string.format("AZSX PROFILE t=%.1f fps=%.1f\nupdates=%d events=%d refresh=%d\nrefresh ms=%.3f max=%.3f first=%.3f\ndecode ms=%.3f count=%d",now,GetFramerate(),p.updates,p.events,p.refreshes,p.ms,p.max,p.first,p.decode_ms,p.decodes))
 end)
 '''

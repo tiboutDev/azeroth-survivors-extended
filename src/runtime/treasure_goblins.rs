@@ -1,8 +1,8 @@
 //! Optional host-owned events over native creatures. No separate simulation/transport.
 use super::event_services::Services;
 use super::{io, Runtime};
-use asx_game::official::{GoblinDefinition, GoblinHandle};
-use asx_gameplay::treasure_goblins::{flee_candidates, whole_boss_marks, Director, Resolution};
+use azsx_game::official::{GoblinDefinition, GoblinHandle};
+use azsx_gameplay::treasure_goblins::{flee_candidates, whole_boss_marks, Director, Resolution};
 use std::{
     cell::Cell,
     sync::{
@@ -25,14 +25,14 @@ static DEFINITIONS: [OnceLock<GoblinDefinition>; 12] = [const { OnceLock::new() 
 thread_local! {static PENDING:Cell<Option<(u64,u64)>>=const{Cell::new(None)};}
 struct State {
     game: u64,
-    arena: Option<asx_gameplay::treasure_goblins::Arena>,
+    arena: Option<azsx_gameplay::treasure_goblins::Arena>,
     owner: u64,
     clock: f32,
     rules: Director,
     handle: Option<GoblinHandle>,
     goal: Option<[f32; 3]>,
     heading: [f32; 2],
-    navigation: asx_gameplay::treasure_goblins::FleeNavigation,
+    navigation: azsx_gameplay::treasure_goblins::FleeNavigation,
     next_goal: f32,
     stopped: bool,
     killed: bool,
@@ -109,7 +109,7 @@ pub fn install(r: &Runtime) {
     if !r.rules {
         return;
     }
-    let disabled = std::env::var("ASX_TREASURE_GOBLINS").as_deref() == Ok("0");
+    let disabled = std::env::var("AZSX_TREASURE_GOBLINS").as_deref() == Ok("0");
     // A guest may join a host with events enabled even if local generation is off.
     // Keep this exact legacy skin association available without enabling a director.
     let skin = (|| -> Result<(), String> {
@@ -134,13 +134,13 @@ pub fn install(r: &Runtime) {
     })();
     if let Err(e) = skin {
         r.log.warn(&format!(
-            "Treasure Goblins unavailable: {e}. Core ASX coop is unaffected."
+            "Treasure Goblins unavailable: {e}. Core AZSX coop is unaffected."
         ));
         return;
     }
     if disabled {
         r.log
-            .info("Treasure Goblins disabled; core ASX coop remains active.");
+            .info("Treasure Goblins disabled; core AZSX coop remains active.");
         return;
     }
     let result = (|| -> Result<(), String> {
@@ -183,7 +183,7 @@ pub fn install(r: &Runtime) {
                 .info("Treasure Goblins enabled: optional native creature integration ready.");
         }
         Err(e) => r.log.warn(&format!(
-            "Treasure Goblins unavailable: {e}. Core ASX coop is unaffected."
+            "Treasure Goblins unavailable: {e}. Core AZSX coop is unaffected."
         )),
     }
 }
@@ -239,7 +239,7 @@ pub fn pursuit(game: u64, enemy: u64, origin: [f32; 3], owner: [f32; 3]) -> Opti
         .collect::<Vec<_>>();
     Some(
         s.goal
-            .filter(|goal| asx_gameplay::treasure_goblins::escapes(origin, *goal, &pursuers))
+            .filter(|goal| azsx_gameplay::treasure_goblins::escapes(origin, *goal, &pursuers))
             .unwrap_or(origin),
     )
 }
@@ -255,7 +255,7 @@ pub(super) fn safe_motion(game: u64, enemy: u64, origin: [f32; 3], goal: [f32; 3
     };
     let pursuers = s.pursuers.iter().map(|(_, p)| *p).collect::<Vec<_>>();
     s.arena.is_some_and(|a| a.contains(goal))
-        && asx_gameplay::treasure_goblins::escapes(origin, goal, &pursuers)
+        && azsx_gameplay::treasure_goblins::escapes(origin, goal, &pursuers)
 }
 pub fn hit_complete(r: &Runtime, game: u64, enemy: u64, spell: u32) {
     if !is_goblin(game, enemy) {
@@ -295,7 +295,7 @@ pub fn finish(r: &dyn Services, game: u64) {
     if let Some(e) = error {
         AVAILABLE.store(false, Ordering::Release);
         r.events_warn(&format!(
-            "Treasure Goblin event stopped: {e}; core ASX remains active."
+            "Treasure Goblin event stopped: {e}; core AZSX remains active."
         ));
         ACTIVE.store(false, Ordering::Release);
         let handle = STATE.lock().ok().and_then(|mut state| {
@@ -326,7 +326,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
         game,
         &p.actors
             .iter()
-            .filter(|a| a.phase != asx_gameplay::Phase::Inactive)
+            .filter(|a| a.phase != azsx_gameplay::Phase::Inactive)
             .map(|a| (a.slot, a.guid))
             .collect::<Vec<_>>(),
     )?;
@@ -371,7 +371,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
         state.as_mut().unwrap().pursuers = p
             .actors
             .iter()
-            .filter(|a| a.hp > 0. && a.phase != asx_gameplay::Phase::Inactive)
+            .filter(|a| a.hp > 0. && a.phase != azsx_gameplay::Phase::Inactive)
             .map(|a| (a.slot, a.position))
             .collect();
     }
@@ -410,7 +410,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
         let members = p
             .actors
             .iter()
-            .filter(|a| a.phase != asx_gameplay::Phase::Inactive)
+            .filter(|a| a.phase != azsx_gameplay::Phase::Inactive)
             .map(|a| (a.slot, a.guid))
             .collect::<Vec<_>>();
         let refresh = STATE.lock().ok().is_some_and(|mut state| {
@@ -469,7 +469,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
                     let ids = p
                         .actors
                         .iter()
-                        .filter(|a| a.phase != asx_gameplay::Phase::Inactive)
+                        .filter(|a| a.phase != azsx_gameplay::Phase::Inactive)
                         .map(|a| (a.slot, a.guid))
                         .collect::<Vec<_>>();
                     let marks =
@@ -500,7 +500,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
                 let pursuers = p
                     .actors
                     .iter()
-                    .filter(|a| a.hp > 0. && a.phase != asx_gameplay::Phase::Inactive)
+                    .filter(|a| a.hp > 0. && a.phase != azsx_gameplay::Phase::Inactive)
                     .map(|a| a.position)
                     .collect::<Vec<_>>();
                 let (mut navigation, previous_goal) = STATE
@@ -544,20 +544,20 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
         || !p
             .actors
             .iter()
-            .any(|a| a.phase == asx_gameplay::Phase::Playing && a.hp > 0.)
+            .any(|a| a.phase == azsx_gameplay::Phase::Playing && a.hp > 0.)
     {
         return Ok(());
     }
     #[cfg(feature="test-hooks")]
     let observed_encounter_ready = !super::scenario_steps::enabled() ||
-        (p.actors.iter().all(|a|a.phase==asx_gameplay::Phase::Playing)&&r.events_blessing_fixture_targets(game)?.is_empty());
+        (p.actors.iter().all(|a|a.phase==azsx_gameplay::Phase::Playing)&&r.events_blessing_fixture_targets(game)?.is_empty());
     #[cfg(feature="test-hooks")]
     let observed_rewards_ready = !super::scenario_steps::enabled() || super::world_events::coop::observed_rewards_complete(game);
     let due = {
         let mut state = STATE.lock().map_err(|_| "Event state unavailable")?;
         let s = state.as_mut().ok_or("Event state reset")?;
         #[cfg(feature = "test-hooks")]
-        let forced = std::env::var("ASX_TEST_TREASURE_GOBLINS").as_deref() == Ok("1")
+        let forced = std::env::var("AZSX_TEST_TREASURE_GOBLINS").as_deref() == Ok("1")
             && s.spawns < 2
             && if super::scenario_steps::enabled(){observed_encounter_ready&&s.rules.encounters()>0&&s.spawns<2&&(s.spawns==0||observed_rewards_ready)}else{now >= if s.spawns == 0 {21.}else{48.}};
         #[cfg(not(feature = "test-hooks"))]
@@ -615,11 +615,11 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
         s.members = p
             .actors
             .iter()
-            .filter(|a| a.phase != asx_gameplay::Phase::Inactive)
+            .filter(|a| a.phase != azsx_gameplay::Phase::Inactive)
             .map(|a| (a.slot, a.guid))
             .collect();
         s.goal = initial_position;
-        s.next_goal = now + asx_gameplay::treasure_goblins::ARRIVAL_SECONDS;
+        s.next_goal = now + azsx_gameplay::treasure_goblins::ARRIVAL_SECONDS;
     }
     r.events_goblin_elite(game, &mut initial_handle)?;
     #[cfg(feature="test-hooks")]
@@ -687,7 +687,7 @@ mod tests {
 
 #[cfg(feature = "test-hooks")]
 fn fixture_enabled() -> bool {
-    std::env::var("ASX_TEST_TREASURE_GOBLINS").as_deref() == Ok("1")
+    std::env::var("AZSX_TEST_TREASURE_GOBLINS").as_deref() == Ok("1")
 }
 #[cfg(feature = "test-hooks")]
 static PACKET_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
@@ -746,7 +746,7 @@ pub(super) fn fixture_active(
     game: u64,
     now: f32,
     h: GoblinHandle,
-    party: &asx_game::official::PartyObservation,
+    party: &azsx_game::official::PartyObservation,
 ) {
     if !fixture_enabled() {
         return;
@@ -787,7 +787,7 @@ pub(super) fn fixture_active(
         super::combat::fixture_goblin_taunt(r, game, h.guid());
     }
     if action == 2 {
-        use asx_game::official::SupportCalls;
+        use azsx_game::official::SupportCalls;
         let io = io::Access {
             local: &r.local,
             adapter: r.adapter,
@@ -813,7 +813,7 @@ pub(super) fn fixture_active(
                 h.guid(),
                 v.hp,
                 v.elite,
-                party.actors.iter().filter(|a|a.hp>0.&&a.phase!=asx_gameplay::Phase::Inactive).map(|a|a.position).collect::<Vec<_>>(),
+                party.actors.iter().filter(|a|a.hp>0.&&a.phase!=azsx_gameplay::Phase::Inactive).map(|a|a.position).collect::<Vec<_>>(),
                 v.position
             ));
         }

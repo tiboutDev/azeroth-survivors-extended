@@ -1,10 +1,10 @@
-# ASX Features
+# AZSX Features
 
 [Home](../../README.md) · [Installation](INSTALLATION.md) · **Features** · [In the workshop](WORKSHOP.md)
 
 ---
 
-ASX adds new decisions during a run and more ways to play together. These pages
+AZSX adds new decisions during a run and more ways to play together. These pages
 describe the current source; check your downloaded release’s notes for its
 available features and exact game compatibility.
 
@@ -81,7 +81,7 @@ the model visible, so you can still point it out to the group.
 - In solo, it disappears immediately when you collect it. Native pauses freeze the countdown.
 - Players joining later cannot claim crystals that appeared before they joined.
 
-ASXUI shows the crystal color and its bonus in a short pickup popup. Notices
+AZSXUI shows the crystal color and its bonus in a short pickup popup. Notices
 queue for nearby pickups and stack below the top HUD. **Crystal Resonance**
 keeps the accumulated bonuses in one buff: hover it to inspect your totals.
 Bonuses add up, survive death and reset with the next run. In co-op,
@@ -89,13 +89,13 @@ Bonuses add up, survive death and reset with the next run. In co-op,
 Crystal Resonance follow when present. In solo, Crystal Resonance follows
 Fortune, or comes first when Fortune is absent.
 
-Amulets keep their native effects and **no longer assign an ASX gem**. The
+Amulets keep their native effects and **no longer assign an AZSX gem**. The
 prototype targets **4–6 opportunities before endless**, with at most two crystals
 present. Discovery counts are not guaranteed: early run endings, occupied slots
 or unavailable terrain can leave fewer. Endless continues independent spawns.
 
-Configure the notice with `/asxui widget crystals …`; see
-[ASXUI presentation](#asxui-presentation) for complete examples.
+Configure the notice with `/azsxui widget crystals …`; see
+[AZSXUI presentation](#azsxui-presentation) for complete examples.
 
 **Feedback wanted:** discovery visibility, whether a detour feels worthwhile,
 and combined power when several crystals of the same color appear.
@@ -165,7 +165,7 @@ These features apply to **co-op**.
 
 **Status: Established**
 
-ASX adapts resource and reward handling for a shared adventure.
+AZSX adapts resource and reward handling for a shared adventure.
 
 - **Shared in-run XP** helps participants progress together.
 - **Shared gold** gives the party one common wallet.
@@ -191,7 +191,7 @@ Effects retain their original caster’s attribution. **Mage Ice Barrier remains
 
 **Status: Playtesting**
 
-ASX adds talent-based taunts:
+AZSX adds talent-based taunts:
 
 | Class | Ability | Required talent |
 | --- | --- | --- |
@@ -211,11 +211,12 @@ Temporary invincibility clears existing ordinary aggro and taunt assignments. A 
 
 **Status: Established**
 
-ASX enriches the party interface with information useful for understanding your teammates’ builds.
+AZSX enriches the party interface with information useful for understanding your teammates’ builds.
 
 - Compact rows show equipped spells and items.
 - Additional buff icons expose supported beneficial effects.
 - Spell and item tooltips reflect their owner’s build.
+- AZSXUI lists each item effect on its own tooltip line and shows native debuff icons beneath boss, guardian and Treasure Goblin health bars. Hover an icon for its name, stacks and remaining time.
 - Group pauses identify who is choosing a reward or holding a menu open.
 - Waiting messages display character names.
 - Reward selection pauses the group until everyone has finished.
@@ -301,12 +302,12 @@ The pickup popup shows the amount actually credited, including applicable
 bonuses. There is no separate crafting inventory.
 
 Item names and icons refer to Classic consumables and materials, but their
-effects are adapted to ASX. **Name colors are cosmetic item quality, not buff
+effects are adapted to AZSX. **Name colors are cosmetic item quality, not buff
 strength or sale value**. Native battleground runes retain their own effects.
 
-## ASXUI presentation
+## AZSXUI presentation
 
-ASXUI is included in ASX and installed automatically. It handles nameplate
+AZSXUI is included in AZSX and installed automatically. It handles nameplate
 styling, event/cache minimap markers, Supplies/Fortune/crystal notices and the
 Sayge progress bar. Caches and Supplies use different native icons; crystals
 have no minimap markers. Fortune leads the native buff row, followed by
@@ -317,25 +318,25 @@ overlap by default. Position, scale, opacity and visibility can be adjusted
 without restarting:
 
 ```text
-/asxui widget anchor position 0 -85
-/asxui widget crystals scale 1.2
-/asxui widget crystals opacity 0.8
-/asxui widget crystals show off
-/asxui widget crystals show on
-/asxui widget crystals reset
+/azsxui widget anchor position 0 -85
+/azsxui widget crystals scale 1.2
+/azsxui widget crystals opacity 0.8
+/azsxui widget crystals show off
+/azsxui widget crystals show on
+/azsxui widget crystals reset
 ```
 
 Widget names are `crystals`, `supplies`, `fortune`, `sayge`, `revive`, `loot` and `marks`. Hiding a widget
 only changes its display; it never disables rewards or changes trial progress.
-The native damage font is kept by default; matching ASX reduces outgoing damage
+The native damage font is kept by default; matching AZSX reduces outgoing damage
 size by three. The optional alternative number face
-requires a client restart. See the [ASXUI guide](../../addons/ASXUI/README.md)
+requires a client restart. See the [AZSXUI guide](../../addons/AZSXUI/README.md)
 for all commands and nameplate limits.
 
 ## Optional events
 
 The host controls event generation in co-op. To change event settings, close
-the game and edit `ASX/options.json` in the game folder. These events are
+the game and edit `AZSX/options.json` in the game folder. These events are
 enabled by default:
 
 ```json
@@ -347,25 +348,25 @@ enabled by default:
 ```
 
 Change the desired value to `false`, preserve any other existing settings, and
-restart through the ASX launcher. Turning off `darkmoon_trials` restores
-boss-based Fortunes. These are gameplay settings; ASXUI's widget commands only
+restart through the AZSX launcher. Turning off `darkmoon_trials` restores
+boss-based Fortunes. These are gameplay settings; AZSXUI's widget commands only
 control presentation.
 
 ## Share feedback
 
 [Report an issue or share a balance observation](https://github.com/tiboutDev/azeroth-survivors-extended/issues).
-Include your game and ASX versions, map, difficulty, classes and player count,
+Include your game and AZSX versions, map, difficulty, classes and player count,
 plus what you expected and what happened.
 
-### Compact ASXUI HUD
+### Compact AZSXUI HUD
 
-ASXUI adds one statistics button beside the native action bar. Hover to consult
+AZSXUI adds one statistics button beside the native action bar. Hover to consult
 stats without opening the character sheet. Clicking the button or pressing the
-configured character-sheet key opens the native character sheet and ASX stats
+configured character-sheet key opens the native character sheet and AZSX stats
 together; a second click/press closes both. All nonzero native stats fit into
 four columns, with short labels and complete terms on hover.
 Visible rows refresh while the panel is open. In coop, XP and gold show the
-effective ASX shared-award bonuses instead of only personal native values.
+effective AZSX shared-award bonuses instead of only personal native values.
 The panel opens immediately in front of equipment, beneath the native XP artwork
 and foreground gryphons. The native XP texture and top border stay intact.
 
@@ -374,7 +375,7 @@ gold and the next cache price. Gold has a soft light behind its value when a cac
 is affordable. The native run clock and next-boss countdown sit below the strip.
 Five circular equipment positions show the amulet, two rings, then two trinkets.
 Native slot silhouettes remain for empty positions. Descriptions use the owner's
-native item text, rank and any verified active ring enchantment. `/asxui hud off` restores the native layout and previous visibility
+native item text, rank and any verified active ring enchantment. `/azsxui hud off` restores the native layout and previous visibility
 preferences.
 
 The raised compact player health bar shows current HP and character level, without a portrait or
@@ -391,7 +392,7 @@ remains visible. One Guardians quest lists living guardians and upcoming arrival
 an arrival countdown appears on its own indented line during the final 30 seconds.
 Quest headings and objective entries have separate spacing. Sayge has its own quest.
 Minimap pins cover all active guardians, with event and cache priorities to keep
-important markers above less urgent ones. The player arrow stays above ASX pins. Goblins no longer receive an automatic
+important markers above less urgent ones. The player arrow stays above AZSX pins. Goblins no longer receive an automatic
 skull marker.
 
 Reward and ally panels use native parchment and border textures. Compact pickup
@@ -411,7 +412,7 @@ the bar; the same style also displays native resurrection progress.
 
 These changes use existing client assets. Health, targeting, auras, progression,
 rewards and native game authority remain unchanged. No native textures are shipped
-in ASX.
+in AZSX.
 
 ## Cooperative area bonuses
 
@@ -430,7 +431,7 @@ of area/range bonuses. A separated gray note clarifies that the stats panel show
 effective values while item/reward descriptions may show base bonuses.
 
 This icon grants no effect, has no countdown, cannot be cancelled, and remains
-present while dead or paused. It disappears in solo and outside the run. ASXUI
-places it in its HUD; the ASX presentation bridge also displays it beside native
-buffs when ASXUI is absent or its HUD is disabled. The ASX addon API exposes its
+present while dead or paused. It disappears in solo and outside the run. AZSXUI
+places it in its HUD; the AZSX presentation bridge also displays it beside native
+buffs when AZSXUI is absent or its HUD is disabled. The AZSX addon API exposes its
 values and texts for other addons. No additional assets are required.

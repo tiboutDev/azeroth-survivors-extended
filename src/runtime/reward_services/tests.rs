@@ -1,8 +1,8 @@
 use super::Services;
 use crate::runtime::{enchantments, gems};
 use crate::test_support::TEST_LOCK;
-use asx_game::official::{AmuletChoice, RingChoice, RingStatLoan};
-use asx_gameplay::{enchantments::RankedEnchantment, gems::Gem};
+use azsx_game::official::{AmuletChoice, RingChoice, RingStatLoan};
+use azsx_gameplay::{enchantments::RankedEnchantment, gems::Gem};
 use std::sync::{atomic::{AtomicUsize, Ordering}, Mutex};
 
 const GAME: u64 = 0x1000;

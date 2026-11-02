@@ -4,8 +4,8 @@ use super::super::{
     blessings, combat, duplicate_loot, elites, enchantments, fatigue, gems, io,
     menu_pause, party_ui, support, wallet, Runtime, RUNTIME,
 };
-use asx_game::official::Observation;
-use asx_gameplay::official::{PausePresentation, PauseReason};
+use azsx_game::official::Observation;
+use azsx_gameplay::official::{PausePresentation, PauseReason};
 use serde_json::Value;
 
 static HUD_PHASES: [AtomicU64; 5] = [const { AtomicU64::new(0) }; 5];
@@ -39,12 +39,12 @@ pub(super) trait HudServices {
     fn hud_snapshot(&self, game: u64, output: u64) -> Result<Option<(u32, Value)>, String>;
     fn capture_party(&self, actor: u32, value: &Value);
     fn effect_owner(&self, game: u64) -> Option<(u32, u64)>;
-    fn hud_phase(&self, value: &Value) -> Result<asx_gameplay::Phase, String>;
+    fn hud_phase(&self, value: &Value) -> Result<azsx_gameplay::Phase, String>;
     fn update_pause_party(
         &self,
         game: u64,
         owner: Option<(u32, u64)>,
-        phase: Option<asx_gameplay::Phase>,
+        phase: Option<azsx_gameplay::Phase>,
     ) -> (Option<PauseReason>, Vec<(u32, u64)>);
     fn decorate_pause(&self, value: &mut Value, view: &PausePresentation);
     fn replace_hud(&self, output: u64, value: &Value) -> Result<(), String>;
@@ -184,10 +184,10 @@ impl HudServices for Runtime {
     fn effect_owner(&self, game: u64) -> Option<(u32, u64)> {
         self.adapter.effect_source(&self.local, game).ok().flatten()
     }
-    fn hud_phase(&self, value: &Value) -> Result<asx_gameplay::Phase, String> {
+    fn hud_phase(&self, value: &Value) -> Result<azsx_gameplay::Phase, String> {
         self.adapter.hud_phase(value)
     }
-    fn update_pause_party(&self, game: u64, owner: Option<(u32, u64)>, phase: Option<asx_gameplay::Phase>) -> (Option<PauseReason>, Vec<(u32, u64)>) {
+    fn update_pause_party(&self, game: u64, owner: Option<(u32, u64)>, phase: Option<azsx_gameplay::Phase>) -> (Option<PauseReason>, Vec<(u32, u64)>) {
         let Some(mut party) = self.party.lock().ok() else { return (None, Vec::new()) };
         let Some(observation) = party.as_mut() else { return (None, Vec::new()) };
         if let (Some((slot, guid)), Some(phase)) = (owner, phase) {
@@ -224,6 +224,6 @@ impl CommandServices for Runtime {
     fn duplicate_command(&self, context: &mut crate::stub::Context) -> bool { duplicate_loot::command(self, context) }
     fn movement_opcode(&self, opcode: u16) -> bool { self.adapter.command_is_movement(opcode) }
     fn active_role(&self, receiver: u64) -> bool {
-        self.adapter.observe(&self.local, receiver).is_ok_and(|state| matches!(state.role, asx_game::official::Role::Host | asx_game::official::Role::Guest))
+        self.adapter.observe(&self.local, receiver).is_ok_and(|state| matches!(state.role, azsx_game::official::Role::Host | azsx_game::official::Role::Guest))
     }
 }

@@ -1,4 +1,4 @@
-# Current ASX feature contracts
+# Current AZSX feature contracts
 
 This is the stable engineering inventory for the only supported client,
 **official {{CLIENT_VERSION}}**. Rows describe contracts to preserve, not universal runtime
@@ -12,11 +12,11 @@ gold compensation. Reserved removed IDs are not reassigned.
 {{FEATURE_TABLE}}
 ## Review requirements
 
-[ASX-BEHAVIOR.md](ASX-BEHAVIOR.md) expands every stable feature into individually
+[AZSX-BEHAVIOR.md](AZSX-BEHAVIOR.md) expands every stable feature into individually
 identified acceptance criteria, regression cases and evidence requirements. Keep
 those current with semantic changes; this generated table remains the index.
 
-A native compatibility change must account for ASX-01 through ASX-28, including
+A native compatibility change must account for AZSX-01 through AZSX-28, including
 reserved removed IDs and upstream-native behavior. Record the
 native boundary, exact source/artifact identity, checks and limitations. Preserve
 producer/recipient GUIDs, host/private layouts, native ownership, reset and

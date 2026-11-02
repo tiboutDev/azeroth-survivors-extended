@@ -1,10 +1,10 @@
 //! Native event operations; no runtime, memory accessor or adapter escapes.
 use super::{io, Runtime};
-use asx_game::official::{
+use azsx_game::official::{
     Entry, EventObject, GoblinDefinition, GoblinHandle, GoblinSnapshot, PartyObservation,
     RitualScene, StatInputLoan,
 };
-use asx_game::Result;
+use azsx_game::Result;
 
 pub(super) trait Services {
     fn events_goblin_notice(&self, game: u64, text: &str) -> Result<()>;
@@ -24,12 +24,12 @@ pub(super) trait Services {
         &self,
         game: u64,
         owner: u64,
-        blessing: asx_gameplay::blessings::Blessing,
+        blessing: azsx_gameplay::blessings::Blessing,
     ) -> Result<()>;
     fn events_group_fortunes(
         &self,
         game: u64,
-        rewards: &[((u32, u64), asx_gameplay::blessings::Blessing)],
+        rewards: &[((u32, u64), azsx_gameplay::blessings::Blessing)],
     ) -> Result<()>;
     fn events_group_sale(&self, game: u64, id: (u32, u64), amount: u32) -> Result<u32>;
 
@@ -37,7 +37,7 @@ pub(super) trait Services {
     fn events_verify_ritual(&self) -> Result<()>;
     fn events_verify_fixture_boss(&self) -> Result<()>;
     fn events_refresh_stats(&self, game: u64) -> Result<()>;
-    fn events_crystal_stats(&self,_game:u64,_totals:asx_gameplay::crystals::Totals)->Result<Option<StatInputLoan>>{Err("Crystal stat inputs unavailable".into())}
+    fn events_crystal_stats(&self,_game:u64,_totals:azsx_gameplay::crystals::Totals)->Result<Option<StatInputLoan>>{Err("Crystal stat inputs unavailable".into())}
     fn events_damage_fixture_target(&self, game: u64, target: u64, damage: f32) -> Result<()>;
     fn events_credit_supply(&self, game: u64, owner: u64, amount: u32) -> Result<u32>;
 
@@ -49,10 +49,10 @@ pub(super) trait Services {
     fn events_consumable_stats(
         &self,
         game: u64,
-        buffs: &[asx_gameplay::supplies::Consumable],
+        buffs: &[azsx_gameplay::supplies::Consumable],
     ) -> Result<Option<StatInputLoan>>;
     unsafe fn events_despawn_goblin(&self, g: u64, h: &mut GoblinHandle) -> Result<()>;
-    fn events_area(&self, game: u64) -> Result<asx_gameplay::world_events::Area>;
+    fn events_area(&self, game: u64) -> Result<azsx_gameplay::world_events::Area>;
     fn events_endless(&self, game: u64) -> Result<bool>;
     fn events_enemy_count(&self, game: u64) -> Result<u64>;
     unsafe fn events_ground(
@@ -67,7 +67,7 @@ pub(super) trait Services {
         game: u64,
         p: [f32; 2],
         footprint: f32,
-    ) -> Result<Option<asx_gameplay::world_events::GroundSite>>;
+    ) -> Result<Option<azsx_gameplay::world_events::GroundSite>>;
     unsafe fn events_notice(&self, game: u64, sender: &str, text: &str) -> Result<()>;
     unsafe fn events_object(
         &self,
@@ -92,7 +92,7 @@ pub(super) trait Services {
         point: [f32; 3],
     ) -> Result<()>;
     unsafe fn events_fixture_spawn_encounter(&self, g: u64, d: u64);
-    fn events_goblin_arena(&self, g: u64) -> Result<asx_gameplay::treasure_goblins::Arena>;
+    fn events_goblin_arena(&self, g: u64) -> Result<azsx_gameplay::treasure_goblins::Arena>;
     unsafe fn events_goblin_clip(&self, g: u64, o: [f32; 3], d: [f32; 3]) -> Result<[f32; 3]>;
     fn events_goblin_elite(&self, g: u64, h: &mut GoblinHandle) -> Result<()>;
     fn events_goblin_marks_amount(&self, g: u64) -> Result<f32>;
@@ -122,7 +122,7 @@ pub(super) trait Services {
     fn events_world_party(&self, game: u64) -> Result<Option<PartyObservation>>;
 }
 impl Services for Runtime {
-    fn events_crystal_stats(&self,game:u64,totals:asx_gameplay::crystals::Totals)->Result<Option<StatInputLoan>>{self.adapter.crystal_stats(&io::Access{local:&self.local,adapter:self.adapter},game,totals)}
+    fn events_crystal_stats(&self,game:u64,totals:azsx_gameplay::crystals::Totals)->Result<Option<StatInputLoan>>{self.adapter.crystal_stats(&io::Access{local:&self.local,adapter:self.adapter},game,totals)}
     fn events_goblin_notice(&self, game: u64, text: &str) -> Result<()> {
         unsafe {
             self.adapter.goblin_notice(
@@ -160,14 +160,14 @@ impl Services for Runtime {
         &self,
         game: u64,
         owner: u64,
-        blessing: asx_gameplay::blessings::Blessing,
+        blessing: azsx_gameplay::blessings::Blessing,
     ) -> Result<()> {
         super::blessings::ritual_reward(self, game, owner, blessing)
     }
     fn events_group_fortunes(
         &self,
         game: u64,
-        rewards: &[((u32, u64), asx_gameplay::blessings::Blessing)],
+        rewards: &[((u32, u64), azsx_gameplay::blessings::Blessing)],
     ) -> Result<()> {
         super::blessings::ritual_rewards(self, game, rewards)
     }
@@ -201,7 +201,7 @@ impl Services for Runtime {
         verify(self, [self.adapter.blessing_spawn_entry()])
     }
     fn events_refresh_stats(&self, game: u64) -> Result<()> {
-        use asx_game::official::SupportCalls;
+        use azsx_game::official::SupportCalls;
         io::Access {
             local: &self.local,
             adapter: self.adapter,
@@ -209,7 +209,7 @@ impl Services for Runtime {
         .refresh_support(game)
     }
     fn events_damage_fixture_target(&self, game: u64, target: u64, damage: f32) -> Result<()> {
-        use asx_game::official::SupportCalls;
+        use azsx_game::official::SupportCalls;
         io::Access {
             local: &self.local,
             adapter: self.adapter,
@@ -257,7 +257,7 @@ impl Services for Runtime {
     fn events_consumable_stats(
         &self,
         game: u64,
-        buffs: &[asx_gameplay::supplies::Consumable],
+        buffs: &[azsx_gameplay::supplies::Consumable],
     ) -> Result<Option<StatInputLoan>> {
         self.adapter.consumable_stats(
             &io::Access {
@@ -281,7 +281,7 @@ impl Services for Runtime {
             )
         }
     }
-    fn events_area(&self, game: u64) -> Result<asx_gameplay::world_events::Area> {
+    fn events_area(&self, game: u64) -> Result<azsx_gameplay::world_events::Area> {
         self.adapter
             .event_area(&self.local, self.local.base as u64, game)
     }
@@ -314,7 +314,7 @@ impl Services for Runtime {
         game: u64,
         p: [f32; 2],
         footprint: f32,
-    ) -> Result<Option<asx_gameplay::world_events::GroundSite>> {
+    ) -> Result<Option<azsx_gameplay::world_events::GroundSite>> {
         unsafe {
             self.adapter.event_ground_sample(
                 &self.local,
@@ -413,7 +413,7 @@ impl Services for Runtime {
     unsafe fn events_fixture_spawn_encounter(&self, g: u64, d: u64) {
         unsafe { self.adapter.fixture_spawn_encounter(self.local.base, g, d) }
     }
-    fn events_goblin_arena(&self, g: u64) -> Result<asx_gameplay::treasure_goblins::Arena> {
+    fn events_goblin_arena(&self, g: u64) -> Result<azsx_gameplay::treasure_goblins::Arena> {
         self.adapter
             .goblin_arena(&self.local, g, self.local.base as u64)
     }

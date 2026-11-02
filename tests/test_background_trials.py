@@ -22,7 +22,7 @@ class BackgroundTrials(unittest.TestCase):
     def test_disposable_profiles_accept_the_current_exact_supported_image(self):
         # A launcher-only version bump used to pass all gates while the live
         # fixture refused to create any disposable character for that image.
-        games = json.loads((ROOT / 'asx/supported-games.json').read_text())['games']
+        games = json.loads((ROOT / 'azsx/supported-games.json').read_text())['games']
         fixture = json.loads((ROOT / 'tools/dev/fixtures/party-talents115.json').read_text())
         accepted = {fixture['sha256'], *fixture.get('compatible_sha256', [])}
         for version, game in games.items():
@@ -30,7 +30,7 @@ class BackgroundTrials(unittest.TestCase):
                 self.assertIn(game['sha256'], accepted)
 
     def test_empty_retired_and_incomplete_routes_fail_during_portable_parse(self):
-        for argv in ([], ['--official115'], ['--tooltip-party1133'], ['--official120'], ['--asx-install'], ['--asx-install122'], ['--asx-mixed'], ['--version1133'], ['--players', '3']):
+        for argv in ([], ['--official115'], ['--tooltip-party1133'], ['--official120'], ['--azsx-install'], ['--azsx-install122'], ['--azsx-mixed'], ['--version1133'], ['--players', '3']):
             with self.subTest(argv=argv), self.assertRaises(SystemExit), redirect_stderr(StringIO()):
                 background.parse_args(argv)
 
@@ -45,7 +45,7 @@ class BackgroundTrials(unittest.TestCase):
             ('--enchantments-trial', '1'): ['--enchantments-trial', '1'],
             ('--reward-wallet-trial',): ['--reward-wallet-trial'],
             ('--immunity-aggro-trial',): ['--immunity-aggro-trial'],
-            ('--asx-install', '--asx-package', 'prepared.zip'): ['--asx-install', '--asx-package', 'prepared.zip'],
+            ('--azsx-install', '--azsx-package', 'prepared.zip'): ['--azsx-install', '--azsx-package', 'prepared.zip'],
             ('--resource-probe',): ['--resource-probe'],
         }
         cases[('--resource-probe', '--extensions-trial', '1')] = None
@@ -81,15 +81,15 @@ class BackgroundTrials(unittest.TestCase):
             with self.subTest(mode=focused):
                 self.assertFalse(extensions.compatibility_scope(**{focused: True}))
     def test_child_dispatch_is_mocked_and_preserves_current_selection(self):
-        args = background.parse_args(['--asx-install', '--asx-package', 'prepared.zip'])
+        args = background.parse_args(['--azsx-install', '--azsx-package', 'prepared.zip'])
         called = []
         mocked = mock.Mock(run=lambda *a, **kw: called.append((a, kw)))
-        with mock.patch.dict('sys.modules', {'asx_install_trial': mocked}):
+        with mock.patch.dict('sys.modules', {'azsx_install_trial': mocked}):
             background.run_child(args, Path('/tmp/test-results/trial/start'))
         self.assertEqual(called, [((45,), {'game_version': '0.138.0', 'package_path': Path('prepared.zip'), 'legacy_package': None})])
 
     def test_archive_preflight_distinguishes_pending_owned_dll_replacement(self):
-        from asx_install_trial import initial_check_passed
+        from azsx_install_trial import initial_check_passed
         unchanged=("profile", "settings")
         for old,new,expected in ((None,"new",1),("same","same",0),("old","new",1)):
             with self.subTest(old=old,new=new):
@@ -100,18 +100,18 @@ class BackgroundTrials(unittest.TestCase):
                 self.assertFalse(initial_check_passed(2,unchanged,unchanged,old,old,new))
 
     def test_packaged_coop_uses_native_ready_input_without_restarting_autostart(self):
-        import asx_install_trial
-        host = asx_install_trial.native_coop_controls(1)
-        guest = asx_install_trial.native_coop_controls(2)
+        import azsx_install_trial
+        host = azsx_install_trial.native_coop_controls(1)
+        guest = azsx_install_trial.native_coop_controls(2)
         self.assertEqual(host["WOW_ROGUE_TAPS"].split(";"), ["410,485"] * 32)
         self.assertEqual(guest["WOW_ROGUE_TAPS"].split(";"), ["306,525"] * 32)
         for controls in (host, guest):
             self.assertNotIn("WOW_ROGUE_AUTOSTART", controls)
             self.assertEqual(controls["WOW_ROGUE_ROAM"], "1")
-            self.assertEqual(controls["ASX_LOG_NATIVE_UI"], "1")
+            self.assertEqual(controls["AZSX_LOG_NATIVE_UI"], "1")
         for slot in (0, 3, True, 1.0):
             with self.subTest(slot=slot), self.assertRaises(ValueError):
-                asx_install_trial.native_coop_controls(slot)
+                azsx_install_trial.native_coop_controls(slot)
 
     def test_shared_wallet_dispatch_requires_two_clients_without_starting_them(self):
         args = background.parse_args(['--reward-wallet-trial'])

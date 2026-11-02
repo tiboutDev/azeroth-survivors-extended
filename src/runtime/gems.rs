@@ -4,13 +4,13 @@ use super::reward_services::Services;
 use super::{io, Runtime};
 #[cfg(feature="test-hooks")]
 use std::sync::atomic::{AtomicBool, Ordering};
-use asx_game::official::{AmuletChoice,RingStatLoan};
-use asx_gameplay::gems::{Gem,Gems};
+use azsx_game::official::{AmuletChoice,RingStatLoan};
+use azsx_gameplay::gems::{Gem,Gems};
 #[derive(Default)]struct State{game:u64,clock:f32,rules:Gems,offers:Vec<(AmuletChoice,Gem)>,rng:u64}
 static STATE:std::sync::Mutex<Option<State>>=std::sync::Mutex::new(None);
 thread_local!{static PENDING:std::cell::RefCell<Vec<(AmuletChoice,Gem)>>=const{std::cell::RefCell::new(Vec::new())};static STATS:std::cell::RefCell<Vec<u64>>=const{std::cell::RefCell::new(Vec::new())};}
 pub fn reset(){if let Ok(mut s)=STATE.lock(){*s=None;}}
-pub fn observe(game:u64,p:Option<&asx_game::official::PartyObservation>){
+pub fn observe(game:u64,p:Option<&azsx_game::official::PartyObservation>){
  let Some(p)=p else{reset();return};
  if let Ok(mut guard)=STATE.lock(){let s=guard.get_or_insert_with(State::default);if s.game!=game||p.clock+0.01<s.clock{*s=State{game,..Default::default()};}s.clock=p.clock;let ids=p.actors.iter().map(|a|(a.slot,a.guid)).collect::<Vec<_>>();s.rules.retain(&ids);s.offers.retain(|(c,_)|ids.contains(&(c.slot,c.guid)));}
 }
@@ -63,19 +63,19 @@ pub fn annotation(content:&str)->Option<(Gem,usize)>{let at=content.find("\n\nGe
 #[cfg(feature="test-hooks")]
 pub fn fixture_tick(r:&Runtime,game:u64){
  if !fixture_enabled(){return}
- let Some(p)=r.extension_party()else{return};if p.actors.is_empty()||p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return}
+ let Some(p)=r.extension_party()else{return};if p.actors.is_empty()||p.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return}
  let io=io::Access{local:&r.local,adapter:r.adapter};
  static MATRIX:AtomicBool=AtomicBool::new(false);
  if p.clock>=3.&&!MATRIX.swap(true,Ordering::Relaxed){
-  let before=r.adapter.ring_input_header(&r.local,game);let _=asx_game::official::SupportCalls::refresh_support(&io,game);let baseline=r.adapter.ring_stat_values(&r.local,game);
-  for gem in Gem::ALL{OVERRIDE.with(|v|v.set(Some(gem)));let _=asx_game::official::SupportCalls::refresh_support(&io,game);let actual=r.adapter.ring_stat_values(&r.local,game);let _=asx_game::official::SupportCalls::refresh_support(&io,game);let repeat=r.adapter.ring_stat_values(&r.local,game);OVERRIDE.with(|v|v.set(None));r.log.info(&format!("gem matrix: kind={} base={baseline:?} actual={actual:?} repeat={repeat:?} restored={}",gem as u8,r.adapter.ring_input_header(&r.local,game)==before));}
-  let _=asx_game::official::SupportCalls::refresh_support(&io,game);
+  let before=r.adapter.ring_input_header(&r.local,game);let _=azsx_game::official::SupportCalls::refresh_support(&io,game);let baseline=r.adapter.ring_stat_values(&r.local,game);
+  for gem in Gem::ALL{OVERRIDE.with(|v|v.set(Some(gem)));let _=azsx_game::official::SupportCalls::refresh_support(&io,game);let actual=r.adapter.ring_stat_values(&r.local,game);let _=azsx_game::official::SupportCalls::refresh_support(&io,game);let repeat=r.adapter.ring_stat_values(&r.local,game);OVERRIDE.with(|v|v.set(None));r.log.info(&format!("gem matrix: kind={} base={baseline:?} actual={actual:?} repeat={repeat:?} restored={}",gem as u8,r.adapter.ring_input_header(&r.local,game)==before));}
+  let _=azsx_game::official::SupportCalls::refresh_support(&io,game);
  }
  static NEXT:std::sync::Mutex<(f32,u32)>=std::sync::Mutex::new((4.,0));
  let due=NEXT.lock().ok().is_some_and(|mut n|{if p.clock<n.0||n.1>=40{return false}n.0=p.clock+0.6;n.1+=1;true});
  if due{type Gold=unsafe extern "system" fn(u64,u32)->usize;type Chest=unsafe extern "system" fn(u64)->bool;let gold:Gold=unsafe{std::mem::transmute(r.local.base+r.adapter.gold_entry().rva as usize)};let chest:Chest=unsafe{std::mem::transmute(r.local.base+r.adapter.chest_entry().rva as usize)};let ok=unsafe{gold(game,1000);chest(game)};r.log.info(&format!("gem fixture native cache: {ok}"));}
  static SAMPLE:std::sync::Mutex<Option<std::time::Instant>>=std::sync::Mutex::new(None);
- if SAMPLE.lock().ok().is_some_and(|mut s|{if s.is_some_and(|t|t.elapsed()<std::time::Duration::from_secs(3)){return false}*s=Some(std::time::Instant::now());true}){let before=r.adapter.ring_input_header(&r.local,game);let _=asx_game::official::SupportCalls::refresh_support(&io,game);let first=r.adapter.ring_stat_values(&r.local,game);let _=asx_game::official::SupportCalls::refresh_support(&io,game);r.log.info(&format!("gem fixture rebuild: stable={} restored={}",first==r.adapter.ring_stat_values(&r.local,game),before==r.adapter.ring_input_header(&r.local,game)));}
+ if SAMPLE.lock().ok().is_some_and(|mut s|{if s.is_some_and(|t|t.elapsed()<std::time::Duration::from_secs(3)){return false}*s=Some(std::time::Instant::now());true}){let before=r.adapter.ring_input_header(&r.local,game);let _=azsx_game::official::SupportCalls::refresh_support(&io,game);let first=r.adapter.ring_stat_values(&r.local,game);let _=azsx_game::official::SupportCalls::refresh_support(&io,game);r.log.info(&format!("gem fixture rebuild: stable={} restored={}",first==r.adapter.ring_stat_values(&r.local,game),before==r.adapter.ring_input_header(&r.local,game)));}
 }
 #[cfg(test)]mod tests{
  use super::*;

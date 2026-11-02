@@ -19,7 +19,7 @@ except ImportError:
 class OfflineComparison(unittest.TestCase):
     def test_inventory_includes_native_menu_paths_without_member_offsets(self):
         root = Path(__file__).resolve().parents[1]
-        rows = comparison.descriptor_inventory(root / "crates/asx-game/src/bindings/official125.rs")
+        rows = comparison.descriptor_inventory(root / "crates/azsx-game/src/bindings/official125.rs")
         for address in (0x5b74c30, 0x5b6c660, 0x8eafa, 0x8eb12, 0x2829765, 0x250192, 0x53ac7c2, 0x53ae60f, 0xa7c22f):
             self.assertIn(address, rows)
         for member_or_opcode in (0x10, 0x160, 0x4e8, 0xa18, 0x11bd, 0x1a78, 0x7a60):

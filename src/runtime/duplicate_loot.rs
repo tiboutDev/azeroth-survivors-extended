@@ -1,8 +1,8 @@
 //! Boss-issued entitlements over the existing reliable native coop stream.
 //! No polling of collections, extra listener, socket, or per-entity boss scan.
 use super::*;
-use asx_game::official::SupportCalls;
-use asx_gameplay::duplicate_loot::{base_gold, Entitlement, Ledger};
+use azsx_game::official::SupportCalls;
+use azsx_gameplay::duplicate_loot::{base_gold, Entitlement, Ledger};
 use serde::{Deserialize, Serialize};
 use std::{
     cell::RefCell,
@@ -364,7 +364,7 @@ unsafe extern "system" fn receive(server: u64, packet: u64, now: f64) -> u64 {
                 s.receipts.push_back(ack);
             }
         }
-        // The next native loot packet immediately follows its ASX offer in the
+        // The next native loot packet immediately follows its AZSX offer in the
         // same reliable stream. Keep correlation scoped around native processing.
         let tag = r.local.read(packet as usize, 8)?;
         if tag == 0x800000000000000cu64.to_le_bytes() {
@@ -733,7 +733,7 @@ unsafe extern "system" fn fixture_dispatch(c:&mut crate::stub::Context){
   Ok(len)=>{c.rax=len;r.log.info(&format!("duplicate loot fixture guest dispatch: peer={} item=101100 len={len}",c.r14));},Err(e)=>warn(r,e)
  }
 }
-pub fn fixture_entry(adapter:Adapter)->Option<asx_game::official::Entry>{
+pub fn fixture_entry(adapter:Adapter)->Option<azsx_game::official::Entry>{
  #[cfg(feature="test-hooks")]
  if std::env::var("AZCOOP_TEST_DUPLICATE_LOOT").as_deref()==Ok("1"){return adapter.loot_fixture_entry()}
  let _=adapter;None

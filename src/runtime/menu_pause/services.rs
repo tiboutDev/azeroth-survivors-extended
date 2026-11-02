@@ -1,6 +1,6 @@
 //! Bounded native and cached observations for menu ownership.
 use super::super::{Runtime, RUNTIME};
-use asx_game::official::{PartyObservation, Role};
+use azsx_game::official::{PartyObservation, Role};
 
 pub(in crate::runtime) trait Services {
     fn key_target(&self) -> Option<usize>;

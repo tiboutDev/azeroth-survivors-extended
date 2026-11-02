@@ -16,26 +16,26 @@ or control the interactive desktop without current authorization.
 The only supported source target is the reviewed official **0.138.0** engine.
 Exact executable hashes and native entry bytes gate activation; version labels
 and approximate signatures do not enable an unknown client. The DLL activates
-only through the explicit official ASX launcher path. Direct native launch stays
+only through the explicit official AZSX launcher path. Direct native launch stays
 inert. The custom simulation, transport, lobby and recovery engine is retired;
 never restore it as a fallback or run it beside official simulation.
 
-- `crates/asx-gameplay/` owns portable rules and contracts, with no native
+- `crates/azsx-gameplay/` owns portable rules and contracts, with no native
   layouts, registers, Windows APIs or transport dependencies.
 - `src/runtime/` coordinates features and lifecycle. Keep imports explicit
   and access bounded rather than exposing the whole runtime.
-- `crates/asx-game/src/official.rs` forwards selected native operations;
+- `crates/azsx-game/src/official.rs` forwards selected native operations;
   `official_native/` and the exact descriptor own schemas, offsets, native calls,
   hook bytes and field/register translations. Shared inherited tables are not
   permission to select retired builds or a claim of completed domain migration.
 - `src/presentation/` and `native-ui/` enrich retained native presentation.
-- `asx/` and `tools/build/asx_*.py` own the current native-folder distribution.
+- `azsx/` and `tools/build/azsx_*.py` own the current native-folder distribution.
   No legacy launcher, helper executable, browser UI or isolated-AppData product
-  is an ASX runtime dependency. `avrt-probe` remains an independent export probe.
+  is an AZSX runtime dependency. `avrt-probe` remains an independent export probe.
 
 Read [CLIENT-ADAPTER.md](docs/compatibility/CLIENT-ADAPTER.md) before native-integration changes
-and [ASX-FEATURES.md](docs/compatibility/ASX-FEATURES.md) before feature or compatibility changes.
-Read [ASX-BEHAVIOR.md](docs/compatibility/ASX-BEHAVIOR.md), the criterion-by-criterion acceptance
+and [AZSX-FEATURES.md](docs/compatibility/AZSX-FEATURES.md) before feature or compatibility changes.
+Read [AZSX-BEHAVIOR.md](docs/compatibility/AZSX-BEHAVIOR.md), the criterion-by-criterion acceptance
 reference. Update affected stable acceptance IDs in the same change as any new
 feature, semantic fix, retirement or integration, together with the feature
 catalog and detailed/player references. Every compatibility review must account
@@ -95,11 +95,12 @@ long common pauses. The native Lua `string.byte` supports one index only; keep
 that restriction in portable stubs. Inspect actual rendered frames for visual
 claims; creation/send logs alone do not prove visibility or tooltip parity.
 
-Use the owned addon read gate: exact file identity and fixed prefix, one changed
-byte in the approved read buffer, on-disk addon inactive. Keep NtReadFile import
-hooking scoped to the game image; preserve all arguments/status/last error.
-Do not scan MPQs, hook OS code globally, alter arbitrary addon reads or restore
-custom-CVar activation. Diagnostic probes remain opt-in and `test-hooks` only.
+Publish the AZSX addon contract through the exact native virtual script reader.
+Use native-owned string allocations and retain the native initialization prefix.
+No installed internal addon or file-read interception is required. AZSXUI remains
+an optional consumer. Never scan MPQs or modify official assets. Prefix native
+host lobby submissions only; native admission and networking remain authoritative.
+Diagnostic probes remain opt-in and `test-hooks` only.
 
 ## Validation and artifact policy
 
@@ -144,8 +145,8 @@ full portable checks do not implicitly perform Windows, game or package trials.
 
 ## Distribution and publication
 
-Read [ASX-INSTALLATION.md](docs/release/ASX-INSTALLATION.md). Current packaging overlays
-`start-asx.cmd`, `README-ASX.txt` and owned `ASX/` files on a supported native
+Read [AZSX-INSTALLATION.md](docs/release/AZSX-INSTALLATION.md). Current packaging overlays
+`start-azsx.cmd`, `README-AZSX.txt` and owned `AZSX/` files on a supported native
 folder. Use native saves/settings; never redirect AppData or restore legacy
 Coop/UserData installation logic. Never ship native EXEs/MPQs or touch official
 assets. Detect loader collisions before deployment.
@@ -160,7 +161,7 @@ explicit complete-archive operation.
 
 Validate the exact signed archive at a release milestone. Source-publication
 hygiene and reproducibility remain required safeguards. Reproducibility requires
-an approved current ASX artifact reference, not old Coop hashes or a fabricated
+an approved current AZSX artifact reference, not old Coop hashes or a fabricated
 baseline. A passing Markdown audit does not sanitize source, reports or Git
 history. No source push/publication follows implicitly from cleanup or preparation.
 
@@ -168,13 +169,13 @@ Project documentation describes current source and supported workflows.
 Historical checkpoints remain in Git history and private evidence backups;
 they do not supersede these instructions or authorize retired workflows.
 
-Final release preparation must use `tools/build/asx_release_layout.py`: keep only
+Final release preparation must use `tools/build/azsx_release_layout.py`: keep only
 UPLOAD/ and the compact README, release notes and publication guide in the
 publication folder. Preserve reports, hashes, references, source metadata and
 verification receipts under ignored `.local/releases/<version>/` in this project.
 Use the publication verifier's explicit evidence directory after finalization.
 
-Current installed layout: ASX/App for payload, ASX/Config for preferences, ASX/Data
-for mutable state and evidence. Compatible signed ASX updates install automatically
+Current installed layout: AZSX/App for payload, AZSX/Config for preferences, AZSX/Data
+for mutable state and evidence. Compatible signed AZSX updates install automatically
 without confirmation; preserve ownership, compatibility, anti-loop and transaction
 gates. The published .2 archive must remain untouched during layout development.

@@ -1,16 +1,16 @@
-local asxNativeActive = 0 -- ASX_LOCAL_UI_GATE
-if asxNativeActive~=1 then return end
+local azsxNativeActive = 0 -- AZSX_LOCAL_UI_GATE
+if azsxNativeActive~=1 then return end
 -- Enrich existing official frames; native frame state and scripts remain owned by the game.
 -- WoW 1.12-compatible Lua. Native aura templates; no gameplay writes.
 local rows, built, hovered = {}, 0, nil
 local interval, last = 0.25, -1
 local function setShown(widget,wanted)
-    if widget.asxShown==wanted then return end
-    widget.asxShown=wanted
+    if widget.azsxShown==wanted then return end
+    widget.azsxShown=wanted
     if wanted then widget:Show()else widget:Hide()end
 end
 local limit = 16
-local observer = CreateFrame("Frame", "ASXOfficialPartyPresentation", UIParent)
+local observer = CreateFrame("Frame", "AZSXOfficialPartyPresentation", UIParent)
 local function leave(button)
     if hovered == button then GameTooltip:Hide(); hovered = nil end
 end
@@ -195,7 +195,7 @@ local function decode(wire)
     return result
 end
 local function refreshModel()
-    local wire=AZS_RUN and AZS_RUN.asx
+    local wire=AZS_RUN and AZS_RUN.azsx
     local updated=AZS_RUN_UPDATED
     if type(wire)~="string" or type(updated)~="number" or GetTime()-updated>4 then model=nil;modelWire=nil;return end
     if wire~=modelWire then
@@ -222,6 +222,22 @@ local function memberFor(index, name)
     local member=remote[index]
     if member and member.name==name and names[name]==1 then return member end
 end
+local function addItemEffects(body)
+    local text=body.."\n";local start=1
+    while start<=string.len(text)do
+        local stop=string.find(text,"\n",start,true);if not stop then break end
+        local line=string.sub(text,start,stop-1);start=stop+1
+        if line=="" or string.find(line,"^Enchantment:") or string.find(line,"^Active enchantment:") then
+            GameTooltip:AddLine(line,1,1,1,true)
+        else
+            local effects=line..", ";local from=1
+            while from<=string.len(effects)do
+                local last=string.find(effects,", ",from,true);if not last then break end
+                GameTooltip:AddLine(string.sub(effects,from,last-1),1,1,1,true);from=last+2
+            end
+        end
+    end
+end
 local function buildEnter()
     local button=this
     local member=memberFor(button.index,UnitName(button.unit))
@@ -236,14 +252,14 @@ local function buildEnter()
         if icon.text~=""then GameTooltip:AddLine(icon.text,1,210/255,0,true)end
     else
         GameTooltip:AddDoubleLine(icon.name,"Rank "..icon.rank,1,0.82,0,1,0.82,0)
-        if icon.text~="" then GameTooltip:AddLine(icon.text,1,1,1,true)end
+        if icon.text~="" then addItemEffects(icon.text)end
     end
     GameTooltip:Show();hovered=button
 end
 local function buildButtons(index,parent,kind,y)
     local buttons={}
     for n=1,16 do
-        local name="ASXOfficialParty"..index..kind..n
+        local name="AZSXOfficialParty"..index..kind..n
         local button=CreateFrame("Button",name,parent,"PartyBuffButtonTemplate")
         button:SetWidth(15);button:SetHeight(15)
         button:SetPoint("TOPLEFT",parent,"TOPRIGHT",4+(n-1)*17,y)
@@ -253,7 +269,7 @@ local function buildButtons(index,parent,kind,y)
         button:SetScript("OnEnter",buildEnter)
         button:SetScript("OnLeave",function()leave(this)end)
         button:SetScript("OnHide",function()leave(this)end)
-        button:Hide();button.asxShown=false;buttons[n]=button
+        button:Hide();button.azsxShown=false;buttons[n]=button
     end
     return buttons
 end
@@ -281,7 +297,7 @@ local function construct(index, parent)
     row.items=buildButtons(index,parent,"Item",-18)
     -- Native debuffs and parent layout remain untouched.
     for n = 1, limit do
-        local name = "ASXOfficialParty" .. index .. "Buff" .. n
+        local name = "AZSXOfficialParty" .. index .. "Buff" .. n
         local button = CreateFrame("Button", name, parent, "PartyBuffButtonTemplate")
         button:SetID(n)
         button:SetWidth(15); button:SetHeight(15)
@@ -293,19 +309,19 @@ local function construct(index, parent)
         button:SetScript("OnEnter", enter)
         button:SetScript("OnLeave", function() leave(this) end)
         button:SetScript("OnHide", function() leave(this) end)
-        button:Hide();button.asxShown=false
+        button:Hide();button.azsxShown=false
         row.buttons[n] = button
     end
     row.overflow = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     row.overflow:SetPoint("LEFT", row.buttons[limit], "RIGHT", 2, 0)
-    row.overflow:Hide();row.overflow.asxShown=false
+    row.overflow:Hide();row.overflow.azsxShown=false
     built = built + 1
     rows[index] = row
     return row
 end
 -- The server projects spell 15007 into the real harmful-aura channel.
 -- Keep native buttons, UnitDebuff/GetPlayerBuff, layout and stack rendering.
--- Only replace ASX's description and freeze its native duration at host time.
+-- Only replace AZSX's description and freeze its native duration at host time.
 local fatigueTexture="interface\\icons\\spell_shadow_deathscream"
 local function isFatigueTexture(texture)
     if type(texture)~="string" then return false end
@@ -359,7 +375,7 @@ if GameTooltip and GameTooltip.SetUnitDebuff and UnitDebuff then
         if data and isFatigueTexture(UnitDebuff(unit,index,filter))then fatigueDescription(tooltip,data)end
     end
 end
--- Native positive aura with an ASX description, plus one retained reward toast.
+-- Native positive aura with an AZSX description, plus one retained reward toast.
 local blessingLabels={"Luck","Experience","Gold","Pickup Radius","Movement Speed"}
 local blessingNames={"Luck","Wisdom","Wealth","Discovery","Swiftness"}
 local blessingIcon="Interface\\Icons\\INV_Misc_Orb_02"
@@ -527,11 +543,11 @@ if GameTooltip and GameTooltip.SetPlayerBuff then
         end
     end
 end
-function ASXSupplyReadout()
+function AZSXSupplyReadout()
     local own=supplyOwner();local result={}
     if own then for _,buff in pairs(own.consumables)do table.insert(result,{family=buff.family,tier=buff.tier,remaining=buff.remaining,index=buff.index,raw=nativeSupplyTexture and nativeSupplyTexture(buff.index),visible=supplyBuff(buff.index)~=nil})end end
     local shown,event=false,nil
-    if ASXUI_SupplyVisualReadout then shown,event=ASXUI_SupplyVisualReadout()end
+    if AZSXUI_SupplyVisualReadout then shown,event=AZSXUI_SupplyVisualReadout()end
     return result,shown,event
 end
 -- Native buttons cache their texture on PLAYER_AURAS_CHANGED. Cosmetic
@@ -554,9 +570,9 @@ local function refreshSupplyBuffButtons()
     end
     this=saved
 end
--- Read-only presentation bridge. ASXUI owns all minimap widgets.
--- No cache coordinates are copied here: ASXUI reads native AZS_CHESTS directly.
-function ASX_GetMinimapData()
+-- Read-only presentation bridge. AZSXUI owns all minimap widgets.
+-- No cache coordinates are copied here: AZSXUI reads native AZS_CHESTS directly.
+function AZSX_GetMinimapData()
     refreshModel()
     local phase=AZS_GetPhase and AZS_GetPhase()
     if phase~="playing" and phase~="paused" and phase~="choosing" then return nil end
@@ -601,7 +617,7 @@ local function refresh()
         end
     end
 end
--- Model/buff work stays at 4 Hz. ASXUI owns minimap geometry;
+-- Model/buff work stays at 4 Hz. AZSXUI owns minimap geometry;
 -- hover handlers still validate live owner/connection/buff identity immediately.
 observer:SetScript("OnUpdate", function()
     local now = GetTime()
@@ -610,8 +626,8 @@ observer:SetScript("OnUpdate", function()
     refresh()
     end
 end)
--- ASX owns all semantic strings, reward values, colors and authoritative progress.
-function ASX_GetEventPresentation()
+-- AZSX owns all semantic strings, reward values, colors and authoritative progress.
+function AZSX_GetEventPresentation()
     refreshModel()
     local phase=AZS_GetPhase and AZS_GetPhase()
     if phase~="playing"and phase~="choosing"and phase~="paused"and phase~="dead"then return nil end
@@ -626,10 +642,10 @@ function ASX_GetEventPresentation()
     if ritual then view.owner.ritual={event=ritual.event,held=ritual.held,inside=ritual.inside,allInside=ritual.allInside,maximum=2000,title="Sayge's Trial",note=(ritual.allInside==false and "Waiting for all players - "or "")..math.floor(ritual.held/100).." / 20 sec"}end
     return view
 end
--- Public ASX addon API v1. Snapshots are detached; callbacks carry no shared tables.
+-- Public AZSX addon API v1. Snapshots are detached; callbacks carry no shared tables.
 local apiRevision,apiSignature,apiCache,apiInput=0,nil,nil,nil
 local apiHandlers,apiNextToken,apiNotified,apiDispatching={},0,0,false
-local eventPresentation=ASX_GetEventPresentation
+local eventPresentation=AZSX_GetEventPresentation
 local function apiCopy(value)
     if type(value)~="table"then return value end
     local result={};for key,item in pairs(value)do result[key]=apiCopy(item)end;return result
@@ -711,19 +727,19 @@ local function apiState()
     state.updatedAt=own and modelTime or nil
     apiCache=state;apiInput=input;return state
 end
-function ASX_GetAPIVersion()return 1,9 end
-function ASX_GetState(major)
+function AZSX_GetAPIVersion()return 1,9 end
+function AZSX_GetState(major)
     if major~=nil and major~=1 then return nil,"unsupported_version"end
     return apiCopy(apiState())
 end
-function ASX_RegisterStateHandler(callback)
+function AZSX_RegisterStateHandler(callback)
     if type(callback)~="function"then return nil,"invalid_callback"end
     local count=0
     for _,existing in pairs(apiHandlers)do if existing==callback then return true end;count=count+1 end
     if count>=64 then return nil,"subscriber_limit"end
     apiNextToken=apiNextToken+1;apiHandlers[apiNextToken]=callback;return true
 end
-function ASX_UnregisterStateHandler(callback)
+function AZSX_UnregisterStateHandler(callback)
     for token,existing in pairs(apiHandlers)do if existing==callback then apiHandlers[token]=nil;return true end end
     return false
 end
@@ -732,7 +748,7 @@ local function apiNotify()
     if apiDispatching then return end
     local state=apiState()
     if state.revision~=apiPublishedRevision or state.updatedAt~=apiPublishedReceived then
-        ASX_STATE=apiCopy(state);ASX_STATE_UPDATED=GetTime()
+        AZSX_STATE=apiCopy(state);AZSX_STATE_UPDATED=GetTime()
         apiPublishedRevision=state.revision;apiPublishedReceived=state.updatedAt
     end
     if state.revision==apiNotified then return end
@@ -746,20 +762,20 @@ end
 local originalUpdate=observer:GetScript("OnUpdate")
 observer:SetScript("OnUpdate",function()originalUpdate();apiNotify()end)
 -- Private pre-v1 adapters remain compatible, but no longer return model aliases.
-function ASX_GetEventPresentation()return apiCopy(eventPresentation())end
-local oldMinimapData=ASX_GetMinimapData
-function ASX_GetMinimapData()local map,pins=oldMinimapData();return apiCopy(map),apiCopy(pins)end
+function AZSX_GetEventPresentation()return apiCopy(eventPresentation())end
+local oldMinimapData=AZSX_GetMinimapData
+function AZSX_GetMinimapData()local map,pins=oldMinimapData();return apiCopy(map),apiCopy(pins)end
 -- Read-only validation surface; never used as a simulation or membership authority.
-function ASXOfficialPartyReadout()
+function AZSXOfficialPartyReadout()
     local result = {}
     for index, row in pairs(rows) do
         result[index] = {owner=row.owner, buffs=row.count, parent=row.parent:GetName(), attached=row.buttons[1]:GetParent()==row.parent, member=row.member, spells=row.spells, items=row.items}
     end
-    return result, built, model and model.own, asxNativeActive, blessingFor("player")
+    return result, built, model and model.own, azsxNativeActive, blessingFor("player")
 end
 
 -- Informational aura: no native buff slot, cancellation or gameplay mutation.
--- Exists without ASXUI. Other consumers can render the detached API record.
+-- Exists without AZSXUI. Other consumers can render the detached API record.
 local cooperativeButton,cooperativeDock,cooperativeAnchor
 local function cooperativeRestore()
     local e=cooperativeAnchor
@@ -783,7 +799,7 @@ local function cooperativeRefresh()
         return nil
     end
     if not cooperativeButton then
-        local b=CreateFrame("Button","ASXCooperativeRulesBuff",UIParent);cooperativeButton=b
+        local b=CreateFrame("Button","AZSXCooperativeRulesBuff",UIParent);cooperativeButton=b
         b:SetWidth(32);b:SetHeight(32)
         b.icon=b:CreateTexture(nil,"ARTWORK");b.icon:SetAllPoints(b);b.icon:SetTexture(text.icon)
         b:SetScript("OnEnter",function()
@@ -828,7 +844,7 @@ local function cooperativeRefresh()
     setShown(cooperativeButton,true);return cooperativeButton
 end
 -- A single explicit owner borrows placement; release restores native fallback.
-function ASX_SetCooperativeRulesDocked(owner,docked)
+function AZSX_SetCooperativeRulesDocked(owner,docked)
     if type(owner)~="string"or owner==""then return nil end
     if docked then
         if cooperativeDock and cooperativeDock~=owner then return nil end

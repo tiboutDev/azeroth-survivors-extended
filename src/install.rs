@@ -78,7 +78,7 @@ pub fn install(specs:&[HookSpec])->Result<(),String>{
 }
 /// Disable every owned batch. Native entries and ownership guards retire together.
 pub fn uninstall(){
- crate::runtime::restore_addon_activation();
+
  if !INSTALLED.swap(false,Relaxed){return}
  let targets=std::mem::take(&mut *TARGETS.lock().unwrap_or_else(|e|e.into_inner()));
  PATCHES.lock().unwrap_or_else(|e|e.into_inner()).clear();

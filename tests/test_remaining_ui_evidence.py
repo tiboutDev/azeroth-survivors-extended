@@ -3,7 +3,7 @@ from tools.dev.remaining_ui_evidence import assess,hot_text_observed
 class RemainingUiTests(unittest.TestCase):
  def fixture(self):
   host='remaining UI native NPCs: Ok([("elite", 1), ("guardian", 2), ("boss", 3)])\n'+'\n'.join(f'remaining UI self HoT: caster={s} spell={139 if s==0 else 774} result=Ok(true)'for s in(0,1))
-  view='\n'.join(f'ASX plate witness: guid={g} rank=Some(1) name=Some("Native NPC") retained=true'for g in(1,2,3))
+  view='\n'.join(f'AZSX plate witness: guid={g} rank=Some(1) name=Some("Native NPC") retained=true'for g in(1,2,3))
   heal='native heal text: periodic=true event=HealText { caster: 9, target: 9, amount: 12, critical: false } result=Ok(true)'
   return host,[view,view],[view+'\n'+heal,view+'\n'+heal]
  def test_actual_matched_roles_and_periodic_writes(self):self.assertTrue(assess(*self.fixture())['passed'])

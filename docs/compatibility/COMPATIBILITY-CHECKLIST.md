@@ -1,6 +1,6 @@
 # Native compatibility checklist
 
-Ordered maintainer procedure. Use it with the [behavior acceptance catalog](ASX-BEHAVIOR.md),
+Ordered maintainer procedure. Use it with the [behavior acceptance catalog](AZSX-BEHAVIOR.md),
 [workflow](COMPATIBILITY-WORKFLOW.md), [adapter contract](CLIENT-ADAPTER.md) and
 [test guide](../development/TESTING.md). This checklist does not authorize commits, deployment or
 publication. A completed patch does not automatically complete a release.
@@ -34,7 +34,7 @@ git diff --binary > "$EVIDENCE/source-before.patch"
 
 ```sh
 sha256sum "$OLD_EXE" "$NEW_EXE" > "$EVIDENCE/native-images.sha256"
-python3 tools/dev/asx_dev.py inventory > "$EVIDENCE/contracts-before.json"
+python3 tools/dev/azsx_dev.py inventory > "$EVIDENCE/contracts-before.json"
 python3 tools/dev/compare_official.py --old "$OLD_EXE" --new "$NEW_EXE" \
   --descriptor "$OLD_DESCRIPTOR" --out "$EVIDENCE/comparison.json"
 ```
@@ -55,11 +55,11 @@ sites and hook ownership. Similar instructions are only candidate matches.
 ## 3. Map all expected behaviors and update the selected adapter
 
 ```sh
-python3 tools/dev/asx_dev.py impact --comparison "$EVIDENCE/comparison.json" > "$EVIDENCE/impact.json"
-python3 tools/dev/asx_dev.py plan compatibility > "$EVIDENCE/plan.json"
+python3 tools/dev/azsx_dev.py impact --comparison "$EVIDENCE/comparison.json" > "$EVIDENCE/impact.json"
+python3 tools/dev/azsx_dev.py plan compatibility > "$EVIDENCE/plan.json"
 ```
 
-Review **every** ASX-01 through ASX-29 section in [ASX-BEHAVIOR.md](ASX-BEHAVIOR.md).
+Review **every** AZSX-01 through AZSX-29 section in [AZSX-BEHAVIOR.md](AZSX-BEHAVIOR.md).
 Create its per-patch evidence table: criterion IDs, trigger/expected outcome,
 PASS/FAIL/NOT RUN/BLOCKED/NOT APPLICABLE, proof and remaining limits. Review both
 roles, spending/granting, alive/dead actors and session resets. Revisit its recurring
@@ -72,7 +72,7 @@ disabled behavior. Do not refresh native balance references without a request.
 ```sh
 python3 tools/dev/binding_registry.py --write
 python3 tools/dev/feature_catalog.py --write-doc
-python3 tools/dev/asx_dev.py check
+python3 tools/dev/azsx_dev.py check
 ```
 
 - **Expected:** generated bindings/catalog agree with reviewed source; all behavior
@@ -107,7 +107,7 @@ profiles rather than assuming `full` includes Lua execution or live checks.
 ```sh
 python3 tools/dev/import_official.py --source "$NATIVE_SOURCE" --receiver "$RECEIVER"
 sh tools/dev/build-chest-fixture.sh
-python3 tools/dev/asx_dev.py stage --receiver "$RECEIVER" \
+python3 tools/dev/azsx_dev.py stage --receiver "$RECEIVER" \
   --dll target/test-hooks/x86_64-pc-windows-msvc/release/avrt.dll
 ```
 
@@ -116,7 +116,7 @@ receiver blindly. Import requires the newly reviewed selected registry. With
 **Windows Python, from the staged receiver**:
 
 ```text
-python -I -B tools/dev/asx_dev.py preflight
+python -I -B tools/dev/azsx_dev.py preflight
 ```
 
 - **Expected:** exact private import, diagnostic artifact receipt and execution
@@ -132,8 +132,8 @@ bounded suites from the plan according to the acceptance matrix; do not run ever
 suite automatically. Example event sequence, **Windows receiver**:
 
 ```text
-python -I -B tools/dev/asx_dev.py validate solo-events
-python -I -B tools/dev/asx_dev.py validate coop-events
+python -I -B tools/dev/azsx_dev.py validate solo-events
+python -I -B tools/dev/azsx_dev.py validate coop-events
 ```
 
 Use core/support/pause/progression or focused UI suites where the review requires
@@ -151,8 +151,8 @@ Screenshots and visual claims require separately authorized visual observation.
 ## 7. Validate the normal artifact separately
 
 ```sh
-python3 tools/build/asx_release_binary.py --target-dir "$NORMAL_TARGET" --receipt "$NORMAL_RECEIPT"
-python3 tools/dev/asx_dev.py stage --receiver "$RECEIVER" \
+python3 tools/build/azsx_release_binary.py --target-dir "$NORMAL_TARGET" --receipt "$NORMAL_RECEIPT"
+python3 tools/dev/azsx_dev.py stage --receiver "$RECEIVER" \
   --dll "$NORMAL_TARGET/x86_64-pc-windows-msvc/release/avrt.dll"
 ```
 
@@ -161,9 +161,9 @@ port, [release checklist step 3](../release/RELEASE-CHECKLIST.md#3-produce-the-n
 can supply this artifact instead of building it twice. **Windows receiver**:
 
 ```text
-python -I -B tools/dev/asx_dev.py preflight
-python -I -B tools/dev/asx_dev.py validate solo-normal
-python -I -B tools/dev/asx_dev.py validate coop-normal
+python -I -B tools/dev/azsx_dev.py preflight
+python -I -B tools/dev/azsx_dev.py validate solo-normal
+python -I -B tools/dev/azsx_dev.py validate coop-normal
 ```
 
 - **Expected:** normal artifact has no diagnostic hooks; solo and coop pass on its
@@ -175,7 +175,7 @@ python -I -B tools/dev/asx_dev.py validate coop-normal
 ## 8. Close the compatibility review
 
 ```sh
-python3 tools/dev/asx_dev.py check
+python3 tools/dev/azsx_dev.py check
 git diff --check
 git status --short --branch
 ```

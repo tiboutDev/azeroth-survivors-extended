@@ -2,8 +2,8 @@
 //! portable supply/ritual rules own claims, duration and progression.
 use super::super::event_services::Services;
 use super::super::RUNTIME;
-use asx_game::official::{EventObject, PartyObservation, RitualScene};
-use asx_gameplay::{
+use azsx_game::official::{EventObject, PartyObservation, RitualScene};
+use azsx_gameplay::{
     Phase,
     blessings::Blessing,
     rituals::{Outcome, Ritual},
@@ -185,7 +185,7 @@ pub fn view(game: u64, owner: u64) -> Option<(u32, u32, bool)> {
 fn inside(point: [f32; 3], position: [f32; 3], hp: f32, phase: Phase) -> bool {
     hp > 0.
         && phase == Phase::Playing
-        && (position[0] - point[0]).hypot(position[1] - point[1]) <= asx_gameplay::rituals::RADIUS
+        && (position[0] - point[0]).hypot(position[1] - point[1]) <= azsx_gameplay::rituals::RADIUS
 }
 pub fn occupied(game: u64) -> Vec<([f32; 3], f32)> {
     STATE
@@ -257,7 +257,7 @@ pub fn finish(r: &dyn Services, game: u64) {
     }
     if let Err(e) = tick(r, game) {
         r.events_warn(&format!(
-            "Cooperative events stopped: {e}; core ASX remains active."
+            "Cooperative events stopped: {e}; core AZSX remains active."
         ));
         let old = STATE.lock().ok().and_then(|mut guard| {
             let s = guard.as_mut()?;
@@ -410,10 +410,10 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
             let stage = s.ritual.take().ok_or("Missing completed ritual")?.encounter;
             completed_scene = s.scene.take();
             for id in &ids {
-                let category = asx_gameplay::blessings::roll_category(ids.len(), |n| s.draw(n));
+                let category = azsx_gameplay::blessings::roll_category(ids.len(), |n| s.draw(n));
                 let power = s.draw(100000);
                 let person = s.people.get_mut(id).ok_or("Missing ritual recipient")?;
-                let next = asx_gameplay::rituals::roll(stage, person.fortune, category, power);
+                let next = azsx_gameplay::rituals::roll(stage, person.fortune, category, power);
                 person.fortune = Some(next);
                 rewards.push((*id, next.1));
             }
@@ -636,7 +636,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
 }
 
 fn fixture_enabled() -> bool {
-    cfg!(feature = "test-hooks") && std::env::var("ASX_TEST_COOP_EVENTS").as_deref() == Ok("1")
+    cfg!(feature = "test-hooks") && std::env::var("AZSX_TEST_COOP_EVENTS").as_deref() == Ok("1")
 }
 #[cfg(feature = "test-hooks")]
 fn fixture(r: &dyn Services, game: u64, p: &PartyObservation) -> Result<(), String> {
@@ -700,7 +700,7 @@ fn fixture(r: &dyn Services, game: u64, p: &PartyObservation) -> Result<(), Stri
             _ => {}
         }
     }
-    let exit=if std::env::var("ASX_TEST_COOP_CIRCLE_EXIT").as_deref()==Ok("1"){
+    let exit=if std::env::var("AZSX_TEST_COOP_CIRCLE_EXIT").as_deref()==Ok("1"){
      let mut state=STATE.lock().map_err(|_|"Exit fixture state")?;let s=state.as_mut().ok_or("Exit fixture missing")?;
      if s.exit_test.is_none()&&s.ritual.as_ref().is_some_and(|v|v.held>=5.){let held=s.ritual.as_ref().unwrap().held;s.exit_test=Some((p.clock,held));r.events_info(&format!("coop circle exit begin: clock={} held={held}",p.clock));}
      s.exit_test.map(|(at,held)|{let outside=p.clock-at<5.;if outside{if let Some(v)=&s.ritual{if v.held>held+0.05{r.events_warn(&format!("coop circle exit advanced unexpectedly: before={held} now={}",v.held));}}}outside}).unwrap_or(false)
@@ -713,7 +713,7 @@ fn fixture(r: &dyn Services, game: u64, p: &PartyObservation) -> Result<(), Stri
             s.reserves.first().map(|v| {
                 (
                     v.rules.position,
-                    if observed{v.rules.event==1&&!s.people.values().any(|person|person.discovery.is_some_and(|d|d.event==1))}else{p.clock - (v.rules.expires - asx_gameplay::supplies::SUPPLY_SECONDS) < 8. && v.rules.event == 1},
+                    if observed{v.rules.event==1&&!s.people.values().any(|person|person.discovery.is_some_and(|d|d.event==1))}else{p.clock - (v.rules.expires - azsx_gameplay::supplies::SUPPLY_SECONDS) < 8. && v.rules.event == 1},
                 )
             })
         }
@@ -767,7 +767,7 @@ fn fixture(r: &dyn Services, game: u64, p: &PartyObservation) -> Result<(), Stri
 
 fn visual_fixture() -> bool {
     cfg!(feature = "test-hooks")
-        && std::env::var("ASX_TEST_COOP_EVENTS_VISUAL").as_deref() == Ok("1")
+        && std::env::var("AZSX_TEST_COOP_EVENTS_VISUAL").as_deref() == Ok("1")
 }
 
 #[cfg(test)]
@@ -807,4 +807,4 @@ pub(in crate::runtime) fn observed_rewards_complete(game:u64)->bool{
  STATE.lock().ok().is_some_and(|guard|guard.as_ref().filter(|s|s.game==game).is_some_and(|s|s.sequence>=2&&s.reserves.is_empty()&&s.scene.is_none()&&s.ritual.is_none()&&s.people.len()==2&&s.people.values().all(|p|p.fortune.is_some()&&p.discovery.is_some_and(|d|d.event==2))))
 }
 
-fn catalog_fixture()->bool{cfg!(feature="test-hooks")&&std::env::var("ASX_TEST_EVENT_CATALOG_REVIEW").as_deref()==Ok("1")}
+fn catalog_fixture()->bool{cfg!(feature="test-hooks")&&std::env::var("AZSX_TEST_EVENT_CATALOG_REVIEW").as_deref()==Ok("1")}

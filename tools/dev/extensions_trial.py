@@ -45,21 +45,21 @@ def consumable_stat_evidence(text):
 
 
 def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,immunity=False,gems=False,goblins=False,supplies=False,ritual=False):
- all_events=os.environ.get("ASX_TEST_ALL_EVENTS")=="1"
- diagnostic_probe=os.environ.get("ASX_TEST_DIAGNOSTIC_PROBE")=="1"
- scenario=os.environ.get("ASX_TEST_SCENARIO")
+ all_events=os.environ.get("AZSX_TEST_ALL_EVENTS")=="1"
+ diagnostic_probe=os.environ.get("AZSX_TEST_DIAGNOSTIC_PROBE")=="1"
+ scenario=os.environ.get("AZSX_TEST_SCENARIO")
  readiness=None
  if scenario:
   from scenario_suites import load_suites,Readiness
   spec=load_suites()["suites"][scenario]
   if spec["players"]!=players or(spec["kind"]=="normal")!=normal:raise ValueError("Scenario/artifact mode mismatch")
   readiness=Readiness(spec)
- if diagnostic_probe and(normal or os.environ.get("ASX_TEST_LUA_DIAGNOSTICS")!="1"):raise ValueError("Diagnostic probe requires opt-in diagnostic Lua")
+ if diagnostic_probe and(normal or os.environ.get("AZSX_TEST_LUA_DIAGNOSTICS")!="1"):raise ValueError("Diagnostic probe requires opt-in diagnostic Lua")
  if all_events:
   if normal or any((enchantments,reward_wallet,immunity,gems)):raise ValueError("Combined events require the diagnostic default mode")
   goblins=True
   if players==1:supplies=ritual=True
-  else:os.environ["ASX_TEST_COOP_EVENTS"]="1"
+  else:os.environ["AZSX_TEST_COOP_EVENTS"]="1"
  if not all_events and sum(map(bool,(normal,enchantments,reward_wallet,immunity,gems,goblins,supplies,ritual)))>1:raise ValueError("Choose one extension trial mode")
  if ritual and players!=1:raise ValueError("Ritual prototype is solo only")
  if supplies and players!=1:raise ValueError("Supplies prototype is solo only")
@@ -67,37 +67,37 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
  if reward_wallet and players!=2:raise ValueError("Shared wallet validation requires two participants")
  if normal and players not in (1,2):raise ValueError("Normal smoke has one or two clients")
  if players not in (1,2):raise ValueError("One solo client or two cooperative clients only")
- coop_events=os.environ.get("ASX_TEST_COOP_EVENTS")=="1"
+ coop_events=os.environ.get("AZSX_TEST_COOP_EVENTS")=="1"
  if coop_events and (players!=2 or normal):raise ValueError("Cooperative event fixture requires two diagnostic clients")
- visual=os.environ.get("ASX_TEST_VISUAL")=="1"
- polish=supplies and os.environ.get("ASX_TEST_EVENT_POLISH")=="1"
- persistence=ritual and os.environ.get("ASX_TEST_RITUAL_PERSISTENCE")=="1"
- ritual_ui=ritual and os.environ.get("ASX_TEST_RITUAL_UI")=="1"
- version=os.environ.get("ASX_TEST_GAME_VERSION",VERSION)
+ visual=os.environ.get("AZSX_TEST_VISUAL")=="1"
+ polish=supplies and os.environ.get("AZSX_TEST_EVENT_POLISH")=="1"
+ persistence=ritual and os.environ.get("AZSX_TEST_RITUAL_PERSISTENCE")=="1"
+ ritual_ui=ritual and os.environ.get("AZSX_TEST_RITUAL_UI")=="1"
+ version=os.environ.get("AZSX_TEST_GAME_VERSION",VERSION)
  if version != VERSION:raise ValueError("Only the selected reviewed extension runtime is supported")
 
  runtime=ROOT/("runtime-official-"+version.replace(".",""));exe=runtime/"AzerothSurvivors.exe";dll=runtime/"avrt.dll"
- sha=json.loads((ROOT/"asx/supported-games.json").read_text())["games"][version]["sha256"]
- proof=json.loads((runtime/"ASX-DEV.json").read_text())
+ sha=json.loads((ROOT/"azsx/supported-games.json").read_text())["games"][version]["sha256"]
+ proof=json.loads((runtime/"AZSX-DEV.json").read_text())
  if digest(exe)!=sha or digest(dll)!=proof["dll_sha256"]:raise ValueError("Reviewed isolated runtime required")
  if normal and b"AZCOOP_TEST_"in dll.read_bytes()or not normal and b"AZCOOP_TEST_EXTENSIONS"not in dll.read_bytes():raise ValueError("Wrong normal/diagnostic binary")
- completion=os.environ.get("ASX_TEST_COMPLETION121","")
+ completion=os.environ.get("AZSX_TEST_COMPLETION121","")
  if completion not in ("","support","fatigue","fatigue-self","tooltip","pause"):raise ValueError("Unknown completion mode")
- support_only=completion=="support" and os.environ.get("ASX_TEST_SUPPORT_ONLY")=="1"
- shield_only=completion in("support","pause") and os.environ.get("ASX_TEST_SUPPORT_SHIELD_ONLY")=="1"
+ support_only=completion=="support" and os.environ.get("AZSX_TEST_SUPPORT_ONLY")=="1"
+ shield_only=completion in("support","pause") and os.environ.get("AZSX_TEST_SUPPORT_SHIELD_ONLY")=="1"
  if completion and normal:raise ValueError("Completion requires a diagnostic binary")
  focused_mode=any((normal,enchantments,reward_wallet,immunity,gems,goblins,supplies,ritual))
  if completion and focused_mode:raise ValueError("Completion scenarios cannot be combined with focused extension modes")
- owner_tips=normal and players==2 and os.environ.get("ASX_TEST_OWNER_TIPS121")=="1"
+ owner_tips=normal and players==2 and os.environ.get("AZSX_TEST_OWNER_TIPS121")=="1"
  mixed_profiles=completion in ("support","fatigue","fatigue-self") or owner_tips or shield_only
  compat121=compatibility_scope(diagnostic_probe=diagnostic_probe,normal=normal,enchantments=enchantments,reward_wallet=reward_wallet,
                               immunity=immunity,gems=gems,
                               completion=completion,goblins=goblins,supplies=supplies,ritual=ritual)
  if coop_events:compat121=False
  prepare=writer(exe);out=ROOT/"test-results"/(("gems-"+str(players)+"-"if gems else"enchantments-"+str(players)+"-"if enchantments else"extensions-normal-"if normal else"extensions-"+str(players)+"-")+uuid.uuid4().hex[:8]);out.mkdir()
- clean={k:v for k,v in os.environ.items()if not k.upper().startswith(("ASX_","AZCOOP_","COOP_","WOW_","BENILLA_"))}
+ clean={k:v for k,v in os.environ.items()if not k.upper().startswith(("AZSX_","AZCOOP_","COOP_","WOW_","BENILLA_"))}
  with socket.socket()as p:p.bind(("127.0.0.1",0));port=p.getsockname()[1]
- private_focus=os.environ.get("ASX_TEST_PRIVATE_FOCUS")=="1"
+ private_focus=os.environ.get("AZSX_TEST_PRIVATE_FOCUS")=="1"
  if private_focus and completion!="pause":raise ValueError("Private focus is scoped to pause regression trials")
  focus_samples=[];last_focus=0.
  children=[];handles=[];password=uuid.uuid4().hex;goblin_mark_baselines=[]
@@ -106,70 +106,67 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
    folder=out/f"player-{slot}";save=folder/"appdata/wenilla-rogue";save.mkdir(parents=True);prepare(save,2 if mixed_profiles and slot==1 else 1,name_override="ExtensionHero"if slot==1 else"ExtensionAlly",class_override=(11 if slot==2 else None) if mixed_profiles else 3 if immunity else None)
    if goblins:goblin_mark_baselines.append(sum(int(v)for v in re.findall(r"^marks\|\d+\|(\d+)$",prepare.read(save),re.M)))
    (folder/"localappdata").mkdir();(folder/"shots").mkdir();(folder/"config.toml").write_text('[cvars]\ngxWindow = "1"\ngxResolution = "800x600"\n'+''.join(f'{k} = "0"\n'for k in("MasterVolume","MusicVolume","SoundVolume","AmbienceVolume","EnableMusic","EnableAmbience","MasterSoundEffects")))
-   if os.environ.get("ASX_TEST_WORLD_UI")=="1":
+   if os.environ.get("AZSX_TEST_WORLD_UI")=="1":
     with (folder/"config.toml").open("a")as config:config.write('nameplateShowEnemies = "1"\n')
-   addon=folder/"AddOns/ASX";addon.mkdir(parents=True);(addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\nAudit.lua\n");(addon/"Presentation.lua").write_bytes((ROOT/"native-ui/official-party.lua").read_bytes());(addon/"Audit.lua").write_bytes((ROOT/"tools/dev/fixtures/asx-extensions-audit.lua").read_bytes())
-   shutil.copytree(ROOT/'addons/ASXUI',folder/'AddOns/ASXUI')
-   env=dict(clean,APPDATA=str(folder/"appdata"),LOCALAPPDATA=str(folder/"localappdata"),BENILLA_HOME=str(folder),ASX_ACTIVE="1",AZCOOP_ENGINE="official",AZCOOP_NATIVE_LOG_DIRECTORY=str(folder),ASX_READY_FILE=str(folder/"ready.json"),WOW_NOSOUND="1",WOW_WIN="1",WOW_ROGUE_UPDATE="0",WOW_ROGUE_UPDATE_AUTO="0",WOW_ROGUE_AUTOPICK="1",WOW_ROGUE_AUTOSTART="1",WOW_ROGUE_AUTOPLAY="18"if slot==1 else"4",RUST_LOG="info",AZCOOP_TEST_BLESSINGS="1")
-   if not normal:env.update(ASX_LOST_SUPPLIES="0",ASX_DARKMOON_TRIALS="0")
+   addon=folder/"AddOns/AZSXAudit";addon.mkdir(parents=True);(addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\nAudit.lua\n");(addon/"Audit.lua").write_bytes((ROOT/"tools/dev/fixtures/azsx-extensions-audit.lua").read_bytes())
+   if os.environ.get('AZSX_TEST_NO_UI')!='1':shutil.copytree(ROOT/'addons/AZSXUI',folder/'AddOns/AZSXUI')
+   env=dict(clean,APPDATA=str(folder/"appdata"),LOCALAPPDATA=str(folder/"localappdata"),BENILLA_HOME=str(folder),AZSX_ACTIVE="1",AZCOOP_ENGINE="official",AZCOOP_NATIVE_LOG_DIRECTORY=str(folder),AZSX_READY_FILE=str(folder/"ready.json"),WOW_NOSOUND="1",WOW_WIN="1",WOW_ROGUE_UPDATE="0",WOW_ROGUE_UPDATE_AUTO="0",WOW_ROGUE_AUTOPICK="1",WOW_ROGUE_AUTOSTART="1",WOW_ROGUE_AUTOPLAY="18"if slot==1 else"4",RUST_LOG="info",AZCOOP_TEST_BLESSINGS="1")
+   if os.environ.get('AZSX_TEST_ADDON_API')=='1':env['AZSX_TEST_ADDON_API']='1'
+   if not normal:env.update(AZSX_LOST_SUPPLIES="0",AZSX_DARKMOON_TRIALS="0")
    if supplies:
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
-    env.update(ASX_LOST_SUPPLIES="1",ASX_TEST_LOST_SUPPLIES="1",ASX_TREASURE_GOBLINS="0",ASX_TEST_EVENT_POLISH="1"if polish else"0",ASX_DARKMOON_TRIALS="1"if polish else"0",ASX_TEST_DARKMOON_TRIAL="1"if polish else"0")
-    (addon/"SupplyAudit.lua").write_bytes((ROOT/"tools/dev/fixtures/asx-supplies-audit.lua").read_bytes())
-    (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\nSupplyAudit.lua\n")
-   if supplies and visual and os.environ.get("ASX_TEST_VISUAL_HOLD_DISCOVERY")=="1":
-    # Disposable visual sampling only: make the short toast observable with sparse
-    # screenshots. Never alter source UI, consumable timers or reward authority.
-    presentation=addon/"Presentation.lua";text=presentation.read_text();needle="supplyUntil=GetTime()+3"
-    if needle not in text:raise ValueError("Discovery visual fixture boundary changed")
-    presentation.write_text(text.replace(needle,"supplyUntil=GetTime()+12"))
+    env.update(AZSX_LOST_SUPPLIES="1",AZSX_TEST_LOST_SUPPLIES="1",AZSX_TREASURE_GOBLINS="0",AZSX_TEST_EVENT_POLISH="1"if polish else"0",AZSX_DARKMOON_TRIALS="1"if polish else"0",AZSX_TEST_DARKMOON_TRIAL="1"if polish else"0")
+    (addon/"SupplyAudit.lua").write_bytes((ROOT/"tools/dev/fixtures/azsx-supplies-audit.lua").read_bytes())
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\nSupplyAudit.lua\n")
+   if supplies and visual and os.environ.get("AZSX_TEST_VISUAL_HOLD_DISCOVERY")=="1":
+    raise ValueError("Embedded API discovery timing cannot be edited by an audit addon")
    if ritual:
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
-    env.update(ASX_DARKMOON_TRIALS="1",ASX_TEST_DARKMOON_TRIAL="1",ASX_TREASURE_GOBLINS="0",ASX_TEST_RITUAL_PERSISTENCE="1"if persistence else"0",ASX_TEST_RITUAL_UI="1"if ritual_ui else"0")
-    (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\n")
+    env.update(AZSX_DARKMOON_TRIALS="1",AZSX_TEST_DARKMOON_TRIAL="1",AZSX_TREASURE_GOBLINS="0",AZSX_TEST_RITUAL_PERSISTENCE="1"if persistence else"0",AZSX_TEST_RITUAL_UI="1"if ritual_ui else"0")
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
    if ritual_ui:
-    (addon/"RitualAudit.lua").write_bytes((ROOT/"tools/dev/fixtures/asx-ritual-ui-audit.lua").read_bytes())
-    with (addon/"ASX.toc").open("a")as toc:toc.write("RitualAudit.lua\n")
+    (addon/"RitualAudit.lua").write_bytes((ROOT/"tools/dev/fixtures/azsx-ritual-ui-audit.lua").read_bytes())
+    with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("RitualAudit.lua\n")
    if enchantments:
     env={k:v for k,v in env.items()if k not in("AZCOOP_TEST_BLESSINGS")}
     env["AZCOOP_TEST_ENCHANTMENTS"]="1";env["AZCOOP_TEST_OFFICIAL_CHOICE_DELAY"]="20"
-    (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\n")
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
    if gems:
     env={k:v for k,v in env.items()if k not in("AZCOOP_TEST_BLESSINGS")}
     env["AZCOOP_TEST_GEMS"]="1";env["AZCOOP_TEST_OFFICIAL_CHOICE_DELAY"]="20"
-    (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\n")
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
    if immunity:
     env={k:v for k,v in env.items()if k not in("AZCOOP_TEST_BLESSINGS")}
     env["AZCOOP_TEST_IMMUNITY_AGGRO"]="1"
-    (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\n")
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
    if reward_wallet:
     env={k:v for k,v in env.items()if k not in("AZCOOP_TEST_BLESSINGS")}
     env["AZCOOP_TEST_REWARD_WALLET"]="1"
-    (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\n")
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
    if compat121:
-    env.update(AZCOOP_TEST_COMPAT121="1",AZCOOP_TEST_GEMS="1",ASX_TEST_CRYSTALS="1",AZCOOP_TEST_ENCHANTMENTS="1",AZCOOP_TEST_BLESSINGS="1",AZCOOP_TEST_OFFICIAL_CHOICE_DELAY="3")
+    env.update(AZCOOP_TEST_COMPAT121="1",AZCOOP_TEST_GEMS="1",AZSX_TEST_CRYSTALS="1",AZCOOP_TEST_ENCHANTMENTS="1",AZCOOP_TEST_BLESSINGS="1",AZCOOP_TEST_OFFICIAL_CHOICE_DELAY="3")
     if slot==1:
      env["AZCOOP_TEST_EXTENSIONS"]="1"
      env["AZCOOP_TEST_MARKS121"]="1"
-    (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\n")
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
    if completion in ("support","fatigue","fatigue-self"):
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
     if slot==1:
      env["AZCOOP_TEST_SUPPORT121"if completion=="support"else"AZCOOP_TEST_OFFICIAL_FATIGUE"]="1"
-     if shield_only:env["ASX_TEST_SUPPORT_SHIELD_ONLY"]="1"
+     if shield_only:env["AZSX_TEST_SUPPORT_SHIELD_ONLY"]="1"
      if completion=="support" and not support_only:env.update(AZCOOP_TEST_SUPPORT121_FULL="1",AZCOOP_TEST_OFFICIAL_FATIGUE="1")
-    (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\n")
-   if os.environ.get("ASX_TEST_COVERAGE")=="1":env["ASX_TEST_COVERAGE"]="1"
-   if os.environ.get("ASX_TEST_WORLD_UI")=="1":env["ASX_TEST_UI"]="1"
-   if os.environ.get("ASX_TEST_UI_REMAINING")=="1":env["ASX_TEST_UI_REMAINING"]="1"
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
+   if os.environ.get("AZSX_TEST_COVERAGE")=="1":env["AZSX_TEST_COVERAGE"]="1"
+   if os.environ.get("AZSX_TEST_WORLD_UI")=="1":env["AZSX_TEST_UI"]="1"
+   if os.environ.get("AZSX_TEST_UI_REMAINING")=="1":env["AZSX_TEST_UI_REMAINING"]="1"
    if completion in ("support","fatigue","fatigue-self"):
-    audit=(ROOT/"tools/dev/fixtures/asx-fatigue-audit.lua").read_text().replace("now-last<1","now-last<2")
+    audit=(ROOT/"tools/dev/fixtures/azsx-fatigue-audit.lua").read_text().replace("now-last<1","now-last<2")
     (addon/"Audit.lua").write_text(audit)
-    with (addon/"ASX.toc").open("a")as toc:toc.write("Audit.lua\n")
+    with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("Audit.lua\n")
    if completion=="support":
     env["AZCOOP_TEST_NATIVE_TIPS121"]="1"
-    (addon/"Audit.lua").write_bytes((ROOT/"tools/dev/fixtures/asx-tooltip121-audit.lua").read_bytes())
-    with (addon/"ASX.toc").open("a")as toc:toc.write("Audit.lua\n")
+    (addon/"Audit.lua").write_bytes((ROOT/"tools/dev/fixtures/azsx-tooltip121-audit.lua").read_bytes())
+    with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("Audit.lua\n")
    if completion=="tooltip":
     env["AZCOOP_TEST_BONUS_TOOLTIP"]="1";env["AZCOOP_TEST_OFFICIAL_CHOICE_DELAY"]="8"
     if slot==1:env["AZCOOP_TEST_MARKS121"]="1"
@@ -178,53 +175,53 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     # Explicit held-choice windows still own their 3/20-second timing.
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
     env.update(AZCOOP_TEST_OFFICIAL_PAUSE="1",WOW_ROGUE_ROAM="1")
-    if shield_only and slot==1:env.update(AZCOOP_TEST_SUPPORT121="1",ASX_TEST_SUPPORT_SHIELD_ONLY="1")
+    if shield_only and slot==1:env.update(AZCOOP_TEST_SUPPORT121="1",AZSX_TEST_SUPPORT_SHIELD_ONLY="1")
     if slot==1:env["AZCOOP_TEST_OFFICIAL_PAUSE_HOST"]="1"
-    (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\nPauseAudit.lua\n")
-    (addon/"PauseAudit.lua").write_bytes((ROOT/"tools/dev/fixtures/asx-pause-audit.lua").read_bytes())
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\nPauseAudit.lua\n")
+    (addon/"PauseAudit.lua").write_bytes((ROOT/"tools/dev/fixtures/azsx-pause-audit.lua").read_bytes())
    if normal:
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
-    (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\n")
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
    elif slot==1 and not completion and not immunity and not enchantments and not gems and not supplies and not ritual:env["AZCOOP_TEST_EXTENSIONS"]="1"
    if owner_tips:
-    (addon/"Audit.lua").write_bytes((ROOT/"tools/dev/fixtures/asx-tooltip121-audit.lua").read_bytes())
-    with (addon/"ASX.toc").open("a")as toc:toc.write("Audit.lua\n")
+    (addon/"Audit.lua").write_bytes((ROOT/"tools/dev/fixtures/azsx-tooltip121-audit.lua").read_bytes())
+    with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("Audit.lua\n")
    if goblins:
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
-    env.update(ASX_TEST_TREASURE_GOBLINS="1",ASX_TREASURE_GOBLINS="0"if os.environ.get("ASX_TEST_GOBLINS_OFF")=="1"else"1")
-    (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\n")
+    env.update(AZSX_TEST_TREASURE_GOBLINS="1",AZSX_TREASURE_GOBLINS="0"if os.environ.get("AZSX_TEST_GOBLINS_OFF")=="1"else"1")
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
    if coop_events:
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
-    env.update(ASX_LOST_SUPPLIES="1",ASX_DARKMOON_TRIALS="1",ASX_TREASURE_GOBLINS="1"if all_events else"0",ASX_TEST_TREASURE_GOBLINS="1"if all_events else"0",ASX_TEST_COOP_EVENTS="1",ASX_TEST_COOP_EVENTS_VISUAL="1"if os.environ.get("ASX_TEST_COOP_EVENTS_VISUAL")=="1"else"0")
-    (addon/"ASX.toc").write_text("## Interface: 11200\n## Title: ASX\nPresentation.lua\n")
+    env.update(AZSX_LOST_SUPPLIES="1",AZSX_DARKMOON_TRIALS="1",AZSX_TREASURE_GOBLINS="1"if all_events else"0",AZSX_TEST_TREASURE_GOBLINS="1"if all_events else"0",AZSX_TEST_COOP_EVENTS="1",AZSX_TEST_COOP_EVENTS_VISUAL="1"if os.environ.get("AZSX_TEST_COOP_EVENTS_VISUAL")=="1"else"0")
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
     if visual:
-     (addon/"CoopEventsAudit.lua").write_bytes((ROOT/"tools/dev/fixtures/asx-coop-events-audit.lua").read_bytes())
-     with (addon/"ASX.toc").open("a")as toc:toc.write("CoopEventsAudit.lua\n")
+     (addon/"CoopEventsAudit.lua").write_bytes((ROOT/"tools/dev/fixtures/azsx-coop-events-audit.lua").read_bytes())
+     with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("CoopEventsAudit.lua\n")
    if diagnostic_probe:
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
-   if os.environ.get("ASX_TEST_OBSERVED_STEPS")=="1":env["ASX_TEST_OBSERVED_STEPS"]="1"
-   if os.environ.get("ASX_TEST_COOP_UI")=="1":env["ASX_TEST_COOP_UI"]="1"
-   if os.environ.get("ASX_TEST_CRYSTAL_UI_ONLY")=="1":
+   if os.environ.get("AZSX_TEST_OBSERVED_STEPS")=="1":env["AZSX_TEST_OBSERVED_STEPS"]="1"
+   if os.environ.get("AZSX_TEST_COOP_UI")=="1":env["AZSX_TEST_COOP_UI"]="1"
+   if os.environ.get("AZSX_TEST_CRYSTAL_UI_ONLY")=="1":
     if not diagnostic_probe or players!=2:raise ValueError("Crystal UI-only fixture requires the two-player diagnostic probe")
-    env.update(ASX_TEST_CRYSTALS="1",ASX_TEST_CRYSTAL_PLAYERS="2",ASX_TEST_CRYSTAL_UI_ONLY="1")
-   if os.environ.get("ASX_TEST_PROGRESSION")=="1":env.update(ASX_TEST_PROGRESSION="1",AZCOOP_TEST_XP_HUD="1")
-   if os.environ.get("ASX_TEST_LUA_DIAGNOSTICS")=="1":
+    env.update(AZSX_TEST_CRYSTALS="1",AZSX_TEST_CRYSTAL_PLAYERS="2",AZSX_TEST_CRYSTAL_UI_ONLY="1")
+   if os.environ.get("AZSX_TEST_PROGRESSION")=="1":env.update(AZSX_TEST_PROGRESSION="1",AZCOOP_TEST_XP_HUD="1")
+   if os.environ.get("AZSX_TEST_LUA_DIAGNOSTICS")=="1":
     if normal:raise ValueError("Lua diagnostics require a diagnostic trial")
-    env.update(ASX_LUA_DIAGNOSTICS="1",ASX_DIAGNOSTIC_SESSION=out.name,ASX_DIAGNOSTIC_SLOT=str(slot-1))
-    (addon/"DiagnosticConfig.lua").write_text("ASXDiagnosticConfig={enabled=true,session="+json.dumps(out.name)+",slot="+str(slot-1)+",duration="+str(min(seconds,300))+",max_records=256}\n")
-    if os.environ.get("ASX_TEST_COOP_UI")=="1":
-     with (addon/"DiagnosticConfig.lua").open("a")as cfg:cfg.write("ASXDiagnosticConfig.coop_ui=true\n")
-     (addon/"CoopUIActions.lua").write_bytes((ROOT/"tools/dev/fixtures/asx-coop-ui-actions.lua").read_bytes())
+    env.update(AZSX_LUA_DIAGNOSTICS="1",AZSX_DIAGNOSTIC_SESSION=out.name,AZSX_DIAGNOSTIC_SLOT=str(slot-1))
+    (addon/"DiagnosticConfig.lua").write_text("AZSXDiagnosticConfig={enabled=true,session="+json.dumps(out.name)+",slot="+str(slot-1)+",duration="+str(min(seconds,300))+",max_records=256}\n")
+    if os.environ.get("AZSX_TEST_COOP_UI")=="1":
+     with (addon/"DiagnosticConfig.lua").open("a")as cfg:cfg.write("AZSXDiagnosticConfig.coop_ui=true\n")
+     (addon/"CoopUIActions.lua").write_bytes((ROOT/"tools/dev/fixtures/azsx-coop-ui-actions.lua").read_bytes())
 
-    if os.environ.get("ASX_TEST_PROGRESSION")=="1":
-     with (addon/"DiagnosticConfig.lua").open("a")as cfg:cfg.write("ASXDiagnosticConfig.progression=true;ASXDiagnosticConfig.max_records=512\n")
-     (addon/"ProgressionAudit.lua").write_bytes((ROOT/"tools/dev/fixtures/asx-progression-audit.lua").read_bytes())
+    if os.environ.get("AZSX_TEST_PROGRESSION")=="1":
+     with (addon/"DiagnosticConfig.lua").open("a")as cfg:cfg.write("AZSXDiagnosticConfig.progression=true;AZSXDiagnosticConfig.max_records=512\n")
+     (addon/"ProgressionAudit.lua").write_bytes((ROOT/"tools/dev/fixtures/azsx-progression-audit.lua").read_bytes())
     (addon/"Observer.lua").write_bytes((ROOT/"tools/dev/diagnostics/observer.lua").read_bytes())
-    with (addon/"ASX.toc").open("a")as toc:toc.write("DiagnosticConfig.lua\nObserver.lua\n")
-    if os.environ.get("ASX_TEST_COOP_UI")=="1":
-     with (addon/"ASX.toc").open("a")as toc:toc.write("CoopUIActions.lua\n")
-    if os.environ.get("ASX_TEST_PROGRESSION")=="1":
-     with (addon/"ASX.toc").open("a")as toc:toc.write("ProgressionAudit.lua\n")
+    with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("DiagnosticConfig.lua\nObserver.lua\n")
+    if os.environ.get("AZSX_TEST_COOP_UI")=="1":
+     with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("CoopUIActions.lua\n")
+    if os.environ.get("AZSX_TEST_PROGRESSION")=="1":
+     with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("ProgressionAudit.lua\n")
    if players==2:env.update(WOW_ROGUE_COOP_PASSWORD=password);env["WOW_ROGUE_COOP_HOST"if slot==1 else"WOW_ROGUE_COOP_JOIN"]=str(port)if slot==1 else f"127.0.0.1:{port}"
    if players==2:
     # Native 0.133 AUTOSTART restarts ready checks even after all answers arrive.
@@ -233,21 +230,21 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     env.pop("WOW_ROGUE_AUTOSTART",None)
     env["WOW_ROGUE_TAPS"]=";".join(["410,485"if slot==1 else"306,525"]*32)
     # Keep the original native event stream without enabling native autostart.
-    env["ASX_LOG_NATIVE_UI"]="1"
+    env["AZSX_LOG_NATIVE_UI"]="1"
     env["WOW_ROGUE_ROAM"]="1" # Native Move to begin; fixture scenes account for ordinary roaming.
 
-   if os.environ.get("ASX_TEST_COOP_UI")=="1"and players==2 and slot==1:env["WOW_ROGUE_KEY"]="n@15"
-   if os.environ.get("ASX_TEST_NATIVE_ESCAPE")=="1":
+   if os.environ.get("AZSX_TEST_COOP_UI")=="1"and players==2 and slot==1:env["WOW_ROGUE_KEY"]="n@15"
+   if os.environ.get("AZSX_TEST_NATIVE_ESCAPE")=="1":
     if not normal or players!=2:raise ValueError("Native Escape trial requires two normal clients")
-    if slot==2:env["WOW_ROGUE_KEY"]="escape@40"if os.environ.get("ASX_TEST_NATIVE_INSPECTION")=="1"else"escape@15"
-    elif os.environ.get("ASX_TEST_NATIVE_INSPECTION")=="1":env["WOW_ROGUE_KEY"]="n@15"
+    if slot==2:env["WOW_ROGUE_KEY"]="escape@40"if os.environ.get("AZSX_TEST_NATIVE_INSPECTION")=="1"else"escape@15"
+    elif os.environ.get("AZSX_TEST_NATIVE_INSPECTION")=="1":env["WOW_ROGUE_KEY"]="n@15"
 
    from trial_limits import environment
-   if visual and (os.environ.get("ASX_TEST_NATIVE_ESCAPE")!="1"or slot==2):
+   if visual and (os.environ.get("AZSX_TEST_NATIVE_ESCAPE")!="1"or slot==2):
     env.update(environment(visual=True));
-    if os.environ.get("ASX_TEST_NATIVE_ESCAPE")=="1":env["WOW_ROGUE_SHOTS_EVERY"]="12"
-    if os.environ.get("ASX_TEST_COVERAGE")=="1":env["WOW_ROGUE_SHOTS_EVERY"]="45"
-    if os.environ.get("ASX_TEST_WORLD_UI")=="1":env["WOW_ROGUE_SHOTS_EVERY"]="12"
+    if os.environ.get("AZSX_TEST_NATIVE_ESCAPE")=="1":env["WOW_ROGUE_SHOTS_EVERY"]="12"
+    if os.environ.get("AZSX_TEST_COVERAGE")=="1":env["WOW_ROGUE_SHOTS_EVERY"]="45"
+    if os.environ.get("AZSX_TEST_WORLD_UI")=="1":env["WOW_ROGUE_SHOTS_EVERY"]="12"
     env["WOW_ROGUE_SHOTS"]=str(folder/"shots")
    handle=(folder/"native-output.log").open("wb");handles.append(handle);children.append(subprocess.Popen([str(exe)],cwd=runtime,env=env,stdout=handle,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW));time.sleep(4 if slot==1 else 2)
   def evaluate():
@@ -283,7 +280,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     (out/"reward-wallet-evidence.json").write_text(json.dumps(evidence,indent=2)+"\n")
    if compat121:
     checks={k:checks[k]for k in("clients_alive","started","clean_scripts","clean_adapter","ui_captures_available","startup_ack","three_native_encounters","native_buff_projected")}
-    checks["native_reward_policy"]=all("ASX capabilities: duplicate-gold=false native-marks=true" in text for text in logs)
+    checks["native_reward_policy"]=all("AZSX capabilities: duplicate-gold=false native-marks=true" in text for text in logs)
     checks["no_duplicate_gold"]=all("duplicate loot credit"not in text for text in logs)
     from crystal_core_evidence import assess_core as assess_crystal_core
     crystal_evidence=assess_crystal_core(host,players);checks.update(crystal_evidence["checks"])
@@ -308,11 +305,11 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
      evidence["checks"].update(assess_completion(host,"fatigue")["checks"])
      evidence["checks"].update(assess_immunity(host)["checks"])
     checks={k:checks[k]for k in("clients_alive","started","clean_scripts","clean_adapter","startup_ack")};merge_assessor_checks(checks,evidence["checks"])
-    if os.environ.get("ASX_TEST_WORLD_UI")=="1":
+    if os.environ.get("AZSX_TEST_WORLD_UI")=="1":
      checks={k:checks[k]for k in("clients_alive","started","clean_scripts","clean_adapter","startup_ack","direct_healing_receipts_both_ways")}
      checks.update(native_plate_layout=all('Native plate layout:'in t for t in logs),native_heal_draw_direct=all('native heal text: periodic=false'in t and 'result=Ok(true)'in t for t in logs),native_heal_draw_periodic=all('native heal text: periodic=true'in t for t in logs))
 
-    if os.environ.get("ASX_TEST_UI_REMAINING")=="1":
+    if os.environ.get("AZSX_TEST_UI_REMAINING")=="1":
      checks={k:checks[k]for k in("clients_alive","started","clean_scripts","clean_adapter","startup_ack")}
      from remaining_ui_evidence import assess as remaining_assess
      remaining=remaining_assess(host,native,logs);checks.update(remaining['checks'])
@@ -375,13 +372,13 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     from enchantment_evidence import assess_fixture_party
     economy=assess_fixture_party(host);checks.update(economy["checks"])
     (out/"fixture-party-evidence.json").write_text(json.dumps(economy,indent=2)+"\n")
-   if os.environ.get("ASX_TEST_NATIVE_ESCAPE")=="1":
+   if os.environ.get("AZSX_TEST_NATIVE_ESCAPE")=="1":
     checks={k:checks[k]for k in ("clients_alive","started","clean_scripts","clean_adapter","startup_ack","normal_binary","coop_joined","no_coop_session","no_shared_wallet","no_group_pause")if k in checks}
-   if os.environ.get("ASX_TEST_NATIVE_ESCAPE")=="1"and players==2:
+   if os.environ.get("AZSX_TEST_NATIVE_ESCAPE")=="1"and players==2:
     from escape_evidence import assess as assess_escape
     escape=assess_escape(logs[0],logs[1]);merge_assessor_checks(checks,escape["checks"])
     (out/"native-escape-evidence.json").write_text(json.dumps(escape,indent=2)+"\n")
-    if os.environ.get("ASX_TEST_NATIVE_INSPECTION")=="1":
+    if os.environ.get("AZSX_TEST_NATIVE_INSPECTION")=="1":
      marker="official inspection pause ignored: open=true"
      tail=logs[0].split(marker,1)[-1].split("official peer menu: slot=1 open=true",1)[0]
      checks["host_talents_keeps_world_running"]=marker in logs[0]and "official XP: source="in tail
@@ -394,7 +391,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     claims=re.findall(r"coop supplies discovered: slot=(\d+) owner=(\d+) event=(\d+) reward=(.*?) gold=(\d+)",host)
     checks=checks if all_events else {k:checks[k]for k in("clients_alive","started","clean_scripts","startup_ack")}
     checks.update(two_personal_claims={int(c[0])for c in claims if c[2]=="1"}=={0,1},different_rewards=len({c[3]for c in claims if c[2]=="1"})==2,ritual_waits_for_group="ritual=Some((1, 0.0, false))"in host,no_boss_fortune="blessing granted:"not in host,unique_claims=len(claims)==len({(c[0],c[1],c[2])for c in claims}),native_encounter="coop events fixture: native boss defeated"in host,ritual_reward="coop ritual completed: stage=1 recipients=2"in host,material_sales=sum(int(c[4])>0 for c in claims)>=2,no_event_failure="Cooperative events stopped:"not in host)
-    if seconds<100 and os.environ.get("ASX_TEST_COOP_EVENTS_VISUAL")=="1":
+    if seconds<100 and os.environ.get("AZSX_TEST_COOP_EVENTS_VISUAL")=="1":
      checks={k:v for k,v in checks.items()if k in("clients_alive","started","clean_scripts","startup_ack","two_personal_claims","different_rewards","unique_claims","no_event_failure")}
     (out/"coop-events-evidence.json").write_text(json.dumps(dict(checks=checks,claims=claims,passed=all(checks.values()),scope="Host authority and native replication; sparse UI images reviewed separately"),indent=2)+"\n")
    if ritual:
@@ -454,8 +451,8 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
    if goblins:
     from treasure_goblin_evidence import assess as assess_goblins
     checks=checks if all_events else {k:checks[k]for k in("clients_alive","started","clean_scripts","startup_ack")}
-    evidence=assess_goblins(logs,disabled=os.environ.get("ASX_TEST_GOBLINS_OFF")=="1")
-    if os.environ.get("ASX_TEST_GOBLINS_OFF")!="1":
+    evidence=assess_goblins(logs,disabled=os.environ.get("AZSX_TEST_GOBLINS_OFF")=="1")
+    if os.environ.get("AZSX_TEST_GOBLINS_OFF")!="1":
      persisted=[];expected=[]
      for index in range(players):
       saved=sum(int(v)for v in re.findall(r"^marks\|\d+\|(\d+)$",prepare.read(out/f"player-{index+1}/appdata/wenilla-rogue"),re.M))
@@ -471,32 +468,38 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
    if not visual:checks.pop("ui_captures_available",None)
    if diagnostic_probe:
     checks={k:checks[k]for k in("clients_alive","clean_scripts","clean_adapter","startup_ack")}
-    if os.environ.get("ASX_TEST_COOP_UI")=="1"or os.environ.get("ASX_TEST_PROGRESSION")=="1":checks["started"]=all('"type":"start"'in t and'"type":"resume"'in t for t in native)
-    checks["lua_transport_observed"]=all("ASX_DIAG "in text and'"kind":"observer.started"'in text for text in logs)
-   if os.environ.get("ASX_TEST_COOP_UI")=="1"and players==2:
+    if os.environ.get("AZSX_TEST_COOP_UI")=="1"or os.environ.get("AZSX_TEST_PROGRESSION")=="1":checks["started"]=all('"type":"start"'in t and'"type":"resume"'in t for t in native)
+    checks["lua_transport_observed"]=all("AZSX_DIAG "in text and'"kind":"observer.started"'in text for text in logs)
+   if os.environ.get("AZSX_TEST_COOP_UI")=="1"and players==2:
     from coop_ui_evidence import assess as assess_coop_ui
     evidence=assess_coop_ui(logs[0],logs[1]);merge_assessor_checks(checks,evidence["checks"])
     (out/"coop-ui-evidence.json").write_text(json.dumps(evidence,indent=2)+"\n")
-   if os.environ.get("ASX_TEST_PROGRESSION")=="1"and players==2:
+   if os.environ.get("AZSX_TEST_PROGRESSION")=="1"and players==2:
     from progression_evidence import assess as assess_progression
     evidence=assess_progression(logs[0],logs[1]);merge_assessor_checks(checks,evidence["checks"])
     (out/"progression-evidence.json").write_text(json.dumps(evidence,indent=2)+"\n")
-   if os.environ.get("ASX_TEST_OBSERVED_STEPS")=="1":env["ASX_TEST_OBSERVED_STEPS"]="1"
-   if os.environ.get("ASX_TEST_LUA_DIAGNOSTICS")=="1":
+   if os.environ.get("AZSX_TEST_OBSERVED_STEPS")=="1":env["AZSX_TEST_OBSERVED_STEPS"]="1"
+   if os.environ.get("AZSX_TEST_LUA_DIAGNOSTICS")=="1":
     from diagnostic_records import collect,assess_events
     streams=[collect(text,out.name,index)for index,text in enumerate(logs)]
     for index,stream in enumerate(streams):
      (out/f"lua-observations-{index}.jsonl").write_text(''.join(json.dumps(row,separators=(',',':'))+"\n"for row in stream["records"]))
      evidence=assess_events(stream)if all_events else stream
+     if os.environ.get('AZSX_TEST_ADDON_API')=='1':
+      api=[row['data']for row in stream['records']if row['kind']=='api.contract']
+      checks[f'api_{index}_available']=any(row.get('available')is True and row.get('major')==1 and row.get('native')is True and row.get('global')is True for row in api)
+      checks[f'api_{index}_ui_mode']=any(row.get('ui')is (os.environ.get('AZSX_TEST_NO_UI')!='1')for row in api)
+      checks[f'api_{index}_no_internal_addon']=not(out/f'player-{index+1}/AddOns/ASX').exists()and not(out/f'player-{index+1}/AddOns/AZSX').exists()
+
      for name,value in evidence["checks"].items():checks[f"lua_{index}_{name}"]=value
      (out/f"lua-evidence-{index}.json").write_text(json.dumps(evidence,indent=2)+"\n")
-   if os.environ.get("ASX_TEST_OBSERVED_STEPS")=="1":
+   if os.environ.get("AZSX_TEST_OBSERVED_STEPS")=="1":
     checks["observed_goblin_steps"]="scenario step: goblin phase=1 action=1"in host and"scenario step: goblin phase=2 action=2"in host
     if players==1:
      checks["observed_supply_steps"]=all(f"scenario step: supplies phase={phase} created={phase}"in host for phase in range(1,12))
      checks["observed_ritual_steps"]="scenario step: ritual action=0"in host and"scenario step: ritual action=1"in host
     else:checks["observed_coop_steps"]=all(f"scenario step: coop action={phase}"in host for phase in range(1,5))
-   result=dict(observed_steps=os.environ.get("ASX_TEST_OBSERVED_STEPS")=="1",scenario=scenario,diagnostic_probe=diagnostic_probe,support_only=support_only,all_events=all_events,owner_tooltip_readback=owner_tips,completion121=completion,players=players,normal=normal,game_version=version,compat121=compat121,enchantments=enchantments,gems=gems,goblins=goblins,immunity=immunity,diagnostic_inputs=not normal,dll_sha256=proof["dll_sha256"],game_sha256=sha,checks=checks,passed=all(checks.values()),grants=grants,ui=ui,desktop_input=False,screenshots=visual,visual_review_required=visual,ritual_ui_single=ritual_ui and seconds<150,visual_discovery_hold=visual and supplies and os.environ.get("ASX_TEST_VISUAL_HOLD_DISCOVERY")=="1")
+   result=dict(observed_steps=os.environ.get("AZSX_TEST_OBSERVED_STEPS")=="1",scenario=scenario,diagnostic_probe=diagnostic_probe,support_only=support_only,all_events=all_events,owner_tooltip_readback=owner_tips,completion121=completion,players=players,normal=normal,game_version=version,compat121=compat121,enchantments=enchantments,gems=gems,goblins=goblins,immunity=immunity,diagnostic_inputs=not normal,dll_sha256=proof["dll_sha256"],game_sha256=sha,checks=checks,passed=all(checks.values()),grants=grants,ui=ui,desktop_input=False,screenshots=visual,visual_review_required=visual,ritual_ui_single=ritual_ui and seconds<150,visual_discovery_hold=visual and supplies and os.environ.get("AZSX_TEST_VISUAL_HOLD_DISCOVERY")=="1")
    return result
   until=time.monotonic()+min(seconds,260 if supplies or ritual else 280 if completion in ("support","fatigue","fatigue-self") else 210 if goblins else 180 if enchantments else 150)
   completed_at=None
@@ -510,8 +513,8 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     solo_done="ritual completed:"in live and"supplies stats rebuilt: active=false"in live
     coop_done="coop ritual completed: stage=1 recipients=2"in live and"coop supplies discovered:"in live
     if goblin_done and(solo_done if players==1 else coop_done):break
-   if os.environ.get("ASX_TEST_UI_REMAINING")=="1" and evaluate()["passed"]:break
-   if os.environ.get("ASX_TEST_WORLD_UI")=="1" and os.environ.get("ASX_TEST_UI_REMAINING")!="1":
+   if os.environ.get("AZSX_TEST_UI_REMAINING")=="1" and evaluate()["passed"]:break
+   if os.environ.get("AZSX_TEST_WORLD_UI")=="1" and os.environ.get("AZSX_TEST_UI_REMAINING")!="1":
     path=out/"player-1/azeroth-coop-native.log"
     if path.exists() and "support121 observed: index=4 "in path.read_text(errors="replace") and evaluate()["passed"]:break
    if readiness is None and support_only:
@@ -524,12 +527,12 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     # Closing the menus is not proof of recovered input. Keep observing until
     # native movement acceptance passes, or preserve failure at the deadline.
     if completed_at is not None and time.monotonic()-completed_at>=6 and evaluate()["passed"]:break
-   if os.environ.get("ASX_TEST_COVERAGE")=="1":
+   if os.environ.get("AZSX_TEST_COVERAGE")=="1":
     path=out/"player-1/azeroth-coop-native.log"
     if path.exists() and "coverage native guardian killed:"in path.read_text(errors="replace") and evaluate()["passed"]:break
-   if diagnostic_probe and os.environ.get("ASX_TEST_COOP_UI")!="1" and os.environ.get("ASX_TEST_PROGRESSION")!="1":
+   if diagnostic_probe and os.environ.get("AZSX_TEST_COOP_UI")!="1" and os.environ.get("AZSX_TEST_PROGRESSION")!="1":
     native_path=out/"player-1/azeroth-coop-native.log"
-    if native_path.exists() and native_path.read_text(encoding="utf-8",errors="replace").count("ASX_DIAG ")>=5:break
+    if native_path.exists() and native_path.read_text(encoding="utf-8",errors="replace").count("AZSX_DIAG ")>=5:break
    if private_focus and time.monotonic()-last_focus>=2:
     from private_trial_focus import notify_owned_windows
     focus_samples.append(notify_owned_windows([child.pid for child in children if child.poll()is None]));last_focus=time.monotonic()

@@ -1,28 +1,37 @@
-# ASX addon contract 1.9
+# AZSX addon contract 1.9
 
-ASX follows Azeroth Survivors' addon conventions: global tables, matching
-`*_UPDATED` timestamps, `ASX_Get...` functions and registered Lua handlers.
-This is an ASX extension, not a replacement for the game's `AZS_*` API. No new
+The DLL appends the provider to the selected native WorldStateFrame initialization script.
+Neither `AddOns/ASX` nor `AddOns/AZSX` is installed or required. The retained
+party presentation and native fallback auras initialize through the same path.
+Direct native launches do not expose the mod contract. AZSXUI is optional.
+
+The former `ASX_*` globals and `AZS_RUN.asx` transport key are renamed to
+`AZSX_*` and `AZS_RUN.azsx`. Third-party consumers must update their names;
+`AZS_*` native globals remain unchanged. Contract data shapes stay at 1.9.
+
+AZSX follows Azeroth Survivors' addon conventions: global tables, matching
+`*_UPDATED` timestamps, `AZSX_Get...` functions and registered Lua handlers.
+This is an AZSX extension, not a replacement for the game's `AZS_*` API. No new
 network transport, outgoing addon message or gameplay command is introduced.
 The currently supported engine is the reviewed 0.138.0 build.
 
 ## Availability and version
 
-The matching ASX DLL/retained Lua bridge must be active in this process. API
-functions may be absent when ASX is disabled or before its Lua has loaded; an
+The matching AZSX DLL/retained Lua bridge must be active in this process. API
+functions may be absent when AZSX is disabled or before its Lua has loaded; an
 addon must tolerate that and retry after world entry or with bounded polling.
-ASXUI is a consumer, not the provider: other addons do not need ASXUI installed.
+AZSXUI is a consumer, not the provider: other addons do not need AZSXUI installed.
 
-`ASX_GetAPIVersion()` returns `major, minor` (currently `1, 9`). Major 1 is a
+`AZSX_GetAPIVersion()` returns `major, minor` (currently `1, 9`). Major 1 is a
 stable contract: incompatible field meanings/types/removals require a new major;
 minor versions may add optional fields. Ignore unknown fields. Tests cover the
 contract; this source change does not update an older installed DLL.
 
-`ASX_GetState([major])` returns an independently owned snapshot. Omitted major
+`AZSX_GetState([major])` returns an independently owned snapshot. Omitted major
 selects v1; passing `1` explicitly is recommended. Unsupported majors return
 `nil, "unsupported_version"`. No native pointers or 64-bit numeric player GUIDs
 are exposed. Mutating the returned tables, including nested arrays/colors, never
-modifies ASX or snapshots obtained by another consumer.
+modifies AZSX or snapshots obtained by another consumer.
 
 ## Snapshot envelope
 
@@ -33,11 +42,11 @@ modifies ASX or snapshots obtained by another consumer.
 | `reason` | When unavailable: `outside_run`, `stale`, or `missing_or_invalid_payload` |
 | `revision` | Monotonic content revision within this Lua environment; not persisted across client reloads |
 | `phase` | Native phase (`playing`, `choosing`, `paused`, `dead`, etc.; `unknown` if unavailable) |
-| `session.epoch` | Opaque string; changes with the ASX session/membership generation |
+| `session.epoch` | Opaque string; changes with the AZSX session/membership generation |
 | `session.recipientGUID` | Exact decimal string; never convert it to a Lua number |
-| `updatedAt` | Last accepted ASX payload update, in `GetTime()` seconds; omitted when unavailable |
+| `updatedAt` | Last accepted AZSX payload update, in `GetTime()` seconds; omitted when unavailable |
 | `data` | Structured local-recipient state below |
-| `texts` | ASX-owned presentation strings/assets/colors, separate from values |
+| `texts` | AZSX-owned presentation strings/assets/colors, separate from values |
 
 Available phases are playing, choosing, paused and dead, with a valid private
 payload no more than four wall-clock seconds old. Outside these conditions the
@@ -54,13 +63,13 @@ progress, damage or timers.
 ## Structured data
 
 All fields below are optional except where their enclosing record exists. Only
-the local recipient's ASX features are public in v1; remote builds are not part
+the local recipient's AZSX features are public in v1; remote builds are not part
 of this contract. Cache coordinates remain in native `AZS_CHESTS`.
 
 | Record | Fields and units |
 |---|---|
 | `data.fortune` | `boss`: encounter progression stage, not a unique reward ID; optional v1.7 `event`: actual award receipt, stable through heartbeat, party-generation and ritual-arrival changes; `category`: active rolls 0..2 (Luck/XP/Gold); legacy 3/4 retain pickup/speed meanings but are no longer produced; `rarity` 0..4; `amount`, `best`: hundredths of a percentage point (1200 means 12%) |
-| `data.economy` | Optional v1.7 cooperative `xp` and `gold` effective multipliers (1.35 means +35%), projected from the actual ASX award policies for the local recipient. Gold retains collector-specific native effects; values need not match across different builds. Missing means unavailable, not zero. These replace the personal `AZS_STATS` values for display; never add them to those values. |
+| `data.economy` | Optional v1.7 cooperative `xp` and `gold` effective multipliers (1.35 means +35%), projected from the actual AZSX award policies for the local recipient. Gold retains collector-specific native effects; values need not match across different builds. Missing means unavailable, not zero. These replace the personal `AZS_STATS` values for display; never add them to those values. |
 | `data.sharedEconomy` | v1.8 cooperative projection with independently optional `xp` and `gold` multipliers. An empty/partial table explicitly marks unavailable shared values; hide those cells instead of falling back to personal `AZS_STATS`. Solo omits this record. The legacy `data.economy` complete-pair guarantee remains unchanged. Values use the same award policies and replace, never add to, native personal values. |
 | `data.fatigue` | `stacks` 0..3; `seconds`: remaining alive-game-time seconds, rounded upward; not a wall-clock deadline |
 | `data.consumables[family]` | Dictionary keyed 0..6, **not** a 1-based list: `family`, `tier` 1..3, `remaining` whole game-time seconds, `index` native aura slot 0..31 |
@@ -71,7 +80,7 @@ of this contract. Cache coordinates remain in native `AZS_CHESTS`.
 
 Current Fortune categories: 0 Luck, 1 Experience, 2 Gold. Legacy IDs 3 Pickup
 Radius and 4 Movement Speed retain their historical meanings for compatibility,
-but current ASX no longer generates them. Rarity: 0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary (discoveries
+but current AZSX no longer generates them. Rarity: 0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary (discoveries
 use only 0..3). Consumable families: 0 Recovery, 1 Critical, 2 Defense,
 3 Vitality, 4 Ferocity, 5 Reach, 6 Swiftness (v1.2). Do not use `table.getn`/`ipairs` to enumerate
 consumables; use `pairs` or the explicit family range. Discovery/trial IDs must be combined
@@ -81,12 +90,12 @@ not by membership epoch or encounter stage. A new award may have identical
 category and amount; an unchanged award survives party-generation changes. Zero `left`
 has different meanings for a persistent trial and an expired supply pin.
 
-Projection still requires native mode/center/ping reads in ASX. Use native
+Projection still requires native mode/center/ping reads in AZSX. Use native
 `Minimap:GetZoom()` for zoom and `GetPingPosition()` for live projection. Hero
 position is not a substitute for the center of a panned view. Unavailable
 projection is represented by a missing `data.minimap`.
 
-## ASX text and presentation
+## AZSX text and presentation
 
 `texts.supplies`, `texts.fortune` and `texts.sayge` contain the applicable
 `title`, `reward`, `note`, `icon` and RGB `color` fields; omit fields that do not
@@ -94,26 +103,26 @@ apply (Sayge currently provides title/note only). Supplies additionally provides
 `name` and `description` as uncomposed reward strings. `texts.consumables[family]`
 contains `name`, `description` and full texture `icon` path.
 
-Titles/notes/reward strings are authored/formatted by ASX. No localization
+Titles/notes/reward strings are authored/formatted by AZSX. No localization
 language is promised; do not parse these strings to recover numbers or identity.
-Use `data` to draw your own representation and `texts` to retain ASX wording.
+Use `data` to draw your own representation and `texts` to retain AZSX wording.
 Colors and assets are presentation metadata, not gameplay authority. Clients may
 format supplied values differently without changing their meaning.
 
 ## Native-style globals and notifications
 
-`ASX_STATE` is the last snapshot published by the retained observer.
-`ASX_STATE_UPDATED` is its publication time in `GetTime()` seconds. They are
+`AZSX_STATE` is the last snapshot published by the retained observer.
+`AZSX_STATE_UPDATED` is its publication time in `GetTime()` seconds. They are
 populated on the observer's first update. They can lag a fresh getter until the
 next UI frame. Publication includes changed receipt timestamps, while handlers
 are called only for meaningful revision changes. Treat the globals as read-only,
 like native `AZS_*` tables: a Lua global cannot prevent another addon from
 mutating that shared view. Use the getter for isolation. Global mutations do not
-reach ASX's internal state and are replaced at the next publication.
+reach AZSX's internal state and are replaced at the next publication.
 
-`ASX_RegisterStateHandler(handler)` returns true, or `nil, "invalid_callback"`
+`AZSX_RegisterStateHandler(handler)` returns true, or `nil, "invalid_callback"`
 / `nil, "subscriber_limit"` (maximum 64 distinct functions). Registering the
-same function twice is idempotent. `ASX_UnregisterStateHandler(handler)` returns
+same function twice is idempotent. `AZSX_UnregisterStateHandler(handler)` returns
 whether it removed a registration. Keep the original function to unregister it.
 
 Handlers receive **one independently copied snapshot**, including unavailable
@@ -133,7 +142,7 @@ local frame = CreateFrame("Frame")
 local bound, last = false, 0
 local function changed(state)
     if not state.available then
-        -- Hide your ASX widgets.
+        -- Hide your AZSX widgets.
         return
     end
     local trial = state.data.sayge
@@ -145,34 +154,34 @@ end
 frame:SetScript("OnUpdate", function()
     if bound or GetTime() - last < 0.25 then return end
     last = GetTime()
-    if type(ASX_GetAPIVersion) ~= "function" then return end
-    local major = ASX_GetAPIVersion()
+    if type(AZSX_GetAPIVersion) ~= "function" then return end
+    local major = AZSX_GetAPIVersion()
     if major ~= 1 then frame:SetScript("OnUpdate", nil); return end
-    local ok = ASX_RegisterStateHandler(changed)
+    local ok = AZSX_RegisterStateHandler(changed)
     if ok then
         bound = true
-        changed(ASX_GetState(1))
+        changed(AZSX_GetState(1))
         frame:SetScript("OnUpdate", nil)
     end
 end)
--- Before retiring your consumer: ASX_UnregisterStateHandler(changed).
+-- Before retiring your consumer: AZSX_UnregisterStateHandler(changed).
 ```
 
 ## Private interfaces
 
-`AZS_RUN.asx` remains private compressed transport, not this public schema.
-`ASX_GetEventPresentation()` and `ASX_GetMinimapData()` are pre-v1 compatibility
-adapters, now detached too; new addons should use `ASX_GetState(1)`. Diagnostic
-readouts are not public contracts. ASXUI now consumes v1 and safely hides its
+`AZS_RUN.azsx` remains private compressed transport, not this public schema.
+`AZSX_GetEventPresentation()` and `AZSX_GetMinimapData()` are pre-v1 compatibility
+adapters, now detached too; new addons should use `AZSX_GetState(1)`. Diagnostic
+readouts are not public contracts. AZSXUI now consumes v1 and safely hides its
 views if the getter is missing or the major is unsupported. No UI addon is
 required to decode the private envelope or read native memory.
 
-Validate with `sh tools/dev/check.sh --profile asxui --profile official-party-ui`.
+Validate with `sh tools/dev/check.sh --profile azsxui --profile official-party-ui`.
 API tests cover deep-copy isolation, exact GUID strings, schema/version errors,
 stale/session/phase changes, heartbeat suppression and handler lifecycle/errors.
 
 In v1.1, Sayge `allInside` reflects host-authoritative collective presence; the
-ASX note explains waiting while another participant is outside. Older private
+AZSX note explains waiting while another participant is outside. Older private
 five-field ritual packets leave this property absent (unknown), rather than
 pretending local presence proves collective readiness. Existing v1 consumers
 remain compatible and must ignore the added field.
@@ -183,20 +192,20 @@ remain compatible and must ignore the added field.
 `red`, `blue`, `green`, `yellow`, `total`, and the native presentation `index`
 (0–31; 32 means no free native slot). `bonuses` contains accumulated percentage
 values named `damage`, `cooldownRecovery`, `maximumHealth`, `areaOfEffect`.
-`state.texts.crystals` contains the ASX-authored title, icon and collection note.
+`state.texts.crystals` contains the AZSX-authored title, icon and collection note.
 Every getter/handler snapshot remains detached. No crystal position is exposed
 to the minimap bridge. Aura indices are presentation metadata, not identities.
 
 ## Crystal pickup presentation (API minor 4)
 
-`texts.crystals.pickups[red|blue|green|yellow]` supplies ASX-authored `title`,
+`texts.crystals.pickups[red|blue|green|yellow]` supplies AZSX-authored `title`,
 `reward`, `note`, `icon`, RGB `color` (effect) and `titleColor` (crystal color).
 These are per-crystal values; structured accumulated totals remain in `data`.
 Consumers can compare consecutive personal counts to announce new pickups. This
 is a snapshot interface, not receipt history: seed a baseline on first available
 state, recipient/session change or reconnect, and do not replay restored totals.
 Counts decreasing or native run time resetting retire the old baseline/queue.
-ASXUI queues each observed increment for three seconds, capped at 16 notices,
+AZSXUI queues each observed increment for three seconds, capped at 16 notices,
 and defers display through choices/pauses. Coalesced different colors use a stable
 color order; no exact cross-color pickup ordering is promised by snapshots.
 
@@ -207,7 +216,7 @@ color order; no exact cross-color pickup ordering is promised by snapshots.
 `texts.equipment[slot]` contains the native `name`, texture `icon` and formatted
 tooltip `text`. These are already captured owner strings, not formulas for an
 addon to recompute. An optional `category` contains native `amulet`, `ring` or `trinket` metadata.
-ASXUI uses it to reserve all five positions even when a slot is empty. Older
+AZSXUI uses it to reserve all five positions even when a slot is empty. Older
 providers without categories retain their sequential display. No persistent
 inventory ID is promised.
 
@@ -220,7 +229,7 @@ are still omitted, and this extension adds no native hook or memory reader.
 
 ## API 1.6: local native loot receipts
 
-`ASX_GetAPIVersion()` returns `1, 6`. `state.data.loot` is an array of up to
+`AZSX_GetAPIVersion()` returns `1, 6`. `state.data.loot` is an array of up to
 16 recent local native drop receipts, each `{event, rarity, isNew}`.
 `state.texts.loot[event]` contains `{name, icon}`; `icon` is the native
 `INV_...` basename, resolved under `Interface/Icons/`. Rarity is the original
@@ -232,18 +241,18 @@ already-local native `drop` UI event; no new native hooks, grants, collection
 reads, name lookup or extra network messages are involved. Only the separately
 requested damage-size adjustment adds a new guarded native contact.
 
-ASXUI shows item toasts only for `isNew=true`. Already-collected receipts remain
-in this API for other consumers; ASXUI consumes their sequence without a toast.
-Mark notifications are independent. ASXUI owns native loot-canvas visibility
+AZSXUI shows item toasts only for `isNew=true`. Already-collected receipts remain
+in this API for other consumers; AZSXUI consumes their sequence without a toast.
+Mark notifications are independent. AZSXUI owns native loot-canvas visibility
 while this current structured provider is available and restores it otherwise.
 
 ### HUD receipt presentation (v1.7)
 
-ASXUI consumes one Fortune receipt once. A pending award waits for a readable
+AZSXUI consumes one Fortune receipt once. A pending award waits for a readable
 native phase; pausing a started toast does not restart its six-second wall-time
 lifetime. Missing metadata never grants or re-announces a reward.
 Local and allied item text retains native owner formatting, with an appended
-ASX enchantment name and current effect only when the native ring icon uniquely
+AZSX enchantment name and current effect only when the native ring icon uniquely
 matches a reviewed definition and its current owner GUID/rank is verified.
 Uncertain matches omit the annotation. No previews, viewer stats or guessed
 localized names enter these tooltips.
@@ -256,7 +265,7 @@ ordering and gaps in observed totals prevent merging; gameplay grants are untouc
 
 `data.cooperativeRules` is present only with a fresh cooperative payload in an
 available run phase, including dead, paused and choosing. It is independent of
-ASXUI, party size changes, gem ownership and Fortune ownership. An unavailable
+AZSXUI, party size changes, gem ownership and Fortune ownership. An unavailable
 snapshot or a solo payload omits it. The cooperative economy envelope identifies
 the native coop projection even when its numeric fields are unavailable.
 
@@ -279,21 +288,21 @@ The stats panel shows effective values.
 Item and reward descriptions may show base bonuses.
 ```
 
-The retained ASX presentation bridge creates `ASXCooperativeRulesBuff`, a 32-pixel
+The retained AZSX presentation bridge creates `AZSXCooperativeRulesBuff`, a 32-pixel
 informational button using the native Prayer of Fortitude icon. It consumes no
 native aura slot, has no timer or cancellation action, and never modifies stats.
 It is deliberately absent from native `UnitBuff` / `GetPlayerBuff` enumeration;
 other addons consume the public record instead. The bridge supplies a leading
-native-buff-row fallback without ASXUI. A stale payload hides the button and
+native-buff-row fallback without AZSXUI. A stale payload hides the button and
 releases any hovered tooltip; heartbeat refreshes do not create duplicate icons.
 
 A renderer may optionally reuse that button via
-`ASX_SetCooperativeRulesDocked(owner, true)`, where `owner` is its nonempty addon
+`AZSX_SetCooperativeRulesDocked(owner, true)`, where `owner` is its nonempty addon
 name. This returns the button when currently available and reserves its placement
 for that single owner (even if temporarily unavailable). A competing owner gets
 `nil`. Do not change its scripts or native aura APIs. Restore any borrowed anchors
-and call `ASX_SetCooperativeRulesDocked(owner, false)` when disabling the layout;
+and call `AZSX_SetCooperativeRulesDocked(owner, false)` when disabling the layout;
 this releases the reservation and restores the bridge's native-row fallback.
-Only the owning name can release it. The fallback remains visible while ASXUI's
+Only the owning name can release it. The fallback remains visible while AZSXUI's
 HUD is off. Addons that render a separate icon should coordinate ownership to
 avoid duplicate informational displays. Availability checks remain mandatory.

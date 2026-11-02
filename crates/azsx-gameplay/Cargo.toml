@@ -1,0 +1,9 @@
+[package]
+name = "azsx-gameplay"
+version.workspace = true
+edition.workspace = true
+description = "AZSX portable gameplay contracts and rules"
+license.workspace = true
+publish.workspace = true
+
+[dependencies]

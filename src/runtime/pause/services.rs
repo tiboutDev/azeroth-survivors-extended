@@ -1,6 +1,6 @@
 //! Selected native/UI access for pause callbacks; policy stays in pause.rs.
 use super::super::{lifecycle, Runtime, RUNTIME};
-use asx_gameplay::official::PausePresentation;
+use azsx_gameplay::official::PausePresentation;
 use serde_json::Value;
 
 pub(super) trait Services {
@@ -8,7 +8,7 @@ pub(super) trait Services {
     fn read_ui(&self, pointer: u64, length: u64) -> Result<Value, String>;
     fn decode_pause(&self, value: &Value) -> Result<Option<PausePresentation>, String>;
     fn pause_notice(&self, active: bool) -> Option<&'static str>;
-    fn hud_phase(&self, value: &Value) -> Result<asx_gameplay::Phase, String>;
+    fn hud_phase(&self, value: &Value) -> Result<azsx_gameplay::Phase, String>;
     fn duplicate_loot_enabled(&self) -> bool;
     fn end_session(&self);
     fn warn(&self, message: &str);
@@ -31,7 +31,7 @@ pub(super) fn available() -> Option<&'static dyn Services> {
 impl Services for Runtime {
     fn trace_native_ui(&self, receiver: u64) {
         static ENABLED: std::sync::LazyLock<bool> = std::sync::LazyLock::new(|| {
-            std::env::var("ASX_LOG_NATIVE_UI").as_deref() == Ok("1")
+            std::env::var("AZSX_LOG_NATIVE_UI").as_deref() == Ok("1")
         });
         static REPORTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
         if !*ENABLED { return; }
@@ -51,7 +51,7 @@ impl Services for Runtime {
     fn pause_notice(&self, active: bool) -> Option<&'static str> {
         self.adapter.pause_notice(active)
     }
-    fn hud_phase(&self, value: &Value) -> Result<asx_gameplay::Phase, String> {
+    fn hud_phase(&self, value: &Value) -> Result<azsx_gameplay::Phase, String> {
         self.adapter.hud_phase(value)
     }
     fn duplicate_loot_enabled(&self) -> bool { self.adapter.duplicate_loot_enabled() }

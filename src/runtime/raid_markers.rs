@@ -1,10 +1,10 @@
 //! Host-owned one-time native markers, scoped to the actual cooperative run.
 use super::*;
-use asx_gameplay::raid_markers::Initialization;
+use azsx_gameplay::raid_markers::Initialization;
 #[derive(Default)]struct State{key:(u64,u64),clock:f32,seen:Initialization,rng:u64}
 static STATE:std::sync::LazyLock<std::sync::Mutex<State>>=std::sync::LazyLock::new(||std::sync::Mutex::new(State::default()));
 pub(super) fn reset(){if let Ok(mut s)=STATE.lock(){*s=State::default();}}
-pub(super) fn observe(r:&Runtime,server:u64,party:Option<&asx_game::official::PartyObservation>){
+pub(super) fn observe(r:&Runtime,server:u64,party:Option<&azsx_game::official::PartyObservation>){
  let Some(p)=party else{return};
  let Some(host)=p.actors.iter().find(|a|a.slot==0)else{return};
  let Ok(game)=r.adapter.game_address(server)else{return};
@@ -16,11 +16,11 @@ pub(super) fn observe(r:&Runtime,server:u64,party:Option<&asx_game::official::Pa
    *s=State{key,rng:seed.max(1),..Default::default()};
   }
   s.clock=p.clock;
-  if !s.seen.needs(p.actors.iter().filter(|a|a.phase!=asx_gameplay::Phase::Inactive).map(|a|(a.slot,a.guid))){return}
+  if !s.seen.needs(p.actors.iter().filter(|a|a.phase!=azsx_gameplay::Phase::Inactive).map(|a|(a.slot,a.guid))){return}
  }
  // Only an uninitialized identity causes native marker-table IO or allocation.
  let Ok(occupied)=r.adapter.raid_markers(&r.local,server)else{return};
- let actors=p.actors.iter().filter(|a|a.phase!=asx_gameplay::Phase::Inactive).map(|a|(a.slot,a.guid)).collect::<Vec<_>>();
+ let actors=p.actors.iter().filter(|a|a.phase!=azsx_gameplay::Phase::Inactive).map(|a|(a.slot,a.guid)).collect::<Vec<_>>();
  let pending={
   let Ok(mut s)=STATE.lock()else{return};if s.key!=key{return}
   let State{seen,rng,..}=&mut *s;

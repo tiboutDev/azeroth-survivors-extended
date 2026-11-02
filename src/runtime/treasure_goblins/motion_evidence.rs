@@ -38,12 +38,12 @@ pub(super) fn observe(
     guid: u64,
     now: f32,
     position: [f32; 3],
-    party: &asx_game::official::PartyObservation,
+    party: &azsx_game::official::PartyObservation,
 ) {
     let threats = party
         .actors
         .iter()
-        .filter(|a| a.hp > 0. && a.phase != asx_gameplay::Phase::Inactive)
+        .filter(|a| a.hp > 0. && a.phase != azsx_gameplay::Phase::Inactive)
         .map(|a| a.position)
         .collect();
     if let Ok(mut tracks) = TRACKS.lock() {

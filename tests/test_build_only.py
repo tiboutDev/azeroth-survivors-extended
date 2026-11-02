@@ -22,8 +22,8 @@ class BuildScriptsAreBuildOnly(unittest.TestCase):
             shutil.copy2(ROOT / "tools/dev" / name, dev / name)
         for name in ("artifact_record.py", "client_registry.py"):
             shutil.copy2(ROOT / "tools/dev" / name, dev / name)
-        (self.root / "asx").mkdir()
-        shutil.copy2(ROOT / "asx/supported-games.json", self.root / "asx/supported-games.json")
+        (self.root / "azsx").mkdir()
+        shutil.copy2(ROOT / "azsx/supported-games.json", self.root / "azsx/supported-games.json")
         (dev / "env.sh").write_text(":\n")
         self.bin = Path(self.temp.name) / "bin"
         self.bin.mkdir()

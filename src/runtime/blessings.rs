@@ -1,6 +1,6 @@
 //! Host-owned event rewards; no per-entity polling or additional network channel.
 use super::{local_base, Adapter};
-use asx_gameplay::blessings::{Blessing, Blessings};
+use azsx_gameplay::blessings::{Blessing, Blessings};
 use services::Services;
 use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -23,7 +23,7 @@ pub fn reset() {
         *s = None;
     }
 }
-pub fn observe(game: u64, p: Option<&asx_game::official::PartyObservation>) {
+pub fn observe(game: u64, p: Option<&azsx_game::official::PartyObservation>) {
     let Some(p) = p else {
         reset();
         return;
@@ -176,7 +176,7 @@ unsafe extern "system" fn pool(c: &mut crate::stub::Context) {
     };
     if let Ok(index) = r.pool_index(c.rbp, c.r14) {
         #[cfg(feature="test-hooks")]
-        if index!=c.r14&&std::env::var("ASX_TEST_COOP_UI").as_deref()==Ok("1"){
+        if index!=c.r14&&std::env::var("AZSX_TEST_COOP_UI").as_deref()==Ok("1"){
             static SAMPLES:AtomicUsize=AtomicUsize::new(0);
             if SAMPLES.fetch_add(1,Ordering::Relaxed)<8{r.info(&format!("native economy pool excluded: input={} output={index}",c.r14));}
         }

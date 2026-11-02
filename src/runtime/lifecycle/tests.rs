@@ -1,6 +1,6 @@
 use super::*;
 use crate::test_support::TEST_LOCK;
-use asx_game::official::PartyObservation;
+use azsx_game::official::PartyObservation;
 use std::cell::{Cell, RefCell};
 
 struct Fake {

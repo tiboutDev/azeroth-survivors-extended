@@ -6,7 +6,7 @@ import re
 
 def assess(logs, disabled=False):
     checks = {
-        "core_asx_active": bool(logs) and all("ASX active:" in text for text in logs),
+        "core_azsx_active": bool(logs) and all("AZSX active:" in text for text in logs),
         "no_event_failure": all(not any(error in text for error in (
             "Treasure Goblin event stopped:", "Treasure Goblins unavailable:",
             "Goblin appearance fallback rejected:", "Goblin cleanup failed once:", "Goblin notice rejected:", "Goblin equipment unavailable:", "Goblin appearance ownership restore failed:", "Goblin recycle exclusion failed:", "Goblin final motion rejected:",

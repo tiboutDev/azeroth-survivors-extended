@@ -1,6 +1,6 @@
 //! Host-owned fatigue. Reuses world, damage, healing and addon boundaries.
 use super::*;
-use asx_gameplay::resurrection_fatigue::Fatigue;
+use azsx_gameplay::resurrection_fatigue::Fatigue;
 use std::collections::BTreeMap;
 #[derive(Default)]
 struct State {
@@ -17,7 +17,7 @@ pub fn reset() {
         ACTIVE.store(false, Ordering::Release);
     }
 }
-pub fn observe(game: u64, party: Option<&asx_game::official::PartyObservation>) {
+pub fn observe(game: u64, party: Option<&azsx_game::official::PartyObservation>) {
     let Some(party) = party.filter(|p| p.clock.is_finite()) else {
         reset();
         return;
@@ -137,7 +137,7 @@ mod tests {
     use super::*;
     #[test]
     fn fatigue_identity_lifecycle_and_scoped_healing_owner() {
-        use asx_game::official::{ActorObservation, PartyObservation};
+        use azsx_game::official::{ActorObservation, PartyObservation};
         let actor = |slot, guid, phase| ActorObservation {
             slot,
             guid,
@@ -156,14 +156,14 @@ mod tests {
         let mut p = PartyObservation {
             clock: 1.0,
             actors: vec![
-                actor(0, 10, asx_gameplay::Phase::Playing),
-                actor(1, 20, asx_gameplay::Phase::Downed),
+                actor(0, 10, azsx_gameplay::Phase::Playing),
+                actor(1, 20, azsx_gameplay::Phase::Downed),
             ],
         };
         reset();
         observe(123, Some(&p));
         p.clock = 2.0;
-        p.actors[1].phase = asx_gameplay::Phase::Playing;
+        p.actors[1].phase = azsx_gameplay::Phase::Playing;
         observe(123, Some(&p));
         assert_eq!(for_source(123, 1, 20), 0.95);
         assert_eq!(for_source(123, 0, 10), 1.0);
@@ -255,7 +255,7 @@ unsafe extern "system" fn aura(c: &mut crate::stub::Context) {
         let io=io::Access{local:&r.local,adapter:r.adapter};
         match r.adapter.project_consumable_auras(&io,&frame,&consumables){Ok(rows)=>super::supplies::aura(frame.game,frame.guid,&rows),Err(e)=>r.log.warn(&format!("Consumable aura rejected: {e}"))}
     }
-    #[cfg(feature="test-hooks")]if std::env::var("ASX_TEST_LOST_SUPPLIES").as_deref()==Ok("1"){
+    #[cfg(feature="test-hooks")]if std::env::var("AZSX_TEST_LOST_SUPPLIES").as_deref()==Ok("1"){
         static SEEN:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
         let count=consumables.len();let bit=1usize<<count;
         if SEEN.fetch_or(bit,Ordering::Relaxed)&bit==0{r.log.info(&format!("supplies native aura rows: families={count} rows={:?}",r.adapter.event_aura_readback(&r.local,&frame)));}

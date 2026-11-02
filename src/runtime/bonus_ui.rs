@@ -1,14 +1,14 @@
 //! Shared reward-bonus rendering and native widget callbacks.
 use super::*;
 static SEPARATOR:AtomicUsize=AtomicUsize::new(0);
-thread_local!{static SEPARATOR_STYLE:std::cell::Cell<Option<asx_game::official::BonusSeparator>>=const{std::cell::Cell::new(None)};}
+thread_local!{static SEPARATOR_STYLE:std::cell::Cell<Option<azsx_game::official::BonusSeparator>>=const{std::cell::Cell::new(None)};}
 crate::context_stub_rw!(separator_entry,0,capture_separator,SEPARATOR);
 unsafe extern "system" fn capture_separator(c:&mut crate::stub::Context){
  if UI_CONTEXT.with(|v|v.get()).is_none(){return}
  if let Some(r)=RUNTIME.get().filter(|r|r.rules){
   if let Some(caller)=c.return_address().checked_sub(r.local.base as u64){
    match r.adapter.bonus_separator_capture(&r.local,caller,c.rdx,c.r8){
-    Ok(Some(style))=>{SEPARATOR_STYLE.with(|v|v.set(Some(style)));#[cfg(feature="test-hooks")]if std::env::var("ASX_TEST_UI").as_deref()==Ok("1"){static N:AtomicUsize=AtomicUsize::new(0);if N.fetch_add(1,Ordering::Relaxed)<8{r.log.info("Native bonus separator style captured");}}},
+    Ok(Some(style))=>{SEPARATOR_STYLE.with(|v|v.set(Some(style)));#[cfg(feature="test-hooks")]if std::env::var("AZSX_TEST_UI").as_deref()==Ok("1"){static N:AtomicUsize=AtomicUsize::new(0);if N.fetch_add(1,Ordering::Relaxed)<8{r.log.info("Native bonus separator style captured");}}},
     Err(error)=>{static WARN:AtomicBool=AtomicBool::new(false);if !WARN.swap(true,Ordering::Relaxed){r.log.warn(&format!("Native bonus separator rejected: {error}"));}},
     _=>{},
    }
@@ -17,10 +17,10 @@ unsafe extern "system" fn capture_separator(c:&mut crate::stub::Context){
 }
 static UI:AtomicUsize=AtomicUsize::new(0);
 static LINE:AtomicUsize=AtomicUsize::new(0);
-thread_local!{static DRAWBACK:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};static STATUS_STYLE:std::cell::Cell<Option<bool>>=const{std::cell::Cell::new(None)};static UI_CONTEXT:std::cell::Cell<Option<asx_game::official::BonusUi>>=const{std::cell::Cell::new(None)};static HEADER:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};static TOOLTIP_TITLE:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};static COMPACT:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};static SUPPRESS:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};}
+thread_local!{static DRAWBACK:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};static STATUS_STYLE:std::cell::Cell<Option<bool>>=const{std::cell::Cell::new(None)};static UI_CONTEXT:std::cell::Cell<Option<azsx_game::official::BonusUi>>=const{std::cell::Cell::new(None)};static HEADER:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};static TOOLTIP_TITLE:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};static COMPACT:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};static SUPPRESS:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};}
 #[derive(Clone,Copy)]enum Caption{Pending{entity:u64,kept:bool},Drawn}
 thread_local!{static CAPTION:std::cell::Cell<Option<Caption>>=const{std::cell::Cell::new(None)};}
-#[derive(Clone,Copy)]struct ColumnRequest{font:u64,status:u64,len:usize,kept:bool,layout:Option<asx_game::official::BonusHeaderColumn>}
+#[derive(Clone,Copy)]struct ColumnRequest{font:u64,status:u64,len:usize,kept:bool,layout:Option<azsx_game::official::BonusHeaderColumn>}
 thread_local!{static COLUMN:std::cell::Cell<Option<ColumnRequest>>=const{std::cell::Cell::new(None)};static COLUMN_DONE:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};}
 struct ColumnScope(Option<ColumnRequest>,bool);
 impl Drop for ColumnScope{fn drop(&mut self){COLUMN.with(|v|v.set(self.0));COLUMN_DONE.with(|v|v.set(self.1));}}
@@ -56,7 +56,7 @@ struct DrawbackScope(bool);
 impl Drop for DrawbackScope{fn drop(&mut self){DRAWBACK.with(|v|v.set(self.0));}}
 struct StatusScope(Option<bool>);
 impl Drop for StatusScope{fn drop(&mut self){STATUS_STYLE.with(|v|v.set(self.0));}}
-struct UiScope(Option<asx_game::official::BonusUi>,bool,Option<asx_game::official::BonusSeparator>,Option<Caption>);
+struct UiScope(Option<azsx_game::official::BonusUi>,bool,Option<azsx_game::official::BonusSeparator>,Option<Caption>);
 impl Drop for UiScope{fn drop(&mut self){UI_CONTEXT.with(|v|v.set(self.0));SUPPRESS.with(|v|v.set(self.1));SEPARATOR_STYLE.with(|v|v.set(self.2));CAPTION.with(|v|v.set(self.3));}}
 struct CompactScope(bool);
 impl Drop for CompactScope{fn drop(&mut self){COMPACT.with(|v|v.set(self.0));}}
@@ -69,7 +69,7 @@ unsafe extern "system" fn ui(parent:u64,closure:u64)->u64{
  let _scope=UiScope(UI_CONTEXT.with(|v|v.replace(context)),SUPPRESS.with(|v|v.replace(false)),SEPARATOR_STYLE.with(|v|v.replace(None)),CAPTION.with(|v|v.replace(None)));
  let original:unsafe extern "system" fn(u64,u64)->u64=std::mem::transmute(UI.load(Ordering::Acquire));original(parent,closure)
 }
-unsafe fn kept_row(r:&Runtime,parent:u64,font:u64,u:asx_game::official::BonusUi,bonus:asx_gameplay::kept_bonus::KeptBonus)->bool{
+unsafe fn kept_row(r:&Runtime,parent:u64,font:u64,u:azsx_game::official::BonusUi,bonus:azsx_gameplay::kept_bonus::KeptBonus)->bool{
  let _compact=CompactScope(COMPACT.with(|v|v.replace(true)));
  let((result,attached),stacked)=with_column(font,"Active",true,||bonus_tooltip::with_row(font,u,bonus,||r.adapter.kept_bonus_ui_draw(r.local.base,parent,font,u,bonus)));
  if result.is_err(){return false}
@@ -82,12 +82,12 @@ unsafe fn kept_row(r:&Runtime,parent:u64,font:u64,u:asx_game::official::BonusUi,
 }
 struct TooltipTitleScope(bool);
 impl Drop for TooltipTitleScope{fn drop(&mut self){TOOLTIP_TITLE.with(|v|v.set(self.0));}}
-unsafe fn draw_kept_values(parent:u64,font:u64,bonus:asx_gameplay::kept_bonus::KeptBonus){
+unsafe fn draw_kept_values(parent:u64,font:u64,bonus:azsx_gameplay::kept_bonus::KeptBonus){
  let line:unsafe extern "system" fn(u64,u64,u64,u64)=std::mem::transmute(LINE.load(Ordering::Acquire));
  let(benefit,drawback)=bonus.lines();line(parent,font,benefit.as_ptr()as u64,benefit.len()as u64);
  if !drawback.is_empty(){let _red=DrawbackScope(DRAWBACK.with(|v|v.replace(true)));line(parent,font,drawback.as_ptr()as u64,drawback.len()as u64);}
 }
-pub unsafe fn draw_kept_tooltip(_r:&Runtime,parent:u64,font:u64,bonus:asx_gameplay::kept_bonus::KeptBonus){
+pub unsafe fn draw_kept_tooltip(_r:&Runtime,parent:u64,font:u64,bonus:azsx_gameplay::kept_bonus::KeptBonus){
  let _normal=CompactScope(COMPACT.with(|v|v.replace(false)));
  let _header=HeaderScope(HEADER.with(|v|v.replace(true)));
  let _status=StatusScope(STATUS_STYLE.with(|v|v.replace(None)));
@@ -101,7 +101,7 @@ unsafe extern "system" fn line(parent:u64,font:u64,text:u64,len:u64){
  let original:unsafe extern "system" fn(u64,u64,u64,u64)=std::mem::transmute(LINE.load(Ordering::Acquire));
  if HEADER.with(|v|v.get()){original(parent,font,text,len);return}
  let data=RUNTIME.get().filter(|r|r.rules).zip(UI_CONTEXT.with(|v|v.get())).and_then(|(r,u)|{
-  if len>8192{return None}let bytes=asx_game::memory::Mem::read(&r.local,text,len as usize).ok()?;let content=String::from_utf8(bytes).ok()?;
+  if len>8192{return None}let bytes=azsx_game::memory::Mem::read(&r.local,text,len as usize).ok()?;let content=String::from_utf8(bytes).ok()?;
   Some((r,u,content))
  });
  if let Some((r,u,content))=data{
@@ -121,7 +121,7 @@ unsafe extern "system" fn line(parent:u64,font:u64,text:u64,len:u64){
   if let Some(block)=bonus_catalog::annotation(&content){
    if block.prefix>0{original(parent,font,text,block.prefix as u64);}
    let separator=SEPARATOR_STYLE.with(|v|v.take());
-   #[cfg(feature="test-hooks")]if std::env::var("ASX_TEST_UI").as_deref()==Ok("1"){static N:AtomicUsize=AtomicUsize::new(0);if N.fetch_add(1,Ordering::Relaxed)<16{r.log.info(&format!("Native bonus separator annotation: available={}",separator.is_some()));}}
+   #[cfg(feature="test-hooks")]if std::env::var("AZSX_TEST_UI").as_deref()==Ok("1"){static N:AtomicUsize=AtomicUsize::new(0);if N.fetch_add(1,Ordering::Relaxed)<16{r.log.info(&format!("Native bonus separator annotation: available={}",separator.is_some()));}}
    if let Some(style)=separator{let result=r.adapter.bonus_separator_draw(&r.local,r.local.base,parent,style);if let Err(error)=result{r.log.warn(&format!("Native bonus separator draw rejected: {error}"));}}
    let _header=HeaderScope(HEADER.with(|v|v.replace(true)));
    if block.retained&&r.adapter.supports_bonus_tooltips()&&kept_row(r,parent,font,u,block.bonus){return}

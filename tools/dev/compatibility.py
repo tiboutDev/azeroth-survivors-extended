@@ -19,7 +19,7 @@ def inventory():
  addresses=dict(constants["ADDRESSES"]);extensions=dict(constants["EXTENSION_ADDRESSES"])
  roles={c["name"]:c.get("role")for c in binding["constants"]}
  domains=json.loads((ROOT/"compat/domains.json").read_text())["domains"]
- paths=sorted(set((ROOT/"crates/asx-game/src/official_native").rglob("*.rs"))|{ROOT/"crates/asx-game/src/official_native.rs"})
+ paths=sorted(set((ROOT/"crates/azsx-game/src/official_native").rglob("*.rs"))|{ROOT/"crates/azsx-game/src/official_native.rs"})
  manifest=ROOT/'tools/dev/native-inventory/Cargo.toml'
  parsed=json.loads(subprocess.check_output(['cargo','run','--locked','--quiet','--manifest-path',str(manifest),'--',*[str(p)for p in paths]],cwd=ROOT,text=True))
  features=load_features()
@@ -43,7 +43,7 @@ def inventory():
      refs.add(extensions.get(value,addresses.get(value,value))if roles.get(name)=="canonical-symbol-key"else value)
     elif isinstance(value,tuple)and len(value)==2 and isinstance(value[0],int)and isinstance(value[1],list):refs.add(value[0])
    contract_domains=sorted(d for d,patterns in domains.items()if any(fnmatch.fnmatch(relative,pattern)for pattern in patterns))or["unclassified"]
-   contract_id=relative.removeprefix("crates/asx-game/src/").removesuffix(".rs").replace("/",".")+"."+method["name"]
+   contract_id=relative.removeprefix("crates/azsx-game/src/").removesuffix(".rs").replace("/",".")+"."+method["name"]
    contracts.append(dict(id=contract_id,method=method["name"],source=relative,domains=contract_domains,native_addresses=sorted(refs),descriptor_constants=named,adapter_source_sha256=hashlib.sha256(body.encode()).hexdigest()))
  contracts,features=apply_attribution(contracts,features,suites)
  return dict(schema=1,client_version=version,client_sha256=client["sha256"],binding_sha256=hashlib.sha256(json.dumps(binding,sort_keys=True).encode()).hexdigest(),contracts=contracts,features=features,approval=False)

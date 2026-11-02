@@ -1,6 +1,6 @@
-//! ASX native loader for the reviewed official game engine.
+//! AZSX native loader for the reviewed official game engine.
 //!
-//! Direct native launch only forwards avrt.dll exports. The ASX launcher opts in
+//! Direct native launch only forwards avrt.dll exports. The AZSX launcher opts in
 //! with AZCOOP_ENGINE=official; exact image selection and byte verification run
 //! before the official feature hooks are installed. Custom simulation, transport,
 //! lobby and measurement entry points are not part of this build.
@@ -59,7 +59,7 @@ unsafe extern "system" fn worker(_: *mut c_void) -> u32 {
         return 0;
     }
     // Direct native launch stays inert. Only the explicit official launcher route
-    // may install ASX; retired custom-engine and measuring modes are ignored.
+    // may install AZSX; retired custom-engine and measuring modes are ignored.
     if !requested() {
         return 0;
     }
@@ -72,7 +72,7 @@ unsafe extern "system" fn worker(_: *mut c_void) -> u32 {
     crash::init(&diagnostics, log);
     crash::test_crash_from_env();
     log.info(&format!(
-        "ASX {} (avrt.dll proxy), pid {}, exe {}",
+        "AZSX {} (avrt.dll proxy), pid {}, exe {}",
         env!("CARGO_PKG_VERSION"),
         GetCurrentProcessId(),
         exe.display()
@@ -85,7 +85,7 @@ unsafe extern "system" fn worker(_: *mut c_void) -> u32 {
     match outcome {
         Ok(Ok(())) => {}
         Ok(Err(reason)) => {
-            log.info(&format!("ASX inactive: {reason}; the game runs unmodified"));
+            log.info(&format!("AZSX inactive: {reason}; the game runs unmodified"));
         }
         Err(_) => {
             log.failed("worker", "panic; the game runs unmodified");

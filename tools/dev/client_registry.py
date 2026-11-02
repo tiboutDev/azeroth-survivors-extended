@@ -5,7 +5,7 @@ import json
 import re
 from pathlib import Path, PurePosixPath
 ROOT = Path(__file__).resolve().parents[2]
-REGISTRY = ROOT / "asx/supported-games.json"
+REGISTRY = ROOT / "azsx/supported-games.json"
 
 def load_clients(path=REGISTRY):
     data = json.loads(Path(path).read_text(encoding="utf-8"))

@@ -1,6 +1,6 @@
 # Selected native client boundary
 
-ASX source supports only official **0.138.0**. `SelectedAdapter::select` accepts
+AZSX source supports only official **0.138.0**. `SelectedAdapter::select` accepts
 only the reviewed executable SHA-256. A version label or a similar instruction
 sequence cannot enable another client. Selection does not bypass entry-byte,
 image-bound or native-layout verification.
@@ -9,14 +9,14 @@ image-bound or native-layout verification.
 
 | Layer | Responsibility |
 | --- | --- |
-| `crates/asx-gameplay/src/` | Portable rules, identities and copied semantic values |
-| `crates/asx-game/src/official.rs` | Selected native facade used by the DLL |
-| `crates/asx-game/src/official_native/` | Native translation, memory validation, call shapes and hook contracts |
-| `crates/asx-game/src/bindings/official138.rs` | Exact current-image identity and descriptor choices |
-| `crates/asx-game/src/memory.rs`, `enemies.rs` | Neutral memory interface and exact enemy parsing used by current support |
+| `crates/azsx-gameplay/src/` | Portable rules, identities and copied semantic values |
+| `crates/azsx-game/src/official.rs` | Selected native facade used by the DLL |
+| `crates/azsx-game/src/official_native/` | Native translation, memory validation, call shapes and hook contracts |
+| `crates/azsx-game/src/bindings/official138.rs` | Exact current-image identity and descriptor choices |
+| `crates/azsx-game/src/memory.rs`, `enemies.rs` | Neutral memory interface and exact enemy parsing used by current support |
 | `src/runtime/` | Feature coordination and bounded production service bindings |
 
-Active native consumers resolve descriptor data through the `asx_game::current`
+Active native consumers resolve descriptor data through the `azsx_game::current`
 re-export. The alias currently points to `official138`; it does not select or
 authorize an executable. Exact hash selection remains explicit in the adapter.
 Event appearance stack slots and native marks tables also belong to that
@@ -28,7 +28,7 @@ explicit invalid gaps; they do not invoke older descriptors. Historical modules
 are test-only comparison references. Reviewed canonical keys are retained where
 call sites require them, with translation owned by the current adapter.
 
-Run `python3 tools/dev/asx_dev.py check` to verify generated source and the feature
+Run `python3 tools/dev/azsx_dev.py check` to verify generated source and the feature
 inventory. Generation never discovers or approves a new ABI. Exact selection,
 entry guards, call-shape review and private-image checks remain required.
 
@@ -102,7 +102,7 @@ qualification still requires effective Holy Nova and Holy Shock heal receipts.
 
 ## Compatibility review
 
-Read [the stable feature inventory](ASX-FEATURES.md) and
+Read [the stable feature inventory](AZSX-FEATURES.md) and
 [the current descriptor notes](CLIENT-COMPATIBILITY.md). Account for every feature
 ID, including disabled or upstream-native behavior. Compare exact build data,
 source policy and artifact validation separately. Matched call sites provide
@@ -117,7 +117,7 @@ the full gate additionally enables that graph to preserve its tests.
 See [Rust architecture](../development/RUST-ARCHITECTURE.md) for workspace boundaries and
 [party presentation](../features/OFFICIAL-PARTY-UI.md) for owner-data and retained-widget rules.
 
-Native callable entry guards must account for ASX-owned hooks without accepting
+Native callable entry guards must account for AZSX-owned hooks without accepting
 arbitrary jumps. The hook installer retains the exact original and installed
 five-byte prefix for each successful hook. The shared item presenter accepts
 that recorded patch only at its registered address, with the reviewed original

@@ -1372,6 +1372,12 @@
     },
     {
       "visibility": "pub",
+      "name": "MENU_TITLE_RESULT",
+      "type": "(u64, &[u8])",
+      "value": "(0x3d8e89, &[0x48, 0x89, 0xd7, 0x48, 0x85, 0xd2, 0x79, 0x10, 0x45, 0x31, 0xff, 0x4c, 0x89, 0xf9],)"
+    },
+    {
+      "visibility": "pub",
       "name": "MENU_UI_QUEUE",
       "type": "(u64, &[u8])",
       "value": "(0x20bab0, &[0x55, 0x56, 0x57, 0x53, 0x48, 0x83, 0xec, 0x48, 0x48, 0x8d, 0x6c, 0x24, 0x40],)"
@@ -1399,6 +1405,36 @@
       "name": "DOWNED_XP_HOST_REWARD_SLOT",
       "type": "u64",
       "value": "0x1688"
+    },
+    {
+      "visibility": "pub",
+      "name": "ADDON_API_READER",
+      "type": "u64",
+      "value": "0x6020f50"
+    },
+    {
+      "visibility": "pub",
+      "name": "ADDON_API_READER_BYTES",
+      "type": "&[u8]",
+      "value": "&[0x55,0x41,0x56,0x56,0x57,0x53,0x48,0x83,0xec,0x60]"
+    },
+    {
+      "visibility": "pub",
+      "name": "LOBBY_SUBMIT",
+      "type": "u64",
+      "value": "0xbad40"
+    },
+    {
+      "visibility": "pub",
+      "name": "LOBBY_SUBMIT_BYTES",
+      "type": "&[u8]",
+      "value": "&[0x55,0x41,0x57,0x41,0x56,0x41,0x55,0x41,0x54,0x56,0x57,0x53,0x48,0x81,0xec,0x78,0x01,0,0]"
+    },
+    {
+      "visibility": "pub",
+      "name": "LOBBY_NAME",
+      "type": "u64",
+      "value": "0xd0"
     }
   ]
 }

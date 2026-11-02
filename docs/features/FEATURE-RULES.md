@@ -1,9 +1,9 @@
 # Active feature rules
 
 This summarizes the current supported source policy. The portable implementations in
-`crates/asx-gameplay/src/` are the precise reference for calculations; selected
-native translation belongs in `asx-game`. Stable feature identities live in
-[ASX-FEATURES.md](../compatibility/ASX-FEATURES.md), and player explanations in
+`crates/azsx-gameplay/src/` are the precise reference for calculations; selected
+native translation belongs in `azsx-game`. Stable feature identities live in
+[AZSX-FEATURES.md](../compatibility/AZSX-FEATURES.md), and player explanations in
 [player/FEATURES.md](../player/FEATURES.md).
 
 ## Shared rewards
@@ -31,7 +31,7 @@ installed by the selected native path.
 
 ## Jewelry
 
-Amulets now retain their native rewards without an ASX gem assignment or card
+Amulets now retain their native rewards without an AZSX gem assignment or card
 annotation. Crystal Resonance replaces the old immutable amulet gem.
 
 Four native UnGoro crystal colors provide personal additive gains per pickup:
@@ -60,7 +60,7 @@ scenes have no countdown. Solo scenes disappear on their first claim.
 One native positive presentation slot shows Crystal Resonance and its collected
 count. Its native GameTooltip lists actual personal accumulated percentages.
 No simulation aura, save mutation, amulet ownership or secondary transport is
-created. ASX addon API 1.3 exposes counts/bonus values independently of text.
+created. AZSX addon API 1.3 exposes counts/bonus values independently of text.
 
 Ring enchantment kind locks on the first accepted upgrade. Five total-value
 tiers begin at native ring ranks **2/4/7/10/14**: Minor, Lesser, unprefixed,
@@ -126,7 +126,7 @@ no meaningful displacement, the blocked heading is discouraged for 2.5 seconds
 to seek a side route. Unsafe directions hold position instead of approaching a living
 pursuer. The active goblin is excluded from native distant-horde recycling, which
 would otherwise teleport it back near the party. Other enemies retain recycling.
-It takes spell damage but rejects ASX taunts.
+It takes spell damage but rejects AZSX taunts.
 
 A killing blow reserves personal rewards for the participants still present:
 one native selection of three distinct amulets, where the eligible pool permits,
@@ -145,10 +145,10 @@ kill counter, equipment drop or pity reward is fabricated. Escape grants nothing
 there is no goblin gold reward. Event identity is scoped to GUID and run.
 Native boss encounters and Fortunes are unaffected.
 
-The host launcher reads optional `ASX/options.json`: `{"treasure_goblins":false}`
+The host launcher reads optional `AZSX/options.json`: `{"treasure_goblins":false}`
 disables local event generation at the next launch. The host controls generation
 for the party; guests retain the optional skin association for host-owned events. Missing settings enable them;
-invalid optional settings disable them while keeping ASX active. Optional native
+invalid optional settings disable them while keeping AZSX active. Optional native
 contacts are verified separately; their failure does not disable required coop
 features or weaken exact-build checks. No event state is saved permanently.
 
@@ -169,7 +169,7 @@ the selected adapter. Source implementation and live validation are distinct.
 Supplies and Sayge's Trial sample uniformly by surface area across the native
 map circle. The player position is not a sampling input and there is no nearby
 fallback. Check the full footprint against map limits, native navigation cells,
-height availability, terrain slope and existing ASX event footprints. Sampling
+height availability, terrain slope and existing AZSX event footprints. Sampling
 is bounded to 32 candidates per attempt. This verifies local walkability, not a
 new whole-map pathfinder. Treasure Goblin appearance rules remain separate.
 
@@ -222,14 +222,14 @@ still-active stronger effect. Tiers follow completed native encounters:
 Defense uses generic native stat input 5: damage reduction only, with no maximum-health contribution. This input is distinct from jewelry kind 5 (Archimtiros), whose item-specific conversion also grants health. No compensating negative-health input is applied.
 
 Classic elixirs, flasks and wizard oils provide the names/icons. Their effects
-are ASX adaptations. Giant Growth retains its real name across tiers rather
+are AZSX adaptations. Giant Growth retains its real name across tiers rather
 than inventing nonexistent Classic variants. Native damage/speed/restoration
 runes remain unchanged. Maximum-health rebuilds never grant a free heal; current
 health is limited to its prior budget and the new maximum. Temporary input
 loans restore after every rebuild; reset also removes derived consumable bonuses.
 
 10% of rewards are automatically sold materials. Conditional material rarity
-is 60/30/9/1% Common/Uncommon/Rare/Epic with relative values 1/2/4/8. These are ASX
+is 60/30/9/1% Common/Uncommon/Rare/Epic with relative values 1/2/4/8. These are AZSX
 discovery rarities, not claims about the original items' WoW quality. Three
 variants per rarity cover herbs, cloth, ores and rare reagents.
 Nominal gold is rounded from `10*(1+min(encounters,5))*200*rarityMultiplier/492`.
@@ -281,7 +281,7 @@ selected-memory fixtures and native stand-ins cover different risks. Consult
 ## Sayge's Trial
 
 Enabled independently through `darkmoon_trials` in the optional event settings
-(`ASX_DARKMOON_TRIALS=0` disables only this event). Boss Fortunes are replaced by this trial while enabled in solo and coop. The shared completed-encounter hook
+(`AZSX_DARKMOON_TRIALS=0` disables only this event). Boss Fortunes are replaced by this trial while enabled in solo and coop. The shared completed-encounter hook
 is independent of either feature.
 
 No trial before the first boss. A native completed encounter schedules one trial
@@ -351,7 +351,7 @@ while that player is inside. Completion commits one personal Fortune per current
 participant before stat refresh; strongest XP/gold contribution rules remain.
 The random power range, stage cap and guaranteed replacement apply independently
 to each player's previous Fortune. Optional event failures stop further event
-work for that run, without disabling core cooperative ASX features.
+work for that run, without disabling core cooperative AZSX features.
 
 The host's addon payload carries personal event metadata through the existing
 native channel. Cosmetic minimap projection uses the viewer's live native
@@ -360,7 +360,7 @@ custom transport, client-side reward decision or simulation authority is added.
 
 ## Event presentation and cooperative validation
 
-ASXUI stacks Sayge, Supplies and Fortune panels below the native top HUD,
+AZSXUI stacks Sayge, Supplies and Fortune panels below the native top HUD,
 centered by default. The shared anchor and each panel's offset, scale, opacity
 and visibility remain configurable; layout accounts for scaled visible heights.
 Sayge exposes collective readiness separately from local presence. Progress
@@ -373,7 +373,7 @@ and solo Supplies. Pending aura cleanup keeps that boundary active after buff
 expiry, so stale native aura rows can be retired. Native stat reconstruction
 continues to use each receiving actor's personal buff inputs.
 
-ASXUI presents Fortunes with their actual +X% amount in green, including native
+AZSXUI presents Fortunes with their actual +X% amount in green, including native
 buff tooltips; rarity remains available as structured data, not the visible
 quality label. Missing/stale snapshots or a new trial do not replay an unchanged
 acquisition notification. Sayge progress uses native WoW casting-bar assets and
@@ -381,8 +381,8 @@ a separate waiting/progress line.
 
 Automatic participant markers keep the seven non-skull icons; skull is left for
 manual use. Goblins receive no automatic raid marker and are identified by their
-ASXUI encounter health bar. Native/manual marks are not cleared or reassigned.
-ASXUI replaces the native guardian red flag using all valid `AZS_GetLairs()`
+AZSXUI encounter health bar. Native/manual marks are not cleared or reassigned.
+AZSXUI replaces the native guardian red flag using all valid `AZS_GetLairs()`
 entries and the same projection as cache/event pins. Explicit pin layers put
 Sayge above active guardians, Supplies, caches and returning guardians. The
 native HUD flag preference is restored when pins/projection are unavailable.
@@ -412,7 +412,7 @@ an obsolete 60-second literal.
 ### Native spending receipts
 
 The selected native client inlines coin-map writes for cache purchases and paid
-rerolls. ASX observes their completed native handlers in addition to the generic
+rerolls. AZSX observes their completed native handlers in addition to the generic
 currency setter. It commits only native decreases to the shared wallet and leaves
 earned-gold totals unchanged. Seeing the same balance through both paths is
 idempotent. A concurrent/nested wallet change cannot be overwritten by a stale

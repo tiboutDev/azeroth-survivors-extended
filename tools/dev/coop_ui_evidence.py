@@ -4,8 +4,8 @@ import json,math
 def rows(text):
  result=[]
  for line in text.splitlines():
-  if "ASX_DIAG "not in line:continue
-  try:row=json.loads(line.split("ASX_DIAG ",1)[1])
+  if "AZSX_DIAG "not in line:continue
+  try:row=json.loads(line.split("AZSX_DIAG ",1)[1])
   except ValueError:continue
   if row.get("kind")=="ui.coop_hud"and isinstance(row.get("data"),dict):result.append(row)
  return result

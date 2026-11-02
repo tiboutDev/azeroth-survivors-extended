@@ -1,12 +1,12 @@
 """Strict, passive Lua evidence collection. Model records never prove rendered UI."""
 import json,math
-KINDS={"observer.started","observer.stopped","ui.coop_hud","ui.progression","ui.supply_toast","ui.sayge_progress","ui.buffs","ui.tooltip","asx.ritual_model"}
+KINDS={"api.contract","observer.started","observer.stopped","ui.coop_hud","ui.progression","ui.supply_toast","ui.sayge_progress","ui.buffs","ui.tooltip","azsx.ritual_model"}
 def collect(text,session,slot):
  records=[];errors=[];last_clock=-1
  for line in text.splitlines():
-  if "ASX_DIAG "not in line:continue
+  if "AZSX_DIAG "not in line:continue
   try:
-   row=json.loads(line.split("ASX_DIAG ",1)[1])
+   row=json.loads(line.split("AZSX_DIAG ",1)[1])
    if row.get("schema")!=1 or row.get("session")!=session or row.get("slot")!=slot:raise ValueError("identity")
    if row.get("sequence")!=len(records)+1 or len(records)>=512:raise ValueError("sequence/budget")
    clock=row.get("clock")

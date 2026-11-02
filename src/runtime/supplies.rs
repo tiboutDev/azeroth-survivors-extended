@@ -1,8 +1,8 @@
 //! Solo supplies director. All native work happens after short state reservations.
 use super::event_services::Services;
 use super::RUNTIME;
-use asx_game::official::{EventObject,StatInputLoan};
-use asx_gameplay::{Phase,supplies::{Supply,Reward,Buffs,Consumable,Family,Discovery}};
+use azsx_game::official::{EventObject,StatInputLoan};
+use azsx_gameplay::{Phase,supplies::{Supply,Reward,Buffs,Consumable,Family,Discovery}};
 use std::{cell::{Cell,RefCell},collections::BTreeMap,sync::{Mutex,atomic::{AtomicBool,Ordering}}};
 static ENABLED:AtomicBool=AtomicBool::new(false);
 struct Reserve{rules:Supply,object:EventObject}
@@ -10,8 +10,8 @@ struct State{game:u64,owner:u64,clock:f32,next:f32,sequence:u64,rng:u64,bosses:u
 static STATE:Mutex<Option<State>>=Mutex::new(None);
 impl State{fn draw(&mut self,n:u32)->u32{loop{self.rng=self.rng.wrapping_add(0x9e3779b97f4a7c15);let mut z=self.rng;z=(z^(z>>30)).wrapping_mul(0xbf58476d1ce4e5b9);z=(z^(z>>27)).wrapping_mul(0x94d049bb133111eb);z^=z>>31;let max=u64::MAX-u64::MAX%u64::from(n);if z<max{return(z%u64::from(n))as u32}}}}
 pub fn install(r:&dyn Services){
- if std::env::var("ASX_LOST_SUPPLIES").as_deref()==Ok("0"){return}
- if r.events_verify_supplies().is_err(){r.events_warn("Lost Supplies unavailable: optional native contact changed; core ASX unchanged.");return}
+ if std::env::var("AZSX_LOST_SUPPLIES").as_deref()==Ok("0"){return}
+ if r.events_verify_supplies().is_err(){r.events_warn("Lost Supplies unavailable: optional native contact changed; core AZSX unchanged.");return}
  ENABLED.store(true,Ordering::Release);r.events_info("Lost Supplies: map-wide generation and personal cooperative claims enabled.");
 }
 pub fn enabled()->bool{ENABLED.load(Ordering::Acquire)}
@@ -28,7 +28,7 @@ pub fn has_aura_projection(game:u64,owner:u64)->bool{if super::world_events::coo
 pub fn discovery(game:u64,owner:u64)->Option<Discovery>{if let Some(d)=super::world_events::coop::discovery(game,owner){return Some(d)}STATE.lock().ok().and_then(|s|s.as_ref().filter(|s|s.game==game&&s.owner==owner)?.discovery)}
 pub fn aura(game:u64,owner:u64,rows:&[(Family,u32)]){super::world_events::coop::aura(game,owner,rows);if let Ok(mut s)=STATE.lock(){if let Some(s)=s.as_mut().filter(|s|s.game==game&&s.owner==owner){s.auras=rows.iter().copied().collect();}}}
 pub fn active()->bool{super::world_events::coop::active()||STATE.lock().is_ok_and(|s|s.as_ref().is_some_and(|s|!s.buffs.is_empty()||!s.auras.is_empty()))}
-pub fn finish(r:&dyn Services,game:u64){if !ENABLED.load(Ordering::Acquire){return}if let Err(e)=tick(r,game){r.events_warn(&format!("Lost Supplies stopped: {e}; core ASX remains active."));ENABLED.store(false,Ordering::Release);reset();}}
+pub fn finish(r:&dyn Services,game:u64){if !ENABLED.load(Ordering::Acquire){return}if let Err(e)=tick(r,game){r.events_warn(&format!("Lost Supplies stopped: {e}; core AZSX remains active."));ENABLED.store(false,Ordering::Release);reset();}}
 fn notice(r:&dyn Services,game:u64,text:&str){if let Err(e)=unsafe{r.events_notice(game, "Lost Supplies", text)}{r.events_warn(&format!("Supply announcement rejected: {e}"));}}
 fn tick(r:&dyn Services,game:u64)->Result<(),String>{
  let Some(p)=r.events_solo_run(game)?else{return Ok(())};let Some(actor)=p.actors.first()else{return Ok(())};let now=p.clock;
@@ -81,7 +81,7 @@ pub fn native_stats(r:&dyn Services,game:u64,native:impl FnOnce()){
  let Some((_,owner))=r.events_run_source(game).ok().flatten()else{native();return};let current=buffs(game,owner).into_iter().filter(|(_,left,_)|*left>0.).map(|(c,_,_)|c).collect::<Vec<_>>();if current.is_empty(){native();return}
  #[cfg(feature="test-hooks")]let mut speed_base=None;
  #[cfg(feature="test-hooks")]
- let audit=if std::env::var("ASX_TEST_COOP_BUFF_STATS").as_deref()==Ok("1"){
+ let audit=if std::env::var("AZSX_TEST_COOP_BUFF_STATS").as_deref()==Ok("1"){
   let mut seen=AUDIT.lock().unwrap_or_else(|e|e.into_inner());let key=(owner,current.iter().map(|c|(c.family as u8,c.tier)).collect::<Vec<_>>());
   let first=seen.len()<64&&seen.insert(key);drop(seen);
   if first{let _skip=Probe::new();r.events_refresh_stats(game).ok().and_then(|_|{speed_base=r.events_movement_speed(game).ok();r.events_ring_stat_values(game).ok()})}else{None}
@@ -90,7 +90,7 @@ pub fn native_stats(r:&dyn Services,game:u64,native:impl FnOnce()){
  #[cfg(feature="test-hooks")]if let (Some(base),Some(c))=(speed_base,current.iter().find(|c|c.family==Family::Swiftness)){r.events_info(&format!("supplies speed stats: owner={owner} expected={} base={base} actual={:?}",c.value(),r.events_movement_speed(game)));}
  #[cfg(feature="test-hooks")]if let Some(base)=audit{let values=current.iter().map(|c|(c.family as u8,c.tier,c.value())).collect::<Vec<_>>();r.events_info(&format!("coop consumable native stats: owner={owner} buffs={values:?} base={base:?} actual={:?}",r.events_ring_stat_values(game)));}
 }
-#[cfg(feature="test-hooks")]fn fixture_enabled()->bool{std::env::var("ASX_TEST_LOST_SUPPLIES").as_deref()==Ok("1")}
+#[cfg(feature="test-hooks")]fn fixture_enabled()->bool{std::env::var("AZSX_TEST_LOST_SUPPLIES").as_deref()==Ok("1")}
 #[cfg(not(feature="test-hooks"))]fn fixture_enabled()->bool{false}
 
 #[cfg(feature="test-hooks")]

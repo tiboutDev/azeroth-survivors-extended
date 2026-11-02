@@ -1,4 +1,4 @@
-# Reproducible native Windows ASX build. Requires the separately reviewed Windows
+# Reproducible native Windows AZSX build. Requires the separately reviewed Windows
 # manifest through scripts/reproduce.ps1 before it can be treated as reproducible.
 param([string]$TargetDir = '')
 $ErrorActionPreference = 'Stop'
@@ -19,7 +19,7 @@ $cargoHome = if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $env:USER
 $sysroot = (& rustc --print sysroot).Trim()
 if ($LASTEXITCODE -ne 0 -or -not $sysroot) { throw 'Cannot identify the Rust sysroot.' }
 $flags = @(
-    "--remap-path-prefix=$root=/asx",
+    "--remap-path-prefix=$root=/azsx",
     "--remap-path-prefix=$cargoHome=/cargo",
     "--remap-path-prefix=$sysroot=/rust",
     '-Cdebuginfo=0',

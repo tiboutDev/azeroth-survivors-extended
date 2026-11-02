@@ -8,8 +8,8 @@ def assess(root):
   text=(folder/"azeroth-coop-native.log").read_text(errors="replace")
   samples=[]
   for line in text.splitlines():
-   if "ASX startup profile: " not in line:continue
-   t=float(re.search(r"([0-9.]+)s",line)[1]);rows=json.loads(line.split("ASX startup profile: ",1)[1]);samples.append((t,rows))
+   if "AZSX startup profile: " not in line:continue
+   t=float(re.search(r"([0-9.]+)s",line)[1]);rows=json.loads(line.split("AZSX startup profile: ",1)[1]);samples.append((t,rows))
   if not samples:raise ValueError("Missing native timing samples")
   peaks={};previous={}
   for t,rows in samples:

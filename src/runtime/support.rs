@@ -1,6 +1,6 @@
 //! Source-owned support over the official native effect queue.
 use super::*;
-use asx_gameplay::support::{self as policy, Active, Member, Spell, UnitKind};
+use azsx_gameplay::support::{self as policy, Active, Member, Spell, UnitKind};
 #[derive(Clone, Copy)]
 struct Selection {
     game: u64,
@@ -10,7 +10,7 @@ struct Selection {
     suppressed: bool,
 }
 thread_local! {static CAST:std::cell::Cell<Option<Selection>>=const{std::cell::Cell::new(None)};}
-use asx_game::official::{OwnedEffect, SupportReceipt, SupportTalents};
+use azsx_game::official::{OwnedEffect, SupportReceipt, SupportTalents};
 static ACTIVE: std::sync::Mutex<Vec<(u64, Active)>> = std::sync::Mutex::new(vec![]);
 static TALENTS: std::sync::Mutex<Vec<(u64, u32, SupportTalents)>> = std::sync::Mutex::new(vec![]);
 static RECEIPTS: std::sync::Mutex<Vec<SupportReceipt>> = std::sync::Mutex::new(vec![]);
@@ -21,13 +21,13 @@ thread_local! {static ORIGIN:std::cell::Cell<Option<[f32;3]>>=const{std::cell::C
 thread_local! {static PROC_RECIPIENT:std::cell::Cell<Option<(u64,u64)>>=const{std::cell::Cell::new(None)};}
 static CAST_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 static HURT_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
-static RETALIATION: std::sync::Mutex<Vec<(asx_game::official::RetaliationTick, u64)>> =
+static RETALIATION: std::sync::Mutex<Vec<(azsx_game::official::RetaliationTick, u64)>> =
     std::sync::Mutex::new(vec![]);
 static HEAL_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 static PERIODIC_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 static METER_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 thread_local! {static FOREIGN_HEAL:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};}
-static OWNERS: std::sync::Mutex<Vec<asx_game::official::OwnedEffect>> =
+static OWNERS: std::sync::Mutex<Vec<azsx_game::official::OwnedEffect>> =
     std::sync::Mutex::new(vec![]);
 static APPLY_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 static CREDITS: std::sync::Mutex<Vec<(u32, u32, f32)>> = std::sync::Mutex::new(vec![]);
@@ -60,7 +60,7 @@ pub(super) unsafe extern "system" fn cast(game: u64, ability: u64) -> bool {
     }
     let selection = spell.zip(caster.as_ref()).and_then(|(spell, caster)| {
         let party = runtime.party.lock().ok().and_then(|p| p.clone())?;
-        if party.actors.len() > asx_game::official::NATIVE_PLAYERS {
+        if party.actors.len() > azsx_game::official::NATIVE_PLAYERS {
             return None;
         }
         let active = ACTIVE.lock().map(|a| a.clone()).unwrap_or_default();
@@ -223,7 +223,7 @@ pub(super) unsafe extern "system" fn cast(game: u64, ability: u64) -> bool {
                 if let Err(e) = runtime
                     .adapter
                     .restore_aura(&io, game, saved)
-                    .and_then(|_| asx_game::official::SupportCalls::refresh_support(&io, game))
+                    .and_then(|_| azsx_game::official::SupportCalls::refresh_support(&io, game))
                 {
                     runtime
                         .log
@@ -238,7 +238,7 @@ pub(super) unsafe extern "system" fn cast(game: u64, ability: u64) -> bool {
                     .adapter
                     .native_effect(&runtime.local, game, spell)
                     .and_then(|effect| {
-                        asx_game::official::SupportCalls::emit_support_effect(
+                        azsx_game::official::SupportCalls::emit_support_effect(
                             &io,
                             game,
                             spell,
@@ -262,7 +262,7 @@ pub(super) unsafe extern "system" fn cast(game: u64, ability: u64) -> bool {
                         .warn(&format!("Official support rollback rejected: {error}"));
                     return success;
                 }
-                if let Err(e) = asx_game::official::SupportCalls::refresh_support(&io, game) {
+                if let Err(e) = azsx_game::official::SupportCalls::refresh_support(&io, game) {
                     runtime
                         .log
                         .warn(&format!("Official source aura refresh rejected: {e}"));
@@ -714,13 +714,13 @@ unsafe extern "system" fn periodic(game: u64, dt: f32) {
         let Ok(before) = runtime.adapter.support_caster(&runtime.local, game) else {
             continue;
         };
-        let heal: asx_game::official::NativeHealCall = std::mem::transmute(HEAL_ORIGINAL.load(Ordering::Acquire));
+        let heal: azsx_game::official::NativeHealCall = std::mem::transmute(HEAL_ORIGINAL.load(Ordering::Acquire));
         let metadata = [(-2i64) as u64, 0, 0, 0, 0, 0];
         let previous = FOREIGN_HEAL.with(|v| v.replace(true));
         let raw = tick.raw * fatigue::for_source(game, tick.owner.caster, tick.owner.caster_guid);
         #[cfg(feature="test-hooks")]
         fatigue::with_source(game,tick.owner.caster,tick.owner.caster_guid,||fatigue::fixture_trace(runtime,game,if tick.owner.caster_guid==tick.owner.target_guid {3}else{2},tick.raw,raw));
-        combat_text::with_periodic_text_source(game,Some((tick.owner.caster_guid,tick.owner.spell)),||asx_game::official::call_native_heal(heal, game, raw, 0, metadata.as_ptr()));
+        combat_text::with_periodic_text_source(game,Some((tick.owner.caster_guid,tick.owner.spell)),||azsx_game::official::call_native_heal(heal, game, raw, 0, metadata.as_ptr()));
         FOREIGN_HEAL.with(|v| v.set(previous));
         let Ok(after) = runtime.adapter.support_caster(&runtime.local, game) else {
             continue;
@@ -759,7 +759,7 @@ fn receipt(
     spell: u32,
     raw: f32,
     effective: f32,
-    target: &asx_game::official::SupportCaster,
+    target: &azsx_game::official::SupportCaster,
 ) {
     let talents = TALENTS
         .lock()
@@ -953,7 +953,7 @@ pub(super) fn observe_combat_damage(game: u64, enemy: u64, amount: f32, spell: u
     }
 }
 
-type Hurt = asx_game::official::NativeHurtCall;
+type Hurt = azsx_game::official::NativeHurtCall;
 unsafe extern "system" fn hurt(game: u64, amount: f32, enemy: u64, melee: bool,native_kind:u32,native_spell:u32) {
     #[cfg(feature="test-hooks")]
     if std::env::var("AZCOOP_TEST_BLESSINGS").as_deref()==Ok("1"){return;}

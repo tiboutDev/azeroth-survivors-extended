@@ -7,12 +7,12 @@ Step-by-step maintainer procedures: [native compatibility](docs/compatibility/CO
 
 ---
 
-**ASX builds on Azeroth Survivors with new build choices and deeper cooperative play.** Discover ring enchantments, world crystals and Sayge’s Dark Fortunes, alongside new ways to support your party.
+**AZSX builds on Azeroth Survivors with new build choices and deeper cooperative play.** Discover ring enchantments, world crystals and Sayge’s Dark Fortunes, alongside new ways to support your party.
 
 > **Unofficial mod — original game required.**\
-> ASX does not include Azeroth Survivors and is independent of its original author.
+> AZSX does not include Azeroth Survivors and is independent of its original author.
 
-**[Download ASX](https://github.com/tiboutDev/azeroth-survivors-extended/releases)** · **[Report a bug](https://github.com/tiboutDev/azeroth-survivors-extended/issues)**
+**[Download AZSX](https://github.com/tiboutDev/azeroth-survivors-extended/releases)** · **[Report a bug](https://github.com/tiboutDev/azeroth-survivors-extended/issues)**
 
 ## Make each run your own
 
@@ -52,7 +52,7 @@ Repeated resurrections temporarily reduce your damage and healing. Stay alive to
 
 ## Feature maturity
 
-ASX is actively evolving. **Balance in progress** means bonus values and progression are still being tuned. **Playtesting** means a feature needs more feedback from real runs. **Established** features have a more settled design and behavior, though issues can still occur.
+AZSX is actively evolving. **Balance in progress** means bonus values and progression are still being tuned. **Playtesting** means a feature needs more feedback from real runs. **Established** features have a more settled design and behavior, though issues can still occur.
 
 These pages describe the current source; published releases may contain an earlier feature set. Check the notes of the release you download.
 
@@ -60,15 +60,15 @@ These labels describe feature maturity, not exhaustive validation of every class
 
 ## Start playing
 
-**Windows 64-bit · Use the game version specified by your ASX release.**
+**Windows 64-bit · Use the game version specified by your AZSX release.**
 
 1. Close the game.
-2. Extract the compatible ASX archive into your game folder, beside `AzerothSurvivors.exe`.
-3. Run **`start-asx.cmd`**. It installs the included ASXUI addon and starts ASX automatically.
+2. Extract the compatible AZSX archive into your game folder, beside `AzerothSurvivors.exe`.
+3. Run **`start-azsx.cmd`**. It installs the included AZSXUI addon and starts AZSX automatically.
 
-ASXUI needs no separate download. Signed ASX updates compatible with your installed game install automatically, update the managed addon files and preserve saved preferences.
+AZSXUI needs no separate download. Signed AZSX updates compatible with your installed game install automatically, update the managed addon files and preserve saved preferences.
 
-For multiplayer, use the official **Co-op** menu. All participants should use the same compatible game and ASX versions.
+For multiplayer, use the official **Co-op** menu. All participants should use the same compatible game and AZSX versions.
 
 **[Installation, updates and removal →](docs/player/INSTALLATION.md)**
 
@@ -82,33 +82,33 @@ Experimental ideas are kept separate from the features available in current rele
 
 In current source, dead co-op participants continue gaining shared XP and native whole-level rewards immediately. Level-up choices remain pending until revival. Prepared archives validate only the source recorded in their release notes.
 
-## Help improve ASX
+## Help improve AZSX
 
 Found a bug or an interesting build interaction? Open an [issue](https://github.com/tiboutDev/azeroth-survivors-extended/issues) with:
 
-- Your game and ASX versions.
+- Your game and AZSX versions.
 - Whether you were playing solo or co-op, including the player count.
 - The affected classes and what happened.
 - A screenshot or diagnostic export when useful.
 
-## Included ASXUI addon
+## Included AZSXUI addon
 
-[ASXUI](addons/ASXUI/README.md) independently styles native enemy nameplates,
+[AZSXUI](addons/AZSXUI/README.md) independently styles native enemy nameplates,
 preserves the native damage font by default, and renders custom/native-cache
-minimap pins using the ASX projection bridge. Supplies, Fortune and crystal
-notifications, plus Sayge progress, are configurable ASXUI widgets with text
-still supplied by ASX.
-ASX installs it automatically in `benilla-config/AddOns/ASXUI` and keeps its
+minimap pins using the AZSX projection bridge. Supplies, Fortune and crystal
+notifications, plus Sayge progress, are configurable AZSXUI widgets with text
+still supplied by AZSX.
+AZSX installs it automatically in `benilla-config/AddOns/AZSXUI` and keeps its
 managed files updated. Native SavedVariables preferences are preserved.
-Use `/asxui widget crystals show off` to hide crystal notices without changing
+Use `/azsxui widget crystals show off` to hide crystal notices without changing
 crystal rewards. Position, scale and opacity can be adjusted for each widget.
 
-Nameplate styling requires neither the ASX gameplay DLL nor its launcher;
-minimap pins require the matching ASX projection bridge. See its README for
+Nameplate styling requires neither the AZSX gameplay DLL nor its launcher;
+minimap pins require the matching AZSX projection bridge. See its README for
 commands, font licensing and compatibility limits.
 
-The [ASX addon contract](docs/features/ADDON-API.md) exposes versioned structured values
-and ASX-authored text using native-style Lua globals/getters/handlers.
+The [AZSX addon contract](docs/features/ADDON-API.md) exposes versioned structured values
+and AZSX-authored text using native-style Lua globals/getters/handlers.
 
 ## Development
 
@@ -121,16 +121,16 @@ declare their own supported game version. See
 
 For source organization and engineering practices, see
 [Development](docs/development/DEVELOPMENT.md). The maintained
-[behavior and compatibility checklist](docs/compatibility/ASX-BEHAVIOR.md) defines expected
-outcomes for every ASX feature, including disabled and native-owned behavior.
+[behavior and compatibility checklist](docs/compatibility/AZSX-BEHAVIOR.md) defines expected
+outcomes for every AZSX feature, including disabled and native-owned behavior.
 
 ## License
 
-Copyright (c) 2026 ASX contributors.
+Copyright (c) 2026 AZSX contributors.
 
-ASX is free software: you can redistribute it and/or modify it under the terms
+AZSX is free software: you can redistribute it and/or modify it under the terms
 of the [GNU General Public License, version 3](LICENSE).
-ASX is distributed without any warranty; see the license for details.
+AZSX is distributed without any warranty; see the license for details.
 The original game, its assets and third-party dependencies retain their own licenses.
 
 Developer workflow: [compatibility and diagnostic tooling](docs/compatibility/COMPATIBILITY-WORKFLOW.md).
@@ -140,3 +140,6 @@ Developer workflow: [compatibility and diagnostic tooling](docs/compatibility/CO
 The [native balance reference](docs/native-balance/NATIVE-BALANCE.md) records common native statistics and jewelry with rank/rarity formulas, an offline calculator, reproducible extraction and source provenance.
 
 The native-only [enemy reference](docs/native-balance/ENEMIES.md) covers map definitions, guardians, bosses and spawn scaling; [economy](docs/native-balance/ECONOMY.md) covers kill rewards, gold credits, cache prices and rerolls. Recorded versions indicate provenance; refresh values only on explicit request.
+
+Existing ASX users: follow the [AZSX migration guide](docs/player/AZSX-MIGRATION.md).
+Hosted lobbies are automatically identified with `[AZSX]`.

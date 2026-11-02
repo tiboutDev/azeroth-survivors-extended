@@ -1,13 +1,13 @@
 -- Opt-in diagnostic observer. Read-only widgets; no input, tooltip activation or screenshots.
-local cfg=ASXDiagnosticConfig
+local cfg=AZSXDiagnosticConfig
 if not cfg or cfg.enabled~=true then return end
 local transport=cfg.sink and 'configured'or'native-reserved-sink'
 local sink=cfg.sink
 if not sink and type(SetCVar)=='function'and type(RegisterCVar)=='function'then
- RegisterCVar('asx_diagnostic_mailbox','')
- sink=function(row)SetCVar('asx_diagnostic_mailbox',row)end
+ RegisterCVar('azsx_diagnostic_mailbox','')
+ sink=function(row)SetCVar('azsx_diagnostic_mailbox',row)end
 end
-if type(sink)~='function'then error('ASX diagnostic transport unavailable')end
+if type(sink)~='function'then error('AZSX diagnostic transport unavailable')end
 local started,last,sequence=GetTime(),-100,0
 local maximum=math.min(tonumber(cfg.max_records)or 256,512)
 local duration=math.min(tonumber(cfg.duration)or 180,300)
@@ -52,7 +52,7 @@ local function emit(kind,data)
  if sequence>=maximum then return end
  sequence=sequence+1
  local record={schema=1,session=cfg.session,slot=cfg.slot,sequence=sequence,clock=GetTime(),run_clock=AZS_RUN and AZS_RUN.t,kind=kind,data=data}
- if type(sink)=='function'then sink('ASX_DIAG '..encode(record))end
+ if type(sink)=='function'then sink('AZSX_DIAG '..encode(record))end
 end
 local function sample(kind,data)
  local encoded=encode(data)
@@ -64,15 +64,19 @@ observer:SetScript('OnUpdate',function()
  local now=GetTime()
  if now-started>=duration or sequence>=maximum-1 then emit('observer.stopped',{reason=sequence>=maximum-1 and'budget'or'duration'});observer:SetScript('OnUpdate',nil);return end
  if now-last<0.5 then return end;last=now
+ local api=AZSX_GetState and AZSX_GetState(1)
+ local major,minor=nil,nil
+ if AZSX_GetAPIVersion then major,minor=AZSX_GetAPIVersion()end
+ sample('api.contract',{available=api and api.available or false,major=major,minor=minor,native=type(AZS_RUN)=='table',global=type(AZSX_STATE)=='table',recipient=api and api.session and api.session.recipientGUID,ui=type(AZSXUI_HudReadout)=='function'})
  if cfg.coop_ui then
-  local state=ASX_GetState and ASX_GetState(1)
-  local hud=ASXUI_HudReadout and ASXUI_HudReadout()
+  local state=AZSX_GetState and AZSX_GetState(1)
+  local hud=AZSXUI_HudReadout and AZSXUI_HudReadout()
   local rows={};if hud then for _,row in ipairs(hud.rows or{})do rows[row.key]=row.value end end
-  sample('ui.coop_hud',{area=AZS_STATS and AZS_STATS.area,info=frame('ASXCooperativeRulesBuff'),phase=AZS_GetPhase and AZS_GetPhase(),native={xp=AZS_STATS and AZS_STATS.xp,gold=AZS_STATS and AZS_STATS.gold},economy=state and state.data and state.data.economy,sharedEconomy=state and state.data and state.data.sharedEconomy,available=state and state.available,hud=rows,pinned=hud and hud.pinned,uiActions=ASXCoopUIActions,character=frame('CharacterFrame'),paperdoll=frame('PaperDollFrame'),talents=frame('TalentFrame'),talentFunction=type(ToggleTalentFrame)})
+  sample('ui.coop_hud',{area=AZS_STATS and AZS_STATS.area,info=frame('AZSXCooperativeRulesBuff'),phase=AZS_GetPhase and AZS_GetPhase(),native={xp=AZS_STATS and AZS_STATS.xp,gold=AZS_STATS and AZS_STATS.gold},economy=state and state.data and state.data.economy,sharedEconomy=state and state.data and state.data.sharedEconomy,available=state and state.available,hud=rows,pinned=hud and hud.pinned,uiActions=AZSXCoopUIActions,character=frame('CharacterFrame'),paperdoll=frame('PaperDollFrame'),talents=frame('TalentFrame'),talentFunction=type(ToggleTalentFrame)})
  end
- if cfg.progression then sample('ui.progression',ASXProgressionAudit or{missing=true})end
- sample('ui.supply_toast',frame('ASXSupplyDiscoveryToast'))
- sample('ui.sayge_progress',frame('ASXSaygeTrialProgress'))
+ if cfg.progression then sample('ui.progression',AZSXProgressionAudit or{missing=true})end
+ sample('ui.supply_toast',frame('AZSXSupplyDiscoveryToast'))
+ sample('ui.sayge_progress',frame('AZSXSaygeTrialProgress'))
  local buffs={available=type(GetPlayerBuff)=='function'and type(GetPlayerBuffTexture)=='function',slots={}}
  if buffs.available then for i=0,31 do
   local slot,permanent=GetPlayerBuff(i,'HELPFUL')
@@ -82,5 +86,5 @@ observer:SetScript('OnUpdate',function()
  local tip=frame('GameTooltip')
  if tip.visible then tip.lines={};for i=1,24 do local label=getglobal('GameTooltipTextLeft'..i);if label and call(label,'IsShown')then tip.lines['line_'..i]=call(label,'GetText')end end end
  sample('ui.tooltip',tip)
- if type(ASXRitualReadout)=='function'then local id,held,inside,shown=ASXRitualReadout();sample('asx.ritual_model',{event=id,held=held,inside=inside,shown=shown})end
+ if type(AZSXRitualReadout)=='function'then local id,held,inside,shown=AZSXRitualReadout();sample('azsx.ritual_model',{event=id,held=held,inside=inside,shown=shown})end
 end)

@@ -1,11 +1,11 @@
-//! Reuse the native item-replacement tooltip hierarchy for retained ASX bonuses.
+//! Reuse the native item-replacement tooltip hierarchy for retained AZSX bonuses.
 use super::*;
-use asx_gameplay::kept_bonus::KeptBonus;
-#[derive(Clone,Copy)]struct Row{font:u64,ui:asx_game::official::BonusUi,bonus:KeptBonus}
+use azsx_gameplay::kept_bonus::KeptBonus;
+#[derive(Clone,Copy)]struct Row{font:u64,ui:azsx_game::official::BonusUi,bonus:KeptBonus}
 thread_local!{static ROW:std::cell::Cell<Option<Row>>=const{std::cell::Cell::new(None)};static ATTACHED:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};}
 struct Scope(Option<Row>,bool);
 impl Drop for Scope{fn drop(&mut self){ROW.with(|v|v.set(self.0));ATTACHED.with(|v|v.set(self.1));}}
-pub fn with_row<T>(font:u64,ui:asx_game::official::BonusUi,bonus:KeptBonus,draw:impl FnOnce()->T)->(T,bool){
+pub fn with_row<T>(font:u64,ui:azsx_game::official::BonusUi,bonus:KeptBonus,draw:impl FnOnce()->T)->(T,bool){
  let _scope=Scope(ROW.with(|v|v.replace(Some(Row{font,ui,bonus}))),ATTACHED.with(|v|v.replace(false)));
  let result=draw();(result,ATTACHED.with(|v|v.get()))
 }
@@ -37,8 +37,8 @@ pub fn hooks(adapter:Adapter)->Vec<crate::install::HookSpec>{let e=adapter.bonus
  #[cfg(feature="test-hooks")]if fixture_enabled(){if let Some(e)=adapter.kept_tooltip_fixture_focus(){hooks.push(crate::install::HookSpec{name:"fixture-kept-native-hit",target:local_base()+e.rva as usize,detour:focus_entry as *const ()as usize,trampoline:&FOCUS_ORIGINAL});}}
  hooks
 }
-#[cfg(test)]mod tests{use super::*;#[test]fn nested_native_rows_restore_the_outer_context_without_holding_a_borrow(){let g=KeptBonus::Gem(asx_gameplay::gems::Gem::Sapphire);let gem=KeptBonus::Gem(asx_gameplay::gems::Gem::Ruby);struct Mem;impl asx_game::memory::Mem for Mem{fn read(&self,a:u64,n:usize)->Result<Vec<u8>,String>{match(a,n){(0x10060,8)=>Ok(0x20000u64.to_le_bytes().to_vec()),(0x10058,8)=>Ok(0x30000u64.to_le_bytes().to_vec()),(0x30000,20)=>Ok(vec![0;20]),_=>Err("Unexpected test read".into())}}}
- let ui=asx_game::official::SelectedAdapter::select(asx_game::current::SHA256).unwrap().bonus_ui_context(&Mem,0x10000).unwrap();let(value,attached)=with_row(10,ui,g,||{assert_eq!(ROW.with(|v|v.get().unwrap().bonus),g);ATTACHED.with(|v|v.set(true));let(_,inner)=with_row(30,ui,gem,||{assert_eq!(ROW.with(|v|v.get().unwrap().bonus),gem);});assert!(!inner);assert_eq!(ROW.with(|v|v.get().unwrap().bonus),g);7});assert_eq!(value,7);assert!(attached);assert!(ROW.with(|v|v.get()).is_none());assert!(!ATTACHED.with(|v|v.get()));}}
+#[cfg(test)]mod tests{use super::*;#[test]fn nested_native_rows_restore_the_outer_context_without_holding_a_borrow(){let g=KeptBonus::Gem(azsx_gameplay::gems::Gem::Sapphire);let gem=KeptBonus::Gem(azsx_gameplay::gems::Gem::Ruby);struct Mem;impl azsx_game::memory::Mem for Mem{fn read(&self,a:u64,n:usize)->Result<Vec<u8>,String>{match(a,n){(0x10060,8)=>Ok(0x20000u64.to_le_bytes().to_vec()),(0x10058,8)=>Ok(0x30000u64.to_le_bytes().to_vec()),(0x30000,20)=>Ok(vec![0;20]),_=>Err("Unexpected test read".into())}}}
+ let ui=azsx_game::official::SelectedAdapter::select(azsx_game::current::SHA256).unwrap().bonus_ui_context(&Mem,0x10000).unwrap();let(value,attached)=with_row(10,ui,g,||{assert_eq!(ROW.with(|v|v.get().unwrap().bonus),g);ATTACHED.with(|v|v.set(true));let(_,inner)=with_row(30,ui,gem,||{assert_eq!(ROW.with(|v|v.get().unwrap().bonus),gem);});assert!(!inner);assert_eq!(ROW.with(|v|v.get().unwrap().bonus),g);7});assert_eq!(value,7);assert!(attached);assert!(ROW.with(|v|v.get()).is_none());assert!(!ATTACHED.with(|v|v.get()));}}
 
 #[cfg(feature="test-hooks")]struct Target{entity:u64,bonus:KeptBonus,at:std::time::Instant,entered:bool,left:bool}
 #[cfg(feature="test-hooks")]static TARGETS:std::sync::Mutex<Vec<Target>>=std::sync::Mutex::new(Vec::new());

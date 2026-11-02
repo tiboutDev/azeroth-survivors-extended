@@ -1,4 +1,4 @@
-"""Current ASX scope selection must cover real targets and never launch a game."""
+"""Current AZSX scope selection must cover real targets and never launch a game."""
 import importlib.util
 import tomllib
 import unittest
@@ -13,9 +13,9 @@ spec.loader.exec_module(m)
 class Plans(unittest.TestCase):
     def test_unknown_executable_and_registry_changes_require_full(self):
         for name in ('src/new_native.rs', 'Cargo.toml', 'Cargo.lock',
-                     'asx/supported-games.json', 'assets/lobby.png',
+                     'azsx/supported-games.json', 'assets/lobby.png',
                      'validation/runtime-profile.json',
-                     'crates/asx-game/src/bindings/official125.rs',
+                     'crates/azsx-game/src/bindings/official125.rs',
                      'dllshim/removed_adapter.py'):
             with self.subTest(path=name):
                 self.assertEqual(m.choose([name]), ['full'])
@@ -24,9 +24,9 @@ class Plans(unittest.TestCase):
         self.assertEqual(m.plan(None, ['AGENTS.md', 'docs/development/TESTING.md'])['commands'], [])
 
     def test_current_native_and_retained_presentation_paths_keep_official_checks(self):
-        for name in ('crates/asx-game/src/official_native/support.rs',
-                     'crates/asx-game/src/official_native/pause.rs',
-                     'crates/asx-game/src/official.rs',
+        for name in ('crates/azsx-game/src/official_native/support.rs',
+                     'crates/azsx-game/src/official_native/pause.rs',
+                     'crates/azsx-game/src/official.rs',
                      'src/runtime.rs', 'src/presentation/pause.rs'):
             with self.subTest(path=name):
                 plan = m.plan(None, [name])
@@ -37,12 +37,12 @@ class Plans(unittest.TestCase):
 
     def test_rules_and_feature_scopes_cover_current_contracts(self):
         for name, scope in (
-            ('crates/asx-gameplay/src/support.rs', 'rules'),
+            ('crates/azsx-gameplay/src/support.rs', 'rules'),
             ('src/runtime/gems.rs', 'gems'),
             ('src/runtime/enchantments.rs', 'enchantments'),
             ('src/runtime/party_ui.rs', 'official-party-ui'),
-            ('asx/core.py', 'asx-install'),
-            ('tools/build/asx_verify_publication.py', 'asx-install'),
+            ('azsx/core.py', 'azsx-install'),
+            ('tools/build/azsx_verify_publication.py', 'azsx-install'),
             ('tools/dev/native_profile_codec.py', 'tooling'),
             ('tools/dev/background_desktop.py', 'tooling'),
         ):
@@ -59,7 +59,7 @@ class Plans(unittest.TestCase):
                             for command in m.PROFILES['full']))
 
     def test_all_portable_cargo_targets_exist_and_exclude_retired_crates(self):
-        portable = {'asx-game': 'asx-game', 'asx-gameplay': 'asx-gameplay'}
+        portable = {'azsx-game': 'azsx-game', 'azsx-gameplay': 'azsx-gameplay'}
         for profile, commands in m.PROFILES.items():
             for command in commands:
                 if command[0] != 'cargo':
@@ -69,7 +69,7 @@ class Plans(unittest.TestCase):
                     selected = command[command.index('--manifest-path') + 1]
                     self.assertEqual(selected, 'tools/dev/native-inventory/Cargo.toml')
                     helper = tomllib.loads((ROOT / selected).read_text())
-                    self.assertEqual(helper['package']['name'], 'asx-native-inventory')
+                    self.assertEqual(helper['package']['name'], 'azsx-native-inventory')
                     self.assertIn('workspace', helper)
                     self.assertNotIn('--test', command)
                     continue

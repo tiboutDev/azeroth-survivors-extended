@@ -1,4 +1,4 @@
-"""Canonical ASX feature catalog and deterministic engineering inventory."""
+"""Canonical AZSX feature catalog and deterministic engineering inventory."""
 import argparse,json,re
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
@@ -12,7 +12,7 @@ def load_features(path=CATALOG):
  if data.get("schema")!=1 or not features:raise ValueError("Invalid feature catalog")
  seen=set()
  for f in features:
-  if not re.fullmatch(r"ASX-[0-9]{2}",f.get("id",""))or f["id"]in seen:raise ValueError("Duplicate/invalid feature ID")
+  if not re.fullmatch(r"AZSX-[0-9]{2}",f.get("id",""))or f["id"]in seen:raise ValueError("Duplicate/invalid feature ID")
   seen.add(f["id"])
   if f.get("disposition")not in("active","disabled","upstream"):raise ValueError("Missing feature disposition")
   if not f.get("contract")or not f.get("mode")or not f.get("reference")or not f.get("native_domains"):raise ValueError("Incomplete feature contract")
@@ -26,7 +26,7 @@ def render(features=None):
 
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument("--write-doc",action="store_true");a=p.parse_args()
- content=render();dest=ROOT/"docs/compatibility/ASX-FEATURES.md"
+ content=render();dest=ROOT/"docs/compatibility/AZSX-FEATURES.md"
  if a.write_doc:dest.write_text(content)
  elif dest.read_text()!=content:raise SystemExit("Feature documentation is stale; run feature_catalog.py --write-doc")
  print("Feature catalog and documentation verified")

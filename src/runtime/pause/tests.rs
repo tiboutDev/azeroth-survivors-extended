@@ -1,6 +1,6 @@
 use super::*;
 use crate::test_support::TEST_LOCK;
-use asx_gameplay::{official::PausePresentation, Phase};
+use azsx_gameplay::{official::PausePresentation, Phase};
 use serde_json::Value;
 use std::{cell::{Cell, RefCell}, sync::atomic::Ordering};
 

@@ -1,6 +1,6 @@
 //! Runtime binding for the local XP hook boundary, not a global native-free API.
 use super::super::{blessings, io, Runtime, RUNTIME};
-use asx_game::official::ExperienceAward;
+use azsx_game::official::ExperienceAward;
 
 pub(super) trait Services {
     fn shared_input(&self, request: u64, game: u64) -> Result<u32, String>;
@@ -43,7 +43,7 @@ impl Services for Runtime {
 pub(in crate::runtime) fn effective_multiplier(runtime:&Runtime)->Option<f32>{
         let multiplier = runtime.party.lock().ok().and_then(|p| {
             p.as_ref().and_then(|party| {
-                asx_gameplay::official::shared_xp_multiplier(
+                azsx_gameplay::official::shared_xp_multiplier(
                     party.actors.iter().map(|a| (
                         a.xp_multiplier - blessings::personal(a.slot, a.guid, 1),
                         runtime.adapter.racial_xp_bonus(a.race_id),

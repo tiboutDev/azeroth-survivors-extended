@@ -4,7 +4,7 @@
 
 ---
 
-ASX continues to explore new build choices as Azeroth Survivors evolves.
+AZSX continues to explore new build choices as Azeroth Survivors evolves.
 
 This page describes ideas still being explored. It is not a release schedule, and these ideas have no promised release date.
 
@@ -17,7 +17,7 @@ We look for mechanics that:
 - Fit naturally into the game’s existing rewards and interface.
 - Remain understandable in both solo and co-op.
 
-Concepts may be tested, revised or set aside before becoming part of ASX. Available features may also go through further playtesting and balance changes; their current status appears in the [feature guide](FEATURES.md).
+Concepts may be tested, revised or set aside before becoming part of AZSX. Available features may also go through further playtesting and balance changes; their current status appears in the [feature guide](FEATURES.md).
 
 Only features explicitly included in a release’s notes should be considered available.
 

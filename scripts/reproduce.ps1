@@ -1,21 +1,21 @@
-# Rebuild the supported ASX DLL against an explicitly reviewed Windows artifact reference.
+# Rebuild the supported AZSX DLL against an explicitly reviewed Windows artifact reference.
 # Missing references fail before compilation; the local xwin reference is a different builder.
 param([string]$ExpectedManifest = '', [string]$TargetDir = '')
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 if (-not $ExpectedManifest) {
-    $ExpectedManifest = Join-Path $root 'validation/asx-reproducible-build.json'
+    $ExpectedManifest = Join-Path $root 'validation/azsx-reproducible-build.json'
 }
 if (-not (Test-Path -LiteralPath $ExpectedManifest -PathType Leaf)) {
-    throw 'No reviewed Windows-native ASX reference. The xwin reference cannot substitute for it.'
+    throw 'No reviewed Windows-native AZSX reference. The xwin reference cannot substitute for it.'
 }
 try {
     $expected = Get-Content -LiteralPath $ExpectedManifest -Raw | ConvertFrom-Json
 } catch {
-    throw 'Invalid reviewed Windows-native ASX reference.'
+    throw 'Invalid reviewed Windows-native AZSX reference.'
 }
-$registry = Get-Content -LiteralPath (Join-Path $root 'asx/supported-games.json') -Raw | ConvertFrom-Json
+$registry = Get-Content -LiteralPath (Join-Path $root 'azsx/supported-games.json') -Raw | ConvertFrom-Json
 $versions = @($registry.games.PSObject.Properties.Name)
 if ($registry.schema -ne 1 -or $versions.Count -ne 1) {
     throw 'Missing or ambiguous supported native client registry.'
@@ -23,16 +23,16 @@ if ($registry.schema -ne 1 -or $versions.Count -ne 1) {
 if ($expected.schema -ne 1 -or $expected.game_version -ne $versions[0] -or
     $expected.artifact -ne 'avrt.dll' -or $expected.builder -ne 'windows-msvc' -or
     $expected.sha256 -cnotmatch '^[0-9a-f]{64}$') {
-    throw 'Invalid reviewed Windows-native ASX reference.'
+    throw 'Invalid reviewed Windows-native AZSX reference.'
 }
-Write-Host '[ .... ] reproducible native Windows ASX build'
+Write-Host '[ .... ] reproducible native Windows AZSX build'
 $builder = Join-Path $root 'tools/build/release.ps1'
 if ($TargetDir) {
     & powershell -NoProfile -File $builder -TargetDir $TargetDir
 } else {
     & powershell -NoProfile -File $builder
 }
-if ($LASTEXITCODE -ne 0) { throw "ASX release build failed: $LASTEXITCODE" }
+if ($LASTEXITCODE -ne 0) { throw "AZSX release build failed: $LASTEXITCODE" }
 if ($TargetDir) {
     $targetRoot = if ([IO.Path]::IsPathRooted($TargetDir)) { [IO.Path]::GetFullPath($TargetDir) } else { [IO.Path]::GetFullPath((Join-Path $root $TargetDir)) }
 } elseif ($env:CARGO_TARGET_DIR) {
@@ -42,5 +42,5 @@ if ($TargetDir) {
 }
 $file = Join-Path $targetRoot 'x86_64-pc-windows-msvc\release\avrt.dll'
 $actual = (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($actual -cne $expected.sha256) { throw 'Rebuilt ASX DLL differs from the reviewed Windows-native artifact.' }
-Write-Host '[  OK  ] ASX DLL matches the reviewed Windows-native artifact.'
+if ($actual -cne $expected.sha256) { throw 'Rebuilt AZSX DLL differs from the reviewed Windows-native artifact.' }
+Write-Host '[  OK  ] AZSX DLL matches the reviewed Windows-native artifact.'

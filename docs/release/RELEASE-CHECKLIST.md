@@ -1,7 +1,7 @@
 # Release preparation checklist
 
 Ordered maintainer procedure, separate from publication. Read [installation and
-distribution](ASX-INSTALLATION.md), [reproducibility](REPRODUCIBILITY.md) and
+distribution](AZSX-INSTALLATION.md), [reproducibility](REPRODUCIBILITY.md) and
 [publication checks](../development/TESTING.md#publication-checks). For a new native patch,
 complete [COMPATIBILITY-CHECKLIST.md](../compatibility/COMPATIBILITY-CHECKLIST.md) first.
 
@@ -41,8 +41,8 @@ for both author and committer and verify their identities afterwards.
 ## 2. Pass source gates and review documentation
 
 ```sh
-python3 tools/dev/asx_dev.py check
-sh tools/dev/check.sh --profile full --profile asx-install
+python3 tools/dev/azsx_dev.py check
+sh tools/dev/check.sh --profile full --profile azsx-install
 sh tools/dev/check.sh --profile official-party-ui
 python3 scripts/hygiene_gate.py
 python3 scripts/audit_local_information.py --history --report "$EVIDENCE/PRIVACY-AUDIT.json"
@@ -65,7 +65,7 @@ invalidated checks. Full portable checks do not execute game/archive trials.
 ## 3. Produce the normal release candidate
 
 ```sh
-python3 tools/build/asx_reproducibility.py --candidate "$CANDIDATE"
+python3 tools/build/azsx_reproducibility.py --candidate "$CANDIDATE"
 ```
 
 The producer makes two independent fresh normal builds. Select the emitted DLL
@@ -86,15 +86,15 @@ A changed native target or compiled source requires a new qualified artifact.
 ## 4. Qualify that exact normal DLL in isolation
 
 ```sh
-python3 tools/dev/asx_dev.py stage --receiver "$RECEIVER" --dll "$DLL"
+python3 tools/dev/azsx_dev.py stage --receiver "$RECEIVER" --dll "$DLL"
 ```
 
 In the verified receiver, with **Windows Python**:
 
 ```text
-python -I -B tools/dev/asx_dev.py preflight
-python -I -B tools/dev/asx_dev.py validate solo-normal
-python -I -B tools/dev/asx_dev.py validate coop-normal
+python -I -B tools/dev/azsx_dev.py preflight
+python -I -B tools/dev/azsx_dev.py validate solo-normal
+python -I -B tools/dev/azsx_dev.py validate coop-normal
 ```
 
 Use prior results only when their DLL/source/UI/tool/scenario identities still
@@ -113,13 +113,13 @@ explicit signing key's public part against the configured trust list without
 exposing the private key. Then:
 
 ```sh
-python3 tools/build/asx_package.py --output "$OUTPUT" --dll "$DLL" \
+python3 tools/build/azsx_package.py --output "$OUTPUT" --dll "$DLL" \
   --runtime "$RUNTIME" --version "$VERSION" --game-version "$GAME_VERSION" \
   --sequence "$SEQUENCE" --private-key "$SIGNING_KEY"
 mkdir "$OUTPUT/UPLOAD"
-cp "$OUTPUT/asx-$VERSION.zip" "$OUTPUT/UPLOAD/asx-$VERSION.zip"
-cp "$OUTPUT/asx-$VERSION.zip" "$OUTPUT/UPLOAD/ASX.zip"
-cp "$OUTPUT/asx-latest.json" "$OUTPUT/asx-latest.json.sig" "$OUTPUT/UPLOAD/"
+cp "$OUTPUT/azsx-$VERSION.zip" "$OUTPUT/UPLOAD/azsx-$VERSION.zip"
+cp "$OUTPUT/azsx-$VERSION.zip" "$OUTPUT/UPLOAD/AZSX.zip"
+cp "$OUTPUT/azsx-latest.json" "$OUTPUT/azsx-latest.json.sig" "$OUTPUT/UPLOAD/"
 ```
 
 Create `PUBLICATION.json` in the intermediate output with `repository`, `tag`,
@@ -130,16 +130,16 @@ not copied assumptions. Write `SOURCE-COMMIT.json` with `payload_source_commit`,
 creates PREPARATION.json; it does **not** create publication metadata or UPLOAD.
 
 ```sh
-python3 tools/build/asx_verify_publication.py --folder "$OUTPUT" --local
+python3 tools/build/azsx_verify_publication.py --folder "$OUTPUT" --local
 ```
 
-Also authenticate/unpack through `asx/updates.py` (`verify` then `unpack`) using
-the intended native hash and prior sequence, and compare extracted DLL, ASXUI,
+Also authenticate/unpack through `azsx/updates.py` (`verify` then `unpack`) using
+the intended native hash and prior sequence, and compare extracted DLL, AZSXUI,
 presentation and launcher bytes with the recorded source. This payload check is
 separate from the publication verifier's signatures/archive-alias check.
 
 - **Expected:** correct signature/sequence/native identity, exact normal DLL and
-  complete ASXUI; no native executable/MPQs, private data or signing key in payload.
+  complete AZSXUI; no native executable/MPQs, private data or signing key in payload.
 - **Keep:** PREPARATION, PUBLICATION, SOURCE-COMMIT, signature/payload verification
   and runtime provenance. Keep these private, outside upload attachments.
 - **Block:** unsigned/invalid feed, wrong key or identity, payload mismatch,
@@ -152,16 +152,16 @@ siblings. With **Windows Python from the isolated receiver**, substitute actual
 Windows paths for the placeholders:
 
 ```text
-python -I -B tools/dev/background_desktop.py --asx-install --asx-package "<prepared-folder>/asx-<version>.zip" --seconds 50
+python -I -B tools/dev/background_desktop.py --azsx-install --azsx-package "<prepared-folder>/azsx-<version>.zip" --seconds 50
 ```
 
 For a supported legacy-layout migration, add
-`--legacy-asx-package "<legacy-fixture>/ASX.zip"`. Copy the authentic old archive
+`--legacy-azsx-package "<legacy-fixture>/AZSX.zip"`. Copy the authentic old archive
 and its matching PREPARATION.json into a disposable fixture folder; do not write
 metadata into the old publication folder. Verify the original hashes first.
 A .2-to-current-layout test is distinct from a same-layout automatic update.
 For changed update/rollback/runtime-worker behavior, add its relevant focused
-checks from [ASX-INSTALLATION.md](ASX-INSTALLATION.md) and [TESTING.md](../development/TESTING.md);
+checks from [AZSX-INSTALLATION.md](AZSX-INSTALLATION.md) and [TESTING.md](../development/TESTING.md);
 the archive smoke alone does not prove those transactions.
 
 Inspect result.json, not just process exit. Currently the base trial has 26
@@ -207,14 +207,14 @@ invented replacement approval.
 ## 8. Finalize the minimal preparation folder
 
 Write RELEASE-NOTES.md, README-PREPARATION.md and PUBLISH-ON-GITHUB.md in English.
-Include required native version, ASXUI inclusion and applicable migration/repair
+Include required native version, AZSXUI inclusion and applicable migration/repair
 instructions. Write VALIDATION.json with honest `technical_validation_passed`,
 `reference_approved`, actual hashes, scenario scope and limitations. Update
 SOURCE-COMMIT/PREPARATION metadata to the actual final source/approval state.
 
 ```sh
-python3 tools/build/asx_release_layout.py --folder "$OUTPUT" --evidence-dir "$EVIDENCE"
-python3 tools/build/asx_verify_publication.py --folder "$OUTPUT" --evidence-dir "$EVIDENCE" --local
+python3 tools/build/azsx_release_layout.py --folder "$OUTPUT" --evidence-dir "$EVIDENCE"
+python3 tools/build/azsx_verify_publication.py --folder "$OUTPUT" --evidence-dir "$EVIDENCE" --local
 git status --short --branch
 ```
 

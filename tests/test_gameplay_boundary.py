@@ -9,26 +9,26 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class GameplayBoundary(unittest.TestCase):
     def test_gameplay_policy_has_no_native_or_transport_dependencies(self):
-        manifest = tomllib.loads((ROOT / "crates/asx-gameplay/Cargo.toml").read_text())
+        manifest = tomllib.loads((ROOT / "crates/azsx-gameplay/Cargo.toml").read_text())
         self.assertFalse(manifest.get("dependencies", {}))
 
-        for source in (ROOT / "crates/asx-gameplay/src").rglob("*.rs"):
+        for source in (ROOT / "crates/azsx-gameplay/src").rglob("*.rs"):
             text = source.read_text()
             for forbidden in (
-                "asx_game::", "azcoop_world::", "windows_sys::", "minhook::",
+                "azsx_game::", "azcoop_world::", "windows_sys::", "minhook::",
                 "crate::Regs", "dyn Client", 'extern "system"', "unsafe {",
                 "layout(", "registers(", "SHA1133", "SHA112",
             ):
                 self.assertNotIn(forbidden, text, str(source))
 
     def test_native_layout_selection_stays_behind_the_official_facade(self):
-        native = (ROOT / "crates/asx-game/src/official_native.rs").read_text()
+        native = (ROOT / "crates/azsx-game/src/official_native.rs").read_text()
         selection = native[native.index("pub fn select("):native.index("pub fn game_address(")]
         self.assertIn("crate::current::SHA256=>Revision::V138", re.sub(r"\s+", "", selection))
         self.assertIn("_=>returnErr", re.sub(r"\s+", "", selection))
         self.assertNotIn("Revision::V115=>", selection)
 
-        facade = (ROOT / "crates/asx-game/src/official.rs").read_text()
+        facade = (ROOT / "crates/azsx-game/src/official.rs").read_text()
         self.assertIn("crate::official_native::Adapter::select(hash)?", facade)
         self.assertIn("pub use crate::official_native::pause::PauseLayout", facade)
         self.assertIn("self.native.pause_addresses()", facade)
@@ -36,18 +36,18 @@ class GameplayBoundary(unittest.TestCase):
     def test_current_native_consumers_do_not_pin_the_selected_version(self):
         # A port changes one descriptor alias and explicit selection. Individual
         # features must not silently keep reading the preceding build's schema.
-        sources = list((ROOT / "crates/asx-game/src/official_native").rglob("*.rs"))
+        sources = list((ROOT / "crates/azsx-game/src/official_native").rglob("*.rs"))
         sources += list((ROOT / "src").rglob("*.rs"))
-        descriptors = [re.escape(p.stem) for p in (ROOT / "crates/asx-game/src/bindings").glob("official*.rs")]
+        descriptors = [re.escape(p.stem) for p in (ROOT / "crates/azsx-game/src/bindings").glob("official*.rs")]
         self.assertTrue(descriptors)
-        pinned = r"(?:crate|asx_game)::(?:" + "|".join(descriptors) + r")(?:::|\s+as)"
+        pinned = r"(?:crate|azsx_game)::(?:" + "|".join(descriptors) + r")(?:::|\s+as)"
         for source in sources:
             production = source.read_text().split("#[cfg(test)]", 1)[0]
             self.assertNotRegex(production, pinned, str(source))
 
     def test_pause_renderer_receives_layout_from_selected_official_runtime(self):
         renderer = (ROOT / "src/presentation/pause.rs").read_text().split("#[cfg(test)]", 1)[0]
-        self.assertIn("use asx_game::official::PauseLayout", renderer)
+        self.assertIn("use azsx_game::official::PauseLayout", renderer)
         self.assertIn("pubfninstall_selected(base:usize,layout:PauseLayout)", re.sub(r"\s+", "", renderer))
         self.assertNotIn("azcoop_bridge", renderer)
         self.assertNotRegex(renderer, r"SHA(?:112|1133)|native(?:112|1133)::")

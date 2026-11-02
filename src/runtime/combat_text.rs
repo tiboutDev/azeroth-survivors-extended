@@ -8,11 +8,11 @@ unsafe extern "system" fn heal(c:&mut crate::stub::Context){
  let Some(r)=RUNTIME.get().filter(|r|r.rules)else{return};
  // Copy the already retained native run identities; never borrow state over calls.
  let players=super::ui_context::participants(r);
- #[cfg(feature="test-hooks")]if std::env::var("ASX_TEST_UI").as_deref()==Ok("1"){static N:AtomicUsize=AtomicUsize::new(0);if N.fetch_add(1,Ordering::Relaxed)<8{r.log.info(&format!("Native healing-log callback: periodic={} players={players:?}",c.id==1));}}
- if players.is_empty()||players.len()>asx_game::official::NATIVE_PLAYERS{return}
+ #[cfg(feature="test-hooks")]if std::env::var("AZSX_TEST_UI").as_deref()==Ok("1"){static N:AtomicUsize=AtomicUsize::new(0);if N.fetch_add(1,Ordering::Relaxed)<8{r.log.info(&format!("Native healing-log callback: periodic={} players={players:?}",c.id==1));}}
+ if players.is_empty()||players.len()>azsx_game::official::NATIVE_PLAYERS{return}
  let periodic=c.id==1;
  #[cfg(feature="test-hooks")]
- if std::env::var("ASX_TEST_UI_REMAINING").as_deref()==Ok("1"){
+ if std::env::var("AZSX_TEST_UI_REMAINING").as_deref()==Ok("1"){
   static DIRECT_HEADERS:AtomicUsize=AtomicUsize::new(0);static PERIODIC_HEADERS:AtomicUsize=AtomicUsize::new(0);
   let counter=if periodic{&PERIODIC_HEADERS}else{&DIRECT_HEADERS};
   if counter.fetch_add(1,Ordering::Relaxed)<8{r.log.info(&format!("remaining UI heal packet: periodic={periodic} bytes={:?}",r.adapter.fixture_heal_packet(&r.local,c.rbp,periodic)));}
@@ -22,7 +22,7 @@ unsafe extern "system" fn heal(c:&mut crate::stub::Context){
   for row in rows{
    let result=r.adapter.draw_native_heal_text(&io::Access{local:&r.local,adapter:r.adapter},r.local.base,c.rbp,periodic,row);
    #[cfg(feature="test-hooks")]
-   if std::env::var("ASX_TEST_UI").as_deref()==Ok("1"){
+   if std::env::var("AZSX_TEST_UI").as_deref()==Ok("1"){
     static COUNT:AtomicUsize=AtomicUsize::new(0);
     if COUNT.fetch_add(1,Ordering::Relaxed)<24{r.log.info(&format!("native heal text: periodic={periodic} event={row:?} result={result:?}"));}
    }
@@ -33,7 +33,7 @@ unsafe extern "system" fn heal(c:&mut crate::stub::Context){
 pub(super)fn hooks(adapter:Adapter)->Vec<crate::install::HookSpec>{
  let entries=adapter.combat_text_entries();
  let size=adapter.damage_text_size_entry();
- vec![crate::install::HookSpec{name:"native-damage-text-size",target:local_base()+size.rva as usize,detour:asx_game::official_native::combat_text::damage_entry as *const()as usize,trampoline:&asx_game::official_native::combat_text::DAMAGE_NEXT},
+ vec![crate::install::HookSpec{name:"native-damage-text-size",target:local_base()+size.rva as usize,detour:azsx_game::official_native::combat_text::damage_entry as *const()as usize,trampoline:&azsx_game::official_native::combat_text::DAMAGE_NEXT},
  crate::install::HookSpec{name:"native-inline-periodic-text",target:local_base()+entries[7].rva as usize,detour:inline_periodic_entry as *const()as usize,trampoline:&INLINE_PERIODIC},
  crate::install::HookSpec{name:"native-fractional-heal-text",target:local_base()+entries[4].rva as usize,detour:fractional_entry as *const()as usize,trampoline:&FRACTIONAL},
  crate::install::HookSpec{name:"native-direct-heal-text",target:local_base()+entries[0].rva as usize,detour:direct_entry as *const() as usize,trampoline:&DIRECT},
@@ -57,25 +57,25 @@ pub(super) fn with_periodic_text_source<T>(game:u64,owner:Option<(u64,u32)>,f:im
  let _restore=Restore(PERIODIC_TEXT_SOURCE.with(|v|v.replace(Some((game,owner)))));f()
 }
 static FRACTIONS_ACTIVE:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
-static FRACTIONS:std::sync::Mutex<std::collections::BTreeMap<u64,asx_gameplay::healing_text::Accumulator>>=std::sync::Mutex::new(std::collections::BTreeMap::new());
+static FRACTIONS:std::sync::Mutex<std::collections::BTreeMap<u64,azsx_gameplay::healing_text::Accumulator>>=std::sync::Mutex::new(std::collections::BTreeMap::new());
 pub(super)fn reset(){if let Ok(mut state)=FRACTIONS.lock(){state.clear();FRACTIONS_ACTIVE.store(false,Ordering::Relaxed);}}
 unsafe extern "system" fn fractional(c:&crate::stub::Context){
  let Some((game,owner))=PERIODIC_TEXT_SOURCE.with(|v|v.get()).filter(|(game,_)|*game==c.rsi)else{return};
  #[cfg(test)]{*FRACTIONAL_CAPTURE.lock().unwrap()=Some((c.rsi,if c.id==1{c.r8 as u32}else{c.rdi as u32},f32::from_bits(c.xmm[1]as u32)));}
  let Some(r)=RUNTIME.get().filter(|r|r.rules)else{return};
- // xmm1 is the final, clamped HP gain, after native talents and ASX penalties.
+ // xmm1 is the final, clamped HP gain, after native talents and AZSX penalties.
  let amount=f32::from_bits(c.xmm[1]as u32);let original_spell=if c.id==1{c.r8 as u32}else{c.rdi as u32};
  if !amount.is_finite()||amount<=0.||c.id==0&&original_spell!=0&&amount>=1.{return}
  let Ok((clock,actor))=r.adapter.fractional_heal_context(&r.local,game)else{return};
  let(caster,spell)=owner.unwrap_or((actor.guid,original_spell));
- let key=asx_gameplay::healing_text::Key{caster,target:actor.guid,spell};
+ let key=azsx_gameplay::healing_text::Key{caster,target:actor.guid,spell};
  FRACTIONS_ACTIVE.store(true,Ordering::Relaxed);
  let ready={let Ok(mut state)=FRACTIONS.lock()else{return};if state.len()>=4&&!state.contains_key(&game){return}state.entry(game).or_default().credit(key,clock,amount,false)};
  let Some(amount)=ready else{return};
- let message=asx_game::official_native::HealText{caster,target:actor.guid,amount,critical:false};
+ let message=azsx_game::official_native::HealText{caster,target:actor.guid,amount,critical:false};
  let result=r.adapter.emit_fractional_heal_text(&io::Access{local:&r.local,adapter:r.adapter},r.local.base,game,message,spell);
  #[cfg(feature="test-hooks")]
- if std::env::var("ASX_TEST_UI_REMAINING").as_deref()==Ok("1"){r.log.info(&format!("fractional HoT text: event={message:?} spell={spell} result={result:?}"));}
+ if std::env::var("AZSX_TEST_UI_REMAINING").as_deref()==Ok("1"){r.log.info(&format!("fractional HoT text: event={message:?} spell={spell} result={result:?}"));}
  #[cfg(not(feature="test-hooks"))]let _=result;
 }
 

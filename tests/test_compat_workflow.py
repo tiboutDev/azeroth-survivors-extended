@@ -1,12 +1,12 @@
 import json,tempfile,unittest,subprocess,sys,re
 from unittest.mock import patch
 from pathlib import Path
-from tools.dev import asx_dev
+from tools.dev import azsx_dev
 from tools.dev import binding_registry,feature_catalog,compatibility,scenario_suites,diagnostic_records,artifact_record
 class WorkflowTests(unittest.TestCase):
  def test_isolated_python_entrypoint_can_check_without_game(self):
   root=Path(__file__).resolve().parents[1]
-  completed=subprocess.run([sys.executable,"-I","-B",str(root/"tools/dev/asx_dev.py"),"check"],capture_output=True,text=True)
+  completed=subprocess.run([sys.executable,"-I","-B",str(root/"tools/dev/azsx_dev.py"),"check"],capture_output=True,text=True)
   self.assertEqual(completed.returncode,0,completed.stderr)
  def test_native_flags_and_model_only_are_distinct(self):
   records=[dict(kind="ui.supply_toast",data=dict(exists=True,visible=1,shown=1,width=200,height=40,title="Found",reward="Item",icon="icon"))]
@@ -16,13 +16,13 @@ class WorkflowTests(unittest.TestCase):
  def test_proof_identity_is_scoped_to_its_own_scenario(self):
   config=scenario_suites.load_suites()
   with patch.object(scenario_suites,'load_suites',return_value=config):
-   before=asx_dev.validation_fingerprint('solo-events')
+   before=azsx_dev.validation_fingerprint('solo-events')
    config['suites']['coop-normal']['seconds']+=1
-   self.assertEqual(before,asx_dev.validation_fingerprint('solo-events'))
+   self.assertEqual(before,azsx_dev.validation_fingerprint('solo-events'))
    config['suites']['solo-events']['seconds']+=1
-   self.assertNotEqual(before,asx_dev.validation_fingerprint('solo-events'))
+   self.assertNotEqual(before,azsx_dev.validation_fingerprint('solo-events'))
  def test_proof_inputs_exclude_unrelated_tools_but_include_executed_fixtures(self):
-  files=asx_dev.validation_inputs('solo-events')
+  files=azsx_dev.validation_inputs('solo-events')
   self.assertIn('tools/dev/extensions_trial.py',files)
   self.assertIn('tools/dev/native_profile_codec.py',files)
   self.assertIn('tools/dev/fixtures/party-talents115.json',files)
@@ -32,7 +32,7 @@ class WorkflowTests(unittest.TestCase):
  def test_inventory_contains_native_gold_after_test_module_and_precise_links(self):
   contracts=compatibility.inventory()['contracts']
   gold=next(c for c in contracts if c['method']=='event_credit_gold')
-  self.assertEqual(gold['features'],['ASX-03','ASX-27'])
+  self.assertEqual(gold['features'],['AZSX-03','AZSX-27'])
   self.assertEqual(gold['link_basis'],'explicit')
   self.assertIn('solo-events',gold['validation_suites'])
   self.assertIn('coop-events',gold['validation_suites'])
@@ -44,10 +44,10 @@ class WorkflowTests(unittest.TestCase):
   self.assertEqual(len(feature_catalog.load_features()),29)
  def test_production_native_access_has_no_historical_descriptor_dependency(self):
   root=Path(__file__).resolve().parents[1]
-  for path in(root/"crates/asx-game/src/official_native").rglob('*.rs'):
+  for path in(root/"crates/azsx-game/src/official_native").rglob('*.rs'):
    source=path.read_text().split('#[cfg(test)]',1)[0]
    self.assertIsNone(re.search(r'crate::official(?:117|120|1201|121|125)\b',source),str(path))
-  current=(root/'crates/asx-game/src/bindings/official129.rs').read_text()
+  current=(root/'crates/azsx-game/src/bindings/official129.rs').read_text()
   self.assertNotIn('super::official',current)
  def test_all_plans_have_solo_before_coop(self):
   config=scenario_suites.load_suites()
@@ -89,14 +89,14 @@ class WorkflowTests(unittest.TestCase):
    self.assertFalse(ready.complete(root,1));self.assertTrue(ready.complete(root,7))
  def test_diagnostics_reject_foreign_duplicate_missing_and_model_only(self):
   def row(n=1,**kw):return dict(schema=1,session="test",slot=0,sequence=n,clock=n,kind="observer.started",data={},**kw)
-  encode=lambda r:"[INFO] ASX_DIAG "+json.dumps(r)
+  encode=lambda r:"[INFO] AZSX_DIAG "+json.dumps(r)
   good=diagnostic_records.collect(encode(row()),"test",0);self.assertTrue(good["passed"])
   self.assertFalse(diagnostic_records.collect(encode(row()),"other",0)["passed"])
   self.assertFalse(diagnostic_records.collect(encode(row())+"\n"+encode(row()),"test",0)["passed"])
   self.assertFalse(diagnostic_records.collect("","test",0)["passed"])
   self.assertFalse(diagnostic_records.assess_events(good)["passed"])
  def test_impact_never_approves_and_refuses_wrong_baseline(self):
-  base=dict(client_sha256="a"*64,contracts=[dict(id="unknown",native_addresses=[5],domains=["unclassified"])],features=[dict(id="ASX-01",disposition="active",native_domains=["ui"])])
+  base=dict(client_sha256="a"*64,contracts=[dict(id="unknown",native_addresses=[5],domains=["unclassified"])],features=[dict(id="AZSX-01",disposition="active",native_domains=["ui"])])
   candidate=dict(old_sha256="a"*64,new_sha256="b"*64,approved=False,offline_only=True,mapping_policy="instruction-alignment-v2",mapping={})
   report=compatibility.impact(candidate,base)
   self.assertFalse(report["approved"]);self.assertEqual(report["features"][0]["contracts"],["unknown"])
@@ -104,10 +104,10 @@ class WorkflowTests(unittest.TestCase):
   with self.assertRaises(ValueError):compatibility.impact(candidate,base)
  def test_coop_refuses_stale_or_failed_solo_proof(self):
   suite=dict(solo_prerequisite="solo-events");record=dict(dll_sha256="a",source_fingerprint="b",validation_fingerprint="c",ui_fingerprint="ui")
-  proof=dict(suite="solo-events",passed=True,dll_sha256="a",source_fingerprint="b",validation_fingerprint="c",ui_fingerprint="ui",version=asx_dev.VERSION)
-  asx_dev.prerequisite(suite,record,[proof])
+  proof=dict(suite="solo-events",passed=True,dll_sha256="a",source_fingerprint="b",validation_fingerprint="c",ui_fingerprint="ui",version=azsx_dev.VERSION)
+  azsx_dev.prerequisite(suite,record,[proof])
   for field,value in (("passed",False),("dll_sha256","old"),("source_fingerprint","old"),("version","old"),("validation_fingerprint","old")):
-   with self.assertRaises(ValueError):asx_dev.prerequisite(suite,record,[dict(proof,**{field:value})])
+   with self.assertRaises(ValueError):azsx_dev.prerequisite(suite,record,[dict(proof,**{field:value})])
  def test_artifact_changed_bytes_or_source_rejected(self):
   with tempfile.TemporaryDirectory()as folder:
    root=Path(folder);dll=root/"avrt.dll";dll.write_bytes(b"normal")

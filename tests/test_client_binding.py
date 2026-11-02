@@ -6,7 +6,7 @@ sys.path.insert(0,str(ROOT/"tools/dev"))
 def descriptor_source():
  # Formatting does not alter the selected native contracts. Keep comments and
  # identifiers intact, but normalize punctuation spacing before extracting tables.
- source=(ROOT/"crates/asx-game/src/bindings/official138.rs").read_text()
+ source=(ROOT/"crates/azsx-game/src/bindings/official138.rs").read_text()
  source=re.sub(r"\s*([,:=&\[\]()])\s*",r"\1",source)
  return re.sub(r",(?=[)\]])","",source)
 
@@ -14,10 +14,10 @@ class Native138(unittest.TestCase):
  def test_registry_pins_distinct_exact_adapter(self):
   source=descriptor_source()
   sha=re.search(r'SHA256\s*:\s*&str\s*=\s*"([0-9a-f]{64})"',source)[1]
-  self.assertEqual(json.loads((ROOT/"asx/supported-games.json").read_text())["games"]["0.138.0"]["sha256"],sha)
-  self.assertIn("Revision::V138",(ROOT/"crates/asx-game/src/official_native.rs").read_text())
+  self.assertEqual(json.loads((ROOT/"azsx/supported-games.json").read_text())["games"]["0.138.0"]["sha256"],sha)
+  self.assertIn("Revision::V138",(ROOT/"crates/azsx-game/src/official_native.rs").read_text())
  def test_native_contacts_guards_and_interior_branches(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private pinned 0.138.0 image unavailable")
   from compare_official import Image,MD
   from capstone import CS_GRP_JUMP,CS_GRP_CALL
@@ -47,7 +47,7 @@ class Native138(unittest.TestCase):
    self.assertNotIn(retired,contacts)
 
  def test_downed_xp_guards_rejoin_scaling_and_native_award_keeps_dead_choices_pending(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private exact image unavailable")
   from compare_official import Image,MD
   from capstone.x86 import X86_OP_MEM,X86_OP_IMM,X86_REG_R13,X86_REG_R9
@@ -93,7 +93,7 @@ class Native138(unittest.TestCase):
   self.assertFalse(any(i.mnemonic.startswith("mov")and i.operands[0].type==X86_OP_MEM and i.operands[0].mem.base==X86_REG_R13 and i.operands[0].mem.disp==0xf4b for i in rows))
 
  def test_native_hybrid_emitter_produces_healing_not_the_neighboring_shield(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private pinned 0.138.0 image unavailable")
   from compare_official import Image
   from capstone import CS_GRP_CALL
@@ -112,7 +112,7 @@ class Native138(unittest.TestCase):
   self.assertIn(emitter,calls) # The reviewed native Renew branch uses this emitter.
 
  def test_native_gold_consumer_identifies_the_multiplier_and_wallet_fields(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private exact image unavailable")
   from compare_official import Image
   from capstone.x86 import X86_OP_MEM,X86_REG_RSI
@@ -132,7 +132,7 @@ class Native138(unittest.TestCase):
   self.assertEqual(native(0x4c0),0x5fc)
 
  def test_converted_reward_caller_is_a_real_gold_call_return_not_a_panic_nop(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private exact image unavailable")
   from compare_official import Image
   from capstone import CS_GRP_CALL
@@ -144,7 +144,7 @@ class Native138(unittest.TestCase):
   self.assertEqual(previous.operands[0].imm,contacts[0x5920470])
 
  def test_damage_size_reads_the_current_message_in_rbx_and_fresh_xmm8(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-01380/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-01380/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private exact image unavailable")
   from compare_official import Image
   image=Image(path);rows={i.address:(i.mnemonic,i.op_str)for i in image.ins(image.owner(0xb57054))}
@@ -152,7 +152,7 @@ class Native138(unittest.TestCase):
   self.assertEqual(rows[0xb57054],("cvtss2sd","xmm10, xmm8"))
 
  def test_heal_observers_use_owning_systems_before_the_event_is_dropped(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-01380/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-01380/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private exact image unavailable")
   from compare_official import Image
   from binding_registry import load_binding,parse_literal
@@ -168,7 +168,7 @@ class Native138(unittest.TestCase):
   self.assertLess(c["PERIODIC_HEAL_TEXT"][0],0xb54b8a)
 
  def test_enemy_iterator_uses_520_byte_rows_and_selected_elite_byte(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-01380/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-01380/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private exact image unavailable")
   from compare_official import Image
   image=Image(path);rows={i.address:(i.mnemonic,i.op_str)for i in image.ins(0x5cfb530)}
@@ -176,12 +176,12 @@ class Native138(unittest.TestCase):
   self.assertEqual(rows[0x5cfd6ac],("movzx","eax, byte ptr [rcx + 0x200]"))
 
  def test_named_hooks_have_safe_complete_detour_spans(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private pinned 0.138.0 image unavailable")
   from compare_official import Image,MD
   from capstone import CS_GRP_JUMP,CS_GRP_CALL
   image=Image(path);source=descriptor_source()
-  source=source.split("// Only reviewed ASX-consumed",1)[1]
+  source=source.split("// Only reviewed AZSX-consumed",1)[1]
   rows=re.findall(r"\((0x[0-9a-f]+),&\[(.*?)\]\)",source,re.S)
   self.assertGreater(len(rows),35)
   for addr,data in rows:
@@ -196,7 +196,7 @@ class Native138(unittest.TestCase):
      self.assertFalse(addr<target<boundary and not(addr<=i.address<boundary),f"branch enters displaced native instructions at {addr:x}")
 
  def test_retained_tooltip_contacts_and_native_row_contract(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private 0.138.0 image unavailable")
   from compare_official import Image
   image=Image(path);source=descriptor_source()
@@ -212,7 +212,7 @@ class Native138(unittest.TestCase):
   self.assertIn(at,{i.address for i in image.ins(image.owner(at))})
 
  def test_native_earned_item_presenter_matches_complete_guard(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private pinned 0.138.0 image unavailable")
   from compare_official import Image
   image=Image(path);source=descriptor_source()
@@ -224,7 +224,7 @@ class Native138(unittest.TestCase):
   self.assertIn(rva+len(expected),{i.address+i.size for i in image.ins(rva)})
 
  def test_native_ui_receiver_vtable_has_complete_layout(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private exact image unavailable")
   import struct
   from compare_official import Image
@@ -238,7 +238,7 @@ class Native138(unittest.TestCase):
    self.assertTrue(image.text<=rva<image.text+len(image.code),hex(pointer))
 
  def test_encounter_definition_frame_is_distinct_from_the_enemy_guid(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private exact 0.138.0 image unavailable")
   from compare_official import Image
   image=Image(path);source=descriptor_source()
@@ -254,7 +254,7 @@ class Native138(unittest.TestCase):
   self.assertEqual(rows[0x5cfe535],("mov","dword ptr [r13 + 0x934], 1"))
 
  def test_trinket_filter_frame_and_excluded_keys_match_the_actual_reward_builder(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private exact 0.138.0 image unavailable")
   import struct
   from compare_official import Image
@@ -273,8 +273,26 @@ class Native138(unittest.TestCase):
    keys.append(image.pe.get_data(ptr-image.pe.OPTIONAL_HEADER.ImageBase,n).decode())
   self.assertEqual(keys,["remote","insignia","eldre_thalas","chosen","onyxia_blood"])
 
+ def test_main_menu_title_lookup_has_exact_result_boundary(self):
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  if not path.exists():self.skipTest("Private exact 0.138.0 image unavailable")
+  from compare_official import Image
+  from binding_registry import load_binding,parse_literal
+  _,_,manifest=load_binding();constants={x["name"]:parse_literal(x["value"])for x in manifest["constants"]}
+  image=Image(path);hook,guard=constants["MENU_TITLE_RESULT"]
+  self.assertEqual(hook,0x3d8e89)
+  self.assertEqual(image.pe.get_data(hook,len(guard)),bytes(guard))
+  rows={i.address:i for i in image.ins(image.owner(0x3d8e75))}
+  lookup=rows[0x3d8e78]
+  key=lookup.address+lookup.size+lookup.operands[1].mem.disp
+  self.assertEqual(image.pe.get_data(key,10),b"game.title")
+  self.assertEqual(rows[0x3d8e7f].op_str,"edx, 0xa")
+  self.assertEqual(rows[0x3d8e84].mnemonic,"call")
+  self.assertEqual(rows[hook].op_str,"rdi, rdx")
+  self.assertEqual(rows[0x3d8edd].mnemonic,"call")
+
  def test_guest_pause_filter_is_observed_before_apply_and_keeps_native_consumption(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private exact 0.138.0 image unavailable")
   import struct
   from compare_official import Image
@@ -306,13 +324,13 @@ class Native138(unittest.TestCase):
   self.assertEqual((rows[target].mnemonic,rows[target].op_str),("mov","al, 1"))
 
  def test_native_encounter_helper_guard(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private 0.138.0 image unavailable")
   from compare_official import Image
   image=Image(path);source=descriptor_source();at=int(re.search(r'\(0x5bd2d40,(0x[0-9a-f]+)\)',source)[1],16);data=re.search(r'BLESSING_SPAWN_BYTES:&\[u8\]=&\[(.*?)\]',source)[1];expected=bytes(int(x,0)for x in data.split(',')if x.strip());self.assertEqual(image.pe.get_data(at,len(expected)),expected);self.assertIn(at+len(expected),{i.address+i.size for i in image.ins(at)})
 
  def test_zone_table_identity_and_encounter_extent(self):
-  path=Path(os.environ.get("ASX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private 0.138.0 image unavailable")
   import struct
   from compare_official import Image
@@ -337,7 +355,7 @@ class ContactInventory130(unittest.TestCase):
    from compare_official import descriptor_inventory
   except ImportError:
    self.skipTest("Offline PE dependencies unavailable")
-  rows=descriptor_inventory(ROOT/"crates/asx-game/src/bindings/inherited/official121.rs")
+  rows=descriptor_inventory(ROOT/"crates/azsx-game/src/bindings/inherited/official121.rs")
   for value in (0x619c9b8,0x7304258,0x73054b8,0x5c3fcb0,0x169780,0x2812005):self.assertIn(value,rows)
   for offset in (0xb0,0x140,0x3a8,0x9e8,0x1968):self.assertNotIn(offset,rows)
 
@@ -352,3 +370,25 @@ class CurrentContactInventory(unittest.TestCase):
   self.assertIn(c["MENU_ESCAPE_QUEUE_RETURN"],rows)
   self.assertNotIn(c["BLESSING_EVENT_RVA"],rows)
   self.assertIn(dict(c["EXTENSION_ADDRESSES"])[c["BLESSING_EVENT_RVA"]],rows)
+
+class AddonAndLobbyNativeContracts(unittest.TestCase):
+ def test_selected_reader_and_host_constructor_keep_reviewed_abis(self):
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-01380/AzerothSurvivors.exe"))
+  if not path.exists():self.skipTest("Private 0.138.0 image unavailable")
+  from compare_official import Image
+  from binding_registry import load_binding,parse_literal
+  _,_,manifest=load_binding();constants={c['name']:parse_literal(c['value'])for c in manifest['constants']}
+  image=Image(path)
+  for name in ('ADDON_API_READER','LOBBY_SUBMIT'):
+   at=constants[name];guard=bytes(constants[name+'_BYTES'])
+   self.assertEqual(image.pe.get_data(at,len(guard)),guard)
+   self.assertIn(at+len(guard),{i.address+i.size for i in image.ins(at)})
+  reader={i.address:(i.mnemonic,i.op_str)for i in image.ins(constants['ADDON_API_READER'])}
+  for at,operands in ((0x6020f67,'rdi, r9'),(0x6020f6a,'rbx, r8'),(0x6020f6d,'r14, rdx'),(0x6020f70,'rsi, rcx'),(0x6021001,'rax, rsi')):
+   self.assertEqual(reader[at],('mov',operands))
+  self.assertEqual(reader[0x6020f85],('call','0x6023050'))
+  self.assertEqual(reader[0x6020fb8],('mov','qword ptr [rsi], 0xffffffffffffffff'))
+  host=[i.op_str for i in image.ins(constants['LOBBY_SUBMIT'])]
+  self.assertEqual(constants['LOBBY_NAME'],0xd0)
+  self.assertTrue(any('+ 0xd0]'in op for op in host))
+  self.assertIn('0x20bab0',host)

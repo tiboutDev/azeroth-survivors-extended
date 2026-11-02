@@ -194,7 +194,7 @@ def main():
  if a.out.exists() and (a.resume is None or a.out.resolve()!=a.resume.resolve()):
   p.error("Output exists; use a new output or explicitly resume that checkpoint")
  old,new=Image(a.old),Image(a.new)
- paths=[ROOT/"crates/asx-game/src/official_native.rs",*(ROOT/"crates/asx-game/src/official_native").rglob("*.rs")]
+ paths=[ROOT/"crates/azsx-game/src/official_native.rs",*(ROOT/"crates/azsx-game/src/official_native").rglob("*.rs")]
  needed=descriptor_inventory(a.descriptor)if a.descriptor else inventory(old,paths)
  a.out.parent.mkdir(parents=True,exist_ok=True)
  completed=False

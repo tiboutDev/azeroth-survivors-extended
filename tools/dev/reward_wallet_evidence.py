@@ -1,4 +1,4 @@
-"""Assess bounded native reward actions against the authoritative ASX wallet."""
+"""Assess bounded native reward actions against the authoritative AZSX wallet."""
 import re
 ROW=re.compile(r"reward wallet fixture: slot=(\d+) guid=(\d+) kind=(\d+) action=(\d+) game=(\d+) before=SharedWallet \{ gold: (\d+), earned: (\d+) \} after=SharedWallet \{ gold: (\d+), earned: (\d+) \} shared_before=Some\(\((\d+), SharedWallet \{ gold: (\d+), earned: (\d+) \}\)\) shared_after=Some\(\((\d+), SharedWallet \{ gold: (\d+), earned: (\d+) \}\)\)")
 def assess(text):

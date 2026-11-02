@@ -19,11 +19,11 @@ unsafe extern "system" fn key(_c: &mut crate::stub::Context) {
         .unwrap_or_else(|| KEY_ORIGINAL.load(Ordering::Acquire));
     KEY_NEXT.store(target, Ordering::Release);
 }
-pub fn observe_role(role: asx_game::official::Role) {
+pub fn observe_role(role: azsx_game::official::Role) {
     ACTIVE.store(
         matches!(
             role,
-            asx_game::official::Role::Host | asx_game::official::Role::Guest
+            azsx_game::official::Role::Host | azsx_game::official::Role::Guest
         ),
         Ordering::Release,
     );
@@ -31,6 +31,8 @@ pub fn observe_role(role: asx_game::official::Role) {
 static UI_QUEUE: AtomicUsize = AtomicUsize::new(0);
 crate::context_stub_rw!(queue_entry, 0, queue, UI_QUEUE);
 unsafe extern "system" fn queue(c: &mut crate::stub::Context) {
+    #[cfg(feature="test-hooks")]
+    if super::lobby::capture_probe(c){return}
     if let Some(r)=services::active(){filter_queue(r,c);}
 }
 fn filter_queue(r:&dyn Services,c:&mut crate::stub::Context){
@@ -39,7 +41,7 @@ fn filter_queue(r:&dyn Services,c:&mut crate::stub::Context){
     // windows (notably talents). They must not acquire cooperative menu ownership.
     // Escape and all actions of an already-owned native menu keep their flow.
     if c.return_address()==r.escape_queue_source(){return}
-    let live=REMOTE_EPOCH.load(Ordering::Acquire)!=0||r.cached_party().is_some_and(|p|p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Inactive));
+    let live=REMOTE_EPOCH.load(Ordering::Acquire)!=0||r.cached_party().is_some_and(|p|p.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Inactive));
     if !live{return}
     if let Ok(Some(open))=r.request(c.rdx){
         // Pause is a payload-free native variant. Consume only this UI request;
@@ -56,12 +58,12 @@ struct Menus {
     key: (u64, u64),
     clock: f32,
     epoch: u64,
-    owners: asx_gameplay::official::MenuOwners,
+    owners: azsx_gameplay::official::MenuOwners,
 }
 static STATE: std::sync::LazyLock<Mutex<Menus>> =
     std::sync::LazyLock::new(|| Mutex::new(Menus::default()));
 impl Menus {
-    fn reconcile(&mut self, game: u64, p: &asx_game::official::PartyObservation) {
+    fn reconcile(&mut self, game: u64, p: &azsx_game::official::PartyObservation) {
         let key = (
             game,
             p.actors.iter().find(|a| a.slot == 0).map_or(0, |a| a.guid),
@@ -98,18 +100,18 @@ pub fn reset() {
 pub fn reason(
     r: &dyn Services,
     game: u64,
-    p: &asx_game::official::PartyObservation,
-) -> Option<asx_gameplay::official::PauseReason> {
+    p: &azsx_game::official::PartyObservation,
+) -> Option<azsx_gameplay::official::PauseReason> {
     if !r.has_menu() {
-        return asx_gameplay::official::group_pause(p.actors.iter().map(|a| (a.slot + 1, a.phase)));
+        return azsx_gameplay::official::group_pause(p.actors.iter().map(|a| (a.slot + 1, a.phase)));
     }
     let Ok(mut s) = STATE.lock() else { return None };
     s.reconcile(game, p);
-    asx_gameplay::official::group_pause(p.actors.iter().map(|a| {
+    azsx_gameplay::official::group_pause(p.actors.iter().map(|a| {
         (
             a.slot + 1,
-            if s.local(a.slot, a.guid) && a.phase == asx_gameplay::Phase::Playing {
-                asx_gameplay::Phase::Paused
+            if s.local(a.slot, a.guid) && a.phase == azsx_gameplay::Phase::Playing {
+                azsx_gameplay::Phase::Paused
             } else {
                 a.phase
             },
@@ -133,7 +135,7 @@ fn request(r: &dyn Services, server: u64, open: bool) -> Result<(), String> {
     let role = r.role(server)?;
     if !matches!(
         role,
-        asx_game::official::Role::Host | asx_game::official::Role::Guest
+        azsx_game::official::Role::Host | azsx_game::official::Role::Guest
     ) {
         return Ok(());
     }
@@ -141,18 +143,18 @@ fn request(r: &dyn Services, server: u64, open: bool) -> Result<(), String> {
     // an owned menu removes only that ownership; the group barrier stays separate.
     let open = open || (!LOCAL_OPEN.load(Ordering::Acquire) && pause::active());
     match role {
-        asx_game::official::Role::Host => {
+        azsx_game::official::Role::Host => {
             let p = r.cached_party().ok_or("Missing menu run")?;
             let a = p
                 .actors
                 .iter()
-                .find(|a| a.slot == 0 && a.phase != asx_gameplay::Phase::Inactive)
+                .find(|a| a.slot == 0 && a.phase != azsx_gameplay::Phase::Inactive)
                 .ok_or("No running menu owner")?;
             let mut s = STATE.lock().map_err(|_| "Menu state unavailable")?;
             s.reconcile(r.game_address(server)?, &p);
             s.set(a.slot, a.guid, open);
         }
-        asx_game::official::Role::Guest => {
+        azsx_game::official::Role::Guest => {
             let epoch = REMOTE_EPOCH.load(Ordering::Acquire);
             if epoch == 0 {
                 return Ok(());
@@ -197,7 +199,7 @@ pub fn command(r: &dyn Services, c: &mut crate::stub::Context) -> bool {
         let a = p
             .actors
             .iter()
-            .find(|a| a.slot == slot && a.phase != asx_gameplay::Phase::Inactive)
+            .find(|a| a.slot == slot && a.phase != azsx_gameplay::Phase::Inactive)
             .ok_or("Menu owner departed")?;
         let mut s = STATE.lock().map_err(|_| "Menu state unavailable")?;
         s.reconcile(r.game_address(c.rcx)?, &p);
@@ -269,7 +271,7 @@ mod tests {
 #[cfg(feature = "test-hooks")]
 static MENU_SEEN: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
 #[cfg(feature = "test-hooks")]
-pub fn fixture_view(v: &asx_gameplay::official::PausePresentation) {
+pub fn fixture_view(v: &azsx_gameplay::official::PausePresentation) {
     if v.active && v.title == "Game paused" {
         let _ = MENU_SEEN.set(std::time::Instant::now());
     }
@@ -289,7 +291,7 @@ pub fn fixture(r: &Runtime, server: u64) {
                     p.clock > 15.
                         && p.actors
                             .iter()
-                            .all(|a| a.phase == asx_gameplay::Phase::Playing)
+                            .all(|a| a.phase == azsx_gameplay::Phase::Playing)
                 })
             })
         } else {

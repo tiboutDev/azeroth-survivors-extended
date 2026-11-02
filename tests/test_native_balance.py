@@ -50,11 +50,11 @@ class NativeBalanceTests(unittest.TestCase):
         self.assertEqual(len(data['amulets']), 16)
         self.assertEqual(len({r['key'] for r in data['jewelry']}), 23)
         self.assertEqual(module.render(data), (folder / 'NATIVE-BALANCE.md').read_text())
-        self.assertNotIn('ASX', module.render(data))
+        self.assertNotIn('AZSX', module.render(data))
 
-    @unittest.skipUnless(os.environ.get('ASX_REVIEWED_IMAGE_1351'), 'Exact native image not supplied')
+    @unittest.skipUnless(os.environ.get('AZSX_REVIEWED_IMAGE_1351'), 'Exact native image not supplied')
     def test_exact_image_reproduces_snapshot(self):
-        data = module.extract(Path(os.environ['ASX_REVIEWED_IMAGE_1351']).read_bytes())
+        data = module.extract(Path(os.environ['AZSX_REVIEWED_IMAGE_1351']).read_bytes())
         expected = json.loads((ROOT / 'docs/native-balance/native-balance.json').read_text())
         self.assertEqual(data, expected)
         accuria = next(r for r in data['jewelry'] if r['key'] == 'accuria')

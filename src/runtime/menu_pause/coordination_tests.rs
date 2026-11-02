@@ -1,7 +1,7 @@
 use super::*;
 use crate::test_support::TEST_LOCK;
-use asx_game::official::{ActorObservation, PartyObservation, Role};
-use asx_gameplay::{official::PauseReason, Phase};
+use azsx_game::official::{ActorObservation, PartyObservation, Role};
+use azsx_gameplay::{official::PauseReason, Phase};
 use std::cell::{Cell, RefCell};
 
 fn actor(slot: u32, guid: u64) -> ActorObservation {

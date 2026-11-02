@@ -56,7 +56,7 @@ class BalanceArithmeticTests(unittest.TestCase):
         with self.assertRaises(ValueError):amulet_scale(0,0)
 
 
-@unittest.skipUnless(os.environ.get('ASX_REVIEWED_IMAGE_1351') and importlib.util.find_spec('unicorn') and importlib.util.find_spec('pefile'), 'Native-image emulation dependencies not supplied')
+@unittest.skipUnless(os.environ.get('AZSX_REVIEWED_IMAGE_1351') and importlib.util.find_spec('unicorn') and importlib.util.find_spec('pefile'), 'Native-image emulation dependencies not supplied')
 class NativeArithmeticOracle(unittest.TestCase):
     """Independent oracle: execute original arithmetic in an isolated emulator.
 
@@ -68,7 +68,7 @@ class NativeArithmeticOracle(unittest.TestCase):
         import unicorn
         from unicorn import x86_const as reg
         cls.reg=reg
-        blob=Path(os.environ['ASX_REVIEWED_IMAGE_1351']).read_bytes()
+        blob=Path(os.environ['AZSX_REVIEWED_IMAGE_1351']).read_bytes()
         cls.image=Image(blob);cls.data=extract(blob);cls.base=cls.image.base
         cls.uc=unicorn.Uc(unicorn.UC_ARCH_X86,unicorn.UC_MODE_64)
         extent=max(a+n for a,n,_ in cls.image.sections)

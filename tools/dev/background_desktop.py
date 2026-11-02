@@ -33,10 +33,10 @@ def build_parser():
     modes.add_argument('--enchantments-trial', type=int, choices=(1, 2), metavar='PLAYERS')
     modes.add_argument('--reward-wallet-trial', action='store_true')
     modes.add_argument('--immunity-aggro-trial', action='store_true')
-    modes.add_argument('--asx-install', action='store_true', help='Run an explicitly selected packaged normal ASX trial')
+    modes.add_argument('--azsx-install', action='store_true', help='Run an explicitly selected packaged normal AZSX trial')
     parser.add_argument('--extensions-normal', action='store_true', help='Use the reviewed normal 0.129 binary for --extensions-trial')
-    parser.add_argument('--legacy-asx-package',type=Path,help='Read-only previous package for migration validation')
-    parser.add_argument('--asx-package', type=Path, help='Prepared package archive for --asx-install')
+    parser.add_argument('--legacy-azsx-package',type=Path,help='Read-only previous package for migration validation')
+    parser.add_argument('--azsx-package', type=Path, help='Prepared package archive for --azsx-install')
     parser.add_argument('--child', type=Path, help=argparse.SUPPRESS)
     return parser
 
@@ -48,12 +48,12 @@ def parse_args(argv=None):
         parser.error('Use a bounded 15..300 second trial')
     if args.extensions_normal and args.extensions_trial is None:
         parser.error('--extensions-normal requires --extensions-trial')
-    if args.asx_package and not args.asx_install:
-        parser.error('--asx-package requires --asx-install')
-    if args.legacy_asx_package and not args.asx_install:parser.error("--legacy-asx-package requires --asx-install")
-    if args.asx_install and not args.asx_package:
-        parser.error('--asx-install requires --asx-package')
-    game_selected = bool(args.ritual_trial or args.supplies_trial or args.goblins_trial or args.extensions_trial or args.gems_trial or args.enchantments_trial or args.reward_wallet_trial or args.immunity_aggro_trial or args.asx_install)
+    if args.azsx_package and not args.azsx_install:
+        parser.error('--azsx-package requires --azsx-install')
+    if args.legacy_azsx_package and not args.azsx_install:parser.error("--legacy-azsx-package requires --azsx-install")
+    if args.azsx_install and not args.azsx_package:
+        parser.error('--azsx-install requires --azsx-package')
+    game_selected = bool(args.ritual_trial or args.supplies_trial or args.goblins_trial or args.extensions_trial or args.gems_trial or args.enchantments_trial or args.reward_wallet_trial or args.immunity_aggro_trial or args.azsx_install)
     selected = args.resource_probe or game_selected
     if not selected:
         parser.error('Choose a 0.129 trial mode or --resource-probe')
@@ -65,16 +65,16 @@ def parse_args(argv=None):
 def child_flags(args):
     """Return the validated mode forwarded through the gated child process."""
     flags = []
-    for name in ('resource_probe', 'asx_install', 'extensions_normal', 'reward_wallet_trial', 'immunity_aggro_trial', 'supplies_trial', 'ritual_trial'):
+    for name in ('resource_probe', 'azsx_install', 'extensions_normal', 'reward_wallet_trial', 'immunity_aggro_trial', 'supplies_trial', 'ritual_trial'):
         if getattr(args, name):
             flags.append('--' + name.replace('_', '-'))
     for name in ('extensions_trial', 'gems_trial', 'enchantments_trial', 'goblins_trial'):
         value = getattr(args, name)
         if value:
             flags.extend(('--' + name.replace('_', '-'), str(value)))
-    if args.asx_package:
-        flags.extend(('--asx-package', str(args.asx_package)))
-    if getattr(args,"legacy_asx_package",None):flags.extend(("--legacy-asx-package",str(args.legacy_asx_package)))
+    if args.azsx_package:
+        flags.extend(('--azsx-package', str(args.azsx_package)))
+    if getattr(args,"legacy_azsx_package",None):flags.extend(("--legacy-azsx-package",str(args.legacy_azsx_package)))
     return flags
 
 
@@ -97,9 +97,9 @@ def run_child(args, gate):
             raise SystemExit(1)
         return
     sys.path.insert(0, str(ROOT / 'tools/dev'))
-    if args.asx_install:
-        from asx_install_trial import run
-        run(args.seconds, game_version=VERSION, package_path=args.asx_package,legacy_package=args.legacy_asx_package)
+    if args.azsx_install:
+        from azsx_install_trial import run
+        run(args.seconds, game_version=VERSION, package_path=args.azsx_package,legacy_package=args.legacy_azsx_package)
         return
     from extensions_trial import run
     if args.goblins_trial:

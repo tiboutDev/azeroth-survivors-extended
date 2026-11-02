@@ -1,9 +1,13 @@
 # Native party presentation
 
-ASX enriches the supported native interface. The native `PlayerFrame` and
+AZSX enriches the supported native interface. The native `PlayerFrame` and
 `PartyMemberFrame1..4` retain health, names, death/resurrection and connection
 behavior. Five-player capacity means the local player plus four remote frames;
-ASX does not replace lobby admission or create a second roster authority.
+AZSX does not replace lobby admission or create a second roster authority.
+
+The selected native main menu presents “Azeroth Survivors Extended” in its
+existing title widget. AZSX changes only the result of that title lookup; the
+client retains the native font, layout and menu actions.
 
 ## Retained children
 
@@ -16,7 +20,7 @@ owners; no player build should be attached to a pet frame.
 `src/runtime/party_ui.rs` owns cosmetic GUID/generation freshness and
 presentation policy. Selected native access owns owner HUD translation, native
 formatter output and native string/buffer bounds. Lobby class-icon decorations
-are retired: ASX installs no atlas-capture, lobby-button, status-refresh or
+are retired: AZSX installs no atlas-capture, lobby-button, status-refresh or
 roster-cache hooks. Only the shared reward-header sizing hook remains; native
 lobby rendering and in-game party identity remain unchanged.
 
@@ -27,6 +31,9 @@ formula. Match slot/order and GUID/generation; ambiguous names, missing owners,
 invalid builds or stale delivery hide the cosmetic row rather than guess.
 Preserve unchanged identities across heartbeats and common pauses so hovering
 does not flicker or discard still-valid data.
+
+Item tooltips show each native comma-separated effect on its own line while preserving
+owner text, blank lines and enchantment notes.
 
 Native spell and item formatter output carries the owner's text, talents,
 bonuses and colors. The native Lua `string.byte` accepts one index only; portable
@@ -40,8 +47,8 @@ See [cooperative pause](COOP-PAUSE.md). A local choice notification is not
 permission to release the host's barrier.
 
 Diagnostic writer channels and controlled fixtures are `test-hooks` only and
-explicitly opted in. Production addon activation uses the owned file/read-buffer
-gate described in [installation](../release/ASX-INSTALLATION.md). Do not add persisted CVars,
+explicitly opted in. Production API initialization uses the selected native virtual script reader
+described in [installation](../release/AZSX-INSTALLATION.md). Do not add persisted CVars,
 a parallel network or modifications to native game assets as a presentation path.
 
 Run `official-party-ui` for required Lua 5.1 behavior and selected-memory checks.
@@ -53,8 +60,9 @@ against the actual artifact; portable checks alone do not establish that result.
 
 [Native world presentation](NATIVE-WORLD-UI.md) documents enemy plate styling,
 world damage/healing text, shared card separators and one-time random cooperative
-markers. ASXUI styles nameplates and selects the world-number font independently;
-healing messages and cooperative markers retain their native ASX owners.
+markers. AZSXUI initializes its bottom HUD during the native `ready` phase, before a run starts. Run-only counters, clock, equipment and statistics remain empty until fresh native run data exists.
+AZSXUI styles nameplates and selects the world-number font independently;
+healing messages and cooperative markers retain their native AZSX owners.
 
 ## World-event presentation
 
@@ -105,9 +113,9 @@ panel shows only when native participant presence reports the player inside the 
 leaving hides it without clearing the cumulative objective. Ritual metadata's
 last field is now an inside flag (0/1), not an availability countdown.
 
-ASXUI now owns minimap pins, including native caches read from `AZS_CHESTS`.
-The embedded presentation exposes the read-only versioned `ASX_GetState(1)` bridge
-and creates no pins. Without ASXUI, this optional custom pin layer is absent.
+AZSXUI now owns minimap pins, including native caches read from `AZS_CHESTS`.
+The embedded presentation exposes the read-only versioned `AZSX_GetState(1)` bridge
+and creates no pins. Without AZSXUI, this optional custom pin layer is absent.
 Minimap pins are circular crate and Fortune-orb images masked by the client's
 SetPortraitToTexture, surrounded by the native tracking ring. They are retained
 children of Minimap, not entries in its engine POI registry. Interior projection
@@ -118,7 +126,7 @@ point, allowing Lua to reconstruct the live center and project at the current
 zoom immediately. One MINIMAP_PING UI listener preserves the last center until
 the changed reference arrives; it never changes the native ping. Pins stay
 visible across zoom changes. No exposed Lua API registers custom engine POIs.
-ASXUI updates pin membership at 10 Hz and retained geometry each frame; ASX
+AZSXUI updates pin membership at 10 Hz and retained geometry each frame; AZSX
 keeps model/buff refresh at 4 Hz and confirmed progress smoothing per frame.
 The read-only bridge checks the current payload freshness without rescanning
 entities or rebuilding unchanged payloads. Missing projection hides pins.
@@ -130,18 +138,18 @@ scene packets are independent of cosmetic Lua metadata. Guests reconstruct their
 own minimap center from the live native projection, with local ping-event
 coordinates preserving the reference across subsequent host metadata samples.
 
-## ASX presentation envelope
+## AZSX presentation envelope
 
-`AZS_RUN.asx` is an ASX-owned extension transported on the native `AZSRUN`
+`AZS_RUN.azsx` is an AZSX-owned extension transported on the native `AZSRUN`
 line; it is not part of the native addon API. The producer, retained Lua view,
-widget names (`ASXOfficialParty...`) and diagnostic readout
-(`ASXOfficialPartyReadout`) use ASX naming. The former field is not an alias.
+widget names (`AZSXOfficialParty...`) and diagnostic readout
+(`AZSXOfficialPartyReadout`) use AZSX naming. The former field is not an alias.
 Historical reports and unrelated legacy diagnostic interfaces are unchanged.
 
-Each recipient receives `M` membership and ASX metadata (including local
+Each recipient receives `M` membership and AZSX metadata (including local
 Fortune, fatigue and personal events), but `S` spell and `I` item build rows
 only for other players. Contract 1.5 additionally carries at most five local
-items in a separate bounded equipment sequence for ASXUI; local spells remain
+items in a separate bounded equipment sequence for AZSXUI; local spells remain
 omitted. Local builds are still captured for those other
 recipients. Native local build presentation remains authoritative.
 
@@ -150,7 +158,7 @@ The `A` minimap row is now
 Coordinates use hundredths and radii use millionths. The unused single radius
 is omitted; six zoom radii, native center and ping coordinates remain available
 for zoom, pan and local-ping projection. Older thirteen-field (zoom) and fourteen-field (radius plus zoom) rows are rejected.
-The current row has twelve fields. ASXUI requires a valid live
+The current row has twelve fields. AZSXUI requires a valid live
 `Minimap:GetZoom()`; there is no payload zoom fallback.
 The compressed envelope and content header versions are unchanged: the renamed
 field and bundled Lua consumer define this private interface together.
@@ -159,11 +167,11 @@ The wall-clock heartbeat remains in `1|epoch|recipientGUID|heartbeat`, including
 while native gameplay time is paused. It refreshes native transport without
 changing stable cosmetic identities or invalidating a hovered owner tooltip.
 
-## Extracted ASXUI event presentation
+## Extracted AZSXUI event presentation
 
 Supply/Fortune notifications and Sayge progress widgets are now owned by
-ASXUI `Events.lua`, not the embedded addon. ASX still formats all semantic text
-through `ASX_GetState(1).texts` from validated current recipient data.
+AZSXUI `Events.lua`, not the embedded addon. AZSX still formats all semantic text
+through `AZSX_GetState(1).texts` from validated current recipient data.
 The addon keeps the native-styled panel recipe, notification lifetimes,
 identity-scoped deduplication/queueing and cosmetic progress smoothing. Saved
 per-widget position, scale, opacity and visibility do not change gameplay.
@@ -171,38 +179,38 @@ Aura tooltips and buff-slot enrichment remain embedded. Native goblin CHAT_MSG
 announcements remain on their existing native channel. This extraction changes
 UI ownership; it does not remove a native gameplay hook.
 
-The supported addon-facing interface is now [ASX contract 1.0](ADDON-API.md):
-`ASX_STATE`, `ASX_STATE_UPDATED`, `ASX_GetAPIVersion()`, `ASX_GetState(1)` and
-registered state handlers. Values and ASX text are separate and getters/handlers
-return detached copies. ASXUI uses this public interface. Older named getters
+The supported addon-facing interface is now [AZSX contract 1.0](ADDON-API.md):
+`AZSX_STATE`, `AZSX_STATE_UPDATED`, `AZSX_GetAPIVersion()`, `AZSX_GetState(1)` and
+registered state handlers. Values and AZSX text are separate and getters/handlers
+return detached copies. AZSXUI uses this public interface. Older named getters
 remain private compatibility adapters; the compressed wire format stays private.
 
-Event widgets share an ASXUI root anchored below the native top HUD and stack
+Event widgets share an AZSXUI root anchored below the native top HUD and stack
 visible scaled panels without overlapping by default. Saved old absolute widget
 positions migrate to offsets from stack slots. Sayge's v1.1 API adds collective
-readiness separately from local presence, so an inside player sees an ASX waiting
+readiness separately from local presence, so an inside player sees an AZSX waiting
 message and frozen cosmetic progress while another required player is outside.
 
 ## Priority buff presentation
 
-ASXUI/Buffs.lua promotes the existing native Fortune button into the first
+AZSXUI/Buffs.lua promotes the existing native Fortune button into the first
 visual buff position (rightmost in the stock layout). Crystal Resonance follows
 immediately, or takes the first position without Fortune. Crystal identification
 requires both the current API aura index and its native gem icon. It remaps only frame
 anchors, including wrapped rows. Native IDs, buffIndex, tooltips, duration
-children and click handlers are unchanged. Missing/stale ASX state, an absent
+children and click handlers are unchanged. Missing/stale AZSX state, an absent
 priority buff or ambiguous icons leave the native layout in control. Original anchors
-are restored only while ASXUI still owns them; fresh native layout changes win.
+are restored only while AZSXUI still owns them; fresh native layout changes win.
 Restore clears the owned graph before rebuilding anchors to avoid cycles.
 
-The retained ASX tooltip keeps native GameTooltip styling: white title, green
+The retained AZSX tooltip keeps native GameTooltip styling: white title, green
 effect and secondary scope/lifetime details. When a party fortune is stronger,
 separate Your fortune and Active party bonus rows distinguish the owned value
 from the effective shared value; they are not added together.
 
-## ASXUI local HUD
+## AZSXUI local HUD
 
-ASXUI `Hud.lua` extends the native action-bar artwork using existing textures,
+AZSXUI `Hud.lua` extends the native action-bar artwork using existing textures,
 retains native action/micro-button scripts and preserves native XP rendering/height/scripts while widening its geometry. Native gryphons remain at the front. A top-centered icon counter strip flush with the screen edge
 reads native kills/gold/cache cost independently of the bottom layout; a three-column fixed-size drawer slides
 through a clipping scroll frame and omits displayed-zero character stats.
@@ -226,7 +234,7 @@ spell/item children without replacing party roots or owner formatting. Allied
 buff buttons sit outside the panel on its right, with up to eight icons per
 row and two rows. Native IDs, owner/recipient data and tooltip scripts stay
 unchanged, and their original anchors restore when the HUD is disabled.
-Read-only objectives in the upper-left use held native lairs (including distant guardians), falling back to living-guardian rows when the lair API is absent, and ASX Sayge state; retained party frames are laid out beneath them.
+Read-only objectives in the upper-left use held native lairs (including distant guardians), falling back to living-guardian rows when the lair API is absent, and AZSX Sayge state; retained party frames are laid out beneath them.
 
 The health bar is centered at two thirds of the bottom HUD width. Native buff
 and debuff rows sit above it, each centered independently (eight icons per row,
@@ -255,7 +263,7 @@ a black inner gutter. No native texture is redistributed.
 The capsule's foreground uses the original native status-bar texture. Retained
 ally build panels align center-to-center with their party roots, with aura
 children outside the panel. Crystal/Fortune medallions use only current public
-ASX state and prefer the selected native buff tooltip. Index reuse is checked
+AZSX state and prefer the selected native buff tooltip. Index reuse is checked
 again on hover; ambiguous/missing indices never target another aura. Native
 buttons are visually suppressed only while a valid badge replaces them, then
 restore their original alpha/mouse state. Other aura rows keep native handlers.
@@ -275,7 +283,7 @@ does not mutate native stat tables, credit gold, or apply multipliers again.
 Native stats remain the fallback when the projection is unavailable. The stat
 panel rebuilds its nonzero rows at the existing four-Hz cadence. Item annotations
 match native definition icons and verify owner GUID and current rank before
-reading the locked ASX enchantment. Native text is retained independently; missing
+reading the locked AZSX enchantment. Native text is retained independently; missing
 or ambiguous annotation data is omitted. No new hook or native call is installed.
 Fortune award receipts are separate from encounter scaling and ritual identity.
 See the v1.7 [addon contract](ADDON-API.md) for units and notification lifetimes.

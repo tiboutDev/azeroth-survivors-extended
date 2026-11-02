@@ -1,6 +1,6 @@
 //! Shared marks and semantic taunt ownership over the official simulation.
 use super::*;
-use asx_gameplay::{
+use azsx_gameplay::{
     marks::Marks,
     taunts::{Hit, Taunts},
     Mark, Player, Talents, TauntSpell,
@@ -25,7 +25,7 @@ struct State {
     players: Vec<Player>,
     marks: Marks,
     taunts: Taunts,
-    immunity:asx_gameplay::immunity_aggro::ImmunityAggro,
+    immunity:azsx_gameplay::immunity_aggro::ImmunityAggro,
     suppressed:std::collections::BTreeSet<u64>,
     pending: Vec<Pending>,
     observed: BTreeMap<(u64, u32), u32>,
@@ -530,7 +530,7 @@ pub fn observe_immunity(r:&Runtime,game:u64){
   if immunity.observe(actor.slot+1,actor.guid,immune,taunts){r.log.info(&format!("official immunity aggro cleared: slot={} guid={}",actor.slot,actor.guid));}
  }
 }
-struct ImmunityScope<'a>{r:&'a Runtime,loan:Option<asx_game::official::AggroLoan>}
+struct ImmunityScope<'a>{r:&'a Runtime,loan:Option<azsx_game::official::AggroLoan>}
 impl Drop for ImmunityScope<'_>{fn drop(&mut self){if let Some(loan)=self.loan.take(){let io=io::Access{local:&self.r.local,adapter:self.r.adapter};if let Err(e)=self.r.adapter.aggro_restore(&io,loan){self.r.log.warn(&format!("Official immunity pool restore rejected: {e}"));}}}}
 fn prepare_immunity(r:&Runtime,game:u64)->Option<ImmunityScope<'_>>{
  if !r.adapter.supports_immunity_aggro(){return None}observe_immunity(r,game);
@@ -541,7 +541,7 @@ fn prepare_immunity(r:&Runtime,game:u64)->Option<ImmunityScope<'_>>{
    for e in enemies{
     if e.target.is_some_and(|t|blocked.contains(&t))||s.suppressed.contains(&e.id){
      let taunt=s.taunts.target(e.id,&s.players).map(|p|p-1);
-     let next=asx_gameplay::immunity_aggro::replacement(e.target,e.position,&candidates,&blocked,taunt);
+     let next=azsx_gameplay::immunity_aggro::replacement(e.target,e.position,&candidates,&blocked,taunt);
      if next!=e.target{changes.push((e.id,next));}
      if next.is_none(){s.suppressed.insert(e.id);}else{s.suppressed.remove(&e.id);}
     }
@@ -557,7 +557,7 @@ pub fn immunity_fixture_enabled()->bool{std::env::var("AZCOOP_TEST_IMMUNITY_AGGR
 pub fn immunity_fixture_tick(r:&Runtime,server:u64){
  static STAGE:std::sync::Mutex<(usize,u8,f32,u64)>=std::sync::Mutex::new((0,0,0.,0));
  let Ok(Some(p))=r.adapter.party(&r.local,server)else{return};
- if p.actors.len()!=2||p.clock<2.||p.actors.iter().any(|a|a.phase!=asx_gameplay::Phase::Playing){return}
+ if p.actors.len()!=2||p.clock<2.||p.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return}
  let (case,stage,began,mut enemy)=*STAGE.lock().unwrap();if case>=4{return}let slot=(case%2)as u32;let spell=[642,20580,7744,1856][case];let game=match r.adapter.game_address(server){Ok(g)=>g,Err(_)=>return};
  let io=io::Access{local:&r.local,adapter:r.adapter};
  let result=(||->Result<Option<(usize,u8,f32,u64)>,String>{
@@ -606,7 +606,7 @@ pub fn immunity_fixture_tick(r:&Runtime,server:u64){
 
 #[cfg(feature="test-hooks")]
 pub fn fixture_goblin_taunt(r:&Runtime,game:u64,goblin:u64){
- use asx_game::official::SupportCalls;
+ use azsx_game::official::SupportCalls;
  if let Ok(mut s)=STATE.lock(){s.fixture_talents.insert(1,Talents{fortified:true,..Default::default()});}
  let io=io::Access{local:&r.local,adapter:r.adapter};
  let normal=r.adapter.combat_enemies(&r.local,game).ok().and_then(|a|a.into_iter().find(|a|a.alive&&a.id!=goblin).map(|a|a.id));
