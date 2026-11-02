@@ -19,7 +19,7 @@ class APITests(unittest.TestCase):
 
     def test_cooperative_information_is_independent_detached_and_lifecycle_bound(self):
         self.cooperative_wire()
-        self.lua.execute('''local s=AZSX_GetState(1);assert(s.api.minor==11 and s.data.cooperativeRules.permanent and s.data.cooperativeRules.priority==1 and s.data.cooperativeRules.areaBonusShare==.5)
+        self.lua.execute('''local s=AZSX_GetState(1);assert(s.api.minor==12 and s.data.cooperativeRules.permanent and s.data.cooperativeRules.priority==1 and s.data.cooperativeRules.areaBonusShare==.5)
 assert(s.texts.cooperativeRules.rule=="Area and range bonuses are 50% effective.")
 s.data.cooperativeRules.areaBonusShare=99;s.texts.cooperativeRules.notes[1]="changed"
 assert(AZSX_GetState().data.cooperativeRules.areaBonusShare==.5 and AZSX_GetState().texts.cooperativeRules.notes[1]=="The stats panel shows effective values.")
@@ -121,10 +121,15 @@ phase="ready";update();assert(objects.BuffButton1.anchor[2]==UIParent)''')
                 self.lua.execute('assert(not AZSX_GetState(1).available)')
     def test_solo_escort_gadget_records_are_detached_and_coop_rejected(self):
         base = "1|7|11|1\nM|11|0|506c61796572\n"
-        solo = "V|11|3|1|2|75|200|1|0|40|120|0\nW|11|1|3|450|0\n"
+        solo = "V|11|3|1|2|75|200|1|0|40|120|0|10.5|20.25\nW|11|1|3|450|0\n"
         self.lua.globals().wire = (base + solo).encode().hex()
-        self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1;local s=AZSX_GetState(1);assert(s.available and s.api.minor==11 and s.data.soloEvent.kind=="chicken_escort" and s.data.soloEvent.progress==40 and s.data.soloEvent.total==120 and s.data.engineering.kind=="mortar" and s.data.engineering.nextTrigger==450 and s.texts.soloEvent.title=="Mechanical Chicken Escort");s.data.engineering.nextTrigger=99;s.texts.engineering.title="changed";assert(AZSX_GetState(1).data.engineering.nextTrigger==450 and AZSX_GetState(1).texts.engineering.title~="changed")')
-        for bad in ("V|11|3|1|2|75|200|1|0|121|120|0\n", "W|11|1|6|450|0\n", "M|22|1|4775657374\n" + solo):
+        self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1;local s=AZSX_GetState(1);assert(s.available and s.api.minor==12 and s.data.soloEvent.kind=="chicken_escort" and s.data.soloEvent.progress==40 and s.data.soloEvent.total==120 and s.data.soloEvent.x==10.5 and s.data.soloEvent.y==20.25 and s.data.engineering.kind=="mortar" and s.data.engineering.nextTrigger==450 and s.texts.soloEvent.title=="Mechanical Chicken Escort");s.data.engineering.nextTrigger=99;s.data.soloEvent.x=999;s.texts.engineering.title="changed";assert(AZSX_GetState(1).data.engineering.nextTrigger==450 and AZSX_GetState(1).data.soloEvent.x==10.5 and AZSX_GetState(1).texts.engineering.title~="changed")')
+        for bad in ("V|11|3|1|2|75|200|1|0|121|120|0\n", "V|11|3|1|2|75|200|1|0|40|120|0|nan|20\n", "V|11|3|1|2|75|200|1|0|40|120|0|100000000|20\n", "W|11|1|6|450|0\n", "M|22|1|4775657374\n" + solo):
             self.lua.globals().wire = (base + bad).encode().hex()
             self.lua.execute('AZS_RUN.azsx=wire;AZS_RUN_UPDATED=now;assert(not AZSX_GetState(1).available)')
+    def test_legacy_escort_row_without_coordinates_remains_available(self):
+        text="1|7|11|1\nM|11|0|506c61796572\nV|11|3|1|2|75|200|1|0|40|120|0\n"
+        self.lua.globals().wire=text.encode().hex()
+        self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1;local s=AZSX_GetState(1);assert(s.available and s.data.soloEvent.x==nil and s.data.soloEvent.y==nil)')
+
 if __name__=='__main__':unittest.main()

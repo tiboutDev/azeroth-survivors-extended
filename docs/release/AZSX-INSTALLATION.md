@@ -30,8 +30,7 @@ failed check by modifying official game assets.
 | Location | Owner and role |
 | --- | --- |
 | `AZSX/App/Bin`, `AZSX/App/Launcher`, `AZSX/App/Python` | Internal DLL source, launcher and bundled Python |
-| `AZSX/App/AddOns` | Internal sources for the gated AZSX presentation and bundled standalone AZSXUI |
-| `benilla-config/AddOns/AZSX` | Owned deployment of that gated presentation; not a standalone UI addon |
+| `AZSX/App/AddOns` | Bundled standalone AZSXUI source; the AZSX provider is embedded in the DLL |
 | `benilla-config/AddOns/AZSXUI` | Bundled native addon, projected and updated by AZSX using an exact owned-file list |
 | `AZSX/App/Defaults`, `AZSX/Config` | Packaged defaults and private channel configuration |
 | `AZSX/Data/State`, `AZSX/Data/Updates` | Ownership, locks, update history, signed caches and transactions |
@@ -43,7 +42,7 @@ launcher preferences. AZSX installs and updates AZSXUI automatically. Its Lua ad
 of the native DLL, but its packaged code/font/license files are owned by AZSX.
 Existing matching files can be adopted; differing pre-existing code requires
 explicit consent and a backup. Unknown files and native SavedVariables are never
-owned or removed. Internal sources and their projected addon files are distinct.
+owned or removed. The bundled AZSXUI source and its projected addon files are distinct. The AZSX provider requires no internal addon.
 
 ## Launcher interaction and file policy
 

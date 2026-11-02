@@ -28,6 +28,13 @@ local function source(includeMarkers)
     if not includeMarkers then return map end
     local markers={}
     for i=1,math.min(table.getn(custom or {}),9)do table.insert(markers,custom[i])end
+    local escort=snapshot.data.soloEvent
+    if type(escort)=="table" and escort.kind=="chicken_escort" and finite(escort.event) and escort.event>0
+        and finite(escort.x) and finite(escort.y) and finite(escort.stage) and escort.stage>=0 and escort.stage<=2 then
+        local text=snapshot.texts and snapshot.texts.soloEvent
+        table.insert(markers,{event=escort.event,kind=4,x=escort.x,y=escort.y,left=0,
+            name=text and text.title or "Mechanical Chicken",note=text and text.note or "Escort to extraction"})
+    end
     for i=1,math.min(table.getn(AZS_CHESTS or {}),128)do
         local cache=AZS_CHESTS[i]
         if type(cache)=="table" and finite(cache.x) and finite(cache.y) and type(cache.id)=="number" and cache.id>0 and cache.id<=9007199254740991 and cache.id==math.floor(cache.id) then
@@ -69,7 +76,7 @@ local function refreshEventPins()
     local map,markers=source(true);local parent=getglobal("Minimap");local used=0
     if parent and parent:IsVisible() and map then
         for _,data in ipairs(markers or {})do
-            if data.kind==1 or data.kind==2 or data.kind==3 or data.left>0 then
+            if data.kind==1 or data.kind==2 or data.kind==3 or data.kind==4 or data.left>0 then
                 if used>=265 then break end
                 used=used+1;local pin=eventPins[used]
                 if not pin then
@@ -78,8 +85,8 @@ local function refreshEventPins()
                     local rim=pin:CreateTexture(nil,"OVERLAY");rim:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder");rim:SetTexCoord(0,0.625,0,0.625);rim:SetWidth(26);rim:SetHeight(26);rim:SetPoint("CENTER",pin,"CENTER",0,0)
                     pin:SetScript("OnEnter",function()
                         local v=this.data;if not v then return end;hoveredEventPin=this;GameTooltip:SetOwner(this,"ANCHOR_LEFT");GameTooltip:ClearLines()
-                        GameTooltip:AddLine(v.kind==3 and v.name or(v.kind==0 and "Lost Supplies"or(v.kind==2 and "Cache"or"Sayge's Trial")),1,0.82,0)
-                        GameTooltip:AddLine(v.kind==3 and (v.active==false and "Guardian returning"or "Guardian lair")or(v.kind==1 and "Available until completed"or(v.kind==2 and ("Next cache: "..tostring(AZS_RUN and AZS_RUN.chest or "?").." gold")or(v.left.."s remaining"))),1,1,1)
+                        GameTooltip:AddLine((v.kind==3 or v.kind==4) and v.name or(v.kind==0 and "Lost Supplies"or(v.kind==2 and "Cache"or"Sayge's Trial")),1,0.82,0)
+                        GameTooltip:AddLine(v.kind==4 and v.note or(v.kind==3 and (v.active==false and "Guardian returning"or "Guardian lair")or(v.kind==1 and "Available until completed"or(v.kind==2 and ("Next cache: "..tostring(AZS_RUN and AZS_RUN.chest or "?").." gold")or(v.left.."s remaining")))),1,1,1)
                         if this.outside then GameTooltip:AddLine("Beyond minimap range",0.8,0.8,0.8)end;GameTooltip:Show()
                     end)
                     pin:SetScript("OnLeave",function()if hoveredEventPin==this then hoveredEventPin=nil;GameTooltip:Hide()end end);eventPins[used]=pin
@@ -88,11 +95,11 @@ local function refreshEventPins()
                 pin.data=data
                 -- Stable semantic layers survive retained-slot reuse. Returning
                 -- guardians stay behind actionable pins; native pins are untouched.
-                local priority=data.kind==1 and 4 or(data.kind==3 and(data.active==false and 0 or 3)or(data.kind==0 and 2 or 1))
+                local priority=(data.kind==1 or data.kind==4) and 4 or(data.kind==3 and(data.active==false and 0 or 3)or(data.kind==0 and 2 or 1))
                 local level=(parent.GetFrameLevel and parent:GetFrameLevel()or 0)+2+priority*2
                 if pin.priority~=priority or pin.azsxLevel~=level then pin:SetFrameLevel(level);pin.priority=priority;pin.azsxLevel=level end
                 if pin.kind~=data.kind then
-                    SetPortraitToTexture(pin.icon:GetName(),data.kind==3 and "Interface\\Icons\\Ability_Warrior_Challange"or(data.kind==1 and blessingIcon or(data.kind==2 and "Interface\\Icons\\INV_Box_02"or "Interface\\Icons\\INV_Crate_01")));pin.kind=data.kind
+                    SetPortraitToTexture(pin.icon:GetName(),data.kind==4 and "Interface\\Icons\\INV_Misc_EngGizmos_06"or(data.kind==3 and "Interface\\Icons\\Ability_Warrior_Challange"or(data.kind==1 and blessingIcon or(data.kind==2 and "Interface\\Icons\\INV_Box_02"or "Interface\\Icons\\INV_Crate_01"))));pin.kind=data.kind
                 end
                 setShown(pin,true)
             end

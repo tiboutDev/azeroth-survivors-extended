@@ -127,12 +127,17 @@ local function decode(wire)
                 local receipt=a[8]and integer(a[8],1,1e9)or nil
                 if a[8]and not receipt then return nil end
                 result.members[id].blessing={boss=boss,category=category,rarity=rarity,amount=amount,best=best,event=receipt}
-            elseif a[1]=="V" and table.getn(a)==12 and id==result.own and result.members[id] then
+            elseif a[1]=="V" and (table.getn(a)==12 or table.getn(a)==14) and id==result.own and result.members[id] then
                 local event,kind,stage=integer(a[3],1,1e9),integer(a[4],1,1),integer(a[5],0,4)
                 local held,maximum,inside=integer(a[6],0,200),integer(a[7],200,200),integer(a[8],0,1)
                 local charge,progress,total,remaining=integer(a[9],0,0),integer(a[10],0,120),integer(a[11],120,120),integer(a[12],0,0)
+                local x,y
+                if table.getn(a)==14 then
+                    x,y=tonumber(a[13]),tonumber(a[14])
+                    if not x or not y or x~=x or y~=y or math.abs(x)>=1e8 or math.abs(y)>=1e8 then return nil end
+                end
                 if not event or not kind or stage==nil or not held or not maximum or inside==nil or charge==nil or not progress or not total or not remaining or progress>total or result.members[id].soloEvent then return nil end
-                result.members[id].soloEvent={event=event,kind="chicken_escort",stage=stage,held=held,maximum=maximum,inside=inside==1,progress=progress,total=total}
+                result.members[id].soloEvent={event=event,kind="chicken_escort",stage=stage,held=held,maximum=maximum,inside=inside==1,progress=progress,total=total,x=x,y=y}
             elseif a[1]=="W" and table.getn(a)==6 and id==result.own and result.members[id] then
                 local revision,kind=integer(a[3],1,1e9),integer(a[4],0,5)
                 local nextTrigger,effect=integer(a[5],0,60000),integer(a[6],0,60000)
@@ -488,7 +493,7 @@ local function crystalPresentation(c)
         })do
             local count=c[row[1]]
             if count>0 then
-                table.insert(text.details,"|c"..row[5]..row[2].." x"..count.."|r  |cff1eff00+"..(count*row[3]).."%|r "..row[4])
+                table.insert(text.details,"|cff1eff00+"..(count*row[3]).."%|r "..row[4].."  |c"..row[5].."("..count.." "..string.lower(row[2])..(count==1 and " crystal)" or " crystals)").."|r")
             end
         end
     end
@@ -695,7 +700,7 @@ local function apiState()
     local own=allowed and supplyOwner()or nil
     local input=phase..":"..tostring(own~=nil)..":"..tostring(AZS_RUN_UPDATED)..":"..tostring(modelWire)
     if apiCache and input==apiInput then return apiCache end
-    local state={api={major=1,minor=11},available=own~=nil,phase=phase,data={},texts={}}
+    local state={api={major=1,minor=12},available=own~=nil,phase=phase,data={},texts={}}
     if own then
         state.session={epoch=model.epoch,recipientGUID=model.own}
         state.data={sharedEconomy=apiCopy(own.economy),crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),soloEvent=apiCopy(own.soloEvent),engineering=apiCopy(own.engineering),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}

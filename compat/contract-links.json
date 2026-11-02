@@ -1533,12 +1533,13 @@
   },
   "evidence": {
     "official_native.actor": {
-      "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone.",
+      "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone. The solo Mechanical Chicken escort also uses this retained native boundary.",
       "references": [
         "crates/azsx-game/src/official_native.rs",
         "src/runtime/lifecycle.rs",
         "src/runtime/session/services.rs",
-        "src/runtime/reward_services.rs"
+        "src/runtime/reward_services.rs",
+        "src/runtime/solo_escort.rs"
       ],
       "role": "native-operation",
       "shared": true
@@ -2152,6 +2153,16 @@
       "role": "native-operation",
       "shared": true
     },
+    "official_native.combat.hurt_actor_tagged": {
+      "reason": "Preserve both native Hurt source words through delayed taunt redirection and fallback; retain actor transactions, defensive isolation and identity checks.",
+      "references": [
+        "crates/azsx-game/src/official_native/combat.rs",
+        "src/runtime/combat.rs",
+        "src/runtime/treasure_goblins.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
     "official_native.combat.prepare_basic_target": {
       "reason": "Native basic-action target ownership, origin restoration and taunt descriptions.",
       "references": [
@@ -2179,6 +2190,15 @@
       "role": "native-operation",
       "shared": false
     },
+    "official_native.combat_text.append_native_heal_text": {
+      "reason": "Native outgoing damage and allied direct/periodic healing text entries and draw queue.",
+      "references": [
+        "crates/azsx-game/src/official_native/combat_text.rs",
+        "src/runtime/combat_text.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
     "official_native.combat_text.combat_text_entries": {
       "reason": "Native outgoing damage and allied direct/periodic healing text entries and draw queue.",
       "references": [
@@ -2199,6 +2219,15 @@
     },
     "official_native.combat_text.native_heal_texts": {
       "reason": "Native outgoing damage and allied direct/periodic healing text entries and draw queue.",
+      "references": [
+        "crates/azsx-game/src/official_native/combat_text.rs",
+        "src/runtime/combat_text.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.combat_text.resolve_with_native_parts": {
+      "reason": "Selected native query predicate plus GUID/entity map lookup; retain query ownership and exact pointer-wrapper ABI for healing text.",
       "references": [
         "crates/azsx-game/src/official_native/combat_text.rs",
         "src/runtime/combat_text.rs"
@@ -2344,6 +2373,15 @@
       "role": "native-operation",
       "shared": false
     },
+    "official_native.enable_native_ui_logging": {
+      "reason": "Opt-in native stdout event logging independent of Game autostart; validate only the selected sink boolean and preserve all other bytes.",
+      "references": [
+        "crates/azsx-game/src/official_native.rs",
+        "src/runtime/pause/services.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
     "official_native.enchantments.enchantment_ui_draw": {
       "reason": "Per-ring identity, upgrade selection, ranked stat loan and annotation.",
       "references": [
@@ -2466,6 +2504,96 @@
       "role": "native-operation",
       "shared": true
     },
+    "official_native.escort.escort_move_chicken": {
+      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
+      "references": [
+        "crates/azsx-game/src/official_native/escort.rs",
+        "src/runtime/solo_escort.rs",
+        "docs/features/SOLO-ESCORT.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.escort.escort_route": {
+      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
+      "references": [
+        "crates/azsx-game/src/official_native/escort.rs",
+        "src/runtime/solo_escort.rs",
+        "docs/features/SOLO-ESCORT.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.escort.solo_engineering_burst": {
+      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
+      "references": [
+        "crates/azsx-game/src/official_native/escort.rs",
+        "src/runtime/solo_escort.rs",
+        "docs/features/SOLO-ESCORT.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.escort.solo_gadget_belt": {
+      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
+      "references": [
+        "crates/azsx-game/src/official_native/escort.rs",
+        "src/runtime/solo_escort.rs",
+        "docs/features/SOLO-ESCORT.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.escort.solo_gadget_net": {
+      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
+      "references": [
+        "crates/azsx-game/src/official_native/escort.rs",
+        "src/runtime/solo_escort.rs",
+        "docs/features/SOLO-ESCORT.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.escort.solo_gadget_speed": {
+      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
+      "references": [
+        "crates/azsx-game/src/official_native/escort.rs",
+        "src/runtime/solo_escort.rs",
+        "docs/features/SOLO-ESCORT.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.escort.solo_launch_mortar": {
+      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
+      "references": [
+        "crates/azsx-game/src/official_native/escort.rs",
+        "src/runtime/solo_escort.rs",
+        "docs/features/SOLO-ESCORT.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.escort.solo_player_scale": {
+      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
+      "references": [
+        "crates/azsx-game/src/official_native/escort.rs",
+        "src/runtime/solo_escort.rs",
+        "docs/features/SOLO-ESCORT.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.escort.solo_sapper_backlash": {
+      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
+      "references": [
+        "crates/azsx-game/src/official_native/escort.rs",
+        "src/runtime/solo_escort.rs",
+        "docs/features/SOLO-ESCORT.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
     "official_native.event_placement.clamp_event_health": {
       "reason": "Consumable stat rebuild and expiry preserve current health bounds.",
       "references": [
@@ -2497,11 +2625,12 @@
       "shared": true
     },
     "official_native.event_placement.event_ground_sample": {
-      "reason": "Shared map-wide placement and native minimap geometry for supplies and Sayge.",
+      "reason": "Shared map-wide placement and native minimap geometry for supplies and Sayge. The solo Mechanical Chicken escort also uses this retained native boundary.",
       "references": [
         "crates/azsx-game/src/official_native/event_placement.rs",
         "src/runtime/world_events.rs",
-        "src/runtime/event_services.rs"
+        "src/runtime/event_services.rs",
+        "src/runtime/solo_escort.rs"
       ],
       "role": "native-operation",
       "shared": true
@@ -2517,11 +2646,12 @@
       "shared": true
     },
     "official_native.event_placement.event_placement_entries": {
-      "reason": "Shared map-wide placement and native minimap geometry for supplies and Sayge.",
+      "reason": "Shared map-wide placement and native minimap geometry for supplies and Sayge. The solo Mechanical Chicken escort also uses this retained native boundary.",
       "references": [
         "crates/azsx-game/src/official_native/event_placement.rs",
         "src/runtime/world_events.rs",
-        "src/runtime/event_services.rs"
+        "src/runtime/event_services.rs",
+        "src/runtime/solo_escort.rs"
       ],
       "role": "native-operation",
       "shared": true
@@ -2563,6 +2693,24 @@
       ],
       "role": "native-operation",
       "shared": true
+    },
+    "official_native.experience.downed_xp_continuation": {
+      "reason": "Native dead-actor shared XP and whole-level receipt guards; pending choices remain native.",
+      "references": [
+        "crates/azsx-game/src/official_native/experience.rs",
+        "src/runtime/experience.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.experience.downed_xp_entries": {
+      "reason": "Native dead-actor shared XP and whole-level receipt guards; pending choices remain native.",
+      "references": [
+        "crates/azsx-game/src/official_native/experience.rs",
+        "src/runtime/experience.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
     },
     "official_native.fatigue.fatigue_aura_entry": {
       "reason": "Native harmful aura entry and frame projection for Resurrection Sickness.",
@@ -3045,6 +3193,17 @@
       "role": "native-operation",
       "shared": true
     },
+    "official_native.pause.pause_remote_motion": {
+      "reason": "Host pause-edge visual stop for other current participants through the existing selected native movement packet sender; authoritative poses and local actor are preserved.",
+      "references": [
+        "crates/azsx-game/src/official_native/pause.rs",
+        "src/runtime/session.rs",
+        "src/runtime/session/services.rs",
+        "docs/features/COOP-PAUSE.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
     "official_native.pause.rva": {
       "reason": "Native pause layout construction and address translation back the pause/menu authority and retained UI.",
       "references": [
@@ -3054,6 +3213,17 @@
       ],
       "role": "native-operation",
       "shared": true
+    },
+    "official_native.pause.stop_body": {
+      "reason": "Host pause-edge visual stop for other current participants through the existing selected native movement packet sender; authoritative poses and local actor are preserved.",
+      "references": [
+        "crates/azsx-game/src/official_native/pause.rs",
+        "src/runtime/session.rs",
+        "src/runtime/session/services.rs",
+        "docs/features/COOP-PAUSE.md"
+      ],
+      "role": "native-operation",
+      "shared": false
     },
     "official_native.presentation.party_build": {
       "reason": "Native party build decoding and source-owner spell tooltip formatting.",
@@ -3143,15 +3313,26 @@
       "shared": true
     },
     "official_native.run_source": {
-      "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone.",
+      "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone. The solo Mechanical Chicken escort also uses this retained native boundary.",
       "references": [
         "crates/azsx-game/src/official_native.rs",
         "src/runtime/lifecycle.rs",
         "src/runtime/session/services.rs",
-        "src/runtime/reward_services.rs"
+        "src/runtime/reward_services.rs",
+        "src/runtime/solo_escort.rs"
       ],
       "role": "native-operation",
       "shared": true
+    },
+    "official_native.scene_units.event_chicken": {
+      "reason": "Selected native contact for the solo Mechanical Chicken escort or its single-tier engineering reward; exact-build guards and owner checks precede use. Candidate attribution does not establish live behavior.",
+      "references": [
+        "crates/azsx-game/src/official_native/scene_units.rs",
+        "src/runtime/solo_escort.rs",
+        "docs/features/SOLO-ESCORT.md"
+      ],
+      "role": "native-operation",
+      "shared": false
     },
     "official_native.scene_units.event_enemy_count": {
       "reason": "Native Sayge/candle scene construction and owned scene replication.",
@@ -3198,15 +3379,16 @@
       "shared": false
     },
     "official_native.scene_units.send_owned_scene_packet": {
-      "reason": "Native Sayge/candle scene construction and owned scene replication.",
+      "reason": "Native Sayge/candle scene construction and owned scene replication. The solo Mechanical Chicken escort also uses this retained native boundary.",
       "references": [
         "crates/azsx-game/src/official_native/scene_units.rs",
         "src/runtime/event_services.rs",
         "src/runtime/rituals.rs",
-        "src/runtime/world_events/coop.rs"
+        "src/runtime/world_events/coop.rs",
+        "src/runtime/solo_escort.rs"
       ],
       "role": "native-operation",
-      "shared": false
+      "shared": true
     },
     "official_native.scene_units.unit_block": {
       "reason": "Native Sayge/candle scene construction and owned scene replication.",
@@ -3247,15 +3429,37 @@
       "shared": false
     },
     "official_native.solo_run": {
-      "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone.",
+      "reason": "Shared native run/participant identity and phase snapshots underpin lifecycle isolation across native features. This explicit shared link deliberately does not narrow review to lifecycle alone. The solo Mechanical Chicken escort also uses this retained native boundary.",
       "references": [
         "crates/azsx-game/src/official_native.rs",
         "src/runtime/lifecycle.rs",
         "src/runtime/session/services.rs",
-        "src/runtime/reward_services.rs"
+        "src/runtime/reward_services.rs",
+        "src/runtime/solo_escort.rs"
       ],
       "role": "native-operation",
       "shared": true
+    },
+    "official_native.stat_inputs.apply_consumable_speed": {
+      "reason": "Personal Swiftness supplies add to the selected native movement output after baseline reconstruction; gameplay tier and cosmetic quality remain independent.",
+      "references": [
+        "crates/azsx-game/src/official_native/stat_inputs.rs",
+        "src/runtime/supplies.rs",
+        "docs/features/FEATURE-RULES.md"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.stat_inputs.apply_coop_area": {
+      "reason": "Scale only the positive global area bonus after an authoritative complete rebuild; preserve native baseline and received snapshots.",
+      "references": [
+        "crates/azsx-game/src/official_native/stat_inputs.rs",
+        "src/runtime/run_stats.rs",
+        "crates/azsx-game/tests/current/jewelry.rs",
+        "docs/features/FEATURE-RULES.md"
+      ],
+      "role": "native-operation",
+      "shared": false
     },
     "official_native.stat_inputs.consumable_stats": {
       "reason": "Owned temporary native stat inputs and restoration are shared across jewelry and consumables.",
@@ -3401,6 +3605,16 @@
       "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
       "references": [
         "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/support.rs",
+        "src/runtime/fatigue.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
+    "official_native.support.effects.call_native_heal": {
+      "reason": "Synthetic healing and meter calls provide the reviewed fifth native source descriptor while retaining active-actor and spell attribution.",
+      "references": [
+        "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
       ],
@@ -3792,6 +4006,15 @@
         "crates/azsx-game/src/official_native/support.rs",
         "src/runtime/support.rs",
         "src/runtime/fatigue.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
+    "official_native.support.spell_modifiers_entry": {
+      "reason": "Native spell modifier resolver retained for borrowed support abilities, without spell customization.",
+      "references": [
+        "crates/azsx-game/src/official_native/support.rs",
+        "src/runtime/io.rs"
       ],
       "role": "native-operation",
       "shared": true
@@ -4458,11 +4681,12 @@
       "shared": true
     },
     "official_native.world_events.event_broadcast": {
-      "reason": "Shared authoritative event context, announcement, placement and controlled test operations.",
+      "reason": "Shared authoritative event context, announcement, placement and controlled test operations. The solo Mechanical Chicken escort also uses this retained native boundary.",
       "references": [
         "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
-        "src/runtime/world_events/coop.rs"
+        "src/runtime/world_events/coop.rs",
+        "src/runtime/solo_escort.rs"
       ],
       "role": "native-operation",
       "shared": true
@@ -4498,11 +4722,12 @@
       "shared": true
     },
     "official_native.world_events.event_object": {
-      "reason": "Supply objects/consumables and shared scene cleanup/projection participate in cooperative event lifecycle.",
+      "reason": "Supply objects/consumables and shared scene cleanup/projection participate in cooperative event lifecycle. The solo Mechanical Chicken escort also uses this retained native boundary.",
       "references": [
         "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
-        "src/runtime/world_events/coop.rs"
+        "src/runtime/world_events/coop.rs",
+        "src/runtime/solo_escort.rs"
       ],
       "role": "native-operation",
       "shared": true
@@ -4538,11 +4763,12 @@
       "shared": false
     },
     "official_native.world_events.event_surface": {
-      "reason": "Shared authoritative event context, announcement, placement and controlled test operations.",
+      "reason": "Shared authoritative event context, announcement, placement and controlled test operations. The solo Mechanical Chicken escort also uses this retained native boundary.",
       "references": [
         "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
-        "src/runtime/world_events/coop.rs"
+        "src/runtime/world_events/coop.rs",
+        "src/runtime/solo_escort.rs"
       ],
       "role": "native-operation",
       "shared": true
@@ -4618,11 +4844,12 @@
       "shared": true
     },
     "official_native.world_events.remove_event_object": {
-      "reason": "Supply objects/consumables and shared scene cleanup/projection participate in cooperative event lifecycle.",
+      "reason": "Supply objects/consumables and shared scene cleanup/projection participate in cooperative event lifecycle. The solo Mechanical Chicken escort also uses this retained native boundary.",
       "references": [
         "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
-        "src/runtime/world_events/coop.rs"
+        "src/runtime/world_events/coop.rs",
+        "src/runtime/solo_escort.rs"
       ],
       "role": "native-operation",
       "shared": true
@@ -4648,11 +4875,12 @@
       "shared": true
     },
     "official_native.world_events.world_event_entries": {
-      "reason": "Shared authoritative event context, announcement, placement and controlled test operations.",
+      "reason": "Shared authoritative event context, announcement, placement and controlled test operations. The solo Mechanical Chicken escort also uses this retained native boundary.",
       "references": [
         "crates/azsx-game/src/official_native/world_events.rs",
         "src/runtime/event_services.rs",
-        "src/runtime/world_events/coop.rs"
+        "src/runtime/world_events/coop.rs",
+        "src/runtime/solo_escort.rs"
       ],
       "role": "native-operation",
       "shared": true
@@ -4667,123 +4895,6 @@
       ],
       "role": "native-operation",
       "shared": true
-    },
-    "official_native.pause.stop_body": {
-      "reason": "Host pause-edge visual stop for other current participants through the existing selected native movement packet sender; authoritative poses and local actor are preserved.",
-      "references": [
-        "crates/azsx-game/src/official_native/pause.rs",
-        "src/runtime/session.rs",
-        "src/runtime/session/services.rs",
-        "docs/features/COOP-PAUSE.md"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.pause.pause_remote_motion": {
-      "reason": "Host pause-edge visual stop for other current participants through the existing selected native movement packet sender; authoritative poses and local actor are preserved.",
-      "references": [
-        "crates/azsx-game/src/official_native/pause.rs",
-        "src/runtime/session.rs",
-        "src/runtime/session/services.rs",
-        "docs/features/COOP-PAUSE.md"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.stat_inputs.apply_consumable_speed": {
-      "reason": "Personal Swiftness supplies add to the selected native movement output after baseline reconstruction; gameplay tier and cosmetic quality remain independent.",
-      "references": [
-        "crates/azsx-game/src/official_native/stat_inputs.rs",
-        "src/runtime/supplies.rs",
-        "docs/features/FEATURE-RULES.md"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.combat.hurt_actor_tagged": {
-      "reason": "Preserve both native Hurt source words through delayed taunt redirection and fallback; retain actor transactions, defensive isolation and identity checks.",
-      "references": [
-        "crates/azsx-game/src/official_native/combat.rs",
-        "src/runtime/combat.rs",
-        "src/runtime/treasure_goblins.rs"
-      ],
-      "role": "native-operation",
-      "shared": true
-    },
-    "official_native.support.effects.call_native_heal": {
-      "reason": "Synthetic healing and meter calls provide the reviewed fifth native source descriptor while retaining active-actor and spell attribution.",
-      "references": [
-        "crates/azsx-game/src/official_native/support.rs",
-        "src/runtime/support.rs",
-        "src/runtime/fatigue.rs"
-      ],
-      "role": "native-operation",
-      "shared": true
-    },
-    "official_native.combat_text.resolve_with_native_parts": {
-      "reason": "Selected native query predicate plus GUID/entity map lookup; retain query ownership and exact pointer-wrapper ABI for healing text.",
-      "references": [
-        "crates/azsx-game/src/official_native/combat_text.rs",
-        "src/runtime/combat_text.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.combat_text.append_native_heal_text": {
-      "reason": "Native outgoing damage and allied direct/periodic healing text entries and draw queue.",
-      "references": [
-        "crates/azsx-game/src/official_native/combat_text.rs",
-        "src/runtime/combat_text.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.enable_native_ui_logging": {
-      "reason": "Opt-in native stdout event logging independent of Game autostart; validate only the selected sink boolean and preserve all other bytes.",
-      "references": [
-        "crates/azsx-game/src/official_native.rs",
-        "src/runtime/pause/services.rs"
-      ],
-      "role": "native-operation",
-      "shared": true
-    },
-    "official_native.experience.downed_xp_continuation": {
-      "reason": "Native dead-actor shared XP and whole-level receipt guards; pending choices remain native.",
-      "references": [
-        "crates/azsx-game/src/official_native/experience.rs",
-        "src/runtime/experience.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.experience.downed_xp_entries": {
-      "reason": "Native dead-actor shared XP and whole-level receipt guards; pending choices remain native.",
-      "references": [
-        "crates/azsx-game/src/official_native/experience.rs",
-        "src/runtime/experience.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
-    },
-    "official_native.support.spell_modifiers_entry": {
-      "reason": "Native spell modifier resolver retained for borrowed support abilities, without spell customization.",
-      "references": [
-        "crates/azsx-game/src/official_native/support.rs",
-        "src/runtime/io.rs"
-      ],
-      "role": "native-operation",
-      "shared": true
-    },
-    "official_native.stat_inputs.apply_coop_area": {
-      "reason": "Scale only the positive global area bonus after an authoritative complete rebuild; preserve native baseline and received snapshots.",
-      "references": [
-        "crates/azsx-game/src/official_native/stat_inputs.rs",
-        "src/runtime/run_stats.rs",
-        "crates/azsx-game/tests/current/jewelry.rs",
-        "docs/features/FEATURE-RULES.md"
-      ],
-      "role": "native-operation",
-      "shared": false
     }
   },
   "conservative_notes": {

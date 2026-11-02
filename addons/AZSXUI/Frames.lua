@@ -334,9 +334,10 @@ local function updateEncounters(active)
      if count<=24 then
       local icon=row.debuffs[count]
       if not icon then
-       icon=CreateFrame("Button",nil,row);icon:SetWidth(18);icon:SetHeight(18)
-       local texture=icon:CreateTexture(nil,"ARTWORK");texture:SetAllPoints(icon);icon.icon=texture
-       local border=icon:CreateTexture(nil,"OVERLAY");border:SetTexture("Interface\\Buttons\\UI-Quickslot2");border:SetAllPoints(icon);border:SetVertexColor(.9,.28,.2)
+       local name="AZSXUIEncounter"..i.."Debuff"..count
+       icon=CreateFrame("Button",name,row,"PartyBuffButtonTemplate");icon:SetID(count);icon:SetWidth(18);icon:SetHeight(18)
+       icon.icon=getglobal(name.."Icon");icon.icon:SetAllPoints(icon)
+       icon.border=getglobal(name.."Border");if icon.border then icon.border:Show()end
        icon.stack=font(icon,9);icon.stack:SetPoint("BOTTOMRIGHT",icon,"BOTTOMRIGHT",2,-1);icon.stack:SetTextColor(1,1,1)
        icon:SetScript("OnEnter",function()
         local effect=this.effect;if not effect then return end

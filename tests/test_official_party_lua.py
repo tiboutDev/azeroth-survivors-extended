@@ -124,7 +124,7 @@ class NativePartyLua(unittest.TestCase):
   h=lambda text:text.encode().hex()
   row=f"Q|11|1|0|1|{h('Recruit Helm')}|{h('INV_Helmet_02')}\n"
   self.publish(("1|1|11|1\nM|11|0|506c61796572\n"+row).encode().hex())
-  self.lua.execute('local s=AZSX_GetState(1);assert(s.api.minor==11 and s.data.loot[1].event==1 and s.data.loot[1].isNew and s.texts.loot[1].icon=="INV_Helmet_02");s.texts.loot[1].icon="mutated";assert(AZSX_GetState(1).texts.loot[1].icon=="INV_Helmet_02")')
+  self.lua.execute('local s=AZSX_GetState(1);assert(s.api.minor==12 and s.data.loot[1].event==1 and s.data.loot[1].isNew and s.texts.loot[1].icon=="INV_Helmet_02");s.texts.loot[1].icon="mutated";assert(AZSX_GetState(1).texts.loot[1].icon=="INV_Helmet_02")')
   self.publish(("1|1|11|1\nM|11|0|506c61796572\n"+row.replace("Q|11|","Q|22|")).encode().hex())
   self.lua.execute('assert(not AZSX_GetState(1).available)')
  def test_native_drop_duplicate_sequence_and_invalid_texture_fail_closed(self):

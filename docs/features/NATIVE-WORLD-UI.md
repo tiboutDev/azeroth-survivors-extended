@@ -214,7 +214,7 @@ are implemented; aura and party/build presentation remain possible future work.
 AZSXUI reads boss, awake-guardian and AZSX goblin health from the native addon
 tables. Goblins are native `AZS_UNITS` elite rows named `Venture Co. Treasurer`,
 the fixed AZSX definition/query name, carrying actual spawn ID/HP/max HP. The
-40-row native list bounds discovery; missing data hides the cosmetic row. The native `debuffs` arrays for bosses and guardians, plus `AZS_GetDebuffs(id)` for the goblin, supply compact icons beneath the matching bars. This uses the native entity ID without target-name matching or a new hook.
+40-row native list bounds discovery; missing data hides the cosmetic row. The native `debuffs` arrays for bosses and guardians, plus `AZS_GetDebuffs(id)` for the goblin, supply compact icons beneath the matching bars. Their icon and debuff border come from the native `PartyBuffButtonTemplate`, with the original native data and entity IDs; no target-name matching or new hook is needed.
 This does not infer a nameplate GUID or introduce a new native memory contact.
 
 Bottom HUD order is equipment, statistics, native XP, then native gryphons.

@@ -43,6 +43,9 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
     let runtime = RUNTIME.get().ok_or("Official runtime unavailable")?;
     if rules {
         super::rituals::verify_before_hooks(runtime);
+        // The scene field setter is shared with an earlier native hook. Verify
+        // escort contacts while the original client bytes are still intact.
+        super::solo_escort::install(runtime);
     }
     if rules {
         super::ui_context::install(runtime)?;
@@ -249,7 +252,6 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         super::treasure_goblins::install(runtime);
         super::supplies::install(runtime);
         super::crystals::install(runtime);
-        super::solo_escort::install(runtime);
         super::rituals::install(runtime);
     }
     if azsx {

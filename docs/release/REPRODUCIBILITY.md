@@ -3,11 +3,11 @@
 Reproducibility is one gate in the [release preparation checklist](RELEASE-CHECKLIST.md); candidate production never approves a release.
 
 The [approved local WSL reference](../../validation/asx-reproducible-build-xwin.json)
-identifies the approved **0.138.0-azsx.1** normal DLL (1,905,664 bytes)
+identifies the approved **0.138.0-azsx.1** normal DLL (2,042,368 bytes)
 for native **0.138.0**:
 
 ```text
-d57c9dd54d96c6d1a224136178b420548fe31747f18eb9ed630b51695aed37ff
+1a2e843781dbfd2802246979dab1959a5f87b91e81c58d189eba1ad30fc694c4
 ```
 
 Two fresh isolated builds produced identical bytes with unchanged source inputs.
@@ -15,11 +15,10 @@ Receipts verify path remapping, disabled diagnostic hooks, PE timestamp 1 and no
 debug directory. The exact DLL passed fresh solo and two-player normal live trials,
 plus all 30 installation/migration/startup/coop/export/uninstall checks of its
 signed archive on a verified private Windows desktop. The user explicitly
-approved this replacement reference on **2026-11-01**. The superseded
-0.135.1-azsx.2 reference remains in Git history and preserved private evidence.
-The 0.135.1-azsx.2 and 0.135.1-azsx.3 release assets were not modified. Pending
-candidates remain separate from the approved reference. These bounded trials
-use local native-engine loopback; they do not establish public-lobby or WAN parity.
+approved this replacement reference on **2026-11-02**. The superseded
+0.138.0-asx.1 reference remains in Git history and preserved private evidence.
+The old release assets were not modified. These bounded trials use local
+native-engine loopback; they do not establish public-lobby or WAN parity.
 
 ## Reproduce
 

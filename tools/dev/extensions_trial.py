@@ -112,6 +112,8 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
    if os.environ.get('AZSX_TEST_NO_UI')!='1':shutil.copytree(ROOT/'addons/AZSXUI',folder/'AddOns/AZSXUI')
    env=dict(clean,APPDATA=str(folder/"appdata"),LOCALAPPDATA=str(folder/"localappdata"),BENILLA_HOME=str(folder),AZSX_ACTIVE="1",AZCOOP_ENGINE="official",AZCOOP_NATIVE_LOG_DIRECTORY=str(folder),AZSX_READY_FILE=str(folder/"ready.json"),WOW_NOSOUND="1",WOW_WIN="1",WOW_ROGUE_UPDATE="0",WOW_ROGUE_UPDATE_AUTO="0",WOW_ROGUE_AUTOPICK="1",WOW_ROGUE_AUTOSTART="1",WOW_ROGUE_AUTOPLAY="18"if slot==1 else"4",RUST_LOG="info",AZCOOP_TEST_BLESSINGS="1")
    if os.environ.get('AZSX_TEST_ADDON_API')=='1':env['AZSX_TEST_ADDON_API']='1'
+   if os.environ.get('AZSX_TEST_ESCORT_PREVIEW')=='1' and players==1 and not normal:
+    env['AZSX_TEST_ESCORT_PREVIEW']='1'
    if not normal:env.update(AZSX_LOST_SUPPLIES="0",AZSX_DARKMOON_TRIALS="0")
    if supplies:
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
@@ -246,6 +248,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     if os.environ.get("AZSX_TEST_COVERAGE")=="1":env["WOW_ROGUE_SHOTS_EVERY"]="45"
     if os.environ.get("AZSX_TEST_WORLD_UI")=="1":env["WOW_ROGUE_SHOTS_EVERY"]="12"
     env["WOW_ROGUE_SHOTS"]=str(folder/"shots")
+    if env.get("AZSX_TEST_ESCORT_PREVIEW")=="1":env["WOW_ROGUE_SHOTS_EVERY"]="5"
    handle=(folder/"native-output.log").open("wb");handles.append(handle);children.append(subprocess.Popen([str(exe)],cwd=runtime,env=env,stdout=handle,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW));time.sleep(4 if slot==1 else 2)
   def evaluate():
    logs=[((out/f"player-{i}/azeroth-coop-native.log").read_text(encoding="utf-8",errors="replace") if (out/f"player-{i}/azeroth-coop-native.log").exists() else "")for i in range(1,players+1)]

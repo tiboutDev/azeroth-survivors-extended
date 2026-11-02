@@ -9,7 +9,7 @@ except ImportError:
 ROOT = Path(__file__).resolve().parents[1]
 STUB = r"""
 frames={}
-function getglobal(name)return _G[name]end
+function getglobal(name)return frames[name]end
 function newFrame(name)
  local f={scripts={},shown=false}
  function f:SetPoint(...)end
@@ -21,7 +21,7 @@ function newFrame(name)
  function f:RegisterEvent(e)end
  function f:GetScript(e)return self.scripts[e]end
  function f:SetScript(e,fn)self.scripts[e]=fn end
- if name then _G[name]=f end
+ if name then frames[name]=f;if _G then _G[name]=f end end
  return f
 end
 function CreateFrame(kind,name,parent)return newFrame(name)end
@@ -37,10 +37,10 @@ function click(button)
  WorldFrame.scripts.OnMouseDown()
  WorldFrame.scripts.OnMouseUp()
  arg1=.11
- AZSXUICameraController.scripts.OnUpdate()
+ frames.AZSXUICameraController.scripts.OnUpdate()
  arg1=nil
 end
-function tick(dt)arg1=dt or .11;AZSXUICameraController.scripts.OnUpdate();arg1=nil end
+function tick(dt)arg1=dt or .11;frames.AZSXUICameraController.scripts.OnUpdate();arg1=nil end
 """
 
 @unittest.skipUnless(LuaRuntime, "Lua 5.1 profile requires lupa")
@@ -52,6 +52,13 @@ class CameraTests(unittest.TestCase):
 
     def run_lua(self, code):
         self.lua.execute(code)
+
+    def test_native_lua_without_global_table_keeps_camera_and_inspection(self):
+        lua=LuaRuntime(unpack_returned_tuples=True)
+        lua.execute(STUB)
+        lua.execute('_G=nil')
+        lua.execute((ROOT/"addons/AZSXUI/Camera.lua").read_text())
+        lua.execute('click("RightButton");assert(look);TalentFrame:Show();tick();assert(not look);TalentFrame:Hide();click("RightButton");assert(look)')
 
     def test_right_click_toggles_without_auto_reacquire(self):
         self.run_lua('click("RightButton");assert(look and starts==1, tostring(look)..":"..tostring(starts)..":"..AZSXUI_CameraStatus().mode..":"..tostring(AZSXUI_CameraStatus().pending));click("RightButton");assert(not look);for i=1,30 do tick()end;assert(starts==1)')

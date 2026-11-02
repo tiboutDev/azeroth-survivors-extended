@@ -29,18 +29,14 @@ Your existing progression and settings are reused. The launcher creates a progre
 
 ## Included addons and preferences
 
-No separate AZSXUI download or manual addon copy is required. The launcher manages
-two complementary folders:
-
-| Folder in your game installation | Purpose |
-| --- | --- |
-| `benilla-config/AddOns/AZSX` | Connects the native AZSX mod to Lua, exposes AZSX data and enriches buff tooltips. |
-| `benilla-config/AddOns/AZSXUI` | Displays nameplate styling, minimap markers, notifications and configurable event widgets. |
+No separate AZSXUI download or manual addon copy is required. The launcher
+manages `benilla-config/AddOns/AZSXUI` for nameplate styling, minimap markers,
+notifications and configurable event widgets. The AZSX Lua provider initializes
+through the selected native client; there is no internal `AddOns/AZSX` addon.
 
 Keep the top-level `AZSX` folder beside the game executable; do not move it into
-AddOns. The launcher puts the required addon files in their correct locations.
-AZSXUI remains an independent Lua addon, while its packaged files are installed
-and updated with AZSX.
+AddOns. AZSXUI remains an independent Lua addon, while its packaged files are
+installed and updated with AZSX.
 
 Existing matching AZSXUI files can be adopted. Different pre-existing addon code
 is preserved until you choose an explicit repair. Modified managed code is backed up before an automatic update replaces it. Native SavedVariables

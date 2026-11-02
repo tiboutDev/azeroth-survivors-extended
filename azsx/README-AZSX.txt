@@ -13,6 +13,7 @@ AZSX FEATURES
 - Ring enchantments at ring ranks 2 / 4 / 7 / 10 / 14.
 - Personal colored world crystals replace amulet gems; Crystal Resonance tracks run-long bonuses.
 - Sayge's Trials grant Dark Fortunes: Luck, Experience or Gold.
+- Solo Mechanical Chicken escort: guide it to extraction for one run-local engineering gadget.
 - Resurrection Sickness: temporary damage/healing penalties after revival.
 - Native enemy difficulty, density and Heroic levels.
 - Native personal marks replace AZSX in-run gold for duplicate boss drops.
@@ -54,9 +55,9 @@ This is an unofficial modification, independent of the original game's author.
 
 AZSX/App contains program files; AZSX/Config contains options; AZSX/Data contains
 state, cache, backups, logs and reports. The new launcher migrates the legacy
-layout after the first complete-archive installation. When migrating from .2,
-close all clients, keep the old AZSX folder, and extract the complete new archive
+layout after the first complete-archive installation. When migrating from the old pre-App/Config/Data layout,
+close all clients, keep the old mod folder, and extract the complete new archive
 beside AzerothSurvivors.exe, replacing start-azsx.cmd. Do not extract inside AZSX.
-The frozen .2 launcher cannot perform this layout transition automatically.
+The older launcher cannot perform this layout transition automatically.
 AZSXUI problems and missing documentation do not prevent native-interface play. Compatible signed updates
 install automatically without confirmation; offline mode skips discovery.

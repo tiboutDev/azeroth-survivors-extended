@@ -67,6 +67,7 @@ arg1=.1;AZSXUIFramesController.scripts.OnUpdate()
 local r=AZSXUI_FramesReadout().encounters
 assert(r.height==159 and r.rows[1].debuffs==2 and r.rows[2].debuffs==1 and r.rows[3].debuffs==1)
 assert(string.find(AZSXUIEncounter1.debuffs[1].icon.texture,"Ability_Gouge",1,true))
+assert(AZSXUIEncounter1.debuffs[1].icon==objects.AZSXUIEncounter1Debuff1Icon and AZSXUIEncounter1.debuffs[1].border==objects.AZSXUIEncounter1Debuff1Border and AZSXUIEncounter1.debuffs[1].border:IsShown())
 assert(AZSXUIEncounter1.debuffs[2].icon.texture=="Interface/Icons/Spell_Shadow_Curse")
 assert(AZSXUIEncounter2.anchor[5]==-53 and AZSXUIEncounter3.anchor[5]==-106)
 this=AZSXUIEncounter1.debuffs[1];this.scripts.OnEnter();assert(GameTooltip.title=="Rend" and GameTooltip.lines[1][1]=="Stacks: 2" and GameTooltip.lines[2][1]=="8 s remaining")

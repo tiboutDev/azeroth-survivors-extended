@@ -45,7 +45,9 @@ addon files and preserves preferences and unknown files.
 - AZSXUI owns the circular custom-event and native-cache minimap pins, their native
   portrait mask, tracking-ring border, hover text and edge projection. Supply and
   trial icons retain their styles; caches use the native `INV_Box_02` icon; supplies retain `INV_Crate_01`.
-  Both keep the same circular mask and tracking ring.
+  Both keep the same circular mask and tracking ring. A solo Mechanical Chicken
+escort uses the native `INV_Misc_EngGizmos_06` icon at its current exposed position and
+removes the pin when the scene ends.
   Native cache coordinates come directly from `AZS_CHESTS`. Native cache opening,
   purchases, event progress and per-recipient availability stay authoritative.
 
@@ -135,7 +137,7 @@ uv run --with fonttools python tools/build/azsxui_font.py --source <source-font.
 
 ## AZSX event widgets
 
-`Events.lua` owns Supply/Fortune/crystal pickup panels and Sayge's progress bar. It also observes the solo Mechanical Chicken escort and shows the equipped engineering gadget, using the native-style AZSX API 1.11. The addon does not control movement or rewards.
+`Events.lua` owns Supply/Fortune/crystal pickup panels and Sayge's progress bar. It also observes the solo Mechanical Chicken escort and shows the equipped engineering gadget beside the health/Fortune medallions, using the native-style AZSX API 1.12. The addon does not control movement or rewards.
 `AZSX_GetState(1)` supplies structured values in `data` and every semantic title,
 reward, note and color in `texts`, all from AZSX. AZSXUI does not calculate
 rewards, timers or gameplay. Goblin appearance/defeat/escape announcements keep
@@ -449,14 +451,15 @@ replay a receipt. Marks retain their separate earned/total presentation.
 The encounter-health stack also includes live elite `Venture Co. Treasurer`
 rows from native `AZS_UNITS`. This is the exact fixed name/rank of the AZSX
 native creature definition and query. Native spawn IDs deduplicate health rows;
-current/max HP and disappearance stay native. `AZS_GetDebuffs(id)` supplies their debuffs by the same spawn ID. No new native hook, creature scan,
+current/max HP and disappearance stay native. `AZS_GetDebuffs(id)` supplies their debuffs by the same spawn ID. Each icon and border uses the native `PartyBuffButtonTemplate` with its debuff border retained. No new native hook, creature scan,
 health estimate or target/nameplate matching is introduced. Other elites and
 normal creatures with that name are excluded. The native special-unit list is
 bounded to 40 entries; if the goblin is absent from that API, no bar is invented.
 
 Crystal Resonance now shows just the total collected count over the lower-right
-of its icon. The four per-color counters beside it are removed. Color totals and
-accumulated bonuses remain in the original native/AZSX tooltip and API.
+of its icon. The four per-color counters beside it are removed. Color totals and accumulated bonuses remain in the original native/AZSX
+tooltip and API. Each tooltip row starts with the accumulated bonus, then shows
+the number of crystals of that color.
 
 ### Detached trackers and character shortcut
 

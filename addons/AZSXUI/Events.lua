@@ -462,8 +462,11 @@ local function refreshEngineering()
         f:SetScript("OnLeave",function()GameTooltip:Hide()end);engineeringBadge=f
     end
     engineeringBadge:ClearAllPoints()
+    local fortune=getglobal and getglobal("AZSXUIFortuneMedallion")
     local vitals=getglobal and getglobal("AZSXUIHudVitals")
-    if vitals and vitals:IsShown()then engineeringBadge:SetPoint("LEFT",vitals,"RIGHT",124,0)else engineeringBadge:SetPoint("BOTTOM",UIParent,"BOTTOM",210,170)end
+    if fortune and vitals and vitals:IsShown()then engineeringBadge:SetPoint("LEFT",fortune,"RIGHT",8,0)
+    elseif vitals and vitals:IsShown()then engineeringBadge:SetPoint("LEFT",vitals,"RIGHT",8,0)
+    else engineeringBadge:SetPoint("BOTTOM",UIParent,"BOTTOM",190,208)end
     engineeringBadge.icon:SetTexture(e.icon);engineeringBadge:Show()
     if engineeringSeen~=e.event then
         engineeringSeen=e.event;engineeringUntil=GetTime()+5

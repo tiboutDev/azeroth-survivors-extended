@@ -131,6 +131,10 @@ impl Adapter {
             6 => (0xa50007, 2972, 0.75, "Green Crystal"),
             7 => (0xa50008, 2974, 0.75, "Yellow Crystal"),
             10 => (0xa50033, 2047, 1.0, "Goblin Teleporter"),
+            11 => (0xa50034, 450, 0.45, "Gnomish Wreckage"),
+            12 => (0xa50035, 454, 0.45, "Gnomish Wreckage"),
+            13 => (0xa50036, 452, 0.6, "Gnomish Wreckage"),
+            14 => (0xa50037, 449, 0.6, "Gnomish Wreckage"),
             _ => return Err("Invalid owned event visual".into()),
         };
         type Info = unsafe extern "system" fn(*mut u64, u32, u32, u32, *const u8, usize);

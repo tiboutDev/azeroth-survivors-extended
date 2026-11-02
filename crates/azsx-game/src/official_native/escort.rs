@@ -31,15 +31,18 @@ impl Adapter {
         game: u64,
         start: [f32; 3],
         draw: u32,
+        segments: usize,
     ) -> Result<Option<Vec<[f32; 3]>>> {
-        if self.solo_run(m, game)?.is_none() {
+        if !(8..=azsx_gameplay::solo_events::ESCORT_SEGMENTS).contains(&segments)
+            || self.solo_run(m, game)?.is_none()
+        {
             return Ok(None);
         }
         let mut route = vec![start];
         let mut point = start;
         let angle = (draw % 360) as f32 * std::f32::consts::PI / 180.;
-        for i in 0..azsx_gameplay::solo_events::ESCORT_SEGMENTS {
-            // Six broad legs form an open curve, keeping a long route within
+        for i in 0..segments {
+            // Up to six broad legs form an open curve, keeping the route within
             // an arena-sized footprint without doubling back onto extraction.
             let direction = angle + (i / 20) as f32 * 0.65;
             let xy = [
@@ -77,6 +80,11 @@ impl Adapter {
             }
             point = end;
             route.push(end);
+        }
+        // The native teleporter needs the same five-yard clearance as the
+        // starting chicken scene, including on narrow maps.
+        if self.event_ground_sample(m, base, game, [point[0], point[1]], 5.)?.is_none() {
+            return Ok(None);
         }
         Ok(Some(route))
     }

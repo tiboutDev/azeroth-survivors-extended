@@ -43,8 +43,11 @@ pub fn hooks(adapter: Adapter, base: usize) -> Vec<crate::install::HookSpec> {
         set_title(&mut context, false);
         assert_eq!((context.rax, context.rdx), (0x1234, 17));
         set_title(&mut context, true);
-        assert_eq!(context.rax, EXTENDED_TITLE.as_ptr() as u64);
         assert_eq!(context.rdx, EXTENDED_TITLE.len() as u64);
+        let title = unsafe {
+            std::slice::from_raw_parts(context.rax as *const u8, context.rdx as usize)
+        };
+        assert_eq!(title, EXTENDED_TITLE.as_bytes());
     }
     #[test]fn title_and_shared_reward_header_are_installed(){
         let adapter=Adapter::select(azsx_game::current::SHA256).unwrap();let base=0x140000000;let entries=hooks(adapter,base);

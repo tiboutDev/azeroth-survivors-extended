@@ -18,9 +18,33 @@ impl Kind {
         if escort_allowed { vec![Self::ChickenEscort] } else { Vec::new() }
     }
 }
-/// Fixed route budget: about one minute of uninterrupted accompaniment.
+/// A one-minute upper bound on large maps; smaller arenas get shorter routes.
 pub const ESCORT_SEGMENTS: usize = 120;
 pub const ESCORT_SEGMENT_LENGTH: f32 = 1.5;
+/// Keep the route proportional to the native playable radius. The minimum is
+/// bounded for unusually small future maps; native ground checks still decide
+/// whether any candidate is viable.
+pub fn escort_segments(radius: f32) -> Option<usize> {
+    if !radius.is_finite() || radius < 10. {
+        return None;
+    }
+    Some(((radius * 1.35 / ESCORT_SEGMENT_LENGTH).floor() as usize).clamp(8, ESCORT_SEGMENTS))
+}
+/// Small scenery points behind the starting chicken, clear of its forward route.
+pub fn escort_crash_sites(route: &[[f32; 3]]) -> Option<[[f32; 2]; 4]> {
+    let [start, next, ..] = route else { return None };
+    let dx = next[0] - start[0];
+    let dy = next[1] - start[1];
+    let length = dx.hypot(dy);
+    if !length.is_finite() || length < 0.5 { return None }
+    let forward = [dx / length, dy / length];
+    let side = [-forward[1], forward[0]];
+    Some([(-1.5, 1.3), (-1.7, -1.2), (-0.8, 2.2), (-2.4, 0.)]
+        .map(|(along, across)| {
+            [start[0] + along * forward[0] + across * side[0],
+             start[1] + along * forward[1] + across * side[1]]
+        }))
+}
 /// Survives scene cleanup/death; only a new run identity or clock rollback
 /// admits another escort. Reserve before native creation, never after reward.
 #[derive(Default)]
@@ -28,6 +52,7 @@ pub struct RunOpportunities {
     run: Option<(u64, u64)>,
     last: f32,
     escort_used: bool,
+    first_boss_at: Option<f32>,
 }
 impl RunOpportunities {
     pub const fn new() -> Self {
@@ -35,6 +60,7 @@ impl RunOpportunities {
             run: None,
             last: 0.,
             escort_used: false,
+            first_boss_at: None,
         }
     }
     pub fn observe(&mut self, run: u64, owner: u64, now: f32) -> bool {
@@ -44,15 +70,27 @@ impl RunOpportunities {
         if self.run != Some((run, owner)) || now < self.last {
             self.run = Some((run, owner));
             self.escort_used = false;
+            self.first_boss_at = None;
         }
         self.last = now;
         true
     }
+    /// Only the selected native completed-encounter callback opens this gate.
+    pub fn encounter(&mut self, run: u64, owner: u64, now: f32) -> bool {
+        if !self.observe(run, owner, now) || self.first_boss_at.is_some() {
+            return false;
+        }
+        self.first_boss_at = Some(now);
+        true
+    }
+    pub fn first_boss_at(&self, run: u64, owner: u64) -> Option<f32> {
+        (self.run == Some((run, owner))).then_some(self.first_boss_at).flatten()
+    }
     pub fn allows(&self, kind: Kind) -> bool {
-        self.run.is_some() && (kind != Kind::ChickenEscort || !self.escort_used)
+        self.run.is_some() && (kind != Kind::ChickenEscort || self.first_boss_at.is_some() && !self.escort_used)
     }
     pub fn reserve_escort(&mut self, run: u64, owner: u64) -> bool {
-        if self.run != Some((run, owner)) || self.escort_used {
+        if self.run != Some((run, owner)) || self.first_boss_at.is_none() || self.escort_used {
             return false;
         }
         self.escort_used = true;
@@ -454,18 +492,27 @@ mod tests {
         assert!(!budget.allows(Kind::ChickenEscort));
         assert!(!budget.observe(0, 11, 0.));
         assert!(budget.observe(1, 11, 10.));
+        assert!(!budget.allows(Kind::ChickenEscort));
+        assert!(!budget.reserve_escort(1, 11)); // elapsed time alone cannot open the gate
+        assert!(!budget.encounter(1, 22, f32::NAN));
+        assert!(budget.encounter(1, 11, 180.));
+        assert!(!budget.encounter(1, 11, 181.));
+        assert_eq!(budget.first_boss_at(1, 11), Some(180.));
         assert!(!budget.reserve_escort(1, 22));
         assert!(budget.reserve_escort(1, 11));
-        for now in [11., 100., 600.] {
+        for now in [182., 200., 600.] {
             assert!(budget.observe(1, 11, now));
             assert!(!budget.allows(Kind::ChickenEscort));
             assert!(!budget.reserve_escort(1, 11));
             assert!(budget.allows(Kind::BanishedDemon));
         }
         assert!(budget.observe(1, 11, 0.)); // next run reuses native addresses
+        assert_eq!(budget.first_boss_at(1, 11), None);
+        assert!(!budget.reserve_escort(1, 11));
+        assert!(budget.encounter(1, 11, 190.));
         assert!(budget.reserve_escort(1, 11));
         assert!(budget.observe(2, 11, 0.));
-        assert!(budget.allows(Kind::ChickenEscort));
+        assert!(!budget.allows(Kind::ChickenEscort));
         assert!(!budget.observe(2, 11, f32::NAN));
     }
     #[test]
@@ -577,6 +624,15 @@ mod tests {
         }
     }
     #[test]
+    fn escort_length_scales_with_native_map_radius() {
+        assert_eq!(escort_segments(32.), Some(28));
+        assert_eq!(escort_segments(44.), Some(39));
+        assert_eq!(escort_segments(120.), Some(108));
+        assert_eq!(escort_segments(150.), Some(120));
+        assert_eq!(escort_segments(f32::NAN), None);
+        assert_eq!(escort_segments(9.), None);
+    }
+    #[test]
     fn services_expire_and_missing_native_turret_retires() {
         let mut s = engaged(Kind::TurretConstruction);
         assert_eq!(
@@ -673,5 +729,23 @@ mod tests {
                 }
             }
         }
+    }
+}
+
+
+#[cfg(test)]
+mod crash_scene_tests {
+    use super::escort_crash_sites;
+    #[test]
+    fn debris_remains_behind_and_away_from_the_chicken_on_rotated_routes() {
+        for end in [[1.5,0.,0.],[0.,1.5,0.],[-1.5,0.,0.],[0.,-1.5,0.]] {
+            let sites=escort_crash_sites(&[[0.;3],end]).unwrap();
+            for p in sites {
+                let forward=p[0]*end[0]+p[1]*end[1];
+                assert!(forward<0.,"debris must not cover the route");
+                assert!((1.0..=3.0).contains(&p[0].hypot(p[1])));
+            }
+        }
+        assert!(escort_crash_sites(&[[0.;3],[0.;3]]).is_none());
     }
 }

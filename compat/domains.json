@@ -43,7 +43,8 @@
       "crates/azsx-game/src/official_native/combat.rs",
       "crates/azsx-game/src/official_native/immunity_aggro.rs",
       "crates/azsx-game/src/enemies.rs",
-      "crates/azsx-game/src/official_native/difficulty.rs"
+      "crates/azsx-game/src/official_native/difficulty.rs",
+      "crates/azsx-game/src/official_native/escort.rs"
     ],
     "auras": [
       "crates/azsx-game/src/official_native/fatigue.rs",
@@ -54,13 +55,15 @@
       "crates/azsx-game/src/official_native/stat_inputs.rs",
       "crates/azsx-game/src/official_native/gems.rs",
       "crates/azsx-game/src/official_native/enchantments.rs",
-      "crates/azsx-game/src/official_native/blessings.rs"
+      "crates/azsx-game/src/official_native/blessings.rs",
+      "crates/azsx-game/src/official_native/escort.rs"
     ],
     "events": [
       "crates/azsx-game/src/official_native/*goblin*.rs",
       "crates/azsx-game/src/official_native/world_events.rs",
       "crates/azsx-game/src/official_native/event_placement.rs",
-      "crates/azsx-game/src/official_native/scene_units.rs"
+      "crates/azsx-game/src/official_native/scene_units.rs",
+      "crates/azsx-game/src/official_native/escort.rs"
     ],
     "spells": [],
     "ui": [

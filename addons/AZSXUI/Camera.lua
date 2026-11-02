@@ -25,7 +25,7 @@ local function inspectingUI()
  if not phase and type(AZS_RUN)=="table" then phase=AZS_RUN.ph end
  if phase and phase~="playing" then return true end
  for _,name in ipairs(panels) do
-  local frame=getglobal and getglobal(name) or _G[name]
+  local frame=type(getglobal)=="function" and getglobal(name) or nil
   if frame and frame.IsShown and frame:IsShown() then return true end
  end
  if type(GetCurrentKeyBoardFocus)=="function" then

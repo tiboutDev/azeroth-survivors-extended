@@ -217,7 +217,7 @@ AZSX enriches the party interface with information useful for understanding your
 - Compact rows show equipped spells and items.
 - Additional buff icons expose supported beneficial effects.
 - Spell and item tooltips reflect their owner’s build.
-- AZSXUI lists each item effect on its own tooltip line and shows native debuff icons beneath boss, guardian and Treasure Goblin health bars. Hover an icon for its name, stacks and remaining time.
+- AZSXUI lists each item effect on its own tooltip line and shows native-template debuff icons and borders beneath boss, guardian and Treasure Goblin health bars. Hover an icon for its name, stacks and remaining time.
 - Group pauses identify who is choosing a reward or holding a menu open.
 - Waiting messages display character names.
 - Reward selection pauses the group until everyone has finished.
@@ -441,17 +441,22 @@ values and texts for other addons. No additional assets are required.
 
 **Status: Playtesting**
 
-In solo runs, a damaged Mechanical Chicken can appear somewhere on the map. Stay
-within six yards while it travels to a Goblin Teleporter. If you leave, it waits
+In solo runs, a damaged Mechanical Chicken can appear somewhere on the map
+after the first boss is defeated. Stay within six yards while it travels to a
+Goblin Teleporter. If you leave, it waits
 and your progress resumes when you return. A completed escort gives one
-engineering gadget for the rest of the run. There is at most one escort in a run;
-an unsuccessful or expired escort gives no reward. The chicken cannot be killed.
+engineering gadget for the rest of the run. The route adapts to the map's
+size; placement retries if no safe native path is found. There is at most one
+escort in a run; an unsuccessful or expired escort gives no reward. The chicken
+cannot be killed.
 
 The six possible gadgets have no ranks: Net, Rocket Boots, Sapper Charge,
 Mortar, Shrink Ray and Protection Belt. They trigger automatically under their
 own conditions. Sapper's backlash never lowers you below 75% of maximum health.
-The optional AZSXUI addon shows the escort objective and your equipped gadget;
-the game rules do not require the addon.
+The optional AZSXUI addon lists the escort beneath the minimap, marks the
+chicken with a native `INV_Misc_EngGizmos_06` minimap icon, and keeps an equipped-gadget
+badge beside the health and Fortune display. The game rules do not require the
+addon.
 
 See [the engineering details](../features/SOLO-ESCORT.md). Check the release
 notes before expecting this source feature in an installed build.

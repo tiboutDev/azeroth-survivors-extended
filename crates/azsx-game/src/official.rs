@@ -1817,8 +1817,8 @@ impl SelectedAdapter {
         self.native.ritual_scene_entries()
     }
     pub fn escort_motion_entries(self) -> Vec<Entry> { self.native.solo_motion_entries() }
-    pub unsafe fn escort_route(self, m: &dyn Mem, base: u64, game: u64, start: [f32; 3], draw: u32) -> Result<Option<Vec<[f32; 3]>>> {
-        self.native.escort_route(m, base, game, start, draw)
+    pub unsafe fn escort_route(self, m: &dyn Mem, base: u64, game: u64, start: [f32; 3], draw: u32, segments: usize) -> Result<Option<Vec<[f32; 3]>>> {
+        self.native.escort_route(m, base, game, start, draw, segments)
     }
     pub unsafe fn escort_chicken(self, m: &dyn MutableMemory, base: u64, game: u64, position: [f32; 3]) -> Result<EventObject> {
         self.native.event_chicken(m, base, game, position)

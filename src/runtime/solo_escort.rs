@@ -30,8 +30,9 @@ pub fn install(r:&Runtime) {
         .chain(r.adapter.solo_engineering_entries())
         .chain([r.adapter.native_hit_effect_entry()]);
     for e in entries {
-        if r.local.read(r.local.base+e.rva as usize,e.bytes.len()).ok().as_deref()!=Some(e.bytes) {
-            r.log.warn(&format!("Solo escort unavailable: native boundary changed at {:#x}",e.rva));
+        let actual=r.local.read(r.local.base+e.rva as usize,e.bytes.len()).ok();
+        if actual.as_deref()!=Some(e.bytes) {
+            r.log.warn(&format!("Solo escort unavailable: native boundary changed at {:#x}; observed={:02x?}",e.rva,actual));
             return;
         }
     }
@@ -45,6 +46,15 @@ fn cleanup(r:&Runtime,s:State) {
     for object in s.objects {
         let _=unsafe{r.adapter.remove_event_object(&access,r.local.base as u64,s.game,object)};
     }
+}
+/// The native completed-encounter callback, not elapsed time, opens the first
+/// escort opportunity for this solo run.
+pub fn encounter(r:&Runtime,g:u64) {
+    if !ENABLED.load(Ordering::Acquire){return}
+    let Ok(Some(p))=r.adapter.solo_run(&r.local,g)else{return};
+    let Some(a)=p.actors.first()else{return};
+    if a.hp<=0.||a.phase==Phase::Inactive{return}
+    if let Ok(mut budget)=OPPORTUNITIES.lock(){budget.encounter(g,a.guid,p.clock);}
 }
 pub fn reset() {
     super::solo_gadgets::reset();
@@ -61,9 +71,16 @@ pub fn wire(g:u64,owner:u64)->Option<String> {
     let scene=s.scene.as_ref()?;
     let stage=match scene.stage(){Stage::Waiting=>0,Stage::Preparing=>1,Stage::Engaged=>2,
         Stage::Succeeded=>3,Stage::Failed|Stage::Retired=>4};
-    Some(format!("V|{owner}|{}|1|{stage}|{}|200|{}|0|{}|{}|0\n",
+    let mut row=format!("V|{owner}|{}|1|{stage}|{}|200|{}|0|{}|{}|0",
         scene.id.event,(scene.held()*100.).round().min(200.)as u32,
-        u8::from(s.inside),s.leg.saturating_sub(1),s.route.len().saturating_sub(1)))
+        u8::from(s.inside),s.leg.saturating_sub(1),s.route.len().saturating_sub(1));
+    if let Some(object)=s.objects.first() {
+        let [x,y,_]=object.position;
+        if x.is_finite()&&y.is_finite()&&x.abs()<1e8&&y.abs()<1e8 {
+            row.push_str(&format!("|{x:.3}|{y:.3}"));
+        }
+    }
+    row.push('\n');Some(row)
 }
 pub fn finish(r:&Runtime,g:u64) {
     if !ENABLED.load(Ordering::Acquire)||TICKING.swap(true,Ordering::AcqRel){return}
@@ -80,20 +97,28 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
     let Some(p)=r.adapter.solo_run(&r.local,g)? else {reset();return Ok(())};
     let Some(a)=p.actors.first() else {return Ok(())};
     let now=p.clock;
-    {
+    #[cfg(feature="test-hooks")]
+    let preview=std::env::var("AZSX_TEST_ESCORT_PREVIEW").as_deref()==Ok("1");
+    #[cfg(not(feature="test-hooks"))]
+    let preview=false;
+    let first_boss_at={
         let mut budget=OPPORTUNITIES.lock().map_err(|_|"Escort budget unavailable")?;
+        #[cfg(feature="test-hooks")]
+        if preview&&now>=25.&&budget.encounter(g,a.guid,now){
+            r.log.info(&format!("Escort preview gate: now={now:.2}"));
+        }
         if !budget.observe(g,a.guid,now){return Err("Invalid escort clock".into())}
-    }
+        budget.first_boss_at(g,a.guid)
+    };
     let old={
         let mut lock=STATE.lock().map_err(|_|"Escort state unavailable")?;
         if lock.as_ref().is_none_or(|s|s.game!=g||s.owner!=a.guid||now<s.clock){
             let old=lock.take();
-            let mut s=State{game:g,owner:a.guid,clock:now,next:0.,
+            let s=State{game:g,owner:a.guid,clock:now,next:f32::INFINITY,
                 rng:g^a.guid^std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
                     .unwrap_or_default().as_nanos()as u64,
                 serial:0,scene:None,objects:Vec::new(),route:Vec::new(),
                 leg:0,next_move:now,created:now,ended:None,arrived:false,inside:false};
-            s.next=now+90.+s.draw(61)as f32;
             *lock=Some(s);old
         }else{None}
     };
@@ -113,23 +138,54 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
         let mut lock=STATE.lock().map_err(|_|"Escort state unavailable")?;
         let s=lock.as_mut().ok_or("Escort state missing")?;
         s.clock=now;
+        if s.next.is_infinite(){if let Some(boss_at)=first_boss_at{s.next=if preview{now+2.}else{boss_at+30.+s.draw(61)as f32};}}
         if s.ended.is_some_and(|end|now-end>=5.){s.scene=None;s.ended=None}
         let allowed=OPPORTUNITIES.lock().map_err(|_|"Escort budget unavailable")?.allows(Kind::ChickenEscort);
         if s.scene.is_none()&&allowed&&now>=s.next{
-            s.next=now+180.+s.draw(121)as f32;
+            s.next=if preview{now+3.}else{now+45.+s.draw(31)as f32};
             s.serial=s.serial.checked_add(1).ok_or("Escort identity exhausted")?;
             Some((s.serial,(0..32).map(|_|(s.draw(u32::MAX),s.draw(u32::MAX))).collect::<Vec<_>>()))
         }else{None}
     };
     if let Some((serial,draws))=work{
-        if let Some(point)=super::world_events::place(r,g,r.events_area(g)?,5.,&draws)?{
-            let mut route=None;
-            for (angle,_) in &draws{
-                if let Some(candidate)=unsafe{r.adapter.escort_route(&r.local,r.local.base as u64,g,point,*angle)}?{
-                    route=Some(candidate);break
+        let area=r.events_area(g)?;
+        let segments=if preview{8}else{azsx_gameplay::solo_events::escort_segments(area.radius)
+            .ok_or("Invalid escort map radius")?};
+        let mut selected=None;
+        if preview {
+            // Diagnostic framing only: leave the player outside the wreckage
+            // so screenshots show the chicken and its individual parts.
+            for offset in [[0.,5.],[5.,0.],[-5.,0.],[0.,-5.],[0.,0.]] {
+                let point=[a.position[0]+offset[0],a.position[1]+offset[1]];
+                if let Some(site)=unsafe{r.adapter.event_ground_sample(
+                    &r.local,r.local.base as u64,g,point,5.
+                )}?{
+                    for heading in (0..360).step_by(45){
+                        if let Some(route)=unsafe{r.adapter.escort_route(
+                            &r.local,r.local.base as u64,g,site.center,heading,segments
+                        )}?{
+                            selected=Some((site.center,route));break
+                        }
+                    }
+                }
+                if selected.is_some(){break}
+            }
+        }
+        // Four independent ground sites, with eight headings each. The native
+        // route verifier remains authoritative; failed sites consume no quota.
+        for group in draws.chunks(8){
+            if selected.is_some(){break}
+            if let Some(point)=super::world_events::place(r,g,area,5.,group)?{
+                for (angle,_) in group{
+                    if let Some(route)=unsafe{r.adapter.escort_route(&r.local,r.local.base as u64,g,point,*angle,segments)}?{
+                        selected=Some((point,route));break
+                    }
                 }
             }
-            if let Some(route)=route{
+            if selected.is_some(){break}
+        }
+        if preview{r.log.info(&format!("Escort preview placement: now={now:.2} selected={}",selected.is_some()));}
+        if let Some((point,route))=selected{
                 if !OPPORTUNITIES.lock().map_err(|_|"Escort budget unavailable")?.reserve_escort(g,a.guid){
                     return Ok(())
                 }
@@ -141,10 +197,27 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
                         return Err(e)
                     }
                 };
+                let mut objects=vec![chicken,portal];
+                if let Some(sites)=azsx_gameplay::solo_events::escort_crash_sites(&route) {
+                    for (index,xy) in sites.into_iter().enumerate() {
+                        let visual=11+index as u8;
+                        let ground=unsafe{r.adapter.event_ground_sample(
+                            &r.local,r.local.base as u64,g,xy,0.45
+                        )};
+                        let Ok(Some(site))=ground else{continue};
+                        if site.high-site.low>1.5||(site.center[2]-point[2]).abs()>1.5{continue}
+                        match unsafe{r.adapter.event_object(
+                            &access,r.local.base as u64,g,visual,site.center
+                        )}{
+                            Ok(object)=>objects.push(object),
+                            Err(e)=>r.log.warn(&format!("Escort scenery skipped: {e}")),
+                        }
+                    }
+                }
                 let scene=Scene::new(Identity{run:a.guid,owner:a.guid,event:serial},Kind::ChickenEscort,
                     now,Proofs{assets:true,cleanup:true,navigation:true,attribution:true,gadget:true,
                         ..Proofs::default()},true).ok_or("Escort policy rejected")?;
-                let mut pending=Some((scene,vec![chicken,portal],route));
+                let mut pending=Some((scene,objects,route));
                 {
                     let mut lock=STATE.lock().map_err(|_|"Escort state unavailable")?;
                     if let Some(s)=lock.as_mut().filter(|s|s.game==g&&s.owner==a.guid&&s.serial==serial&&s.scene.is_none()){
@@ -158,7 +231,6 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
                     return Ok(())
                 }
                 notice(r,g,"A damaged Mechanical Chicken awaits repairs. Escort it to extraction for an engineering gadget.");
-            }
         }
     }
     let (motion,done,reward,objects)={
