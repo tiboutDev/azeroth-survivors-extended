@@ -3,8 +3,8 @@
   "artifact": {
     "file": "avrt.dll",
     "game_version": "0.138.0",
-    "sha256": "1a2e843781dbfd2802246979dab1959a5f87b91e81c58d189eba1ad30fc694c4",
-    "size_bytes": 2042368,
+    "sha256": "7fe7937ca101a05dbd672d0718c878dc08d4a8fc97a1fb84cd1a1b4fc870ff8c",
+    "size_bytes": 2050560,
     "target": "x86_64-pc-windows-msvc"
   },
   "build_recipe": {
@@ -26,7 +26,7 @@
       "2"
     ],
     "external_environment": {
-      "configuration_sha256": "0c315556f37435ca1c4f3303cd33b567359707ca1bf5f83a44c9ea0cb8e79ea5",
+      "configuration_sha256": "02e163cff9b5f83d5d004c18ed5240f3ab73f51c8edc074f7c8f52dcdf295d03",
       "scope": "Same reviewed external toolchain environment; no cross-host reproduction claim",
       "sdk_overlay_sha256": [
         "a8ab1b9689a46161e19394d770da7815b7aeeb9c6f1b6095a1ac292e1246571b"
@@ -41,18 +41,18 @@
       "-Clink-arg=/DEBUG:NONE",
       "-Clink-arg=/TIMESTAMP:1"
     ],
-    "source_fingerprint_sha256": "57fd5044a2592fb37ae0ea579b8a7e312293c9c8b4ceb67c89884c968e966f4d",
+    "source_fingerprint_sha256": "9773a7947952b6440d9eb2b31699d49b8c4f5f52cbffae5aaad2d826998d0b5f",
     "test_hooks": "disabled-and-checked-absent",
     "tool_versions": {
       "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
       "cargo_xwin": "cargo-xwin-xwin 0.23.1",
       "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
-      "pefile": "2024.8.26",
-      "python": "3.14.7",
+      "pefile": "2023.2.7",
+      "python": "3.12.3",
       "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
     }
   },
-  "build_recipe_sha256": "795d0352b17984356e9e937196abe6831669de78ed8eb40358546bdb5328899e",
+  "build_recipe_sha256": "99d801928562028133a62a4614996ac59acf2749cf8bafa703657bf18c064fd2",
   "builder": "xwin-msvc",
   "builder_script": "tools/build/azsx_release_binary.py",
   "cargo_lock_sha256": "ce8aeedc81c5368e6acb2ad3155ff9c2310250d56cc6d0623b9222980f2ec206",
@@ -243,8 +243,8 @@
       },
       {
         "path": "crates/azsx-game/src/official.rs",
-        "sha256": "04e28f6002d47ef62621f85b00c3642d2cd22544043993248ae56a4d742cfa09",
-        "size_bytes": 64449
+        "sha256": "bb747bb483fcc97ae2c7c2a76500484da61a2ef4f39bac09f7c906d0a79ff11b",
+        "size_bytes": 64476
       },
       {
         "path": "crates/azsx-game/src/official_native.rs",
@@ -293,8 +293,8 @@
       },
       {
         "path": "crates/azsx-game/src/official_native/escort.rs",
-        "sha256": "d1e19488e335133c0fa828cb3b1fbea6e393a0155fd7a750b8857981a233c9af",
-        "size_bytes": 32291
+        "sha256": "1b9bae518e2ec0755e438ddfdda69c92eeaef7781f759fcbaee50c158c50bf79",
+        "size_bytes": 32643
       },
       {
         "path": "crates/azsx-game/src/official_native/event_placement.rs",
@@ -398,8 +398,8 @@
       },
       {
         "path": "crates/azsx-game/src/official_native/world_events.rs",
-        "sha256": "35f78834f77d70d83da1a87d5b400d2ee32cb5896f3b16d6f015ef61bc1039fa",
-        "size_bytes": 26365
+        "sha256": "519e3e6ea701b6316fd2a907dd0baee98e2cb21ff57fa32007ce9f14cbc57d73",
+        "size_bytes": 26607
       },
       {
         "path": "crates/azsx-game/src/official_native/world_ui_fixture.rs",
@@ -533,8 +533,8 @@
       },
       {
         "path": "crates/azsx-gameplay/src/solo_events.rs",
-        "sha256": "41a8b64a7618d51d8ebd84694f89090b7d88e61a2237ad4c6c3b9a5a1eebd598",
-        "size_bytes": 21784
+        "sha256": "1f83b9954006362e3bdb7f555d6bb0e1c203bea26183222a0c95dfaaec4ddac7",
+        "size_bytes": 25060
       },
       {
         "path": "crates/azsx-gameplay/src/spells.rs",
@@ -568,8 +568,8 @@
       },
       {
         "path": "native-ui/official-party.lua",
-        "sha256": "271ee65d307c987127f7f26b51312800f9f6c24c04a758e94d0daccf7497832d",
-        "size_bytes": 52000
+        "sha256": "8e05561b3a3a79de23ddff9b9838872824c8dd22672eb0c691ac22b2b550972d",
+        "size_bytes": 52355
       },
       {
         "path": "resources/windows/avrt-exports.txt",
@@ -678,8 +678,8 @@
       },
       {
         "path": "src/runtime/bootstrap.rs",
-        "sha256": "0a0b1c2945f76aa9475d0d71cb3c1e4355cb7a23f2342de6d4031d4a63c898b3",
-        "size_bytes": 11080
+        "sha256": "bd2930086ca986b1846de4b5b0d2940969e5a15e6ad78978bd248877276de987",
+        "size_bytes": 11237
       },
       {
         "path": "src/runtime/combat.rs",
@@ -728,8 +728,8 @@
       },
       {
         "path": "src/runtime/encounters.rs",
-        "sha256": "89d5feeceaa63e6257049f104fb19981ca255699a4e626b78dbec22b9ce85f0a",
-        "size_bytes": 1535
+        "sha256": "acebb13192940becb400d731de328270569d160f774c987bf84ce798dec05eaa",
+        "size_bytes": 1573
       },
       {
         "path": "src/runtime/event_services.rs",
@@ -813,8 +813,8 @@
       },
       {
         "path": "src/runtime/menu_ui.rs",
-        "sha256": "0d2bd62fa444811a2075b722eb530b03a38f73fd2547d271dff5987960802cf3",
-        "size_bytes": 2470
+        "sha256": "f2814e0fdcb680843ee936de1484c74e3523b5d7f889c6755f3715e1a30dc902",
+        "size_bytes": 2586
       },
       {
         "path": "src/runtime/party_ui.rs",
@@ -898,8 +898,8 @@
       },
       {
         "path": "src/runtime/solo_escort.rs",
-        "sha256": "2e7233ca70dc00213886ad82c8712be5507c9eeaec3d9108a1f4646d7f8b4fc7",
-        "size_bytes": 10261
+        "sha256": "11d95c5f75e205a3d7248161bd18fa0a68e4cb2e545a256f3c1a626f311fdf66",
+        "size_bytes": 14051
       },
       {
         "path": "src/runtime/solo_gadgets.rs",
@@ -1037,15 +1037,15 @@
         "size_bytes": 2004
       }
     ],
-    "sha256": "57fd5044a2592fb37ae0ea579b8a7e312293c9c8b4ceb67c89884c968e966f4d"
+    "sha256": "9773a7947952b6440d9eb2b31699d49b8c4f5f52cbffae5aaad2d826998d0b5f"
   },
   "status": "technically-reviewed-local-reference",
   "tool_versions": {
     "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
     "cargo_xwin": "cargo-xwin-xwin 0.23.1",
     "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
-    "pefile": "2024.8.26",
-    "python": "3.14.7",
+    "pefile": "2023.2.7",
+    "python": "3.12.3",
     "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
   },
   "verification": {
@@ -1055,13 +1055,13 @@
     "target_directories_distinct": true
   },
   "technical_review": {
-    "human_approval": "Explicit user approval of this exact SHA-256 for 0.138.0-azsx.1 in the release preparation conversation on 2026-11-02",
+    "human_approval": "Explicit user approval of this exact SHA-256 for 0.138.0-azsx.2 in the release preparation conversation on 2026-11-02",
     "not_established": [
       "Cross-host reproduction",
       "Windows-native reproduction",
       "Publication authorization"
     ],
-    "result": "Two independent identical normal distribution builds; full portable gate, hygiene and history privacy review; exact normal DLL solo and two-player coop; all 30 signed archive installation/migration/coop/export/uninstall checks passed.",
+    "result": "Two independent identical normal distribution builds; full portable gate, Lua 5.1, 112 Windows ABI tests, hygiene and history privacy review; exact normal DLL solo and two-player coop; all 26 signed archive installation/coop/export/uninstall checks passed.",
     "scope": "Same reviewed local WSL/xwin environment"
   }
 }
