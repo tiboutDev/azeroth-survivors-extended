@@ -352,7 +352,8 @@ same scale, opacity, position and visibility controls as other event widgets.
 Current boss-item popups use API 1.6 structured local receipts with their real
 native icon, rarity and new-collection flag. Already-collected items are silent.
 Marks use recognized local English chat receipts and the native rune icon,
-preserving decimal amounts. Older providers retain their bounded chat fallback;
+preserving decimal amounts. Contiguous gains refresh a three-second quiet window
+and remain one popup, including duplicate-item mark awards. Older providers retain their bounded chat fallback;
 unknown locales keep native loot presentation. Ordinary chat is untouched.
 The prior native loot preference restores when the HUD/provider is unavailable.
 These messages queue through

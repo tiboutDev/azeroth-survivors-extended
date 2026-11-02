@@ -114,7 +114,7 @@ local function decode(wire)
             elseif a[1]=="G" and table.getn(a)==7 and result.members[id] then
                 local red,blue,green,yellow=integer(a[3],0,1000000),integer(a[4],0,1000000),integer(a[5],0,1000000),integer(a[6],0,1000000)
                 local index=integer(a[7],0,32)
-                if red==nil or blue==nil or green==nil or yellow==nil or index==nil or result.members[id].crystals or red+blue+green+yellow==0 then return nil end
+                if red==nil or blue==nil or green==nil or yellow==nil or index==nil or result.members[id].crystals then return nil end
                 result.members[id].crystals={red=red,blue=blue,green=green,yellow=yellow,index=index,total=red+blue+green+yellow}
             elseif a[1]=="O" and table.getn(a)==4 and id==result.own and result.members[id] then
                 local xp,gold=integer(a[3],0,1e10),integer(a[4],0,1e10)
@@ -462,13 +462,31 @@ local function crystalBuff(index)
     local data=crystalOwner("player")
     if data and data.index==index and index<32 and nativeCrystalTexture and isCrystalPlaceholder(nativeCrystalTexture(index))then return data end
 end
-local function crystalDescription(tooltip,c)
-    tooltip:ClearLines();tooltip:AddLine("Crystal Resonance",1,1,1)
-    tooltip:AddLine("Crystals collected: "..c.total,0.75,0.75,0.75)
-    for _,line in ipairs({{c.red,12,"damage"},{c.blue,7,"cooldown recovery"},{c.green,15,"maximum health"},{c.yellow,12,"area of effect"}})do
-        if line[1]>0 then tooltip:AddLine("+"..(line[1]*line[2]).."% "..line[3],0.12,1,0,true)end
+local function crystalPresentation(c)
+    local text={summary="Crystals collected: "..c.total,details={},footer="Persists through death. Ends with this run."}
+    if c.total==0 then
+        table.insert(text.details,"Find crystals across the map to gain permanent bonuses.")
+    else
+        for _,row in ipairs({
+            {"red","Red",12,"Damage","ffff6060"},
+            {"blue","Blue",7,"Cooldown recovery","ff609fff"},
+            {"green","Green",15,"Maximum health","ff50d870"},
+            {"yellow","Yellow",12,"Area of effect","ffffd050"},
+        })do
+            local count=c[row[1]]
+            if count>0 then
+                table.insert(text.details,"|c"..row[5]..row[2].." x"..count.."|r  |cff1eff00+"..(count*row[3]).."%|r "..row[4])
+            end
+        end
     end
-    tooltip:AddLine("Persists through death. Ends with this run.",0.75,0.75,0.75,true);tooltip:Show()
+    return text
+end
+local function crystalDescription(tooltip,c)
+    local text=crystalPresentation(c)
+    tooltip:ClearLines();tooltip:AddLine("Crystal Resonance",1,1,1)
+    tooltip:AddLine(text.summary,.75,.75,.75)
+    for _,line in ipairs(text.details)do tooltip:AddLine(line,1,1,1,true)end
+    tooltip:AddLine(text.footer,.75,.75,.75,true);tooltip:Show()
 end
 if GetPlayerBuff then
     local native=GetPlayerBuff
@@ -664,7 +682,7 @@ local function apiState()
     local own=allowed and supplyOwner()or nil
     local input=phase..":"..tostring(own~=nil)..":"..tostring(AZS_RUN_UPDATED)..":"..tostring(modelWire)
     if apiCache and input==apiInput then return apiCache end
-    local state={api={major=1,minor=9},available=own~=nil,phase=phase,data={},texts={}}
+    local state={api={major=1,minor=10},available=own~=nil,phase=phase,data={},texts={}}
     if own then
         state.session={epoch=model.epoch,recipientGUID=model.own}
         state.data={sharedEconomy=apiCopy(own.economy),crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
@@ -689,7 +707,8 @@ local function apiState()
         if state.data.crystals then
             local c=state.data.crystals
             c.bonuses={damage=c.red*12,cooldownRecovery=c.blue*7,maximumHealth=c.green*15,areaOfEffect=c.yellow*12}
-            crystalText={title="Crystal Resonance",icon=crystalIcon,note="Crystals collected: "..c.total}
+            local presentation=crystalPresentation(c)
+            crystalText={title="Crystal Resonance",icon=crystalIcon,note=presentation.summary,details=presentation.details,footer=presentation.footer}
             crystalText.pickups={}
             local names={"Red","Blue","Green","Yellow"}
             local keys={"red","blue","green","yellow"}
@@ -727,7 +746,7 @@ local function apiState()
     state.updatedAt=own and modelTime or nil
     apiCache=state;apiInput=input;return state
 end
-function AZSX_GetAPIVersion()return 1,9 end
+function AZSX_GetAPIVersion()return 1,10 end
 function AZSX_GetState(major)
     if major~=nil and major~=1 then return nil,"unsupported_version"end
     return apiCopy(apiState())

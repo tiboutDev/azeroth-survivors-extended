@@ -229,7 +229,7 @@
     },
     {
       "id": "AZSX-22",
-      "contract": "Crystal Resonance replaces amulet gems: independent map-wide UnGoro crystals, free equal color draws, individual once-only claims, one shared 60-second simulation deadline after the first claim, common removal after all eligible players collect or timeout, personal additive run-local bonuses and one native permanent buff with cumulative tooltip. No minimap pins. Prototype Red +10% damage, Blue +5% cooldown recovery, Green +15% maximum health, Yellow +10% area of effect; 4\u20136 random opportunities in the normal-run window and continued endless generation. AZSXUI announces newly observed personal pickups with AZSX-authored color/effect text; restored totals are not replayed.",
+      "contract": "Crystal Resonance replaces amulet gems: independent map-wide UnGoro crystals, free equal color draws, individual once-only claims, one shared 60-second simulation deadline after the first claim, common removal after all eligible players collect or timeout, personal additive run-local bonuses and one native permanent buff with cumulative tooltip. No minimap pins. Red +12% damage, Blue +7% cooldown recovery, Green +15% maximum health, Yellow +12% area of effect; an average 174-second random interval after a 30-second grace period targets about five opportunities by minute 15 with no count ceiling and continues in endless. The permanent buff and discovery guidance appear from run start, even with zero pickups. AZSXUI announces newly observed personal pickups with AZSX-authored color/effect text; restored totals are not replayed.",
       "mode": "Both",
       "reference": "[Contract](../features/FEATURE-RULES.md)",
       "native_domains": [
@@ -274,7 +274,7 @@
     },
     {
       "id": "AZSX-26",
-      "contract": "Optional host-owned Treasure Goblins in solo/coop: native creature creation and object transport, fleeing movement, 25 simulation-second expiry, no attacks/ordinary loot, taunt immunity, rare encounter-based appearances and personal native amulet/mark rewards. A separate launcher setting and optional contact checks preserve core AZSX when disabled/unavailable. First-opportunity bad-luck protection uses increasing pre-final encounter odds (25%, 1/3, 50%, 100% on five-boss maps), never before the first boss; selected opportunities use a 20-40 second placement delay. Later appearances remain rare. Goblins receive no automatic raid marker; AZSXUI shows their native HP in the encounter stack and manual marks remain native.",
+      "contract": "Optional host-owned Treasure Goblins in solo/coop: native creature creation and object transport, fleeing movement, 25 simulation-second expiry, no attacks/ordinary loot, taunt immunity, rare encounter-based appearances and personal native amulet/mark rewards. A separate launcher setting and optional contact checks preserve core AZSX when disabled/unavailable. First-opportunity bad-luck protection uses increasing pre-final encounter odds (25%, 1/3, 50%, 100% on five-boss maps), never before the first boss; selected opportunities use a 20-40 second placement delay. Later appearances remain rare. Goblin base HP is 150% of the first native guardian on the map before native time/Heroic/party scaling. Goblins receive no automatic raid marker; AZSXUI shows their native HP in the encounter stack and manual marks remain native.",
       "mode": "Both",
       "reference": "[Contract](../features/FEATURE-RULES.md)",
       "native_domains": [

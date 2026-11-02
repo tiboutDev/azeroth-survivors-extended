@@ -82,6 +82,10 @@ local function badgeTooltip()
  local t=state.texts[key];GameTooltip:SetText(t.title,1,1,1)
  if t.reward then GameTooltip:AddLine(t.reward,.12,1,0,true)end
  if t.note then GameTooltip:AddLine(t.note,.8,.8,.8,true)end
+ if key=="crystals"then
+  for _,line in ipairs(t.details or{})do GameTooltip:AddLine(line,1,1,1,true)end
+  if t.footer then GameTooltip:AddLine(t.footer,.8,.8,.8,true)end
+ end
  GameTooltip:Show()
 end
 local function badgeClick()
@@ -122,7 +126,7 @@ local function updateMedallions(state,crystal,fortune)
   local key=kind=="crystal"and"crystals"or"fortune";local value=data and data[key];local t=texts and texts[key]
   local valid=vitals and value and type(t)=="table"and type(t.title)=="string"and type(t.icon)=="string"
   if valid and kind=="crystal"then
-   valid=finite(value.total)and value.total>0
+   valid=finite(value.total)and value.total>=0
    for _,color in ipairs(crystalKeys)do valid=valid and finite(value[color])and value[color]>=0 end
   elseif valid then valid=finite(value.amount)and value.amount>=0 and finite(value.category)and value.category>=0 and value.category<=4 and math.floor(value.category)==value.category end
   local b=medallions[kind]
@@ -130,7 +134,7 @@ local function updateMedallions(state,crystal,fortune)
    b=b or createMedallion(kind);active[kind]=true;if kind=="crystal"then b.native=crystal else b.native=fortune end
    if b.iconPath~=t.icon then SetPortraitToTexture(b.icon:GetName(),t.icon);b.iconPath=t.icon end
    if kind=="crystal"then
-    b.total:SetText(string.format("%.0f",value.total))
+    b.total:SetText(value.total>0 and string.format("%.0f",value.total) or "")
    else
     local nature=fortuneIcons[value.category]
     if nature then

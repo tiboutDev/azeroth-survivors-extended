@@ -40,11 +40,13 @@ Yellow +12% area of effect. Color draws are independent and equally likely;
 repeated colors are allowed. No rarity, pity rotation or ordering against other
 events is applied. All collected bonuses reset at the next run, not on death.
 
-The prototype samples 4–6 independent opportunity times uniformly in simulation
-seconds 30–870 of a normal run (15-minute reference window). It is a target budget,
-not a guaranteed discovery count: no accessible site, a full two-object budget,
-or an early run end can leave fewer crystals. Endless uses independent 90–240
-second intervals. Pauses do not advance native simulation time. Locations use
+After a 30-second opening grace period, independent random intervals average
+174 simulation seconds, targeting about five crystal opportunities by minute 15.
+There is no per-run count ceiling or fixed timetable: some runs have fewer, some
+have more than six. At most two models coexist; occupied slots defer the next
+opportunity. Failed native placement consumes that opportunity, and short runs
+can end before the average is reached. The same rate continues in endless.
+Pauses do not advance native simulation time. Locations use
 map-wide native terrain sampling and ordinary object separation, never enemy
 kill drops. No minimap coordinates or pins are published for crystals.
 
@@ -57,8 +59,11 @@ participants have collected, or the deadline expires. Departures retire their
 old identity; a reused slot and late join cannot inherit its claim. Unclaimed
 scenes have no countdown. Solo scenes disappear on their first claim.
 
-One native positive presentation slot shows Crystal Resonance and its collected
-count. Its native GameTooltip lists actual personal accumulated percentages.
+One native positive presentation slot shows Crystal Resonance from the start of
+the run, including with zero collected. Its native GameTooltip gives a discovery
+hint at zero, then lists each collected color, count and actual accumulated
+percentage on its own line. AZSXUI's badge uses the same authored text when
+the native slot is unavailable.
 No simulation aura, save mutation, amulet ownership or secondary transport is
 created. AZSX addon API 1.3 exposes counts/bonus values independently of text.
 
@@ -112,7 +117,7 @@ After an actual first appearance, later encounter chances remain 6%, then 3%.
 A goblin escapes after 25 simulation seconds; group
 pauses suspend its deadline. A missing native instance is abandoned without a
 reward. The native horde constructor retains time/Heroic/party health scaling
-over the first native guardian’s base health for that map. The event
+over 150% of the first native guardian’s base health for that map. The event
 clears guardian drop classification, attacks and rewards, while setting the
 native instance’s elite target-priority flag. The event cannot attack or issue
 ordinary XP, gold or elite/guardian rewards. Its native movement uses a fleeing

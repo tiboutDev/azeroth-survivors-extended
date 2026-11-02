@@ -35,7 +35,7 @@ impl GoblinDefinition {
         b[36..40].copy_from_slice(&v::GOBLIN_DISPLAY.to_le_bytes());
         b[40..44].copy_from_slice(&2.0f32.to_le_bytes());
         // Native rank reconstruction, time/Heroic/party coefficients still run.
-        let hp = number(&b, 48).max(1.);
+        let hp = (number(&b, 48)*1.5).clamp(1.,1e9);
         b[48..52].copy_from_slice(&hp.to_le_bytes());
         b[52..56].copy_from_slice(&0f32.to_le_bytes()); // No outgoing damage.
         b[56..60].copy_from_slice(&5f32.to_le_bytes()); // Native attack interval, inert for this event.
@@ -765,7 +765,7 @@ pub(super) mod tests {
         let mut b = [0u8; 80];
         b[48..52].copy_from_slice(&600f32.to_le_bytes());
         let d = GoblinDefinition::from_native(b);
-        assert_eq!(number(&d.0, 48), 600.);
+        assert_eq!(number(&d.0, 48), 900.);
         assert_eq!(number(&d.0, 52), 0.);
         assert!(d.0[..16].iter().all(|v| *v == 0));
         assert!(d.0[64..].iter().all(|v| *v == 0));

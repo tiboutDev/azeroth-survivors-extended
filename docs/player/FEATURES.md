@@ -83,16 +83,17 @@ the model visible, so you can still point it out to the group.
 
 AZSXUI shows the crystal color and its bonus in a short pickup popup. Notices
 queue for nearby pickups and stack below the top HUD. **Crystal Resonance**
-keeps the accumulated bonuses in one buff: hover it to inspect your totals.
+appears as one buff from the start of the run, even before your first pickup: hover it for a discovery hint, then color counts and accumulated bonuses.
 Bonuses add up, survive death and reset with the next run. In co-op,
 **Cooperative Rules** comes first in the helpful-buff row. Fortune and then
 Crystal Resonance follow when present. In solo, Crystal Resonance follows
 Fortune, or comes first when Fortune is absent.
 
 Amulets keep their native effects and **no longer assign an AZSX gem**. The
-prototype targets **4–6 opportunities before endless**, with at most two crystals
-present. Discovery counts are not guaranteed: early run endings, occupied slots
-or unavailable terrain can leave fewer. Endless continues independent spawns.
+spawn rate targets about **five opportunities by minute 15**, without a maximum
+number per run. The random timing can produce fewer or more than six. At most two
+crystals are present together; early endings or unavailable terrain can reduce
+the actual number. The same rate continues in endless.
 
 Configure the notice with `/azsxui widget crystals …`; see
 [AZSXUI presentation](#azsxui-presentation) for complete examples.
@@ -259,7 +260,7 @@ contains three distinct amulets. Whole-mark rounding can yield zero marks; the
 amulet choice still applies. Each participant receives personal rewards.
 
 The goblin ignores taunts and cannot attack. Its health uses the first native
-guardian's base, with native time, difficulty and party scaling. Group pauses
+guardian's base multiplied by 1.5, with native time, difficulty and party scaling. Group pauses
 freeze its escape timer. A native announcement and encounter health bar signal
 its arrival. Goblins receive no automatic skull; manual markers remain available.
 Automatic player markers use the other seven icons. Goblin rewards do not remove

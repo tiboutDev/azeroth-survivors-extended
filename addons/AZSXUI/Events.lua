@@ -124,13 +124,13 @@ local function mergeMarks(receipt,now)
     if receipt.kind~="marks"then return false end
     local last=nativeQueue[table.getn(nativeQueue)]
     if not last and nativeCurrent and nativeCurrent.kind=="marks"and now<nativeUntil then last=nativeCurrent end
-    if not last or last.kind~="marks"or not last.amount or not last.total or not last.firstAt or now-last.firstAt>3 then return false end
+    if not last or last.kind~="marks"or not last.amount or not last.total or not last.lastAt or now-last.lastAt>3 then return false end
     -- A repeated/stale total is not a second gain. A discontinuity starts a new receipt.
     if receipt.total<=last.total then return true end
     if math.abs(receipt.total-last.total-receipt.amount)>.00001 then return false end
-    last.amount=last.amount+receipt.amount;last.total=receipt.total
+    last.amount=last.amount+receipt.amount;last.total=receipt.total;last.lastAt=now
     last.reward="|cff1eff00+"..markNumber(last.amount).."|r marks";last.note="Total: |cff1eff00"..markNumber(last.total).."|r"
-    if last==nativeCurrent and nativeToast then nativeToast.reward:SetText(last.reward);nativeToast.note:SetText(last.note)end
+    if last==nativeCurrent then nativeUntil=math.max(nativeUntil,now+3);if nativeToast then nativeToast.reward:SetText(last.reward);nativeToast.note:SetText(last.note)end end
     return true
 end
 controller:RegisterEvent("CHAT_MSG_LOOT");controller:RegisterEvent("CHAT_MSG_SYSTEM")
@@ -146,7 +146,7 @@ controller:SetScript("OnEvent",function()
         if not claimLoot()then return end
     end
     local now=GetTime();if mergeMarks(receipt,now)then return end
-    if table.getn(nativeQueue)<16 then table.insert(nativeQueue,{kind=kind,amount=receipt.amount,total=receipt.total,firstAt=now,reward=receipt.reward,note=receipt.note,icon=noticeIcon(kind,message),readyAt=now+.25})end
+    if table.getn(nativeQueue)<16 then table.insert(nativeQueue,{kind=kind,amount=receipt.amount,total=receipt.total,lastAt=now,reward=receipt.reward,note=receipt.note,icon=noticeIcon(kind,message),readyAt=now+.25})end
 end)
 local function refreshNativeRewards()
     local now=GetTime();local previousWall=nativeWall;local dt=math.max(0,now-nativeWall);nativeWall=now

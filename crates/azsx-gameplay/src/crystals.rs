@@ -36,18 +36,22 @@ impl Crystal{
 }
 #[derive(Default)]pub struct Collection{pub people:BTreeMap<Owner,Totals>}
 impl Collection{pub fn retain(&mut self,ids:&[Owner]){self.people.retain(|id,_|ids.contains(id));}pub fn grant(&mut self,id:Owner,color:Color)->bool{self.people.entry(id).or_default().add(color)}}
-#[derive(Clone,Debug)]pub struct Director{times:Vec<f32>,cursor:usize,next_endless:f32,rng:u64}
+/// A renewal process targets five opportunities per 15-minute normal run.
+/// There is no count cap; the two-object limit only bounds simultaneous scenes.
+#[derive(Clone,Debug)]pub struct Director{next:f32,rng:u64}
 impl Director{
  pub fn new(seed:u64)->Self{
-  let mut s=Self{times:vec![],cursor:0,next_endless:0.,rng:seed};let count=4+s.draw(3);
-  // Prototype window: independent uniform opportunities during a 15-minute run.
-  for _ in 0..count{let time=30.+s.draw(841)as f32;s.times.push(time)}s.times.sort_by(f32::total_cmp);s
+  let mut s=Self{next:0.,rng:seed};s.next=30.+s.interval();s
+ }
+ fn interval(&mut self)->f32{
+  // Open interval (0,1); the exponential mean is 174 simulation seconds.
+  let u=(f64::from(self.draw(u32::MAX))+1.)/(f64::from(u32::MAX)+1.);
+  (-u.ln()*174.).max(1.)as f32
  }
  pub fn draw(&mut self,n:u32)->u32{assert!(n>0);loop{self.rng=self.rng.wrapping_add(0x9e3779b97f4a7c15);let mut z=self.rng;z=(z^(z>>30)).wrapping_mul(0xbf58476d1ce4e5b9);z=(z^(z>>27)).wrapping_mul(0x94d049bb133111eb);z^=z>>31;let max=u64::MAX-u64::MAX%u64::from(n);if z<max{return(z%u64::from(n))as u32}}}
- pub fn due(&mut self,now:f32,endless:bool,present:usize)->bool{
-  if !now.is_finite()||now<0.||present>=MAX_PRESENT{return false}
-  if endless{if self.next_endless==0.{self.next_endless=now+90.+self.draw(151)as f32;}if now<self.next_endless{return false}self.next_endless=now+90.+self.draw(151)as f32;return true}
-  if now>900.{return false}if self.times.get(self.cursor).is_some_and(|at|now>=*at){self.cursor+=1;true}else{false}
+ pub fn due(&mut self,now:f32,present:usize)->bool{
+  if !now.is_finite()||now<0.||present>=MAX_PRESENT||now<self.next{return false}
+  self.next=now+self.interval();true
  }
 }
 #[cfg(test)]mod tests{
@@ -60,6 +64,23 @@ impl Director{
  #[test]fn personal_claims_start_one_shared_deadline_and_keep_model_until_complete(){let ids=[(0,11),(1,22)];let mut c=Crystal::new(1,Color::Red,[0.;3],&ids).unwrap();assert!(!c.done(1000.));assert!(c.claim(1000.,ids[0],[0.;3],true));assert_eq!(c.deadline,Some(1060.));assert!(!c.done(1001.));assert!(!c.claim(1001.,ids[0],[0.;3],true));assert!(c.claim(1059.,ids[1],[0.;3],true));assert_eq!(c.deadline,Some(1060.));assert!(c.done(1059.));}
  #[test]fn deadline_range_pause_death_departure_and_reused_slots(){let mut c=Crystal::new(1,Color::Blue,[0.;3],&[(0,11),(1,22)]).unwrap();assert!(!c.claim(1.,(0,11),[2.,0.,0.],true));assert!(!c.claim(1.,(0,11),[0.;3],false));assert!(c.claim(5.,(0,11),[0.;3],true));assert!(!c.claim(6.,(1,33),[0.;3],true));for _ in 0..100{assert!(!c.done(5.));}assert!(!c.claim(65.,(1,22),[0.;3],true));assert!(c.done(65.));c.retain(&[(0,11),(1,33)]);assert!(c.done(6.));}
  #[test]fn additive_totals_are_individual_and_retire_departed_identity(){let mut c=Collection::default();c.grant((0,11),Color::Red);c.grant((0,11),Color::Red);c.grant((1,22),Color::Green);assert_eq!(c.people[&(0,11)].inputs(),vec![(0,0.24)]);assert_eq!(c.people[&(1,22)].inputs(),vec![(2,0.15)]);c.retain(&[(0,33),(1,22)]);assert!(!c.people.contains_key(&(0,11)));}
- #[test]fn free_draws_and_nonperiodic_budget_allow_repetitions(){let mut counts=[0;4];let mut repeated=false;for seed in 0..1000{let mut d=Director::new(seed);assert!((4..=6).contains(&d.times.len()));assert!(d.times.iter().all(|v|(30.0..=870.0).contains(v)));let a=d.draw(4);let b=d.draw(4);repeated|=a==b;counts[a as usize]+=1;let old=d.cursor;assert!(!d.due(899.,false,2));assert_eq!(d.cursor,old);}assert!(repeated);assert!(counts.iter().all(|n|*n>150));}
- #[test]fn solo_completes_immediately_and_no_unbounded_appearance_backlog(){let mut c=Crystal::new(1,Color::Yellow,[0.;3],&[(0,1)]).unwrap();assert!(c.claim(2.,(0,1),[0.;3],true));assert!(c.done(2.));let mut d=Director::new(1);assert!(!d.due(901.,false,0));assert!(!d.due(901.,true,0));assert!(!d.due(901.,true,0));assert!(d.due(1200.,true,0));}
+ #[test]fn free_colors_and_mean_rate_without_a_count_cap(){
+  let mut colors=[0;4];let mut repeated=false;let mut total=0;let mut over_six=false;
+  for seed in 0..2000{
+   let mut d=Director::new(seed);let mut count=0;
+   while d.next<=900.{let at=d.next;assert!(d.due(at,0));count+=1;}
+   total+=count;over_six|=count>6;
+   let a=d.draw(4);let b=d.draw(4);repeated|=a==b;colors[a as usize]+=1;
+  }
+  assert!(repeated&&over_six);
+  assert!((9000..=11000).contains(&total));
+  assert!(colors.iter().all(|n|*n>350));
+ }
+ #[test]fn simultaneous_limit_defers_and_late_clock_never_replays_backlog(){
+  let mut d=Director::new(1);let first=d.next;
+  assert!(!d.due(first,MAX_PRESENT));assert_eq!(d.next,first);
+  assert!(d.due(first,0));let next=d.next;assert!(next>first);
+  assert!(!d.due(first,0));assert!(d.due(1200.,0));assert!(d.next>1200.);
+ }
+ #[test]fn solo_completes_immediately(){let mut c=Crystal::new(1,Color::Yellow,[0.;3],&[(0,1)]).unwrap();assert!(c.claim(2.,(0,1),[0.;3],true));assert!(c.done(2.));}
 }

@@ -22,7 +22,7 @@ functions may be absent when AZSX is disabled or before its Lua has loaded; an
 addon must tolerate that and retry after world entry or with bounded polling.
 AZSXUI is a consumer, not the provider: other addons do not need AZSXUI installed.
 
-`AZSX_GetAPIVersion()` returns `major, minor` (currently `1, 9`). Major 1 is a
+`AZSX_GetAPIVersion()` returns `major, minor` (currently `1, 10`). Major 1 is a
 stable contract: incompatible field meanings/types/removals require a new major;
 minor versions may add optional fields. Ignore unknown fields. Tests cover the
 contract; this source change does not update an older installed DLL.
@@ -37,7 +37,7 @@ modifies AZSX or snapshots obtained by another consumer.
 
 | Field | Meaning |
 |---|---|
-| `api.major`, `api.minor` | Contract version, currently 1.9 |
+| `api.major`, `api.minor` | Contract version, currently 1.10 |
 | `available` | Boolean; check before accessing run fields |
 | `reason` | When unavailable: `outside_run`, `stale`, or `missing_or_invalid_payload` |
 | `revision` | Monotonic content revision within this Lua environment; not persisted across client reloads |
@@ -188,11 +188,11 @@ remain compatible and must ignore the added field.
 
 ## Crystal Resonance (API minor 3)
 
-`state.data.crystals` is absent before the first pickup. It contains integer
+From minor 10, `state.data.crystals` is present from run initialization, including before the first pickup. It contains integer
 `red`, `blue`, `green`, `yellow`, `total`, and the native presentation `index`
 (0–31; 32 means no free native slot). `bonuses` contains accumulated percentage
 values named `damage`, `cooldownRecovery`, `maximumHealth`, `areaOfEffect`.
-`state.texts.crystals` contains the AZSX-authored title, icon and collection note.
+`state.texts.crystals` contains the AZSX-authored title, icon, collection note, per-color tooltip `details` and `footer`. Zero counts carry discovery guidance.
 Every getter/handler snapshot remains detached. No crystal position is exposed
 to the minimap bridge. Aura indices are presentation metadata, not identities.
 
@@ -257,7 +257,7 @@ matches a reviewed definition and its current owner GUID/rank is verified.
 Uncertain matches omit the annotation. No previews, viewer stats or guessed
 localized names enter these tooltips.
 Marks still use actual native English receipts. Contiguous receipts within a
-three-second burst add their gains into one popup and retain the latest native
+three-second quiet window, renewed on each receipt, add their gains into one popup and retain the latest native
 collection total. Repeated/stale totals are ignored within that burst. Item
 ordering and gaps in observed totals prevent merging; gameplay grants are untouched.
 

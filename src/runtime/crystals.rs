@@ -10,10 +10,10 @@ static ENABLED:AtomicBool=AtomicBool::new(false);
 pub fn install(r:&dyn Services){if std::env::var("AZSX_CRYSTALS").as_deref()==Ok("0"){return}if r.events_verify_supplies().is_err(){r.events_warn("Crystal Resonance unavailable: native scene contact changed.");return}ENABLED.store(true,Ordering::Release);r.events_info("Crystal Resonance: independent native crystals and personal run-local totals enabled; amulet gems retired.");}
 fn authority(r:&dyn Services,game:u64)->Result<Option<PartyObservation>,String>{if r.events_run_source(game)?.is_none_or(|(slot,_)|slot!=0){return Ok(None)}if let Some(p)=r.events_solo_run(game)?{return Ok(Some(p))}r.events_world_party(game)}
 pub fn reset(){let old=STATE.lock().ok().and_then(|mut s|s.take());if let(Some(r),Some(s))=(RUNTIME.get(),old){if authority(r,s.game).ok().flatten().is_some_and(|p|p.clock>=s.clock&&p.actors.first().is_some_and(|a|a.guid==s.owner)){for v in s.reserves{let _=unsafe{r.events_remove_event_object(s.game,v.object)};}}}}
-pub fn active()->bool{STATE.lock().is_ok_and(|s|s.as_ref().is_some_and(|s|!s.collection.people.is_empty()||!s.auras.is_empty()))}
+pub fn active()->bool{STATE.lock().is_ok_and(|s|s.is_some())}
 pub fn totals(game:u64,owner:Owner)->Totals{STATE.lock().ok().and_then(|s|s.as_ref().filter(|s|s.game==game).and_then(|s|s.collection.people.get(&owner).copied())).unwrap_or_default()}
 pub fn aura(game:u64,owner:Owner,index:Option<u32>){if let Ok(mut guard)=STATE.lock(){if let Some(s)=guard.as_mut().filter(|s|s.game==game){if let Some(index)=index{s.auras.insert(owner,index);}else{s.auras.remove(&owner);}}}}
-pub fn wire(game:u64,owner:Owner)->Option<String>{STATE.lock().ok().and_then(|s|{let s=s.as_ref().filter(|s|s.game==game)?;let c=s.collection.people.get(&owner)?;let index=s.auras.get(&owner).copied().unwrap_or(32);Some(format!("G|{}|{}|{}|{}|{}|{index}\n",owner.1,c.0[0],c.0[1],c.0[2],c.0[3]))})}
+pub fn wire(game:u64,owner:Owner)->Option<String>{STATE.lock().ok().and_then(|s|{let s=s.as_ref().filter(|s|s.game==game)?;let c=s.collection.people.get(&owner).copied().unwrap_or_default();let index=s.auras.get(&owner).copied().unwrap_or(32);Some(format!("G|{}|{}|{}|{}|{}|{index}\n",owner.1,c.0[0],c.0[1],c.0[2],c.0[3]))})}
 pub fn member_wire(owner:Owner)->Option<String>{let game=STATE.lock().ok().and_then(|s|s.as_ref().map(|s|s.game))?;wire(game,owner)}
 pub fn occupied(game:u64)->Vec<([f32;3],f32)>{STATE.lock().ok().and_then(|s|s.as_ref().filter(|s|s.game==game).map(|s|s.reserves.iter().map(|v|(v.rules.position,1.)).collect())).unwrap_or_default()}
 pub fn finish(r:&dyn Services,game:u64){if !ENABLED.load(Ordering::Acquire){return}if let Err(e)=tick(r,game){r.events_warn(&format!("Crystal Resonance stopped: {e}; core AZSX remains active."));ENABLED.store(false,Ordering::Release);reset();}}
@@ -38,7 +38,6 @@ fn tick(r:&dyn Services,game:u64)->Result<(),String>{
    }
   }
  }
- let endless=r.events_endless(game)?;
  let (remove,refresh,spawn)={let mut guard=STATE.lock().map_err(|_|"Crystal state unavailable")?;let s=guard.as_mut().ok_or("Crystal state missing")?;
   if s.last==Some(now){return Ok(())}s.last=Some(now);s.clock=now;s.collection.retain(&ids);s.auras.retain(|id,_|ids.contains(id));s.pending.retain(|id|ids.contains(id));
   let mut grants=vec![];
@@ -46,7 +45,7 @@ fn tick(r:&dyn Services,game:u64)->Result<(),String>{
   for(id,color,event)in grants{if s.collection.grant(id,color){s.pending.insert(id);r.events_info(&format!("crystal collected: event={event} slot={} owner={} color={} counts={:?} clock={now}",id.0,id.1,color as u8,s.collection.people[&id].0));}}
   let mut remove=vec![];let mut i=0;while i<s.reserves.len(){if s.reserves[i].rules.done(now){let v=s.reserves.remove(i);remove.push((v.rules.id,v.object));}else{i+=1}}
   let available=p.actors.iter().any(|a|a.phase==Phase::Playing&&a.hp>0.);
-  let mut due=available&&s.director.due(now,endless,s.reserves.len());
+  let mut due=available&&s.director.due(now,s.reserves.len());
   #[cfg(feature="test-hooks")]if fixture_enabled(){due=available&&s.reserves.len()<MAX_PRESENT&&s.fixture<6&&now>=3.+s.fixture as f32*4.;if due{s.fixture+=1;}}
   let spawn=if due&&s.reserves.len()<MAX_PRESENT{s.sequence=s.sequence.checked_add(1).ok_or("Crystal identity overflow")?;let color=Color::roll(s.director.draw(4));
    #[cfg(feature="test-hooks")]let color=if fixture_enabled(){Color::ALL[((s.fixture-1)%4)as usize]}else{color};let draws=(0..32).map(|_|(s.director.draw(u32::MAX),s.director.draw(u32::MAX))).collect::<Vec<_>>();Some((s.sequence,color,draws,s.fixture))}else{None};(remove,s.pending.iter().copied().collect::<Vec<_>>(),spawn)

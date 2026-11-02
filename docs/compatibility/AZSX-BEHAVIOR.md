@@ -329,7 +329,7 @@ Candidate profiles: `official`. [Scenario mappings and limits](../../compat/feat
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
 | AZSX-21.01 | Already-collected loot | Native personal marks/collection remain authoritative; no AZSX duplicate-loot gold or extra grant. |
-| AZSX-21.02 | Contiguous mark gains | Sum earned values in one popup with latest native total; duplicate item popup silent. Notification itself awards nothing. |
+| AZSX-21.02 | Contiguous mark gains | Sum contiguous earned values in one popup using a three-second quiet window refreshed by each receipt and the latest native total; duplicate item popup silent. Notification itself awards nothing. |
 
 ### AZSX-22 — Crystal Resonance
 
@@ -339,11 +339,11 @@ Candidate profiles: `crystals`, `official-party-ui`, `azsxui`. [Scenario mapping
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-22.01 | Generation | Independent map-wide native models, equal free colors, no minimap pins/kill drops. Prototype 4–6 opportunities in seconds 30–870, max two scenes; terrain/budget/early end can reduce discoveries. Endless intervals 90–240 seconds. |
+| AZSX-22.01 | Generation | Independent map-wide native models, equal free colors, no minimap pins/kill drops. After 30 seconds, independent random intervals average 174 simulation seconds, targeting about five opportunities by minute 15 without a count ceiling; max two simultaneous scenes, with deferred opportunities and no backlog replay. The same rate continues in endless; terrain/early end can reduce discoveries. |
 | AZSX-22.02 | Color pickup | Red +12% damage, Blue +7% cooldown recovery, Green +15% max HP, Yellow +12% area; personal additive permanent run gains. Native amulet effects remain, no AZSX amulet gem. |
 | AZSX-22.03 | First/group claims | Alive proximity grants once per appearance-time identity; model stays visible even to collector. First claim starts shared 60 simulation seconds, never extended by later claims. |
 | AZSX-22.04 | All claims/expiry/solo/departure | Common removal on all remaining claims or timeout, solo immediate; unclaimed has no timer. Pause freezes time, late/reused identities cannot claim. |
-| AZSX-22.05 | Death/revival/UI restore | Bonuses survive death, reset next run. One permanent effect with total icon count and per-color totals; only new pickups notify, no replay of restored totals. |
+| AZSX-22.05 | Death/revival/UI restore | Bonuses survive death, reset next run. One permanent effect visible at zero with discovery guidance, then color counts and per-stat totals; only new pickups notify, no replay of restored totals. |
 
 ### AZSX-23 — AZSXUI HUD and minimap
 
@@ -404,7 +404,7 @@ Candidate profiles: `rules`, `official`. [Scenario mappings and limits](../../co
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
 | AZSX-26.01 | First opportunity | Never before first boss; pre-final bad-luck protection (25%, 1/3, 50%, 100% on five-boss maps), then 20–40-second placement delay. Not fixed early; short run/placement failure can prevent actual appearance. |
-| AZSX-26.02 | Active goblin | Max one, native model/transport, guardian-based native health scaling, no attack/ordinary loot, taunt immune. Flee within terrain/arena without distant-recycling teleport; 25 simulation seconds including arrival delay, pause freezes deadline. |
+| AZSX-26.02 | Active goblin | Max one, native model/transport, 150% guardian-base native health scaling, no attack/ordinary loot, taunt immune. Flee within terrain/arena without distant-recycling teleport; 25 simulation seconds including arrival delay, pause freezes deadline. |
 | AZSX-26.03 | Kill/escape | Kill reserves personal native amulet choice and native-scaled whole marks per present participant, distinct amulets where possible. Escape/missing instance grants nothing; no gold/fabricated boss or pity progression. |
 | AZSX-26.04 | Downed/choosing recipient | Marks credit once; amulet request waits without replacing current choice; native pause remains authoritative. |
 | AZSX-26.05 | Disable/failure/presentation | Host optional setting controls generation; no uncertain spawn retry. Native announcement/HP bar, no automatic skull. |

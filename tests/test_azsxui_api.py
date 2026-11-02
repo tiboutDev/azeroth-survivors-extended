@@ -19,7 +19,7 @@ class APITests(unittest.TestCase):
 
     def test_cooperative_information_is_independent_detached_and_lifecycle_bound(self):
         self.cooperative_wire()
-        self.lua.execute('''local s=AZSX_GetState(1);assert(s.api.minor==9 and s.data.cooperativeRules.permanent and s.data.cooperativeRules.priority==1 and s.data.cooperativeRules.areaBonusShare==.5)
+        self.lua.execute('''local s=AZSX_GetState(1);assert(s.api.minor==10 and s.data.cooperativeRules.permanent and s.data.cooperativeRules.priority==1 and s.data.cooperativeRules.areaBonusShare==.5)
 assert(s.texts.cooperativeRules.rule=="Area and range bonuses are 50% effective.")
 s.data.cooperativeRules.areaBonusShare=99;s.texts.cooperativeRules.notes[1]="changed"
 assert(AZSX_GetState().data.cooperativeRules.areaBonusShare==.5 and AZSX_GetState().texts.cooperativeRules.notes[1]=="The stats panel shows effective values.")
@@ -102,7 +102,7 @@ phase="ready";update();assert(objects.BuffButton1.anchor[2]==UIParent)''')
         self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1')
     def test_local_equipment_native_text_copy_isolation_and_zero_item_snapshot(self):
         self.equipment_wire()
-        self.lua.execute('local major,minor=AZSX_GetAPIVersion();assert(major==1 and minor==9);local s=AZSX_GetState(1);assert(s.available and s.data.equipment[1].slot==1 and s.data.equipment[1].rank==2 and s.data.equipment[1].name==nil);assert(s.texts.equipment[1].name=="Native ring" and s.texts.equipment[1].text=="Exact owner text\\n+10 damage");s.texts.equipment[1].name="Mutated";assert(AZSX_GetState(1).texts.equipment[1].name=="Native ring")')
+        self.lua.execute('local major,minor=AZSX_GetAPIVersion();assert(major==1 and minor==10);local s=AZSX_GetState(1);assert(s.available and s.data.equipment[1].slot==1 and s.data.equipment[1].rank==2 and s.data.equipment[1].name==nil);assert(s.texts.equipment[1].name=="Native ring" and s.texts.equipment[1].text=="Exact owner text\\n+10 damage");s.texts.equipment[1].name="Mutated";assert(AZSX_GetState(1).texts.equipment[1].name=="Native ring")')
         self.equipment_wire(header='L|11|0',row='')
         self.lua.execute('local s=AZSX_GetState(1);assert(s.available and table.getn(s.data.equipment)==0 and table.getn(s.texts.equipment)==0)')
     def test_equipment_retains_native_category_and_rejects_unknown_category(self):

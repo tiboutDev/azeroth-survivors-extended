@@ -534,8 +534,8 @@ mod consumable_aura_tests {
         assert_eq!(m.read(0x10020+12,4).unwrap(),3u32.to_le_bytes());
         assert_eq!(a.project_crystal_aura(&m,&f,7).unwrap(),Some(2));
         assert_eq!(m.read(0x10000,32).unwrap(),before);
-        assert_eq!(a.project_crystal_aura(&m,&f,0).unwrap(),None);
-        assert_eq!(m.read(0x10020,16).unwrap(),vec![0;16]);
+        assert_eq!(a.project_crystal_aura(&m,&f,0).unwrap(),Some(2));
+        assert_eq!(m.read(0x10020+12,4).unwrap(),0u32.to_le_bytes());
         for index in 0..32{m.write(0x10000+index*16,&[1,0,0,0,44,0,0,0]).unwrap();}
         let full=m.read(0x10000,512).unwrap();assert_eq!(a.project_crystal_aura(&m,&f,1).unwrap(),None);assert_eq!(m.read(0x10000,512).unwrap(),full);
     }

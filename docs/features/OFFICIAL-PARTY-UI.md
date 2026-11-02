@@ -195,7 +195,8 @@ message and frozen cosmetic progress while another required player is outside.
 
 AZSXUI/Buffs.lua promotes the existing native Fortune button into the first
 visual buff position (rightmost in the stock layout). Crystal Resonance follows
-immediately, or takes the first position without Fortune. Crystal identification
+immediately, or takes the first position without Fortune, from the start of the
+run even with zero pickups. Crystal identification
 requires both the current API aura index and its native gem icon. It remaps only frame
 anchors, including wrapped rows. Native IDs, buffIndex, tooltips, duration
 children and click handlers are unchanged. Missing/stale AZSX state, an absent

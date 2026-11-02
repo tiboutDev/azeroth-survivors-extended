@@ -140,7 +140,6 @@ impl Adapter{
   let rows=m.read(f.rows,32*16)?;if rows.len()!=512{return Err("Truncated crystal aura slots".into())}
   let mut free=None;let mut owned=None;
   for (index,row)in rows.chunks_exact(16).enumerate(){let tag=u32::from_le_bytes(row[..4].try_into().unwrap());if tag>1{return Err("Invalid crystal aura variant".into())}if tag==0&&free.is_none(){free=Some(index)}if tag==1&&u32::from_le_bytes(row[4..8].try_into().unwrap())==2337{owned=Some(index)}}
-  if count==0{if let Some(index)=owned{m.write(f.rows+index as u64*16,&[0;16])?;}return Ok(None)}
   let Some(index)=owned.or(free)else{return Ok(None)};let mut row=[0u8;16];row[..4].copy_from_slice(&1u32.to_le_bytes());row[4..8].copy_from_slice(&2337u32.to_le_bytes());row[12..].copy_from_slice(&count.to_le_bytes());m.write(f.rows+index as u64*16,&row)?;Ok(Some(index as u32))
  }
 }
