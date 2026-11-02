@@ -249,6 +249,7 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         super::treasure_goblins::install(runtime);
         super::supplies::install(runtime);
         super::crystals::install(runtime);
+        super::solo_escort::install(runtime);
         super::rituals::install(runtime);
     }
     if azsx {

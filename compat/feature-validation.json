@@ -258,6 +258,22 @@
         "official-party-ui"
       ],
       "scope_note": "Portable rule and selected-adapter fixtures cover solo/host/guest and all five actor slots. Windows runtime scope tests cover reentrancy and unwind cleanup. These are not live spell-radius evidence. Lua 5.1 covers informational-aura lifecycle, detached API, tooltip notes, first placement, ownership and native fallback. Visual placement still requires rendered review."
+    },
+    "AZSX-30": {
+      "profiles": [
+        "rules",
+        "official",
+        "official-party-ui",
+        "azsxui"
+      ],
+      "scope_note": "Portable route/identity/reward policy, exact 0.138.0 native byte/field review, Lua 5.1 schema and Windows ABI checks. Scene movement, model rendering, gadget effects and extraction reward require an artifact-scoped live solo run; portable checks alone do not establish those outcomes.",
+      "targeted_scenario": {
+        "profile": "official",
+        "trigger": "In an isolated 0.138.0 solo run, approach one native Mechanical Chicken, stay close, leave and return, and reach its Goblin Teleporter.",
+        "expected": "At most one escort; the chicken and teleporter render from native resources; motion and progress pause outside six yards and resume without reset; extraction removes both and grants exactly one single-tier gadget. A failed or expired escort grants none.",
+        "limit": "A single run may not exercise all six random gadget kinds; native combat effects and optional AZSXUI widgets require separate focused evidence.",
+        "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
+      }
     }
   }
 }

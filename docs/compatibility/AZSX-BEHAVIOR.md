@@ -479,3 +479,19 @@ and verification cases here. A prototype/model/helper alone is not acceptance.
 - Migrating ASX keeps configuration, native saves, SavedVariables and original backups. New binaries take precedence; conflicting state stops without overwrite.
 - Native host submissions use one `[AZSX] ` prefix within the 32-character limit. Join submissions, passwords and public/private choices remain native.
 - The API must execute with no internal addon and without AZSXUI. Native API tables remain intact.
+
+### AZSX-30 — Mechanical Chicken escort and engineering gadgets
+
+Mode: **Solo**. Disposition: **active**. Details: [Contract](../features/SOLO-ESCORT.md).
+
+Candidate profiles: `rules`, `official`, `official-party-ui`, `azsxui`. [Scenario mappings and limits](../../compat/feature-validation.json).
+
+| Criterion | Trigger / case | Required outcome |
+| --- | --- | --- |
+| AZSX-30.01 | Solo scheduling and placement | One successful reservation per run at most; map-wide walkable native 180-yard route, native Mechanical Chicken and Goblin Teleporter, no external assets. Failed placement may retry; coop never creates an escort. |
+| AZSX-30.02 | Presence and movement | Invulnerable chicken advances by native spline only while the living player stays within six yards. Leaving suspends cumulative progress without reset; native pause freezes time. |
+| AZSX-30.03 | Extraction and failure | Arrival grants one reward exactly once, removes chicken and portal; expiry, death, invalid route or cleanup grants nothing. No uncertain native commit is retried. |
+| AZSX-30.04 | Engineering reward | One of six equal-power, unranked, run-local gadgets: Net, Rocket Boots, Sapper Charge, Mortar, Shrink Ray or Protection Belt. The optional UI shows the equipped gadget and escort objective; a versioned detached API works without AZSXUI. |
+| AZSX-30.05 | Native effects | Net roots ordinary nearby enemies; Boots use native movement reconstruction; Belt grants a native shield; Mortar launches a native projectile and applies one bounded AoE after impact; Shrink Ray changes only visual scale. |
+| AZSX-30.06 | Sapper safety | Native self-damage/shields/reduction apply, never lowering health below 75% maximum; defer activation without a health budget. Native enemies receive the bounded explosion once. |
+| AZSX-30.07 | Compatibility boundary | Exact 0.138.0 executable and selected entry bytes, fields, actor identity and source guard activation. Missing or changed contacts disable the escort; do not substitute guessed offsets or synthetic rewards. |

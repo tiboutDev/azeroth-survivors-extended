@@ -127,6 +127,18 @@ local function decode(wire)
                 local receipt=a[8]and integer(a[8],1,1e9)or nil
                 if a[8]and not receipt then return nil end
                 result.members[id].blessing={boss=boss,category=category,rarity=rarity,amount=amount,best=best,event=receipt}
+            elseif a[1]=="V" and table.getn(a)==12 and id==result.own and result.members[id] then
+                local event,kind,stage=integer(a[3],1,1e9),integer(a[4],1,1),integer(a[5],0,4)
+                local held,maximum,inside=integer(a[6],0,200),integer(a[7],200,200),integer(a[8],0,1)
+                local charge,progress,total,remaining=integer(a[9],0,0),integer(a[10],0,120),integer(a[11],120,120),integer(a[12],0,0)
+                if not event or not kind or stage==nil or not held or not maximum or inside==nil or charge==nil or not progress or not total or not remaining or progress>total or result.members[id].soloEvent then return nil end
+                result.members[id].soloEvent={event=event,kind="chicken_escort",stage=stage,held=held,maximum=maximum,inside=inside==1,progress=progress,total=total}
+            elseif a[1]=="W" and table.getn(a)==6 and id==result.own and result.members[id] then
+                local revision,kind=integer(a[3],1,1e9),integer(a[4],0,5)
+                local nextTrigger,effect=integer(a[5],0,60000),integer(a[6],0,60000)
+                if not revision or kind==nil or not nextTrigger or not effect or result.members[id].engineering then return nil end
+                local kinds={"net","rocket_boots","sapper","mortar","shrink_ray","protection_belt"}
+                result.members[id].engineering={event=revision,kind=kinds[kind+1],nextTrigger=nextTrigger,remaining=effect}
             elseif a[1]=="R" and (table.getn(a)==5 or table.getn(a)==6) and result.members[id] then
                 local event,held,inside=integer(a[3],1,4294967295),integer(a[4],0,2000),integer(a[5],0,1)
                 local allInside;if table.getn(a)==6 then allInside=integer(a[6],0,1)end
@@ -192,6 +204,7 @@ local function decode(wire)
     end
     result.signature=table.concat(signature,"\n")
     if not result.members[result.own] then return nil end
+    if table.getn(result.ordered)~=1 and (result.members[result.own].soloEvent or result.members[result.own].engineering) then return nil end
     return result
 end
 local function refreshModel()
@@ -202,7 +215,7 @@ local function refreshModel()
         local nextModel=decode(wire)
         if not nextModel or not model or model.epoch~=nextModel.epoch or model.own~=nextModel.own or model.signature~=nextModel.signature then model=nextModel
         else
-            for id,member in pairs(model.members)do member.fatigue=nextModel.members[id].fatigue;member.consumables=nextModel.members[id].consumables;member.discovery=nextModel.members[id].discovery;member.ritual=nextModel.members[id].ritual;member.minimap=nextModel.members[id].minimap;member.markers=nextModel.members[id].markers end
+            for id,member in pairs(model.members)do member.fatigue=nextModel.members[id].fatigue;member.consumables=nextModel.members[id].consumables;member.discovery=nextModel.members[id].discovery;member.ritual=nextModel.members[id].ritual;member.soloEvent=nextModel.members[id].soloEvent;member.engineering=nextModel.members[id].engineering;member.minimap=nextModel.members[id].minimap;member.markers=nextModel.members[id].markers end
         end
         modelWire=wire
     end
@@ -682,10 +695,10 @@ local function apiState()
     local own=allowed and supplyOwner()or nil
     local input=phase..":"..tostring(own~=nil)..":"..tostring(AZS_RUN_UPDATED)..":"..tostring(modelWire)
     if apiCache and input==apiInput then return apiCache end
-    local state={api={major=1,minor=10},available=own~=nil,phase=phase,data={},texts={}}
+    local state={api={major=1,minor=11},available=own~=nil,phase=phase,data={},texts={}}
     if own then
         state.session={epoch=model.epoch,recipientGUID=model.own}
-        state.data={sharedEconomy=apiCopy(own.economy),crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
+        state.data={sharedEconomy=apiCopy(own.economy),crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),soloEvent=apiCopy(own.soloEvent),engineering=apiCopy(own.engineering),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
         -- Retain v1.7's complete-pair guarantee for existing consumers.
         if own.economy and own.economy.xp~=nil and own.economy.gold~=nil then state.data.economy=apiCopy(own.economy)end
         state.data.loot={};local lootTexts={}
@@ -730,6 +743,20 @@ local function apiState()
             return {title=value.title,icon=value.icon,reward=value.reward,note=value.note,color=apiCopy(value.color)}
         end
         state.texts={loot=lootTexts,equipment=equipmentTexts,crystals=crystalText,supplies=textOnly(formatted.owner.discovery),fortune=textOnly(formatted.blessing),sayge=textOnly(formatted.owner.ritual),consumables=consumableTexts}
+        if state.data.soloEvent then
+            local e=state.data.soloEvent
+            local notes={"Find the damaged chicken","Restart the chicken","Accompany the chicken to its teleporter","Extraction complete","Escort ended"}
+            local note=notes[e.stage+1]
+            if e.stage==2 and not e.inside then note=note.." (waiting for you)" end
+            state.texts.soloEvent={title="Mechanical Chicken Escort",note=note,icon="Interface\\Icons\\INV_Misc_EngGizmos_06",reward="Engineering gadget equipped",duration="Until the end of the run"}
+        end
+        if state.data.engineering then
+            local e=state.data.engineering
+            local names={net="Gnomish Net",rocket_boots="Goblin Rocket Boots",sapper="Goblin Sapper Charge",mortar="Goblin Mortar",shrink_ray="Gnomish Shrink Ray",protection_belt="Gnomish Harm Prevention Belt"}
+            local icons={net="Ability_Ensnare",rocket_boots="Spell_Fire_Fire",sapper="Spell_Fire_SelfDestruct",mortar="Spell_Fire_SelfDestruct",shrink_ray="Spell_Ice_MagicDamage",protection_belt="Spell_Holy_PowerWordShield"}
+            local descriptions={net="Roots up to three nearby ordinary enemies.",rocket_boots="A two-second movement speed burst.",sapper="Fire explosion against ordinary enemies. Backlash cannot lower health below 75%.",mortar="Native projectile with area damage at impact.",shrink_ray="Changes appearance for six seconds. Cosmetic only.",protection_belt="Grants a native shield with native absorption and expiry."}
+            state.texts.engineering={title=names[e.kind],icon="Interface\\Icons\\"..icons[e.kind],description=descriptions[e.kind],reward=names[e.kind],duration="Until the end of the run"}
+        end
         if own.economy then
             state.data.cooperativeRules={id="cooperative_rules",permanent=true,priority=1,areaBonusShare=0.5}
             state.texts.cooperativeRules={title="Cooperative Rules",icon="Interface\\Icons\\Spell_Holy_PrayerofFortitude",
@@ -746,7 +773,7 @@ local function apiState()
     state.updatedAt=own and modelTime or nil
     apiCache=state;apiInput=input;return state
 end
-function AZSX_GetAPIVersion()return 1,10 end
+function AZSX_GetAPIVersion()return 1,11 end
 function AZSX_GetState(major)
     if major~=nil and major~=1 then return nil,"unsupported_version"end
     return apiCopy(apiState())

@@ -15,6 +15,7 @@ pub(super) unsafe extern "system" fn stats(game:u64){
  if let Some(r)=RUNTIME.get().filter(|r|r.rules){super::supplies::native_stats(r,game,||crystals::native_stats(r,game,||enchantments::native_stats(r,game,||original(game))));}else{original(game)}
  blessings::apply_stats(game);
  if scope.outer {if let Some(r)=RUNTIME.get().filter(|r|r.rules){
+  super::solo_gadgets::apply_speed(r,game);
   if let Err(e)=r.adapter.apply_coop_area(&super::io::Access{local:&r.local,adapter:r.adapter},game){r.log.warn(&format!("Cooperative area adjustment rejected: {e}"));}
  }}
 }

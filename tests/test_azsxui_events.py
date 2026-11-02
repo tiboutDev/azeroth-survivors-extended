@@ -10,6 +10,15 @@ class EventTests(unittest.TestCase):
         self.lua.execute('view={epoch="1",own="11",owner={discovery={event=1,title="AZSX supplies title",icon="Interface/Icons/INV_Crate_01",reward="AZSX reward wording",note="AZSX exact receipt",color={1,.5,0}},ritual={event=2,held=700,inside=true,maximum=2000,title="AZSX ritual title",note="AZSX progress wording"}},blessing={boss=1,title="AZSX fortune title",icon="Interface/Icons/INV_Misc_Orb_02",reward="AZSX exact fortune",note="AZSX fortune note",color={1,1,1}}};function AZSX_GetAPIVersion()return 1,0 end;function AZSX_GetState()return {available=true,session={epoch=view.epoch,recipientGUID=view.own},data={discovery=view.owner.discovery,sayge=view.owner.ritual,fortune=view.blessing},texts={supplies=view.owner.discovery,sayge=view.owner.ritual,fortune=view.blessing}}end;function tick()now=now+.2;objects.AZSXUIEventsController.scripts.OnUpdate()end')
         self.lua.execute((ROOT/'addons/AZSXUI/Theme.lua').read_text());self.lua.execute((ROOT/'addons/AZSXUI/Events.lua').read_text());self.lua.execute('tick()')
     def run_lua(self,s):self.lua.execute(s)
+    def test_engineering_badge_and_single_reward_toast_follow_local_api(self):
+        self.run_lua('''view.engineering={event=1,kind="mortar",nextTrigger=450,remaining=0,title="Goblin Mortar",description="Native projectile",reward="Goblin Mortar equipped",duration="Until the end of the run",icon="Interface/Icons/INV_Gizmo_01"}
+local original=AZSX_GetState
+function AZSX_GetState(...)local s=original(unpack(arg));s.data.engineering=view.engineering;s.texts.engineering=view.engineering;return s end
+tick();assert(objects.AZSXUIEngineeringBadge:IsShown() and objects.AZSXUIEngineeringBadge.icon.texture==view.engineering.icon)
+assert(objects.AZSXUIEngineeringRewardToast:IsShown() and objects.AZSXUIEngineeringRewardToast.reward.text==view.engineering.reward)
+now=now+6;tick();assert(not objects.AZSXUIEngineeringRewardToast:IsShown())
+tick();assert(not objects.AZSXUIEngineeringRewardToast:IsShown())
+view.engineering=nil;tick();assert(not objects.AZSXUIEngineeringBadge:IsShown())''')
     def test_sale_uses_exact_gold_and_native_coin_then_clears_for_a_buff(self):
         self.run_lua('view.owner.discovery.event=2;view.owner.discovery.gold=25;view.owner.discovery.note="Sold for 25 gold";now=now+4;tick();local t=objects.AZSXSupplyDiscoveryToast;assert(t.note.text=="Sold for 25" and t.coin:IsShown() and t.coin.texture=="Interface\\\\MoneyFrame\\\\UI-GoldIcon");view.owner.discovery.event=3;view.owner.discovery.gold=0;view.owner.discovery.note="+10% damage - 60 seconds";now=now+4;tick();assert(not t.coin:IsShown() and string.find(t.note.text,"Duration:",1,true))')
     def test_popups_use_classic_wow_backdrop_and_font(self):

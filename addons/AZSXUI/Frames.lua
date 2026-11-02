@@ -244,6 +244,7 @@ local function updateObjectives(active,state)
  end
  if table.getn(guardianLines)>0 then table.insert(goals,table.concat(guardianLines,"; "));table.insert(titles,"Guardians");table.insert(details,table.concat(guardianDisplay,"\n\n  - "))end
  if state and state.available and state.data and state.data.sayge then table.insert(goals,"Complete Sayge's Trial");table.insert(titles,"Sayge's Trial");table.insert(details,"Complete the ritual")end
+ if state and state.available and state.data and state.data.soloEvent and state.texts and state.texts.soloEvent then local e=state.texts.soloEvent;table.insert(goals,e.note);table.insert(titles,e.title);table.insert(details,e.note)end
  if table.getn(goals)==0 then table.insert(goals,"No active objectives");table.insert(titles,"No active objectives");table.insert(details,"")end
  if not objectives then
   objectives=CreateFrame("Frame","AZSXUIObjectives",UIParent);objectives:SetWidth(216)

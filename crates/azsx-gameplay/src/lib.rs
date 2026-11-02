@@ -204,6 +204,7 @@ pub mod world_events;
 pub mod healing_text;
 
 pub mod crystals;
+pub mod solo_events;
 
 pub mod area;
 

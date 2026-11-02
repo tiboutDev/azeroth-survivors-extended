@@ -1027,7 +1027,8 @@ static EFFECT_HIT:AtomicUsize=AtomicUsize::new(0);
 unsafe extern "system" fn effect_hit(game:u64,enemy:u64,effect:u64,damage:f32,spell:u32){
  let original:unsafe extern "system" fn(u64,u64,u64,f32,u32)=std::mem::transmute(EFFECT_HIT.load(Ordering::Acquire));
  if scale_native_hit_heal(original,game,enemy,effect,damage,spell){return}
- original(game,enemy,effect,damage,spell)
+ original(game,enemy,effect,damage,spell);
+ if spell==13237 { if let Some(r)=RUNTIME.get().filter(|r|r.rules){super::solo_gadgets::impact(r,game,enemy,effect,spell);} }
 }
 
 #[cfg(test)]mod effect_abi_tests {

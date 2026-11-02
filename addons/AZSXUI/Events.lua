@@ -324,16 +324,18 @@ end
 local ritualFrame
 local function refreshRitual()
     local own=supplyOwner();local r=own and own.ritual
+    local escort=own and own.soloEvent
+    if escort and escort.stage==1 and escort.inside then r=escort end
     if not r or not r.inside then if ritualFrame then ritualFrame:Hide();ritualFrame.rendered=r and r.held or 0 end;return end
     if not ritualFrame then
         local f=channelFrame("AZSXSaygeTrialProgress")
         f.bar:SetStatusBarColor(1,.7,0);f.bar:SetMinMaxValues(0,r.maximum);f.rendered=r.held
         ritualFrame=f
     end
-    local identity=model.epoch..":"..model.own..":"..r.event
+    local identity=model.epoch..":"..model.own..":"..tostring(r.kind or "sayge")..":"..r.event
     if ritualFrame.identity~=identity then ritualFrame.identity=identity;ritualFrame.rendered=r.held end
     if r.allInside==false then ritualFrame.rendered=r.held end
-    ritualFrame.target=r.held;ritualFrame.title:SetText(r.title)
+    ritualFrame.bar:SetMinMaxValues(0,r.maximum);ritualFrame.target=r.held;ritualFrame.title:SetText(r.title)
     ritualFrame.time:SetText(string.format("%.1f s",math.max(0,r.maximum-r.held)/100))
     ritualFrame.note:SetText(r.allInside==false and "Waiting for all players"or"")
     ritualFrame:Show()
@@ -386,7 +388,8 @@ function AZSXEventVisualReadout()
     return blessingToast and blessingToast:IsShown()or false,blessingToast and blessingToast:GetAlpha()or 0,supplyToast and supplyToast:IsShown()or false,supplyToast and supplyToast:GetAlpha()or 0
 end
 
-local defaults={supplies={x=0,y=0},fortune={x=0,y=0},crystals={x=0,y=0},sayge={x=0,y=0},revive={x=0,y=0},loot={x=0,y=0},marks={x=0,y=0}}
+local engineeringBadge,engineeringToast,engineeringScope,engineeringSeen,engineeringUntil=nil,nil,nil,nil,0
+local defaults={engineering={x=0,y=0},supplies={x=0,y=0},fortune={x=0,y=0},crystals={x=0,y=0},sayge={x=0,y=0},revive={x=0,y=0},loot={x=0,y=0},marks={x=0,y=0}}
 local anchor=CreateFrame("Frame","AZSXUIEventAnchor",UIParent)
 anchor:SetWidth(1);anchor:SetHeight(1);anchor:EnableMouse(false)
 local function layoutSettings()
@@ -424,7 +427,7 @@ local function layout()
     local signature=p.x..":"..top
     if anchor.azsxPosition~=signature then anchor:ClearAllPoints();anchor:SetPoint("TOP",UIParent,"TOP",p.x,top);anchor.azsxPosition=signature end
     local offset=0
-    for _,entry in ipairs({{reviveFrame,"revive",54},{ritualFrame,"sayge",54},{supplyToast,"supplies",88},{blessingToast,"fortune",88},{crystalToast,"crystals",88},{nativeToast,nativeCurrent and nativeCurrent.kind or "loot",88}})do
+    for _,entry in ipairs({{engineeringToast,"engineering",88},{reviveFrame,"revive",54},{ritualFrame,"sayge",54},{supplyToast,"supplies",88},{blessingToast,"fortune",88},{crystalToast,"crystals",88},{nativeToast,nativeCurrent and nativeCurrent.kind or "loot",88}})do
         local frame,kind,height=entry[1],entry[2],entry[3];local pref=preference(kind)
         if frame then
             if frame.azsxCompactToast then
@@ -446,6 +449,29 @@ local function layout()
         end
     end
 end
+local function refreshEngineering()
+    local e=model and model.engineering
+    local scope=model and(model.epoch..":"..model.own)or nil
+    if scope~=engineeringScope then engineeringScope=scope;engineeringSeen=e and e.event or nil;engineeringUntil=0 end
+    if not e then if engineeringBadge then engineeringBadge:Hide()end;if engineeringToast then engineeringToast:Hide()end;return end
+    if not engineeringBadge then
+        local f=CreateFrame("Button","AZSXUIEngineeringBadge",UIParent);f:SetWidth(28);f:SetHeight(28)
+        f.icon=f:CreateTexture(nil,"ARTWORK");f.icon:SetAllPoints(f)
+        f.border=f:CreateTexture(nil,"OVERLAY");f.border:SetTexture("Interface\\Buttons\\UI-Quickslot2");f.border:SetWidth(44);f.border:SetHeight(44);f.border:SetPoint("CENTER",f,"CENTER",0,0)
+        f:SetScript("OnEnter",function()local d=model and model.engineering;if not d then return end;GameTooltip:SetOwner(f,"ANCHOR_TOP");GameTooltip:AddLine(d.title,1,.82,0);GameTooltip:AddLine(d.description,1,1,1,1);GameTooltip:AddLine(string.format("Next activation: %.0f s",d.nextTrigger/100),.7,.7,.7);if d.remaining>0 then GameTooltip:AddLine(string.format("Active: %.1f s",d.remaining/100),.2,1,.2)end;GameTooltip:AddLine(d.duration,.7,.7,.7);GameTooltip:Show()end)
+        f:SetScript("OnLeave",function()GameTooltip:Hide()end);engineeringBadge=f
+    end
+    engineeringBadge:ClearAllPoints()
+    local vitals=getglobal and getglobal("AZSXUIHudVitals")
+    if vitals and vitals:IsShown()then engineeringBadge:SetPoint("LEFT",vitals,"RIGHT",124,0)else engineeringBadge:SetPoint("BOTTOM",UIParent,"BOTTOM",210,170)end
+    engineeringBadge.icon:SetTexture(e.icon);engineeringBadge:Show()
+    if engineeringSeen~=e.event then
+        engineeringSeen=e.event;engineeringUntil=GetTime()+5
+        if not engineeringToast then engineeringToast=discoveryToast("AZSXUIEngineeringRewardToast",e.title,e.icon)end
+        engineeringToast.title:SetText("Engineering gadget");engineeringToast.reward:SetText(e.reward);engineeringToast.note:SetText(e.duration);engineeringToast.icon:SetTexture(e.icon)
+    end
+    if engineeringToast then if GetTime()<engineeringUntil then engineeringToast:Show()else engineeringToast:Hide()end end
+end
 local function update()
     local snapshot=type(AZSX_GetAPIVersion)=="function"and AZSX_GetAPIVersion()==1 and type(AZSX_GetState)=="function"and AZSX_GetState(1)or nil
     model=nil
@@ -456,9 +482,9 @@ local function update()
             local value={};for key,item in pairs(raw)do value[key]=item end;for key,item in pairs(text)do value[key]=item end
             return value
         end
-        model={epoch=snapshot.session.epoch,own=snapshot.session.recipientGUID,owner={discovery=present(data.discovery,texts.supplies),ritual=present(data.sayge,texts.sayge)},blessing=present(data.fortune,texts.fortune),crystals=data.crystals,crystalTexts=texts.crystals and texts.crystals.pickups}
+        model={epoch=snapshot.session.epoch,own=snapshot.session.recipientGUID,owner={discovery=present(data.discovery,texts.supplies),ritual=present(data.sayge,texts.sayge),soloEvent=present(data.soloEvent,texts.soloEvent)},engineering=present(data.engineering,texts.engineering),blessing=present(data.fortune,texts.fortune),crystals=data.crystals,crystalTexts=texts.crystals and texts.crystals.pickups}
     end
-    refreshSupplyToast();refreshBlessingToast();refreshRitual();refreshCrystalToast();refreshRevive();refreshNativeRewards()
+    refreshEngineering();refreshSupplyToast();refreshBlessingToast();refreshRitual();refreshCrystalToast();refreshRevive();refreshNativeRewards()
     if reviveFrame and reviveFrame:IsShown()and ritualFrame then ritualFrame:Hide()end
     layout()
     updateRitualBar(GetTime())

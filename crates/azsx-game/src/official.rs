@@ -1816,6 +1816,16 @@ impl SelectedAdapter {
     pub fn ritual_scene_entries(self) -> Vec<Entry> {
         self.native.ritual_scene_entries()
     }
+    pub fn escort_motion_entries(self) -> Vec<Entry> { self.native.solo_motion_entries() }
+    pub unsafe fn escort_route(self, m: &dyn Mem, base: u64, game: u64, start: [f32; 3], draw: u32) -> Result<Option<Vec<[f32; 3]>>> {
+        self.native.escort_route(m, base, game, start, draw)
+    }
+    pub unsafe fn escort_chicken(self, m: &dyn MutableMemory, base: u64, game: u64, position: [f32; 3]) -> Result<EventObject> {
+        self.native.event_chicken(m, base, game, position)
+    }
+    pub unsafe fn escort_move(self, m: &dyn MutableMemory, base: u64, game: u64, object: EventObject, to: [f32; 3], millis: u32) -> Result<EventObject> {
+        self.native.escort_move_chicken(m, base, game, object, to, millis)
+    }
     pub unsafe fn event_sayge(
         self,
         m: &dyn MutableMemory,
@@ -2023,3 +2033,21 @@ impl SelectedAdapter {
 }
 
 impl SelectedAdapter { pub fn spell_modifiers_entry(self)->Entry { self.native.spell_modifiers_entry() } }
+
+pub use crate::official_native::SoloMortarLaunch;
+impl SelectedAdapter {
+    pub fn solo_engineering_entries(self) -> Vec<Entry> { self.native.solo_engineering_entries() }
+    pub fn solo_visual_entries(self) -> Vec<Entry> { self.native.solo_visual_entries() }
+    pub fn solo_gadget_observation(self,m:&dyn Mem,game:u64,owner:u64)->Result<(f32,f32,f32,f32)>{self.native.solo_gadget_observation(m,game,owner)}
+    pub fn solo_sapper_has_target(self,m:&dyn Mem,game:u64,owner:u64)->Result<bool>{self.native.solo_sapper_has_target(m,game,owner)}
+    pub unsafe fn solo_gadget_net(self,m:&dyn Mem,base:u64,game:u64,owner:u64)->Result<usize>{self.native.solo_gadget_net(m,base,game,owner)}
+    pub unsafe fn solo_gadget_belt(self,m:&dyn Mem,base:u64,game:u64,owner:u64)->Result<(f32,f32)>{self.native.solo_gadget_belt(m,base,game,owner)}
+    pub fn solo_gadget_speed(self,m:&dyn MutableMemory,game:u64,owner:u64,value:f32)->Result<()>{self.native.solo_gadget_speed(m,game,owner,value)}
+    pub fn solo_sapper_backlash(self,io:&dyn SupportCalls,game:u64,owner:u64)->Result<Option<(f32,f32)>>{self.native.solo_sapper_backlash(io,game,owner)}
+    pub unsafe fn solo_engineering_burst(self,m:&dyn Mem,base:u64,game:u64,owner:u64,point:[f32;3],sapper:bool)->Result<usize>{self.native.solo_engineering_burst(m,base,game,owner,point,sapper)}
+    pub fn solo_new_mortar_token(self,serial:u32)->Option<u64>{self.native.solo_new_mortar_token(serial)}
+    pub fn solo_mortar_token(self,m:&dyn Mem,spell:u32,effect:u64)->Result<Option<u64>>{self.native.solo_mortar_token(m,spell,effect)}
+    pub unsafe fn solo_launch_mortar(self,m:&dyn Mem,base:u64,game:u64,owner:u64,draw:u32,token:u64)->Result<Option<SoloMortarLaunch>>{self.native.solo_launch_mortar(m,base,game,owner,draw,token)}
+    pub fn solo_player_scale_base(self)->f32{self.native.solo_player_scale_base()}
+    pub unsafe fn solo_player_scale(self,m:&dyn Mem,base:u64,game:u64,owner:u64,scale:f32)->Result<()>{self.native.solo_player_scale(m,base,game,owner,scale)}
+}

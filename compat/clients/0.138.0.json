@@ -1435,6 +1435,108 @@
       "name": "LOBBY_NAME",
       "type": "u64",
       "value": "0xd0"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_SCENE_SPLINE",
+      "type": "(u64, &[u8])",
+      "value": "(0x5b94950, &[0x55, 0x41, 0x56, 0x56, 0x57, 0x53, 0x48, 0x81, 0xec, 0x80, 0x0, 0x0, 0x0])"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_SCENE_SEQUENCE",
+      "type": "u64",
+      "value": "0xec0"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_CHICKEN_ENTRY",
+      "type": "u32",
+      "value": "0xa50030"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_ENEMY_ELITE",
+      "type": "usize",
+      "value": "0x200"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_ENEMY_ENCOUNTER",
+      "type": "usize",
+      "value": "0x18"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_ENEMY_ROOT_UNTIL",
+      "type": "usize",
+      "value": "0x1e0"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_NATIVE_SHIELD",
+      "type": "u64",
+      "value": "0x56c"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_MORTAR_SPELL",
+      "type": "u32",
+      "value": "13237"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_SAPPER_SPELL",
+      "type": "u32",
+      "value": "13241"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_MORTAR_TOKEN",
+      "type": "u64",
+      "value": "0x415a535800000000"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_PROJECTILE_VECTOR",
+      "type": "u64",
+      "value": "0x6b8"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_PROJECTILE_STRIDE",
+      "type": "usize",
+      "value": "144"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_HURT_REDUCTION",
+      "type": "u64",
+      "value": "0x5e8"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_PLAYER_SCALE_BASE",
+      "type": "f32",
+      "value": "1.0"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_PROJECTILE_CREATE",
+      "type": "(u64, &[u8])",
+      "value": "(0x5d35c50, &[0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48, 0x81, 0xec, 0x28, 0x1, 0x0, 0x0])"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_PROJECTILE_DELAY_READ",
+      "type": "(u64, &[u8])",
+      "value": "(0x5d35c93, &[0xf3, 0x0f, 0x10, 0xbd, 0x20, 0x1, 0x0, 0x0])"
+    },
+    {
+      "visibility": "pub",
+      "name": "SOLO_PROJECTILE_ORIGIN_READ",
+      "type": "(u64, &[u8])",
+      "value": "(0x5d361e2, &[0x48, 0x8b, 0x95, 0x28, 0x1, 0x0, 0x0])"
     }
   ]
 }

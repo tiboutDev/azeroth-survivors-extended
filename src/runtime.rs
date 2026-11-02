@@ -27,6 +27,8 @@ mod run_stats;
 mod enchantments;
 mod gems;
 mod crystals;
+mod solo_gadgets;
+mod solo_escort;
 mod menu_ui;
 #[cfg(feature="test-hooks")]
 mod presentation;

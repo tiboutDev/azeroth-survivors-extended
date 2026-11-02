@@ -135,7 +135,7 @@ uv run --with fonttools python tools/build/azsxui_font.py --source <source-font.
 
 ## AZSX event widgets
 
-`Events.lua` owns Supply/Fortune/crystal pickup panels and Sayge's progress bar.
+`Events.lua` owns Supply/Fortune/crystal pickup panels and Sayge's progress bar. It also observes the solo Mechanical Chicken escort and shows the equipped engineering gadget, using the native-style AZSX API 1.11. The addon does not control movement or rewards.
 `AZSX_GetState(1)` supplies structured values in `data` and every semantic title,
 reward, note and color in `texts`, all from AZSX. AZSXUI does not calculate
 rewards, timers or gameplay. Goblin appearance/defeat/escape announcements keep

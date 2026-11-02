@@ -1,4 +1,4 @@
-# AZSX addon contract 1.9
+# AZSX addon contract 1.11
 
 The DLL appends the provider to the selected native WorldStateFrame initialization script.
 Neither `AddOns/ASX` nor `AddOns/AZSX` is installed or required. The retained
@@ -7,7 +7,7 @@ Direct native launches do not expose the mod contract. AZSXUI is optional.
 
 The former `ASX_*` globals and `AZS_RUN.asx` transport key are renamed to
 `AZSX_*` and `AZS_RUN.azsx`. Third-party consumers must update their names;
-`AZS_*` native globals remain unchanged. Contract data shapes stay at 1.9.
+`AZS_*` native globals remain unchanged. Existing contract data shapes remain compatible.
 
 AZSX follows Azeroth Survivors' addon conventions: global tables, matching
 `*_UPDATED` timestamps, `AZSX_Get...` functions and registered Lua handlers.
@@ -22,7 +22,7 @@ functions may be absent when AZSX is disabled or before its Lua has loaded; an
 addon must tolerate that and retry after world entry or with bounded polling.
 AZSXUI is a consumer, not the provider: other addons do not need AZSXUI installed.
 
-`AZSX_GetAPIVersion()` returns `major, minor` (currently `1, 10`). Major 1 is a
+`AZSX_GetAPIVersion()` returns `major, minor` (currently `1, 11`). Major 1 is a
 stable contract: incompatible field meanings/types/removals require a new major;
 minor versions may add optional fields. Ignore unknown fields. Tests cover the
 contract; this source change does not update an older installed DLL.
@@ -37,7 +37,7 @@ modifies AZSX or snapshots obtained by another consumer.
 
 | Field | Meaning |
 |---|---|
-| `api.major`, `api.minor` | Contract version, currently 1.10 |
+| `api.major`, `api.minor` | Contract version, currently 1.11 |
 | `available` | Boolean; check before accessing run fields |
 | `reason` | When unavailable: `outside_run`, `stale`, or `missing_or_invalid_payload` |
 | `revision` | Monotonic content revision within this Lua environment; not persisted across client reloads |
@@ -306,3 +306,24 @@ this releases the reservation and restores the bridge's native-row fallback.
 Only the owning name can release it. The fallback remains visible while AZSXUI's
 HUD is off. Addons that render a separate icon should coordinate ownership to
 avoid duplicate informational displays. Availability checks remain mandatory.
+
+## API 1.11: solo escort and engineering
+
+`data.soloEvent` appears for the local recipient during a solo Mechanical Chicken
+escort. It has `event` (positive run-local identity), `kind` (`chicken_escort`),
+`stage` (0 waiting, 1 preparing, 2 engaged, 3 succeeded, 4 ended), `held` and
+`maximum` (centiseconds), `inside` (boolean), and `progress` / `total` (route
+segments, currently 120 total). `texts.soloEvent` supplies a title, note, native
+icon, reward and duration. Neither record exposes coordinates or a gameplay
+command; the native scene remains authoritative.
+
+`data.engineering` appears after extraction. Its `event` is a recipient-scoped
+reward revision, `kind` is one of `net`, `rocket_boots`, `sapper`, `mortar`,
+`shrink_ray`, `protection_belt`, and `nextTrigger` / `remaining` are bounded
+centiseconds. `texts.engineering` supplies the native icon, title, description,
+reward and duration. The gadget lasts only for this run and has no rank.
+
+These records are local, detached copies, omitted in coop and unavailable phases,
+and do not require AZSXUI. Combine an event/revision with the session identity
+when deduplicating notifications. API minor 11 adds optional fields only; existing
+major-1 consumers may ignore them.

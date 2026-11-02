@@ -39,7 +39,7 @@ impl Adapter {
         opcode: u16,
         body: &[u8],
     ) -> Result<()> {
-        if body.len() > 4096 || !matches!(opcode, 0x61 | 0xaa | 0x96 | 0x5f | 0xa9) {
+        if body.len() > 4096 || !matches!(opcode, 0x61 | 0xaa | 0x96 | 0x5f | 0xa9 | 0xdd) {
             return Err("Invalid event presentation packet".into());
         }
         let party = self
@@ -130,6 +130,7 @@ impl Adapter {
             5 => (0xa50006, 2971, 0.75, "Blue Crystal"),
             6 => (0xa50007, 2972, 0.75, "Green Crystal"),
             7 => (0xa50008, 2974, 0.75, "Yellow Crystal"),
+            10 => (0xa50033, 2047, 1.0, "Goblin Teleporter"),
             _ => return Err("Invalid owned event visual".into()),
         };
         type Info = unsafe extern "system" fn(*mut u64, u32, u32, u32, *const u8, usize);

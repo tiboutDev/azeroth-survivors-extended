@@ -300,7 +300,7 @@
     },
     {
       "id": "AZSX-28",
-      "contract": "Optional Sayge\u2019s Trial: native encounter trigger only between bosses, native ground rune, decorative Classic Sayge and candles, map-wide placement with flatness preference and walkable fallback/AZSXUI minimap pin, persistent unfinished scene with stable identity and encounter-upgraded reward, cumulative presence that suspends until every active participant returns, explicit collective-wait presentation, bounded randomized power, automatic Fortune replacement and AZSXUI progress UI with configurable position, scale, opacity and visibility, shown only during native circle presence. Host-owned cooperative scene and shared progress require every active participant inside; personal Fortunes replace cooperative boss grants, with strongest XP/gold contributions preserved.",
+      "contract": "Optional Sayge’s Trial: native encounter trigger only between bosses, native ground rune, decorative Classic Sayge and candles, map-wide placement with flatness preference and walkable fallback/AZSXUI minimap pin, persistent unfinished scene with stable identity and encounter-upgraded reward, cumulative presence that suspends until every active participant returns, explicit collective-wait presentation, bounded randomized power, automatic Fortune replacement and AZSXUI progress UI with configurable position, scale, opacity and visibility, shown only during native circle presence. Host-owned cooperative scene and shared progress require every active participant inside; personal Fortunes replace cooperative boss grants, with strongest XP/gold contributions preserved.",
       "mode": "Solo / Coop",
       "reference": "[Contract](../features/FEATURE-RULES.md)",
       "native_domains": [
@@ -318,6 +318,19 @@
       "mode": "Coop",
       "reference": "[Contract](../features/FEATURE-RULES.md)",
       "native_domains": [
+        "stats",
+        "ui"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "AZSX-30",
+      "contract": "One optional solo Mechanical Chicken escort per run. A walkable 180-yard native spline leads to a native Goblin Teleporter. The invulnerable chicken advances only while the living player stays within six yards; leaving suspends cumulative repair/progress without reset. Expiry or death grants nothing. Successful extraction grants one of six single-tier engineering gadgets for that run, with bounded native effects, cooldowns and a Sapper backlash that cannot cross 75% maximum health. Native model and packet contacts are exact-build guarded; AZSXUI is an optional observer.",
+      "mode": "Solo",
+      "reference": "[Contract](../features/SOLO-ESCORT.md)",
+      "native_domains": [
+        "events",
+        "combat",
         "stats",
         "ui"
       ],

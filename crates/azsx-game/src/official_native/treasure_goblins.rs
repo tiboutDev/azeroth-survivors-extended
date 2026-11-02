@@ -334,7 +334,7 @@ impl Adapter {
         }
         Ok((map as usize, GoblinDefinition::from_native(data)))
     }
-    fn goblin_array(self, m: &dyn Mem, game: u64) -> Result<(u64, usize)> {
+    pub(super) fn goblin_array(self, m: &dyn Mem, game: u64) -> Result<(u64, usize)> {
         let cap = q(m, game + self.game_field(0x570))?;
         let p = q(m, game + self.game_field(0x578))?;
         let n = q(m, game + self.game_field(0x580))?;

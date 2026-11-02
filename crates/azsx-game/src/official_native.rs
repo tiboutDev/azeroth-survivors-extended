@@ -945,6 +945,8 @@ mod stat_inputs;
 pub use stat_inputs::StatInputLoan;
 
 mod scene_units;
+mod escort;
+pub use escort::SoloMortarLaunch;
 
 mod event_placement;
 pub use event_placement::EventMinimap;

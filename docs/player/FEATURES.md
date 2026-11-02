@@ -436,3 +436,22 @@ present while dead or paused. It disappears in solo and outside the run. AZSXUI
 places it in its HUD; the AZSX presentation bridge also displays it beside native
 buffs when AZSXUI is absent or its HUD is disabled. The AZSX addon API exposes its
 values and texts for other addons. No additional assets are required.
+
+## Solo engineering escort
+
+**Status: Playtesting**
+
+In solo runs, a damaged Mechanical Chicken can appear somewhere on the map. Stay
+within six yards while it travels to a Goblin Teleporter. If you leave, it waits
+and your progress resumes when you return. A completed escort gives one
+engineering gadget for the rest of the run. There is at most one escort in a run;
+an unsuccessful or expired escort gives no reward. The chicken cannot be killed.
+
+The six possible gadgets have no ranks: Net, Rocket Boots, Sapper Charge,
+Mortar, Shrink Ray and Protection Belt. They trigger automatically under their
+own conditions. Sapper's backlash never lowers you below 75% of maximum health.
+The optional AZSXUI addon shows the escort objective and your equipped gadget;
+the game rules do not require the addon.
+
+See [the engineering details](../features/SOLO-ESCORT.md). Check the release
+notes before expecting this source feature in an installed build.

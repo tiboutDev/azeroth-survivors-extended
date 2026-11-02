@@ -30,6 +30,8 @@ Complete Sayge’s Trial between bosses to earn a personal Luck, Experience or G
 📦 **Explore for rewards** — *Balance in progress*\
 Find Lost Supplies for temporary buffs or gold, and chase Venture Co. Treasure Goblins for personal rewards. First-goblin bad-luck protection applies after the first boss.
 
+The current source also includes a solo [Mechanical Chicken escort](docs/features/SOLO-ESCORT.md) with one run-local engineering gadget. Check release notes before expecting it in an installed build.
+
 [Explore the build features →](docs/player/FEATURES.md#build-choices)
 
 ## Go further together

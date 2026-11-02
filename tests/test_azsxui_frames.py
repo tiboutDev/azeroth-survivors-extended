@@ -78,6 +78,13 @@ AZSXUIFramesController.scripts.OnUpdate();assert(not AZSXUIEncounters:IsShown() 
 """)
     def test_encounter_overflow_preserves_complete_native_display(self):
         self.run_lua('hudPrefs.bosses=true;function AZS_GetBosses()local out={};for i=1,9 do out[i]={id=i,name="Boss",hp=1,hpm=2}end;return out end;guardians={};arg1=.2;AZSXUIFramesController.scripts.OnUpdate();assert(hudPrefs.bosses and not AZSXUIEncounters)')
+    def test_solo_escort_objective_uses_provider_text(self):
+        self.run_lua('''view.data.soloEvent={event=2,kind="chicken_escort",stage=2,progress=40,total=120}
+view.texts.soloEvent={title="Mechanical Chicken Escort",note="Stay close to the chicken"}
+arg1=.1;AZSXUIFramesController.scripts.OnUpdate()
+local r=AZSXUI_FramesReadout();assert(r.objectives[table.getn(r.objectives)]=="Stay close to the chicken")
+view.data.soloEvent=nil;arg1=.1;AZSXUIFramesController.scripts.OnUpdate()
+local r=AZSXUI_FramesReadout();for _,v in ipairs(r.objectives)do assert(v~="Stay close to the chicken")end''')
     def test_objectives_only_include_living_guardians_and_available_ritual(self):
         self.run_lua('assert(AZSXUIObjectives:IsShown() and AZSXUIObjectives:GetHeight()==164);guardians={};view.data.sayge=nil;arg1=.1;AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUIObjectives:IsShown() and AZSXUI_FramesReadout().objectives[1]=="No active objectives")')
     def test_objective_tracker_follows_minimap_without_moving_allies_across_screen(self):

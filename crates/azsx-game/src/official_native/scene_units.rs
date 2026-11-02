@@ -70,12 +70,24 @@ impl Adapter {
         }
         Ok(n)
     }
-    pub unsafe fn event_sayge(
+    pub unsafe fn event_sayge(self, m: &dyn MutableMemory, base: u64, game: u64, position: [f32; 3]) -> Result<EventObject> {
+        self.event_scene_unit(m, base, game, position, SAYGE_ENTRY, 491, 1., "Sayge", "Darkmoon Faire")
+    }
+    pub unsafe fn event_chicken(self, m: &dyn MutableMemory, base: u64, game: u64, position: [f32; 3]) -> Result<EventObject> {
+        if self.solo_run(m, game)?.is_none() { return Err("Chicken escort is solo only".into()); }
+        self.event_scene_unit(m, base, game, position, 0xa50030, 6909, 1.5, "Mechanical Chicken", "Escort to extraction")
+    }
+    unsafe fn event_scene_unit(
         self,
         m: &dyn MutableMemory,
         base: u64,
         game: u64,
         position: [f32; 3],
+        entry: u32,
+        display: u32,
+        scale: f32,
+        name: &str,
+        title: &str,
     ) -> Result<EventObject> {
         if self.event_party(m, game)?.is_none() || position.iter().any(|v| !v.is_finite()) {
             return Err("Visual unit requires a valid authoritative run".into());
@@ -91,7 +103,7 @@ impl Adapter {
         .ok_or("Scene GUID counter exhausted")?;
         // Reserve before any callback-capable serialization or delivery.
         m.write(counter, &next.to_le_bytes())?;
-        let guid = 0xf130000000000000 | (u64::from(SAYGE_ENTRY) << 24) | u64::from(next);
+        let guid = 0xf130000000000000 | (u64::from(entry) << 24) | u64::from(next);
         type Query = unsafe extern "system" fn(
             *mut u64,
             u32,
@@ -105,18 +117,18 @@ impl Adapter {
         );
         let query: Query = std::mem::transmute((base + v::GOBLIN_QUERY_BUILD.0) as usize);
         let mut packet = [0u64; 4];
-        let name = b"Sayge";
-        let title = b"Darkmoon Faire";
+        let name = name.as_bytes();
+        let title = title.as_bytes();
         query(
             packet.as_mut_ptr(),
-            SAYGE_ENTRY,
+            entry,
             name.as_ptr(),
             name.len(),
             title.as_ptr(),
             title.len(),
             7,
             0,
-            491,
+            display,
         );
         self.send_owned_scene_packet(m, base, game, 0x61, packet)?;
         let set: SetField = std::mem::transmute((base + v::EVENT_UNIT_FIELDS_SET.0) as usize);
@@ -125,7 +137,8 @@ impl Adapter {
         let create: Create = std::mem::transmute((base + v::EVENT_UNIT_CREATE.0) as usize);
         let pack: Pack = std::mem::transmute((base + v::EVENT_UPDATE_PACKET.0) as usize);
         let mut fields = [0u64; 3];
-        for (index, value) in sayge_fields(guid) {
+        for (index, mut value) in sayge_fields(guid) {
+            match index { 3 => value = entry, 4 => value = scale.to_bits(), 131 | 132 => value = display, _ => {} }
             set(fields.as_mut_ptr(), index, value);
         }
         let mut block = [0, 1, 0, 0];
@@ -141,7 +154,7 @@ impl Adapter {
         }
         Ok(object)
     }
-    unsafe fn send_owned_scene_packet(
+    pub(super) unsafe fn send_owned_scene_packet(
         self,
         m: &dyn MutableMemory,
         base: u64,

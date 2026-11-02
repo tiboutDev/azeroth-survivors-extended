@@ -9,6 +9,7 @@ mod tests;
 
 pub(super) fn end(runtime: &dyn Services) {
     super::crystals::reset();
+    super::solo_escort::reset();
     super::world_events::coop::reset();
     super::rituals::reset();
     super::supplies::reset();
