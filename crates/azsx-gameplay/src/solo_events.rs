@@ -1,4 +1,4 @@
-//! Portable solo escort and single-tier engineering policy. Native IO is adapter-owned.
+//! Portable escort and single-tier engineering policy. Native IO is adapter-owned.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kind {
     BanishedDemon,
@@ -29,6 +29,20 @@ pub fn escort_segments(radius: f32) -> Option<usize> {
         return None;
     }
     Some(((radius * 1.35 / ESCORT_SEGMENT_LENGTH).floor() as usize).clamp(8, ESCORT_SEGMENTS))
+}
+/// Every active participant must be alive, playing and within six yards.
+pub fn escort_party_present(
+    members: impl IntoIterator<Item = (bool, [f32; 2])>, focus: [f32; 2],
+) -> bool {
+    let mut count = 0;
+    for (ready, position) in members {
+        count += 1;
+        if !ready || position.iter().any(|v| !v.is_finite())
+            || (position[0] - focus[0]).hypot(position[1] - focus[1]) > 6. {
+            return false;
+        }
+    }
+    count > 0
 }
 /// Small scenery points behind the starting chicken, clear of its forward route.
 pub fn escort_crash_sites(route: &[[f32; 3]]) -> Option<[[f32; 2]; 4]> {
@@ -112,16 +126,13 @@ pub struct Proofs {
 }
 impl Proofs {
     pub fn permits(self, kind: Kind, solo: bool) -> bool {
-        solo && self.assets
-            && self.cleanup
-            && match kind {
-                Kind::BanishedDemon => self.hostile_combat && self.banish && self.attribution,
-                Kind::ChickenEscort => self.navigation && self.gadget && self.attribution,
-                Kind::TurretConstruction => self.ally_combat && self.attribution,
-                Kind::HeroAssistance => {
-                    self.ally_combat && self.navigation && self.attribution && self.hero_abilities
-                }
-            }
+        self.assets && self.cleanup && match kind {
+            Kind::ChickenEscort => self.navigation && self.gadget && self.attribution,
+            Kind::BanishedDemon => solo && self.hostile_combat && self.banish && self.attribution,
+            Kind::TurretConstruction => solo && self.ally_combat && self.attribution,
+            Kind::HeroAssistance => solo && self.ally_combat && self.navigation
+                && self.attribution && self.hero_abilities,
+        }
     }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -212,7 +223,8 @@ impl Scene {
         self.held
     }
     pub fn observe(&mut self, o: Observation) -> Stage {
-        if o.id != self.id || !o.solo || !o.now.is_finite() || o.now < self.last {
+        if o.id != self.id || (!o.solo && self.kind != Kind::ChickenEscort)
+            || !o.now.is_finite() || o.now < self.last {
             self.retire();
             return self.stage;
         }
@@ -519,7 +531,7 @@ mod tests {
     fn no_unproved_activation_or_cooperative_fallback() {
         for k in Kind::ALL {
             assert!(Scene::new(id(), k, 0., Proofs::default(), true).is_none());
-            assert!(Scene::new(id(), k, 0., proofs(), false).is_none());
+            assert_eq!(Scene::new(id(), k, 0., proofs(), false).is_some(), k == Kind::ChickenEscort);
             let mut p = proofs();
             p.cleanup = false;
             assert!(!p.permits(k, true));
@@ -622,6 +634,25 @@ mod tests {
             );
             assert_eq!(s.take_reward(), None);
         }
+    }
+    #[test]
+    fn cooperative_escort_waits_for_every_active_participant() {
+        let focus = [10., 20.];
+        assert!(!escort_party_present([], focus));
+        assert!(escort_party_present([(true, [10., 20.]), (true, [15., 20.])], focus));
+        assert!(!escort_party_present([(true, [10., 20.]), (true, [16.1, 20.])], focus));
+        assert!(!escort_party_present([(true, [10., 20.]), (false, [10., 20.])], focus));
+        assert!(!escort_party_present([(true, [f32::NAN, 20.])], focus));
+        let mut scene = Scene::new(id(), Kind::ChickenEscort, 0., proofs(), false).unwrap();
+        assert_eq!(scene.observe(Observation { solo:false, present:true, ..obs(0.) }), Stage::Preparing);
+        scene.observe(Observation { solo:false, present:true, ..obs(1.) });
+        let held = scene.held();
+        scene.observe(Observation { solo:false, present:false, ..obs(1.5) });
+        scene.observe(Observation { solo:false, present:false, ..obs(2.) });
+        assert_eq!(scene.held(), held);
+        scene.observe(Observation { solo:false, present:true, ..obs(2.5) });
+        scene.observe(Observation { solo:false, present:true, ..obs(3.) });
+        assert!(scene.held() > held);
     }
     #[test]
     fn escort_length_scales_with_native_map_radius() {

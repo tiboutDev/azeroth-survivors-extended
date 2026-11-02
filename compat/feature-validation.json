@@ -248,7 +248,7 @@
         "diagnostics",
         "official-party-ui"
       ],
-      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+      "scope_note": "Portable site probes cover large-footprint interior navigation cells and reject blocked tree cells between center and rim. Native visual foliage without navigation flags remains an artifact-scoped visual limit."
     },
     "AZSX-29": {
       "profiles": [
@@ -266,12 +266,12 @@
         "official-party-ui",
         "azsxui"
       ],
-      "scope_note": "Portable route/identity/reward policy, exact 0.138.0 native byte/field review, Lua 5.1 schema and Windows ABI checks. Scene movement, model rendering, gadget effects and extraction reward require an artifact-scoped live solo run; portable checks alone do not establish those outcomes.",
+      "scope_note": "Portable route, group-presence, identity, reward and large-footprint interior-clearance policy; exact 0.138.0 native byte/field review; Lua 5.1 variable-route schema and Windows ABI checks. Scene movement, native participant effects and extraction rewards require artifact-scoped live solo and two-client coop trials.",
       "targeted_scenario": {
         "profile": "official",
-        "trigger": "In an isolated 0.138.0 solo run, approach one native Mechanical Chicken, stay close, leave and return, and reach its Goblin Teleporter.",
-        "expected": "At most one escort; the chicken and teleporter render from native resources; motion and progress pause outside six yards and resume without reset; extraction removes both and grants exactly one single-tier gadget. A failed or expired escort grants none.",
-        "limit": "A single run may not exercise all six random gadget kinds; native combat effects and optional AZSXUI widgets require separate focused evidence.",
+        "trigger": "In isolated 0.138.0 solo and two-client coop runs, approach one native Mechanical Chicken, test one participant leaving and returning, then reach its Goblin Teleporter.",
+        "expected": "At most one escort per run; native chicken, teleporter and scenery appear for both clients; progress pauses if any active participant is absent or downed and resumes without reset; extraction removes the scene and grants one individual gadget to each current participant exactly once. Variable route totals retain the whole AZSX UI state; start and extraction footprints reject blocked interior native navigation cells.",
+        "limit": "A bounded trial may not exercise all six random gadgets or observe a full normal post-boss route; report these separately from portable and diagnostic evidence. Purely visual tree models absent from native navigation require separate scenery evidence.",
         "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
       }
     }

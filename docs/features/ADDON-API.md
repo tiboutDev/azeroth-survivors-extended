@@ -307,13 +307,13 @@ Only the owning name can release it. The fallback remains visible while AZSXUI's
 HUD is off. Addons that render a separate icon should coordinate ownership to
 avoid duplicate informational displays. Availability checks remain mandatory.
 
-## API 1.11: solo escort and engineering
+## API 1.11: Mechanical Chicken escort and engineering
 
-`data.soloEvent` appears for the local recipient during a solo Mechanical Chicken
-escort. It has `event` (positive run-local identity), `kind` (`chicken_escort`),
+`data.soloEvent` appears for the local recipient during a solo or cooperative Mechanical Chicken
+escort. The record name is retained for API compatibility. It has `event` (positive run-local identity), `kind` (`chicken_escort`),
 `stage` (0 waiting, 1 preparing, 2 engaged, 3 succeeded, 4 ended), `held` and
 `maximum` (centiseconds), `inside` (boolean), and `progress` / `total` (route
-segments, currently 120 total). Optional finite `x` / `y` world coordinates
+segments, 8–120 according to native map radius). Optional finite `x` / `y` world coordinates
 track the live chicken while its native scene object exists; they are absent
 after cleanup or on older 1.11 payloads. `texts.soloEvent` supplies a title,
 note, native icon, reward and duration. This is read-only presentation data;
@@ -325,7 +325,7 @@ reward revision, `kind` is one of `net`, `rocket_boots`, `sapper`, `mortar`,
 centiseconds. `texts.engineering` supplies the native icon, title, description,
 reward and duration. The gadget lasts only for this run and has no rank.
 
-These records are local, detached copies, omitted in coop and unavailable phases,
+These records are local, detached copies, omitted in unavailable phases,
 and do not require AZSXUI. Combine an event/revision with the session identity
 when deduplicating notifications. API minor 12 adds optional escort coordinates only; existing major-1 consumers
 may ignore them. A consumer must hide its marker when either coordinate is absent,

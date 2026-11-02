@@ -1,4 +1,4 @@
-//! One invulnerable native Mechanical Chicken escort in solo play.
+//! One host-owned Mechanical Chicken escort per run, shared in cooperative play.
 use super::{event_services::Services, io, Runtime, RUNTIME};
 use azsx_game::official::EventObject;
 use azsx_gameplay::{Phase, solo_events::{Identity, Kind, Observation, Proofs, RunOpportunities, Scene, Stage}};
@@ -10,6 +10,7 @@ static STATE: Mutex<Option<State>> = Mutex::new(None);
 static OPPORTUNITIES: Mutex<RunOpportunities> = Mutex::new(RunOpportunities::new());
 struct State {
     game:u64, owner:u64, clock:f32, next:f32, rng:u64, serial:u64,
+    participants:Vec<(u32,u64)>,
     scene:Option<Scene>, objects:Vec<EventObject>, route:Vec<[f32;3]>,
     leg:usize, next_move:f32, created:f32, ended:Option<f32>, arrived:bool, inside:bool,
 }
@@ -39,8 +40,8 @@ pub fn install(r:&Runtime) {
     ENABLED.store(true,Ordering::Release);
 }
 fn cleanup(r:&Runtime,s:State) {
-    let same=r.adapter.solo_run(&r.local,s.game).ok().flatten()
-        .is_some_and(|p|p.clock>=s.clock&&p.actors.first().is_some_and(|a|a.guid==s.owner));
+    let same=r.adapter.event_party(&r.local,s.game).ok().flatten()
+        .is_some_and(|p|p.clock>=s.clock&&p.actors.iter().any(|a|a.slot==0&&a.guid==s.owner));
     if !same{return}
     let access=io::Access{local:&r.local,adapter:r.adapter};
     for object in s.objects {
@@ -51,8 +52,8 @@ fn cleanup(r:&Runtime,s:State) {
 /// escort opportunity for this solo run.
 pub fn encounter(r:&Runtime,g:u64) {
     if !ENABLED.load(Ordering::Acquire){return}
-    let Ok(Some(p))=r.adapter.solo_run(&r.local,g)else{return};
-    let Some(a)=p.actors.first()else{return};
+    let Ok(Some(p))=r.adapter.event_party(&r.local,g)else{return};
+    let Some(a)=p.actors.iter().find(|a|a.slot==0)else{return};
     if a.hp<=0.||a.phase==Phase::Inactive{return}
     if let Ok(mut budget)=OPPORTUNITIES.lock(){budget.encounter(g,a.guid,p.clock);}
 }
@@ -67,7 +68,7 @@ fn notice(r:&Runtime,g:u64,text:&str) {
 }
 pub fn wire(g:u64,owner:u64)->Option<String> {
     let lock=STATE.lock().ok()?;
-    let s=lock.as_ref().filter(|s|s.game==g&&s.owner==owner)?;
+    let s=lock.as_ref().filter(|s|s.game==g&&s.participants.iter().any(|(_,id)|*id==owner))?;
     let scene=s.scene.as_ref()?;
     let stage=match scene.stage(){Stage::Waiting=>0,Stage::Preparing=>1,Stage::Engaged=>2,
         Stage::Succeeded=>3,Stage::Failed|Stage::Retired=>4};
@@ -88,14 +89,18 @@ pub fn finish(r:&Runtime,g:u64) {
     impl Drop for Guard{fn drop(&mut self){TICKING.store(false,Ordering::Release)}}
     let _guard=Guard;
     if let Err(e)=tick(r,g).and_then(|_|super::solo_gadgets::tick(r,g)){
-        r.log.warn(&format!("Solo escort stopped: {e}"));
+        r.log.warn(&format!("Escort stopped: {e}"));
         ENABLED.store(false,Ordering::Release);
         reset();
     }
 }
 fn tick(r:&Runtime,g:u64)->Result<(),String> {
-    let Some(p)=r.adapter.solo_run(&r.local,g)? else {reset();return Ok(())};
-    let Some(a)=p.actors.first() else {return Ok(())};
+    let Some(p)=r.adapter.event_party(&r.local,g)? else {reset();return Ok(())};
+    let Some(a)=p.actors.iter().find(|a|a.slot==0) else {return Ok(())};
+    let solo=r.adapter.solo_run(&r.local,g)?.is_some();
+    let participants=p.actors.iter().filter(|a|a.phase!=Phase::Inactive)
+        .map(|a|(a.slot,a.guid)).collect::<Vec<_>>();
+    if participants.is_empty()||participants.iter().any(|(_,id)|*id==0){return Ok(())}
     let now=p.clock;
     #[cfg(feature="test-hooks")]
     let preview=std::env::var("AZSX_TEST_ESCORT_PREVIEW").as_deref()==Ok("1");
@@ -117,18 +122,19 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
             let s=State{game:g,owner:a.guid,clock:now,next:f32::INFINITY,
                 rng:g^a.guid^std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
                     .unwrap_or_default().as_nanos()as u64,
-                serial:0,scene:None,objects:Vec::new(),route:Vec::new(),
+                serial:0,participants:participants.clone(),scene:None,objects:Vec::new(),route:Vec::new(),
                 leg:0,next_move:now,created:now,ended:None,arrived:false,inside:false};
             *lock=Some(s);old
         }else{None}
     };
     if let Some(old)=old{cleanup(r,old)}
-    if a.hp<=0.||a.phase==Phase::Inactive{reset();return Ok(())}
-    if a.phase!=Phase::Playing{
+    if solo&&(a.hp<=0.||a.phase==Phase::Inactive){reset();return Ok(())}
+    if p.actors.iter().filter(|a|a.phase!=Phase::Inactive)
+        .any(|a|a.phase!=Phase::Playing||a.hp<=0.){
         if let Some(s)=STATE.lock().map_err(|_|"Escort state unavailable")?.as_mut(){
             s.clock=now;
             if let Some(scene)=s.scene.as_mut(){
-                scene.observe(Observation{id:scene.id,now,playing:false,solo:true,
+                scene.observe(Observation{id:scene.id,now,playing:false,solo,
                     player_alive:true,present:false,unit_alive:true,arrived:false,enemy_defeated:false});
             }
         }
@@ -137,7 +143,7 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
     let work={
         let mut lock=STATE.lock().map_err(|_|"Escort state unavailable")?;
         let s=lock.as_mut().ok_or("Escort state missing")?;
-        s.clock=now;
+        s.clock=now;s.participants=participants.clone();
         if s.next.is_infinite(){if let Some(boss_at)=first_boss_at{s.next=if preview{now+2.}else{boss_at+30.+s.draw(61)as f32};}}
         if s.ended.is_some_and(|end|now-end>=5.){s.scene=None;s.ended=None}
         let allowed=OPPORTUNITIES.lock().map_err(|_|"Escort budget unavailable")?.allows(Kind::ChickenEscort);
@@ -216,7 +222,7 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
                 }
                 let scene=Scene::new(Identity{run:a.guid,owner:a.guid,event:serial},Kind::ChickenEscort,
                     now,Proofs{assets:true,cleanup:true,navigation:true,attribution:true,gadget:true,
-                        ..Proofs::default()},true).ok_or("Escort policy rejected")?;
+                        ..Proofs::default()},solo).ok_or("Escort policy rejected")?;
                 let mut pending=Some((scene,objects,route));
                 {
                     let mut lock=STATE.lock().map_err(|_|"Escort state unavailable")?;
@@ -233,13 +239,44 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
                 notice(r,g,"A damaged Mechanical Chicken awaits repairs. Escort it to extraction for an engineering gadget.");
         }
     }
+    // Test-hook only: a bounded escort rehearsal moves the owned actors
+    // beside the chicken, then withdraws one participant briefly.
+    // Normal scheduling, motion and reward code never reads this fixture.
+    #[cfg(feature="test-hooks")]
+    if preview {
+        let scene=STATE.lock().ok().and_then(|guard|guard.as_ref()
+            .filter(|s|s.game==g&&s.scene.is_some())
+            .and_then(|s|s.objects.first().map(|o|(o.position,now-s.created))));
+        if let Some((focus,age))=scene {
+            for actor in p.actors.iter().filter(|a|a.phase==Phase::Playing) {
+                let withdrawing=if solo{actor.slot==0}else{actor.slot==1};
+                let offset=if withdrawing&&(3. ..5.).contains(&age){8.}else{0.5};
+                r.adapter.fixture_event_pose(&io::Access{local:&r.local,adapter:r.adapter},g,actor.slot,actor.guid,
+                    [focus[0]+offset,focus[1],focus[2]])?;
+            }
+        }
+    }
+    #[cfg(feature="test-hooks")]
+    let p=if preview {r.adapter.event_party(&r.local,g)?
+        .ok_or("Escort preview party retired")?}else{p};
     let (motion,done,reward,objects)={
         let mut lock=STATE.lock().map_err(|_|"Escort state unavailable")?;
         let s=lock.as_mut().ok_or("Escort state missing")?;
         let Some(scene)=s.scene.as_mut()else{return Ok(())};
         let focus=s.objects.first().map_or([0.;3],|v|v.position);
-        s.inside=(a.position[0]-focus[0]).hypot(a.position[1]-focus[1])<=6.;
-        let stage=scene.observe(Observation{id:scene.id,now,playing:true,solo:true,
+        let was_inside=s.inside;
+        s.inside=azsx_gameplay::solo_events::escort_party_present(
+            p.actors.iter().filter(|a|a.phase!=Phase::Inactive)
+                .map(|a|(a.hp>0.&&a.phase==Phase::Playing,[a.position[0],a.position[1]])),
+            [focus[0],focus[1]]);
+        #[cfg(feature="test-hooks")]
+        if preview&&was_inside!=s.inside {
+            r.log.info(&format!("escort preview group: inside={} held={:.2} leg={}",s.inside,scene.held(),s.leg));
+        }
+        #[cfg(not(feature="test-hooks"))]
+        let _=was_inside;
+        s.participants=participants.clone();
+        let stage=scene.observe(Observation{id:scene.id,now,playing:true,solo,
             player_alive:true,present:s.inside,unit_alive:true,arrived:s.arrived,enemy_defeated:false});
         if now-s.created>240.&&!matches!(stage,Stage::Succeeded|Stage::Failed|Stage::Retired){scene.retire()}
         let terminal=matches!(scene.stage(),Stage::Succeeded|Stage::Failed|Stage::Retired);
@@ -262,9 +299,9 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
         unsafe{r.adapter.remove_event_object(&access,r.local.base as u64,g,object)}?;
     }}
     if reward.is_some(){
-        let gadget=super::solo_gadgets::award(r,g,a.guid,None)?;
-        notice(r,g,"Extraction complete. Your engineering gadget is equipped for this run.");
-        r.log.info(&format!("solo escort rewarded: kind={gadget:?} once=true"));
+        let granted=super::solo_gadgets::award_group(r,g,&participants)?;
+        notice(r,g,"Extraction complete. Each participant has an engineering gadget for this run.");
+        r.log.info(&format!("escort rewarded: recipients={granted:?} once=true"));
     }else if done{notice(r,g,"The Mechanical Chicken escort has ended.")}
     Ok(())
 }

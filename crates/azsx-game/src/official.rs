@@ -2037,7 +2037,9 @@ impl SelectedAdapter { pub fn spell_modifiers_entry(self)->Entry { self.native.s
 pub use crate::official_native::SoloMortarLaunch;
 impl SelectedAdapter {
     pub fn solo_engineering_entries(self) -> Vec<Entry> { self.native.solo_engineering_entries() }
+    pub fn engineering_actor_row(self,m:&dyn Mem,game:u64,slot:u32,owner:u64)->Result<u64>{self.native.engineering_actor_row(m,game,slot,owner)}
     pub fn solo_visual_entries(self) -> Vec<Entry> { self.native.solo_visual_entries() }
+    pub fn engineering_with_actor<T>(self,io:&dyn SupportCalls,game:u64,slot:u32,owner:u64,action:impl FnOnce()->Result<T>)->Result<T>{self.native.engineering_with_actor(io,game,slot,owner,action)}
     pub fn solo_gadget_observation(self,m:&dyn Mem,game:u64,owner:u64)->Result<(f32,f32,f32,f32)>{self.native.solo_gadget_observation(m,game,owner)}
     pub fn solo_sapper_has_target(self,m:&dyn Mem,game:u64,owner:u64)->Result<bool>{self.native.solo_sapper_has_target(m,game,owner)}
     pub unsafe fn solo_gadget_net(self,m:&dyn Mem,base:u64,game:u64,owner:u64)->Result<usize>{self.native.solo_gadget_net(m,base,game,owner)}

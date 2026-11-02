@@ -432,7 +432,7 @@ Candidate profiles: `rules`, `diagnostics`, `official-party-ui`. [Scenario mappi
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-28.01 | Scheduling | Enabled trial replaces boss Fortunes; after first boss/between bosses, not after final normal encounter, endless continues. One map-wide walkable rune/decorative Sayge/candles, no combat actor/reward contribution. |
+| AZSX-28.01 | Scheduling | Enabled trial replaces boss Fortunes; after first boss/between bosses, not after final normal encounter, endless continues. One map-wide walkable rune/decorative Sayge/candles; sample interior navigation cells across its large footprint, no combat actor/reward contribution. |
 | AZSX-28.02 | Unfinished trial/later boss | Keep identity/location/progress, upgrade reward stage without reset/replacement/banked extras. No availability deadline or premature reward. |
 | AZSX-28.03 | Presence/death/pause | Twenty cumulative seconds; every active coop actor must be alive/playing/inside. Leaving/death suspends without reset, resume when all return; native pause freezes time. |
 | AZSX-28.04 | Progress UI | Visible only for local inside actor, collective waiting explicit; never interpolate suspended progress. |
@@ -482,16 +482,16 @@ and verification cases here. A prototype/model/helper alone is not acceptance.
 
 ### AZSX-30 — Mechanical Chicken escort and engineering gadgets
 
-Mode: **Solo**. Disposition: **active**. Details: [Contract](../features/SOLO-ESCORT.md).
+Mode: **Solo, Coop**. Disposition: **active**. Details: [Contract](../features/SOLO-ESCORT.md).
 
 Candidate profiles: `rules`, `official`, `official-party-ui`, `azsxui`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-30.01 | Solo scheduling and placement | No placement before the first completed native boss; first attempt 30–90 simulation seconds afterward. One successful reservation per run at most; route length scales with the native map radius (maximum 180 yards), with four candidate ground sites and eight headings each. Every segment and the five-yard extraction footprint must be walkable. Native Mechanical Chicken and Goblin Teleporter, plus up to four ground-checked native gnomish debris objects behind the start; missing debris never blocks the escort. All owned objects retire together, with no external assets. Failed placement may retry without spending the quota; coop never creates an escort. |
-| AZSX-30.02 | Presence and movement | Invulnerable chicken advances by native spline only while the living player stays within six yards. Leaving suspends cumulative progress without reset; native pause freezes time. |
-| AZSX-30.03 | Extraction and failure | Arrival grants one reward exactly once, removes chicken and portal; expiry, death, invalid route or cleanup grants nothing. No uncertain native commit is retried. |
-| AZSX-30.04 | Engineering reward | One of six equal-power, unranked, run-local gadgets: Net, Rocket Boots, Sapper Charge, Mortar, Shrink Ray or Protection Belt. The optional UI lists the escort beneath the minimap, marks its native position while active, and keeps the gadget beside the health/Fortune medallions; a versioned detached API works without AZSXUI. The requested Egg_05 icon is absent in 0.138.0, so the verified native EngGizmos icon is used. |
+| AZSX-30.01 | Solo scheduling and placement | No placement before the first completed native boss; first attempt 30–90 simulation seconds afterward. One successful reservation per run at most; route length scales with the native map radius (maximum 180 yards), with four candidate ground sites and eight headings each. Every segment and the interiors of the start and five-yard extraction footprints must be walkable. Native Mechanical Chicken and Goblin Teleporter, plus up to four ground-checked native gnomish debris objects behind the start; missing debris never blocks the escort. All owned objects retire together, with no external assets. Failed placement may retry without spending the quota; the host creates at most one shared escort in coop. |
+| AZSX-30.02 | Presence and movement | Invulnerable chicken advances by native spline only while every active participant is alive and within six yards. Leaving suspends cumulative progress without reset; native pause freezes time. |
+| AZSX-30.03 | Extraction and failure | Arrival reserves one independently drawn gadget per current participant exactly once, removes chicken and portal; expiry, invalid route or cleanup grants nothing; a downed participant suspends the escort. No uncertain native commit is retried. |
+| AZSX-30.04 | Engineering reward | Each participant receives one of six equal-power, unranked, run-local gadgets: Net, Rocket Boots, Sapper Charge, Mortar, Shrink Ray or Protection Belt. The optional UI lists the escort beneath the minimap, marks its native position while active, and keeps the gadget beside the health/Fortune medallions; a versioned detached API works without AZSXUI. Variable route totals from 8 to 120 must never invalidate the full AZSX payload or hide unrelated UI. The requested Egg_05 icon is absent in 0.138.0, so the verified native EngGizmos icon is used. |
 | AZSX-30.05 | Native effects | Net roots ordinary nearby enemies; Boots use native movement reconstruction; Belt grants a native shield; Mortar launches a native projectile and applies one bounded AoE after impact; Shrink Ray changes only visual scale. |
 | AZSX-30.06 | Sapper safety | Native self-damage/shields/reduction apply, never lowering health below 75% maximum; defer activation without a health budget. Native enemies receive the bounded explosion once. |
 | AZSX-30.07 | Compatibility boundary | Exact 0.138.0 executable and selected entry bytes, fields, actor identity and source guard activation. Missing or changed contacts disable the escort; do not substitute guessed offsets or synthetic rewards. |

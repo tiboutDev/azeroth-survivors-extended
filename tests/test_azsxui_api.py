@@ -119,14 +119,28 @@ phase="ready";update();assert(objects.BuffButton1.anchor[2]==UIParent)''')
             with self.subTest(header=header,body=body):
                 self.equipment_wire(header,body)
                 self.lua.execute('assert(not AZSX_GetState(1).available)')
-    def test_solo_escort_gadget_records_are_detached_and_coop_rejected(self):
+    def test_escort_and_gadget_records_are_detached_and_scoped_to_recipient(self):
         base = "1|7|11|1\nM|11|0|506c61796572\n"
         solo = "V|11|3|1|2|75|200|1|0|40|120|0|10.5|20.25\nW|11|1|3|450|0\n"
         self.lua.globals().wire = (base + solo).encode().hex()
         self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1;local s=AZSX_GetState(1);assert(s.available and s.api.minor==12 and s.data.soloEvent.kind=="chicken_escort" and s.data.soloEvent.progress==40 and s.data.soloEvent.total==120 and s.data.soloEvent.x==10.5 and s.data.soloEvent.y==20.25 and s.data.engineering.kind=="mortar" and s.data.engineering.nextTrigger==450 and s.texts.soloEvent.title=="Mechanical Chicken Escort");s.data.engineering.nextTrigger=99;s.data.soloEvent.x=999;s.texts.engineering.title="changed";assert(AZSX_GetState(1).data.engineering.nextTrigger==450 and AZSX_GetState(1).data.soloEvent.x==10.5 and AZSX_GetState(1).texts.engineering.title~="changed")')
-        for bad in ("V|11|3|1|2|75|200|1|0|121|120|0\n", "V|11|3|1|2|75|200|1|0|40|120|0|nan|20\n", "V|11|3|1|2|75|200|1|0|40|120|0|100000000|20\n", "W|11|1|6|450|0\n", "M|22|1|4775657374\n" + solo):
+        for bad in ("V|11|3|1|2|75|200|1|0|121|120|0\n", "V|11|3|1|2|75|200|1|0|40|120|0|nan|20\n", "V|11|3|1|2|75|200|1|0|40|120|0|100000000|20\n", "W|11|1|6|450|0\n", "V|22|3|1|2|75|200|1|0|40|120|0\n"):
             self.lua.globals().wire = (base + bad).encode().hex()
             self.lua.execute('AZS_RUN.azsx=wire;AZS_RUN_UPDATED=now;assert(not AZSX_GetState(1).available)')
+    def test_cooperative_guest_receives_scaled_route_and_individual_gadget(self):
+        text=("1|7|22|1\nM|11|0|486f7374\nM|22|1|4775657374\n"
+              "V|22|3|1|2|75|200|1|0|12|28|0|10.5|20.25\n"
+              "W|22|1|2|450|0\n")
+        self.lua.globals().wire=text.encode().hex()
+        self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1;local s=AZSX_GetState(1);assert(s.available and s.session.recipientGUID=="22" and s.data.soloEvent.total==28 and s.data.soloEvent.progress==12 and s.data.engineering.kind=="sapper")')
+    def test_short_solo_escort_route_preserves_all_other_state(self):
+        text=("1|7|11|1\nM|11|0|506c61796572\n"
+              "B|11|1|1|0|1200|1200\n"
+              "A|11|1000|2000|100000000|80000000|60000000|40000000|20000000|10000000|0|0\n"
+              "V|11|3|1|2|75|200|1|0|12|28|0|10.5|20.25\n")
+        self.lua.globals().wire=text.encode().hex()
+        self.lua.execute('AZS_RUN={azsx=wire};AZS_RUN_UPDATED=now;now=now+.1;local s=AZSX_GetState(1);assert(s.available and s.data.soloEvent.total==28 and s.data.fortune.amount==1200 and s.data.minimap.radii[1]==100 and s.texts.soloEvent.note)')
+
     def test_legacy_escort_row_without_coordinates_remains_available(self):
         text="1|7|11|1\nM|11|0|506c61796572\nV|11|3|1|2|75|200|1|0|40|120|0\n"
         self.lua.globals().wire=text.encode().hex()

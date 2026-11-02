@@ -109,6 +109,7 @@ impl WorldControl for Runtime {
         blessings::finish(self, game);
         super::super::treasure_goblins::finish(self, game);
         super::super::world_events::coop::finish(self,game);
+        super::super::solo_escort::finish(self,game);
         super::super::crystals::finish(self,game);
     }
     fn log_group_pause(&self, reason: &Option<PauseReason>) {

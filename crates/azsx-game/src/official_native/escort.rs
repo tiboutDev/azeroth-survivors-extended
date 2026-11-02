@@ -34,7 +34,7 @@ impl Adapter {
         segments: usize,
     ) -> Result<Option<Vec<[f32; 3]>>> {
         if !(8..=azsx_gameplay::solo_events::ESCORT_SEGMENTS).contains(&segments)
-            || self.solo_run(m, game)?.is_none()
+            || self.event_party(m, game)?.is_none()
         {
             return Ok(None);
         }
@@ -99,7 +99,7 @@ impl Adapter {
         to: [f32; 3],
         millis: u32,
     ) -> Result<super::EventObject> {
-        if self.solo_run(m, game)?.is_none()
+        if self.event_party(m, game)?.is_none()
             || ((object.guid() >> 24) & 0xffffff) != u64::from(v::SOLO_CHICKEN_ENTRY)
             || !valid_scene_step(object.position, to, millis)
         {
@@ -217,23 +217,70 @@ impl Adapter {
     // This validates an existing native delivery, including the remainder of a
     // synchronous batch when native choice/pause opens during a callback. The
     // runtime independently requires Playing before starting any new activation.
+    /// Read only the currently selected native actor. Cooperative callers swap
+    /// into a verified recipient context and restore the host after the effect.
     fn solo_gadget_owner(
-        self,
-        m: &dyn Mem,
-        game: u64,
-        owner: u64,
+        self, m: &dyn Mem, game: u64, owner: u64,
     ) -> Result<super::PartyObservation> {
-        let p = self
-            .solo_run(m, game)?
-            .ok_or("Engineering gadgets are solo only")?;
-        if p.actors
-            .first()
-            .is_none_or(|a| a.guid != owner || a.hp <= 0. || !a.phase.can_tank())
-            || self.run_source(m, game)? != Some((0, owner))
-        {
+        let (slot, guid) = self.run_source(m, game)?
+            .ok_or("Engineering actor context unavailable")?;
+        if guid != owner { return Err("Engineering actor identity changed".into()); }
+        let root = self.read_game(m, game)?;
+        let actor = Self::actor(slot, &root, root[0xc46])?;
+        if actor.guid != owner || actor.hp <= 0. || !actor.phase.can_tank() {
             return Err("Engineering gadget owner is inactive".into());
         }
-        Ok(p)
+        let clock = f32::from_le_bytes(root[0xb9c..0xba0].try_into().unwrap());
+        if !clock.is_finite() || !(0. ..=1e7).contains(&clock) {
+            return Err("Invalid engineering clock".into());
+        }
+        Ok(super::PartyObservation { clock, actors: vec![actor] })
+    }
+    /// Resolve a recipient row only from a restored host snapshot. The returned
+    /// address is used immediately and never cached across native callbacks.
+    pub fn engineering_actor_row(
+        self, m: &dyn Mem, game: u64, slot: u32, owner: u64,
+    ) -> Result<u64> {
+        let party = self.event_party(m, game)?.ok_or("Engineering run retired")?;
+        if self.run_source(m, game)? != party.actors.iter().find(|a| a.slot == 0)
+            .map(|a| (0, a.guid)) {
+            return Err("Engineering requires restored host context".into());
+        }
+        if !party.actors.iter().any(|a| a.slot == slot && a.guid == owner
+            && a.hp > 0. && a.phase == azsx_gameplay::Phase::Playing) {
+            return Err("Engineering recipient changed".into());
+        }
+        let row = self.support_row(m, game, slot)?;
+        if m.read(row + self.row_field(row == game, 0x478), 8)? != owner.to_le_bytes() {
+            return Err("Engineering row identity changed".into());
+        }
+        Ok(row)
+    }
+    /// Execute one recipient effect through the native actor switch and always
+    /// restore the host before returning, including after a rejected effect.
+    pub fn engineering_with_actor<T>(
+        self, io: &dyn crate::official::SupportCalls, game: u64,
+        slot: u32, owner: u64, action: impl FnOnce() -> Result<T>,
+    ) -> Result<T> {
+        let row = self.engineering_actor_row(io, game, slot, owner)?;
+        if slot == 0 { return action(); }
+        let host = self.event_party(io, game)?.and_then(|p| p.actors.into_iter()
+            .find(|a| a.slot == 0)).ok_or("Engineering host retired")?;
+        io.swap_actor(game, row)?;
+        if let Err(e) = io.write(game + self.game_field(0xb40), &u64::from(slot).to_le_bytes()) {
+            let host_row = self.support_row(io, game, 0)?;
+            let _ = io.swap_actor(game, host_row);
+            return Err(e);
+        }
+        let result = action();
+        let flush = io.flush_actor(game);
+        let host_row = self.support_row(io, game, 0)?;
+        if io.read(host_row + self.row_field(false, 0x478), 8)? != host.guid.to_le_bytes() {
+            return Err("Engineering host row identity changed".into());
+        }
+        io.write(game + self.game_field(0xb40), &0u64.to_le_bytes())?;
+        io.swap_actor(game, host_row)?;
+        result.and_then(|value| flush.map(|_| value))
     }
     /// Do not spend a Sapper health budget in an empty area. This is a copied
     /// native target observation, not a damage probe or a new combat engine.
@@ -359,15 +406,7 @@ impl Adapter {
         if !value.is_finite() || !(0.0..=0.55).contains(&value) {
             return Err("Invalid Rocket Boots speed".into());
         }
-        let p = self
-            .solo_run(m, game)?
-            .ok_or("Rocket Boots are solo only")?;
-        if p.actors.first().is_none_or(|a| {
-            a.guid != owner || a.hp <= 0. || a.phase == azsx_gameplay::Phase::Inactive
-        }) || self.run_source(m, game)? != Some((0, owner))
-        {
-            return Err("Rocket Boots owner changed".into());
-        }
+        self.solo_gadget_owner(m, game, owner)?;
         let at = game + self.field117(v::BLESSING_STAT_FIELDS[4]);
         let base = f32::from_le_bytes(
             m.read(at, 4)?
@@ -655,14 +694,8 @@ impl Adapter {
         }
         let amount = budget / (1. - reduction).max(1.);
         io.support_hurt_tagged(game, amount, 0, false, 1, v::SOLO_SAPPER_SPELL)?;
-        let p = self
-            .solo_run(io, game)?
-            .ok_or("Sapper run retired during backlash")?;
-        let a = p
-            .actors
-            .first()
-            .filter(|a| a.guid == owner)
-            .ok_or("Sapper owner changed")?;
+        let p = self.solo_gadget_owner(io, game, owner)?;
+        let a = &p.actors[0];
         if a.hp + 0.001 < a.maximum * 0.75 {
             return Err("Native Sapper backlash crossed the protected health floor".into());
         }
@@ -744,11 +777,9 @@ impl Adapter {
         if !scale.is_finite() || !(0.5..=1.5).contains(&scale) {
             return Err("Invalid cosmetic engineering scale".into());
         }
-        let p = self
-            .solo_run(m, game)?
-            .ok_or("Cosmetic engineering is solo only")?;
-        if p.actors.first().is_none_or(|a| a.guid != owner)
-            || self.run_source(m, game)? != Some((0, owner))
+        let p = self.event_party(m, game)?.ok_or("Cosmetic engineering run retired")?;
+        if !p.actors.iter().any(|a| a.guid == owner)
+            || self.run_source(m, game)?.is_none_or(|(slot, _)| slot != 0)
         {
             return Err("Cosmetic engineering owner changed".into());
         }
@@ -789,14 +820,8 @@ impl Adapter {
         game: u64,
         owner: u64,
     ) -> Result<(f32, f32, f32, f32)> {
-        let p = self
-            .solo_run(m, game)?
-            .ok_or("Engineering observation is solo only")?;
-        let a = p
-            .actors
-            .first()
-            .filter(|a| a.guid == owner)
-            .ok_or("Engineering observation owner changed")?;
+        let p = self.solo_gadget_owner(m, game, owner)?;
+        let a = &p.actors[0];
         let read = |at| -> Result<f32> {
             let v = f32::from_le_bytes(
                 m.read(at, 4)?

@@ -1,6 +1,6 @@
 # Mechanical Chicken escort
 
-AZSX adds one optional engineering escort in a solo run. This page describes
+AZSX adds one optional engineering escort in a solo or cooperative run. This page describes
 current source behavior, not an already published release. Native assets only:
 the Mechanical Chicken display and Goblin Teleporter object are selected from
 the supported client. Missing assets or changed native contacts are blockers,
@@ -17,17 +17,20 @@ sites consume no escort quota. The route length follows the native map radius,
 at 1.5 yards per segment with a 180-yard maximum: the reviewed 0.138.0 maps
 range from about 42 yards in Gurubashi Arena (32-yard radius) and 58.5 yards
 in Naxxramas (44-yard radius) to 180 yards on the largest maps. Every segment
-must pass native terrain and clipping checks, and the extraction point needs
-five yards of native ground clearance. A map can still reject an attempt when
+must pass native terrain and clipping checks. The start and five-yard extraction
+footprints also probe interior navigation cells, not just their centers and rims. Purely visual foliage outside native navigation remains a placement limit.
+A map can still reject an attempt when
 no safe route exists; placement is not guaranteed. The chicken is an
 invulnerable scene actor, not an enemy or ordinary escort quest. The portal
 marks the end of the route.
 
-Stay within six yards. After a two-second preparation, the chicken moves one
-segment every half second while the player stays close. Leaving pauses progress;
-returning resumes it. Native pause freezes simulation time. The scene expires
-after four simulation minutes; death and run exit clean it without reward.
-Successful extraction removes both objects and awards one gadget once.
+Every active participant must be alive, playing and within six yards. After a
+two-second preparation, the chicken moves one segment every half second while
+the whole group stays close. Leaving pauses progress; returning resumes it. Native pause freezes simulation time. The scene expires
+after four simulation minutes. A downed cooperative participant suspends movement; run exit cleans the scene without reward.
+Successful extraction removes all owned objects and reserves one independently drawn
+gadget for each current participant, once. Gadgets are bound to slot and GUID;
+a departed participant receives no reward.
 
 ## Crash-site scenery
 
@@ -61,8 +64,8 @@ unlock. It is equipped for the current run and triggers automatically:
 | Shrink Ray | Cosmetic native player scale change only; no gameplay size/reach change. |
 | Protection Belt | Native temporary shield. |
 
-Gadget triggers and cooldowns use simulation time. Death or run end removes
-temporary effects and identities. No uncertain native launch or grant is retried.
+Gadget triggers and cooldowns use simulation time. A participant’s death or departure removes that participant’s temporary effects
+and identity; run end removes all remaining effects. No uncertain native launch or grant is retried.
 
 ## Presentation and compatibility
 
@@ -73,7 +76,7 @@ badge beside the health/Fortune medallions after extraction. The marker uses
 read-only live scene coordinates and disappears with the scene. Native aura
 templates supply encounter debuff borders. AZSXUI does not own gameplay. The selected 0.138.0 descriptor guards native scene, spline,
 projectile, combat and broadcast contacts. A future client needs a complete
-native review and a live solo trial; matching bytes alone do not prove behavior.
+native review and live solo and two-client cooperative trials; matching bytes alone do not prove behavior.
 
 The requested native `INV_Egg_05` is absent from every 0.138.0 MPQ in the
 reviewed isolated client. No replacement asset is bundled; the available

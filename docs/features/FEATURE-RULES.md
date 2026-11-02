@@ -174,9 +174,11 @@ the selected adapter. Source implementation and live validation are distinct.
 Supplies and Sayge's Trial sample uniformly by surface area across the native
 map circle. The player position is not a sampling input and there is no nearby
 fallback. Check the full footprint against map limits, native navigation cells,
-height availability, terrain slope and existing AZSX event footprints. Sampling
+height availability, terrain slope and existing AZSX event footprints. Large
+footprints also probe the interior every 1.5 yards; a clear center and rim alone
+can miss blocked cells beneath a tree. Sampling
 is bounded to 32 candidates per attempt. This verifies local walkability, not a
-new whole-map pathfinder. Treasure Goblin appearance rules remain separate.
+new whole-map pathfinder or a guarantee against purely visual tree canopies. Treasure Goblin appearance rules remain separate.
 
 Flatness is a preference, never a reason to discard all otherwise safe sites.
 Within each bounded sample, prefer height variation at most 0.60 yards for the

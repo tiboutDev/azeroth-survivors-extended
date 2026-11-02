@@ -90,10 +90,11 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
  if completion and focused_mode:raise ValueError("Completion scenarios cannot be combined with focused extension modes")
  owner_tips=normal and players==2 and os.environ.get("AZSX_TEST_OWNER_TIPS121")=="1"
  mixed_profiles=completion in ("support","fatigue","fatigue-self") or owner_tips or shield_only
+ escort_preview=os.environ.get("AZSX_TEST_ESCORT_PREVIEW")=="1" and not normal
  compat121=compatibility_scope(diagnostic_probe=diagnostic_probe,normal=normal,enchantments=enchantments,reward_wallet=reward_wallet,
                               immunity=immunity,gems=gems,
                               completion=completion,goblins=goblins,supplies=supplies,ritual=ritual)
- if coop_events:compat121=False
+ if coop_events or escort_preview:compat121=False
  prepare=writer(exe);out=ROOT/"test-results"/(("gems-"+str(players)+"-"if gems else"enchantments-"+str(players)+"-"if enchantments else"extensions-normal-"if normal else"extensions-"+str(players)+"-")+uuid.uuid4().hex[:8]);out.mkdir()
  clean={k:v for k,v in os.environ.items()if not k.upper().startswith(("AZSX_","AZCOOP_","COOP_","WOW_","BENILLA_"))}
  with socket.socket()as p:p.bind(("127.0.0.1",0));port=p.getsockname()[1]
@@ -109,10 +110,11 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
    if os.environ.get("AZSX_TEST_WORLD_UI")=="1":
     with (folder/"config.toml").open("a")as config:config.write('nameplateShowEnemies = "1"\n')
    addon=folder/"AddOns/AZSXAudit";addon.mkdir(parents=True);(addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\nAudit.lua\n");(addon/"Audit.lua").write_bytes((ROOT/"tools/dev/fixtures/azsx-extensions-audit.lua").read_bytes())
+   if escort_preview:(addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
    if os.environ.get('AZSX_TEST_NO_UI')!='1':shutil.copytree(ROOT/'addons/AZSXUI',folder/'AddOns/AZSXUI')
    env=dict(clean,APPDATA=str(folder/"appdata"),LOCALAPPDATA=str(folder/"localappdata"),BENILLA_HOME=str(folder),AZSX_ACTIVE="1",AZCOOP_ENGINE="official",AZCOOP_NATIVE_LOG_DIRECTORY=str(folder),AZSX_READY_FILE=str(folder/"ready.json"),WOW_NOSOUND="1",WOW_WIN="1",WOW_ROGUE_UPDATE="0",WOW_ROGUE_UPDATE_AUTO="0",WOW_ROGUE_AUTOPICK="1",WOW_ROGUE_AUTOSTART="1",WOW_ROGUE_AUTOPLAY="18"if slot==1 else"4",RUST_LOG="info",AZCOOP_TEST_BLESSINGS="1")
    if os.environ.get('AZSX_TEST_ADDON_API')=='1':env['AZSX_TEST_ADDON_API']='1'
-   if os.environ.get('AZSX_TEST_ESCORT_PREVIEW')=='1' and players==1 and not normal:
+   if os.environ.get('AZSX_TEST_ESCORT_PREVIEW')=='1' and players in (1,2) and not normal:
     env['AZSX_TEST_ESCORT_PREVIEW']='1'
    if not normal:env.update(AZSX_LOST_SUPPLIES="0",AZSX_DARKMOON_TRIALS="0")
    if supplies:
@@ -207,10 +209,12 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     if not diagnostic_probe or players!=2:raise ValueError("Crystal UI-only fixture requires the two-player diagnostic probe")
     env.update(AZSX_TEST_CRYSTALS="1",AZSX_TEST_CRYSTAL_PLAYERS="2",AZSX_TEST_CRYSTAL_UI_ONLY="1")
    if os.environ.get("AZSX_TEST_PROGRESSION")=="1":env.update(AZSX_TEST_PROGRESSION="1",AZCOOP_TEST_XP_HUD="1")
-   if os.environ.get("AZSX_TEST_LUA_DIAGNOSTICS")=="1":
+   if os.environ.get("AZSX_TEST_LUA_DIAGNOSTICS")=="1" or escort_preview:
     if normal:raise ValueError("Lua diagnostics require a diagnostic trial")
     env.update(AZSX_LUA_DIAGNOSTICS="1",AZSX_DIAGNOSTIC_SESSION=out.name,AZSX_DIAGNOSTIC_SLOT=str(slot-1))
     (addon/"DiagnosticConfig.lua").write_text("AZSXDiagnosticConfig={enabled=true,session="+json.dumps(out.name)+",slot="+str(slot-1)+",duration="+str(min(seconds,300))+",max_records=256}\n")
+    if escort_preview:
+     with (addon/"DiagnosticConfig.lua").open("a") as cfg:cfg.write("AZSXDiagnosticConfig.escort=true;AZSXDiagnosticConfig.max_records=512\n")
     if os.environ.get("AZSX_TEST_COOP_UI")=="1":
      with (addon/"DiagnosticConfig.lua").open("a")as cfg:cfg.write("AZSXDiagnosticConfig.coop_ui=true\n")
      (addon/"CoopUIActions.lua").write_bytes((ROOT/"tools/dev/fixtures/azsx-coop-ui-actions.lua").read_bytes())
@@ -482,7 +486,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     evidence=assess_progression(logs[0],logs[1]);merge_assessor_checks(checks,evidence["checks"])
     (out/"progression-evidence.json").write_text(json.dumps(evidence,indent=2)+"\n")
    if os.environ.get("AZSX_TEST_OBSERVED_STEPS")=="1":env["AZSX_TEST_OBSERVED_STEPS"]="1"
-   if os.environ.get("AZSX_TEST_LUA_DIAGNOSTICS")=="1":
+   if os.environ.get("AZSX_TEST_LUA_DIAGNOSTICS")=="1" or escort_preview:
     from diagnostic_records import collect,assess_events
     streams=[collect(text,out.name,index)for index,text in enumerate(logs)]
     for index,stream in enumerate(streams):
@@ -502,6 +506,17 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
      checks["observed_supply_steps"]=all(f"scenario step: supplies phase={phase} created={phase}"in host for phase in range(1,12))
      checks["observed_ritual_steps"]="scenario step: ritual action=0"in host and"scenario step: ritual action=1"in host
     else:checks["observed_coop_steps"]=all(f"scenario step: coop action={phase}"in host for phase in range(1,5))
+   if escort_preview:
+    checks={k:checks[k] for k in ("clients_alive","started","clean_scripts","clean_adapter","startup_ack","coop_joined","equal_progression","shared_wallet","group_pause") if k in checks}
+    states=re.findall(r"escort preview group: inside=(true|false) held=([0-9.]+)",host)
+    sequence=[value for value,_ in states]
+    equipped=re.findall(r"gadget equipped: slot=(\d+) owner=(\d+) kind=(\w+)",host)
+    escort_streams=[collect(text,out.name,index) for index,text in enumerate(logs)]
+    escort_rows=[[row["data"] for row in stream["records"] if row["kind"]=="azsx.escort"] for stream in escort_streams]
+    checks.update(escort_spawn='Escort preview placement:' in host and 'selected=true' in host,
+                  escort_group_pause_resume=any(sequence[i:i+3]==['true','false','true'] for i in range(len(sequence)-2)),
+                  escort_two_individual_gadgets={int(slot) for slot,_,_ in equipped}==set(range(players)),
+                  escort_guest_api=all(any(row.get("available") is True and isinstance(row.get("event"),dict) for row in rows) and any(row.get("available") is True and isinstance(row.get("gadget"),dict) for row in rows) for rows in escort_rows))
    result=dict(observed_steps=os.environ.get("AZSX_TEST_OBSERVED_STEPS")=="1",scenario=scenario,diagnostic_probe=diagnostic_probe,support_only=support_only,all_events=all_events,owner_tooltip_readback=owner_tips,completion121=completion,players=players,normal=normal,game_version=version,compat121=compat121,enchantments=enchantments,gems=gems,goblins=goblins,immunity=immunity,diagnostic_inputs=not normal,dll_sha256=proof["dll_sha256"],game_sha256=sha,checks=checks,passed=all(checks.values()),grants=grants,ui=ui,desktop_input=False,screenshots=visual,visual_review_required=visual,ritual_ui_single=ritual_ui and seconds<150,visual_discovery_hold=visual and supplies and os.environ.get("AZSX_TEST_VISUAL_HOLD_DISCOVERY")=="1")
    return result
   until=time.monotonic()+min(seconds,260 if supplies or ritual else 280 if completion in ("support","fatigue","fatigue-self") else 210 if goblins else 180 if enchantments else 150)

@@ -1,12 +1,10 @@
-//! One solo engineering reward slot; native effects own combat and movement.
+//! Run-local engineering equipment per native participant.
 use super::{event_services::Services, io, Runtime, RUNTIME};
-use azsx_game::official::SoloMortarLaunch;
-use azsx_gameplay::{
-    solo_events::{sapper_backlash_budget, Equipment, Gadget},
-    Phase,
-};
+use azsx_game::official::{ActorObservation, SoloMortarLaunch};
+use azsx_gameplay::{solo_events::{sapper_backlash_budget, Equipment, Gadget}, Phase};
 use std::{collections::BTreeMap, sync::Mutex};
-static STATE: Mutex<Option<State>> = Mutex::new(None);
+
+static STATE: Mutex<BTreeMap<u64, State>> = Mutex::new(BTreeMap::new());
 struct Receipt {
     launch: Option<SoloMortarLaunch>,
     early_impact: Option<u64>,
@@ -14,6 +12,7 @@ struct Receipt {
 }
 struct State {
     game: u64,
+    slot: u32,
     owner: u64,
     clock: f32,
     rng: u64,
@@ -36,247 +35,170 @@ impl State {
     }
 }
 fn valid(r: &Runtime, s: &State) -> bool {
-    r.adapter
-        .solo_run(&r.local, s.game)
-        .ok()
-        .flatten()
-        .is_some_and(|p| p.clock >= s.clock && p.actors.first().is_some_and(|a| a.guid == s.owner))
+    r.adapter.event_party(&r.local, s.game).ok().flatten().is_some_and(|p|
+        p.clock >= s.clock && p.actors.iter().any(|a| a.slot == s.slot && a.guid == s.owner))
 }
-fn refresh(r: &Runtime, game: u64, owner: u64) -> Result<(), String> {
-    r.events_refresh_blessings(game, &[(0, owner)])
+fn refresh(r: &Runtime, game: u64, slot: u32, owner: u64) -> Result<(), String> {
+    r.events_refresh_blessings(game, &[(slot, owner)])
+}
+fn retire(r: &Runtime, s: State) {
+    if !valid(r, &s) { return }
+    if s.scaled {
+        let _ = unsafe { r.adapter.solo_player_scale(&r.local, r.local.base as u64,
+            s.game, s.owner, s.scale_base) };
+    }
+    if s.speed { let _ = refresh(r, s.game, s.slot, s.owner); }
 }
 pub fn reset() {
-    let old = STATE.lock().ok().and_then(|mut s| s.take());
-    if let (Some(r), Some(s)) = (RUNTIME.get(), old) {
-        if valid(r, &s) {
-            if s.scaled {
-                let _ = unsafe {
-                    r.adapter.solo_player_scale(
-                        &r.local,
-                        r.local.base as u64,
-                        s.game,
-                        s.owner,
-                        s.scale_base,
-                    )
-                };
-            }
-            if s.speed {
-                let _ = refresh(r, s.game, s.owner);
-            }
-        }
+    let old = STATE.lock().ok().map(|mut guard| std::mem::take(&mut *guard));
+    if let (Some(r), Some(old)) = (RUNTIME.get(), old) {
+        for (_, state) in old { retire(r, state); }
     }
 }
-/// Called after the event's once-only reward reservation, not from a heartbeat.
-pub fn award(r: &Runtime, game: u64, owner: u64, kind: Option<Gadget>) -> Result<Gadget, String> {
-    let p = r
-        .adapter
-        .solo_run(&r.local, game)?
-        .ok_or("Engineering reward is solo only")?;
-    let a = p
-        .actors
-        .first()
-        .filter(|a| a.guid == owner && a.hp > 0. && a.phase == Phase::Playing)
-        .ok_or("Engineering reward owner changed")?;
-    let stale = STATE
-        .lock()
-        .map_err(|_| "Engineering state unavailable")?
-        .as_ref()
-        .is_some_and(|s| s.game != game || s.owner != owner || p.clock < s.clock);
-    if stale {
-        reset();
+/// Reserve all individual rewards before any native effect runs. A failed
+/// recipient preflight grants nobody and can never replay a partial group.
+pub fn award_group(r: &Runtime, game: u64, recipients: &[(u32,u64)])
+    -> Result<Vec<(u32,u64,Gadget)>, String> {
+    let p = r.adapter.event_party(&r.local, game)?.ok_or("Engineering run retired")?;
+    if recipients.is_empty() || recipients.len() > azsx_game::official::NATIVE_PLAYERS
+        || recipients.len() != p.actors.iter().filter(|a| a.phase != Phase::Inactive).count()
+        || recipients.iter().any(|(slot, owner)| *owner == 0 || !p.actors.iter().any(|a|
+            a.slot == *slot && a.guid == *owner && a.hp > 0. && a.phase == Phase::Playing))
+        || recipients.iter().enumerate().any(|(i, id)| recipients[..i].contains(id)) {
+        return Err("Engineering recipient roster changed".into());
     }
-    let (old_speed, old_scale, base, chosen, revision) = {
-        let mut state = STATE.lock().map_err(|_| "Engineering state unavailable")?;
-        let s = state.get_or_insert_with(|| State {
-            game,
-            owner,
-            clock: p.clock,
-            rng: game
-                ^ owner
-                ^ std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_nanos() as u64,
-            equipment: None,
-            revision: 0,
-            serial: 0,
-            speed: false,
-            scaled: false,
-            scale_base: r.adapter.solo_player_scale_base(),
-            next_check: p.clock,
-            mortars: BTreeMap::new(),
-        });
-        s.clock = p.clock;
-        let chosen = kind.unwrap_or_else(|| Gadget::ALL[s.draw() as usize % 6]);
+    let mut planned = BTreeMap::new();
+    let mut grants = Vec::new();
+    let seed = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default().as_nanos() as u64;
+    for &(slot, owner) in recipients {
+        let mut s = State { game, slot, owner, clock:p.clock, rng:game ^ owner ^ seed,
+            equipment:None, revision:1, serial:0, speed:false, scaled:false,
+            scale_base:r.adapter.solo_player_scale_base(), next_check:p.clock,
+            mortars:BTreeMap::new() };
+        let kind = Gadget::ALL[s.draw() as usize % Gadget::ALL.len()];
         let draw = s.draw();
-        if let Some(e) = s.equipment.as_mut() {
-            if !e.replace(chosen, p.clock, draw) {
-                return Err("Engineering reward clock rolled back".into());
-            }
-        } else {
-            s.equipment = Equipment::new(chosen, p.clock, draw);
-        }
-        s.revision = s
-            .revision
-            .checked_add(1)
-            .ok_or("Engineering reward identity exhausted")?;
-        let old = (s.speed, s.scaled, s.scale_base, chosen, s.revision);
-        s.speed = false;
-        s.scaled = false;
-        s.next_check = p.clock;
-        old
-    };
-    if old_scale {
-        unsafe {
-            r.adapter
-                .solo_player_scale(&r.local, r.local.base as u64, game, owner, base)
-        }?;
+        s.equipment = Equipment::new(kind, p.clock, draw);
+        if s.equipment.is_none() { return Err("Engineering equipment rejected".into()); }
+        grants.push((slot, owner, kind));
+        planned.insert(owner, s);
     }
-    if old_speed {
-        refresh(r, game, a.guid)?;
+    let mut state = STATE.lock().map_err(|_| "Engineering state unavailable")?;
+    if state.values().any(|s| s.game == game && s.equipment.is_some()) {
+        return Err("Engineering reward already reserved".into());
     }
-    r.log.info(&format!(
-        "solo gadget equipped: revision={revision} kind={chosen:?} owner={owner}"
-    ));
-    Ok(chosen)
+    *state = planned;
+    for (slot,owner,kind) in &grants {
+        r.log.info(&format!("gadget equipped: slot={slot} owner={owner} kind={kind:?}"));
+    }
+    Ok(grants)
+}
+fn with_actor<T>(r: &Runtime, game: u64, slot: u32, owner: u64,
+    action: impl FnOnce() -> Result<T, String>) -> Result<T, String> {
+    let access = io::Access { local: &r.local, adapter: r.adapter };
+    r.adapter.engineering_with_actor(&access, game, slot, owner, action)
 }
 pub fn apply_speed(r: &Runtime, game: u64) {
+    let Ok(Some((slot, owner))) = r.adapter.run_source(&r.local, game) else { return };
     let value = STATE.lock().ok().and_then(|state| {
-        let s = state.as_ref().filter(|s| s.game == game && s.speed)?;
-        s.equipment
-            .as_ref()
-            .filter(|e| e.kind == Gadget::RocketBoots && s.clock < e.effect_until())?;
-        Some((s.owner, 0.35))
+        let s = state.get(&owner).filter(|s| s.game == game && s.slot == slot && s.speed)?;
+        s.equipment.as_ref().filter(|e| e.kind == Gadget::RocketBoots
+            && s.clock < e.effect_until())?;
+        Some(0.35)
     });
-    let Some((owner, value)) = value else { return };
-    let access = io::Access {
-        local: &r.local,
-        adapter: r.adapter,
-    };
+    let Some(value) = value else { return };
+    let access = io::Access { local: &r.local, adapter: r.adapter };
     if let Err(e) = r.adapter.solo_gadget_speed(&access, game, owner, value) {
-        r.log
-            .warn(&format!("Rocket Boots reconstruction rejected: {e}"));
+        r.log.warn(&format!("Rocket Boots reconstruction rejected: {e}"));
     }
 }
 pub fn tick(r: &Runtime, game: u64) -> Result<(), String> {
-    let Some(p) = r.adapter.solo_run(&r.local, game)? else {
-        reset();
-        return Ok(());
-    };
-    let Some(a) = p.actors.first() else {
-        return Ok(());
-    };
-    let stale = STATE
-        .lock()
-        .map_err(|_| "Engineering state unavailable")?
-        .as_ref()
-        .is_some_and(|s| s.game != game || s.owner != a.guid || p.clock < s.clock);
-    if stale {
-        reset();
-        return Ok(());
-    }
-    if a.hp <= 0. {
-        reset();
-        return Ok(());
-    }
-    let expires = {
+    let Some(p) = r.adapter.event_party(&r.local, game)? else { reset(); return Ok(()) };
+    let stale = STATE.lock().map_err(|_| "Engineering state unavailable")?
+        .values().any(|s| s.game != game || p.clock < s.clock);
+    if stale { reset(); return Ok(()) }
+    let departed = {
         let mut state = STATE.lock().map_err(|_| "Engineering state unavailable")?;
-        let Some(s) = state.as_mut() else {
+        let ids = state.iter().filter(|(_, s)| !p.actors.iter().any(|a|
+            a.slot == s.slot && a.guid == s.owner && a.hp > 0. && a.phase != Phase::Inactive))
+            .map(|(id, _)| *id).collect::<Vec<_>>();
+        ids.into_iter().filter_map(|id| state.remove(&id)).collect::<Vec<_>>()
+    };
+    for s in departed { retire(r, s); }
+    for a in &p.actors { tick_actor(r, game, p.clock, a)?; }
+    Ok(())
+}
+fn tick_actor(r: &Runtime, game: u64, now: f32, a: &ActorObservation) -> Result<(), String> {
+    let (speed, scaled, base, pending) = {
+        let mut state = STATE.lock().map_err(|_| "Engineering state unavailable")?;
+        let Some(s) = state.get_mut(&a.guid).filter(|s| s.game == game && s.slot == a.slot) else {
             return Ok(());
         };
-        s.clock = p.clock;
-        s.mortars.retain(|_, v| v.expires >= p.clock);
-        let ended = s
-            .equipment
-            .as_ref()
-            .is_some_and(|e| p.clock >= e.effect_until());
-        let speed = ended && s.speed;
-        let scaled = ended && s.scaled;
-        if speed {
-            s.speed = false
-        }
-        if scaled {
-            s.scaled = false
-        }
-        (speed, scaled, s.scale_base)
+        s.clock = now;
+        s.mortars.retain(|_, v| v.expires >= now);
+        let ended = s.equipment.as_ref().is_some_and(|e| now >= e.effect_until());
+        let speed = ended && std::mem::take(&mut s.speed);
+        let scaled = ended && std::mem::take(&mut s.scaled);
+        let pending = s.mortars.iter().find_map(|(token, receipt)|
+            (receipt.launch.is_some() && receipt.early_impact.is_some()).then_some(*token));
+        let pending = pending.and_then(|token| s.mortars.remove(&token))
+            .and_then(|receipt| receipt.early_impact.map(|enemy| (receipt, enemy)));
+        (speed, scaled, s.scale_base, pending)
     };
-    if expires.1 {
-        unsafe {
-            r.adapter
-                .solo_player_scale(&r.local, r.local.base as u64, game, a.guid, expires.2)
-        }?;
-        r.log.info("solo Shrink Ray restored native scale");
+    if scaled {
+        unsafe { r.adapter.solo_player_scale(&r.local, r.local.base as u64,
+            game, a.guid, base) }?;
     }
-    if expires.0 {
-        refresh(r, game, a.guid)?;
-        r.log
-            .info("solo Rocket Boots expired through native stat reconstruction");
+    if speed { refresh(r, game, a.slot, a.guid)?; }
+    if let Some((receipt, enemy)) = pending {
+        with_actor(r, game, a.slot, a.guid, || deliver_mortar(r, game, a.guid, receipt, enemy))?;
     }
-    if a.phase != Phase::Playing {
-        return Ok(());
-    }
-    let check_target = STATE.lock().ok().is_some_and(|state| {
-        state.as_ref().is_some_and(|s| {
-            p.clock >= s.next_check
-                && s.equipment
-                    .as_ref()
-                    .is_some_and(|e| e.kind == Gadget::Sapper && e.due(p.clock))
-        })
-    });
-    let sapper_target =
-        !check_target || r.adapter.solo_sapper_has_target(&r.local, game, a.guid)?;
+    if a.phase != Phase::Playing || a.hp <= 0. { return Ok(()) }
+    let check_target = STATE.lock().ok().is_some_and(|state| state.get(&a.guid)
+        .is_some_and(|s| now >= s.next_check && s.equipment.as_ref()
+            .is_some_and(|e| e.kind == Gadget::Sapper && e.due(now))));
+    let sapper_target = !check_target || with_actor(r, game, a.slot, a.guid,
+        || r.adapter.solo_sapper_has_target(&r.local, game, a.guid))?;
     let activation = {
         let mut state = STATE.lock().map_err(|_| "Engineering state unavailable")?;
-        let s = state.as_mut().ok_or("Engineering state retired")?;
-        if p.clock < s.next_check {
-            return Ok(());
-        }
-        s.next_check = p.clock + 0.2;
-        let Some(e) = s.equipment.as_ref() else {
+        let Some(s) = state.get_mut(&a.guid).filter(|s| s.game == game && s.slot == a.slot) else {
             return Ok(());
         };
-        if !e.due(p.clock) {
-            return Ok(());
-        }
-        if e.kind == Gadget::Sapper
-            && sapper_backlash_budget(a.hp, a.maximum).is_none_or(|v| v <= 0.)
-        {
-            s.next_check = p.clock + 1.;
-            r.log
-                .info("solo Sapper deferred: protected 75% health budget unavailable");
-            return Ok(());
-        }
-        if e.kind == Gadget::Sapper && !sapper_target {
-            s.next_check = p.clock + 1.;
-            return Ok(());
+        if now < s.next_check { return Ok(()) }
+        s.next_check = now + 0.2;
+        let Some(e) = s.equipment.as_ref() else { return Ok(()) };
+        if !e.due(now) { return Ok(()) }
+        if e.kind == Gadget::Sapper &&
+            (sapper_backlash_budget(a.hp, a.maximum).is_none_or(|v| v <= 0.) || !sapper_target) {
+            s.next_check = now + 1.;
+            return Ok(())
         }
         let schedule = s.draw();
         let effect_draw = s.draw();
-        let e = s
-            .equipment
-            .as_mut()
-            .ok_or("Engineering equipment missing")?;
-        if !e.trigger(p.clock, true, true, schedule) {
-            return Ok(());
-        }
+        let e = s.equipment.as_mut().ok_or("Engineering equipment missing")?;
+        if !e.trigger(now, true, true, schedule) { return Ok(()) }
         let kind = e.kind;
-        if kind == Gadget::RocketBoots {
-            s.speed = true
-        }
-        if kind == Gadget::ShrinkRay {
-            s.scaled = true
-        }
+        if kind == Gadget::RocketBoots { s.speed = true; }
+        if kind == Gadget::ShrinkRay { s.scaled = true; }
         Some((kind, effect_draw, e.effect_until()))
     };
     if let Some((kind, draw, until)) = activation {
-        activate(r, game, a.guid, kind, draw, until)?;
+        if matches!(kind, Gadget::Net | Gadget::ProtectionBelt | Gadget::Sapper | Gadget::Mortar) {
+            with_actor(r, game, a.slot, a.guid,
+                || activate(r, game, a.slot, a.guid, a.position, a.maximum, kind, draw, until))?;
+        } else {
+            activate(r, game, a.slot, a.guid, a.position, a.maximum, kind, draw, until)?;
+        }
     }
     Ok(())
 }
 fn activate(
     r: &Runtime,
     game: u64,
+    slot: u32,
     owner: u64,
+    position: [f32; 3],
+    maximum: f32,
     kind: Gadget,
     draw: u32,
     until: f32,
@@ -293,7 +215,7 @@ fn activate(
             r.log
                 .info(&format!("solo Net native rooted targets: {count}"));
         }
-        Gadget::RocketBoots => refresh(r, game, owner)?,
+        Gadget::RocketBoots => refresh(r, game, slot, owner)?,
         Gadget::ProtectionBelt => {
             let (before, after) = unsafe {
                 r.adapter
@@ -312,16 +234,7 @@ fn activate(
                 game,
                 owner,
             )? {
-                let p = r
-                    .adapter
-                    .solo_run(&r.local, game)?
-                    .ok_or("Sapper run retired")?;
-                let point = p
-                    .actors
-                    .first()
-                    .filter(|a| a.guid == owner)
-                    .ok_or("Sapper owner changed")?
-                    .position;
+                let point = position;
                 let hits = unsafe {
                     r.adapter.solo_engineering_burst(
                         &r.local,
@@ -332,7 +245,7 @@ fn activate(
                         true,
                     )
                 }?;
-                r.log.info(&format!("solo Sapper native explosion: targets={hits} before_hp={before} after_hp={after} maximum_hp={} protected_floor=75%",p.actors[0].maximum));
+                r.log.info(&format!("solo Sapper native explosion: targets={hits} before_hp={before} after_hp={after} maximum_hp={} protected_floor=75%",maximum));
             }
         }
         Gadget::ShrinkRay => {
@@ -351,16 +264,17 @@ fn activate(
             let token = {
                 let mut state = STATE.lock().map_err(|_| "Mortar state unavailable")?;
                 let s = state
-                    .as_mut()
-                    .filter(|s| s.game == game && s.owner == owner)
+                    .get_mut(&owner)
+                    .filter(|s| s.game == game && s.slot == slot)
                     .ok_or("Mortar owner retired")?;
                 if s.mortars.len() >= 8 {
                     return Err("Mortar receipt safety bound reached".into());
                 }
-                s.serial = s.serial.checked_add(1).ok_or("Mortar identity exhausted")?;
+                s.serial = s.serial.checked_add(1).filter(|n| *n <= 0xffffff)
+                    .ok_or("Mortar identity exhausted")?;
                 let token = r
                     .adapter
-                    .solo_new_mortar_token(s.serial)
+                    .solo_new_mortar_token((slot << 24) | s.serial)
                     .ok_or("Mortar identity is zero")?;
                 s.mortars.insert(
                     token,
@@ -382,34 +296,16 @@ fn activate(
                     token,
                 )
             }?;
-            let deferred = {
-                let mut state = STATE.lock().map_err(|_| "Mortar state unavailable")?;
-                let s = state
-                    .as_mut()
-                    .filter(|s| s.game == game && s.owner == owner)
-                    .ok_or("Mortar owner changed during launch")?;
-                if let Some(launch) = launch {
-                    let receipt = s
-                        .mortars
-                        .get_mut(&token)
-                        .ok_or("Mortar receipt disappeared")?;
-                    receipt.launch = Some(launch);
-                    receipt.expires = launch.arrives + 5.;
-                    let early = receipt.early_impact;
-                    r.log.info(&format!("solo Mortar native launched: token={token} target={} point={:?} arrives={}",launch.target,launch.point,launch.arrives));
-                    if early.is_some() {
-                        let receipt = s.mortars.remove(&token).unwrap();
-                        Some((receipt, early.unwrap()))
-                    } else {
-                        None
-                    }
-                } else {
-                    s.mortars.remove(&token);
-                    None
-                }
-            };
-            if let Some((receipt, enemy)) = deferred {
-                deliver_mortar(r, game, owner, receipt, enemy)?;
+            let mut state = STATE.lock().map_err(|_| "Mortar state unavailable")?;
+            let s = state.get_mut(&owner).filter(|s| s.game == game && s.slot == slot)
+                .ok_or("Mortar owner changed during launch")?;
+            if let Some(launch) = launch {
+                let receipt = s.mortars.get_mut(&token).ok_or("Mortar receipt disappeared")?;
+                receipt.launch = Some(launch);
+                receipt.expires = launch.arrives + 5.;
+                r.log.info(&format!("Mortar native launched: owner={owner} token={token} target={}", launch.target));
+            } else {
+                s.mortars.remove(&token);
             }
         }
     }
@@ -444,45 +340,19 @@ fn deliver_mortar(
     Ok(())
 }
 pub fn impact(r: &Runtime, game: u64, enemy: u64, effect: u64, spell: u32) {
-    let result = (|| -> Result<(), String> {
-        let Some(token) = r.adapter.solo_mortar_token(&r.local, spell, effect)? else {
-            return Ok(());
-        };
-        let receipt = {
-            let mut state = STATE.lock().map_err(|_| "Mortar state unavailable")?;
-            let Some(s) = state.as_mut().filter(|s| s.game == game) else {
-                return Ok(());
-            };
-            let Some(receipt) = s.mortars.get_mut(&token) else {
-                return Ok(());
-            };
-            if receipt.launch.is_none() {
-                receipt.early_impact = Some(enemy);
-                return Ok(());
+    let Ok(Some(token)) = r.adapter.solo_mortar_token(&r.local, spell, effect) else { return };
+    if let Ok(mut state) = STATE.lock() {
+        for s in state.values_mut().filter(|s| s.game == game) {
+            if let Some(receipt) = s.mortars.get_mut(&token) {
+                if receipt.early_impact.is_none() { receipt.early_impact = Some(enemy); }
+                return;
             }
-            let owner = s.owner;
-            Some((
-                owner,
-                s.mortars.remove(&token).ok_or("Mortar receipt missing")?,
-            ))
-        };
-        if let Some((owner, receipt)) = receipt {
-            deliver_mortar(r, game, owner, receipt, enemy)?;
         }
-        Ok(())
-    })();
-    if let Err(e) = result {
-        r.log.warn(&format!(
-            "Engineering impact stopped: {e}; no uncertain impact is retried"
-        ));
-        reset();
     }
 }
 pub fn wire(game: u64, owner: u64) -> Option<String> {
     let state = STATE.lock().ok()?;
-    let s = state
-        .as_ref()
-        .filter(|s| s.game == game && s.owner == owner)?;
+    let s = state.get(&owner).filter(|s| s.game == game)?;
     let e = s.equipment.as_ref()?;
     let kind = Gadget::ALL.iter().position(|v| *v == e.kind)?;
     let centis = |v: f32| ((v - s.clock).max(0.) * 100.).round().min(60000.) as u32;

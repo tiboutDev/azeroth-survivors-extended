@@ -349,6 +349,8 @@ fn event_text(r:&Runtime,game:u64,slot:u32)->String{
  #[cfg(feature="test-hooks")]
  if std::env::var("AZSX_TEST_COOP_UI").as_deref()==Ok("1") {static SAMPLES:AtomicUsize=AtomicUsize::new(0);let n=SAMPLES.fetch_add(1,Ordering::Relaxed);if n<3000&&n%100==0{r.log.info(&format!("coop economy diagnostic: slot={slot} owner={owner} xp={:?} gold={:?} actors={:?}",super::xp_hooks::services::effective_multiplier(r),super::wallet::effective_multiplier(r,game,actor),party.actors.iter().map(|a|(a.slot,a.xp_multiplier,a.gold_multiplier)).collect::<Vec<_>>()));}}
  text.push_str(&economy_wire(owner,super::xp_hooks::services::effective_multiplier(r),super::wallet::effective_multiplier(r,game,actor)));
+ if let Some(row)=super::solo_escort::wire(game,owner){text.push_str(&row);}
+ if let Some(row)=super::solo_gadgets::wire(game,owner){text.push_str(&row);}
  if let Some((event,held,inside))=super::world_events::coop::view(game,owner){text.push_str(&format!("R|{owner}|{event}|{held}|{}|{}\n",u8::from(inside),u8::from(super::world_events::coop::all_inside(game))));}
  for(c,remaining,index)in super::supplies::buffs(game,owner){if index<32&&remaining>0.{text.push_str(&format!("C|{owner}|{}|{}|{}|{index}|{}|{}|{}\n",c.family as u8,c.tier,remaining.ceil()as u32,hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}
  if let Some(d)=super::supplies::discovery(game,owner){text.push_str(&format!("D|{owner}|{}|{}|{}|{}|{}|{}|{}\n",d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.reward.text().as_bytes()),d.reward.quality()));}

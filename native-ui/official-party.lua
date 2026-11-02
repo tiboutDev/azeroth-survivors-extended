@@ -130,7 +130,7 @@ local function decode(wire)
             elseif a[1]=="V" and (table.getn(a)==12 or table.getn(a)==14) and id==result.own and result.members[id] then
                 local event,kind,stage=integer(a[3],1,1e9),integer(a[4],1,1),integer(a[5],0,4)
                 local held,maximum,inside=integer(a[6],0,200),integer(a[7],200,200),integer(a[8],0,1)
-                local charge,progress,total,remaining=integer(a[9],0,0),integer(a[10],0,120),integer(a[11],120,120),integer(a[12],0,0)
+                local charge,progress,total,remaining=integer(a[9],0,0),integer(a[10],0,120),integer(a[11],8,120),integer(a[12],0,0)
                 local x,y
                 if table.getn(a)==14 then
                     x,y=tonumber(a[13]),tonumber(a[14])
@@ -209,7 +209,6 @@ local function decode(wire)
     end
     result.signature=table.concat(signature,"\n")
     if not result.members[result.own] then return nil end
-    if table.getn(result.ordered)~=1 and (result.members[result.own].soloEvent or result.members[result.own].engineering) then return nil end
     return result
 end
 local function refreshModel()
@@ -752,7 +751,7 @@ local function apiState()
             local e=state.data.soloEvent
             local notes={"Find the damaged chicken","Restart the chicken","Accompany the chicken to its teleporter","Extraction complete","Escort ended"}
             local note=notes[e.stage+1]
-            if e.stage==2 and not e.inside then note=note.." (waiting for you)" end
+            if e.stage==2 and not e.inside then note=note.." (waiting for all players)" end
             state.texts.soloEvent={title="Mechanical Chicken Escort",note=note,icon="Interface\\Icons\\INV_Misc_EngGizmos_06",reward="Engineering gadget equipped",duration="Until the end of the run"}
         end
         if state.data.engineering then

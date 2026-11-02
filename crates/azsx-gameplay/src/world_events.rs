@@ -10,10 +10,32 @@ impl Area{
  pub fn contains(self,point:[f32;2],margin:f32)->bool{point.iter().chain(self.center.iter()).all(|v|v.is_finite())&&margin.is_finite()&&margin>=0.&&self.radius.is_finite()&&self.radius>=margin&&(point[0]-self.center[0]).hypot(point[1]-self.center[1])<=self.radius-margin}
 }
 pub fn separated(point:[f32;2],radius:f32,occupied:&[([f32;3],f32)])->bool{occupied.iter().all(|(p,r)|(point[0]-p[0]).hypot(point[1]-p[1])>=radius+r+3.)}
+/// Interior navigation probes for large world-event footprints. The native
+/// perimeter/center probe alone can miss a blocked tree cell inside a rune or
+/// crash site. Small collectible footprints keep their existing cheap probe.
+pub fn interior_clearance_points(center:[f32;2],radius:f32)->Vec<[f32;2]>{
+ if !center.iter().all(|v|v.is_finite())||!radius.is_finite()||radius<3.||radius>10.{return Vec::new()}
+ let steps=(radius/1.5).floor()as i32;
+ let mut points=Vec::new();
+ for y in -steps..=steps {for x in -steps..=steps {
+  if x==0&&y==0{continue}
+  let offset=[x as f32*1.5,y as f32*1.5];
+  if offset[0].hypot(offset[1])<radius {
+   points.push([center[0]+offset[0],center[1]+offset[1]]);
+  }
+ }}
+ points
+}
 #[cfg(test)]mod tests{
  use super::*;
  #[test]fn sample_covers_area_without_a_player_input_and_respects_footprint(){let a=Area{center:[10.,20.],radius:100.};let near=a.sample(9.,0,0).unwrap();let far=a.sample(9.,u32::MAX,0).unwrap();assert!((near[0]-10.).abs()<0.01);assert!((far[0]-101.).abs()<0.01);for n in 0..1000{let p=a.sample(9.,n*4294967,n*3943621).unwrap();assert!(a.contains(p,8.99));}assert!(!separated([10.,20.],2.,&[([12.,20.,0.],8.)]));}
  #[test]fn invalid_geometry_is_rejected(){assert!(Area{center:[0.;2],radius:8.}.sample(9.,0,0).is_none());assert!(Area{center:[f32::NAN,0.],radius:20.}.sample(2.,0,0).is_none());}
+ #[test]fn large_event_footprint_checks_blocked_cells_between_center_and_edge(){
+  let points=interior_clearance_points([100.,200.],5.);
+  assert!(points.contains(&[101.5,201.5]));
+  assert!(points.iter().all(|p|(p[0]-100.).hypot(p[1]-200.)<5.));
+  assert!(interior_clearance_points([100.,200.],0.5).is_empty());
+ }
 }
 
 /// Native terrain observations only; inclination is a preference, never a veto.

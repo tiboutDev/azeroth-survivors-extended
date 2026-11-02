@@ -1,6 +1,6 @@
 """Strict, passive Lua evidence collection. Model records never prove rendered UI."""
 import json,math
-KINDS={"api.contract","observer.started","observer.stopped","ui.coop_hud","ui.progression","ui.supply_toast","ui.sayge_progress","ui.buffs","ui.tooltip","azsx.ritual_model"}
+KINDS={"api.contract","observer.started","observer.stopped","ui.coop_hud","ui.progression","ui.supply_toast","ui.sayge_progress","ui.buffs","ui.tooltip","azsx.ritual_model","azsx.escort"}
 def collect(text,session,slot):
  records=[];errors=[];last_clock=-1
  for line in text.splitlines():

@@ -164,6 +164,11 @@ impl Adapter {
             low = low.min(z);
             high = high.max(z);
         }
+        // A clear rim does not prove a clear interior: large decorative tree
+        // footprints can occupy cells between the center and eight rim probes.
+        for sample in azsx_gameplay::world_events::interior_clearance_points(point, footprint) {
+            if !self.event_walkable(m, terrain, sample)? { return Ok(None); }
+        }
         Ok(Some(GroundSite {
             center: [point[0], point[1], center],
             low,
