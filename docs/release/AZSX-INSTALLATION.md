@@ -206,3 +206,7 @@ never packages native executable or MPQ files. After the native executable chang
 the launcher restarts and installs the signed compatible AZSX package through its
 usual transaction. If either announcement or signed feed is unavailable, the
 installed native client remains in use. Offline play never checks either feed.
+
+## Updating from the font-bearing .5 bundle
+
+The .5 launcher requires both former font files in a signed addon inventory. For the first release that omits them, close the game and launcher and extract the complete new archive over the supported game folder. The new launcher recognizes the previous inventory for rollback. A direct automatic update from the .5 launcher requires a separately qualified bridge release.

@@ -2,14 +2,12 @@
 -- Plate styling is standalone; optional minimap/event views consume AZSX bridges.
 local addon = CreateFrame("Frame", "AZSXUIController", UIParent)
 local plates, known, scanned = {}, {}, -1
-local originalDamageFont = DAMAGE_TEXT_FONT
-local numberFont = "Interface\\AddOns\\AZSXUI\\Fonts\\AZSXUI-Numbers.ttf"
 local borderTexture = "Interface\\Tooltips\\Nameplate-Border"
 local ready = false
 local function settings()
     if type(AZSXUIDB) ~= "table" then AZSXUIDB = type(ASXUIDB)=="table" and ASXUIDB or {} end
     if type(AZSXUIDB.plates) ~= "boolean" then AZSXUIDB.plates = true end
-    if type(AZSXUIDB.numbers) ~= "boolean" then AZSXUIDB.numbers = false end
+    AZSXUIDB.numbers = nil -- Retire the saved custom-font preference.
     if type(AZSXUIDB.scale) ~= "number" or AZSXUIDB.scale ~= AZSXUIDB.scale
         or AZSXUIDB.scale < 0.5 or AZSXUIDB.scale > 1.5 then AZSXUIDB.scale = 0.5 end
     -- Migrate the previous factory size, retaining other explicit scales.
@@ -151,7 +149,6 @@ addon:SetScript("OnEvent",function()
         ShowNameplates();NAMEPLATES_ON=1
         SetCVar("nameplateLayout","overlap");db.nativePlateDefaults=true
     end
-    DAMAGE_TEXT_FONT=db.numbers and numberFont or originalDamageFont
 end)
 addon:SetScript("OnUpdate",refresh)
 SLASH_AZSXUI1="/azsxui"
@@ -178,10 +175,8 @@ SlashCmdList["AZSXUI"]=function(message)
         local value=tonumber(argument)
         if not value or value~=value or value<0.5 or value>1.5 then say("Scale must be between 0.5 and 1.5.");return end
         db.scale=value;refresh();say("Nameplate scale: "..value)
-    elseif command=="numbers"and(argument=="on"or argument=="off")then
-        db.numbers=argument=="on";say("World number font "..argument..". Applies after restarting the client.")
     else
-        say("/azsxui camera toggle|inspect|status; /azsxui hud on|off; /azsxui widget supplies|fortune|crystals|sayge|revive|loot|marks ...; /azsxui pins on|off; /azsxui plates on|off; /azsxui scale 0.5..1.5; /azsxui numbers on|off")
+        say("/azsxui camera toggle|inspect|status; /azsxui hud on|off; /azsxui widget supplies|fortune|crystals|sayge|revive|loot|marks ...; /azsxui pins on|off; /azsxui plates on|off; /azsxui scale 0.5..1.5")
     end
 end
 function AZSXUI_Readout()

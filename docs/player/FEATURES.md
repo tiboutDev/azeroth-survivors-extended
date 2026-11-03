@@ -327,9 +327,7 @@ without restarting:
 
 Widget names are `crystals`, `supplies`, `fortune`, `sayge`, `revive`, `loot` and `marks`. Hiding a widget
 only changes its display; it never disables rewards or changes trial progress.
-The native damage font is kept by default; matching AZSX reduces outgoing damage
-size by three. The optional alternative number face
-requires a client restart. See the [AZSXUI guide](../../addons/AZSXUI/README.md)
+AZSXUI leaves the world-number font unchanged. AZSX scales outgoing normal hits to one third of native size and critical hits to one half. See the [AZSXUI guide](../../addons/AZSXUI/README.md)
 for all commands and nameplate limits.
 
 ## Optional events
@@ -403,8 +401,7 @@ gained together add up in one notification, with the latest native total.
 Fortune acquisition appears once per actual reward; a pause or new ritual does
 not replay the previous reward. Original chat messages remain available.
 
-Crystal Resonance and Sayge's Fortune appear as permanent-effect medallions beside
-health. Crystals show one total count on their icon; the tooltip lists accumulated
+The row below health shows active Crystal Resonance, Sayge's Fortune, the equipped gadget and a reserved healing potion. The potion icon clears when its charge is spent. Crystals show one total count on their icon; the tooltip lists accumulated
 bonuses. Fortune has a small icon for the bonus category. The health capsule keeps
 native shaded artwork. Sayge's icon-free channel bar shows remaining time inside
 the bar; the same style also displays native resurrection progress.
@@ -445,7 +442,7 @@ control at most three ordinary enemies; Shrink Ray changes appearance only
 (x0.5, x1 or x1.5). The parachute cape remains under feasibility review.
 The optional AZSXUI addon lists the escort beneath the minimap, marks the
 chicken with a native `INV_Misc_EngGizmos_06` minimap icon, and keeps an equipped-gadget
-badge beside the health and Fortune display. The game rules do not require the
+badge in the effects row below health. The game rules do not require the
 addon.
 
 See [the engineering details](../features/SOLO-ESCORT.md). Check the release

@@ -218,6 +218,9 @@ class AZSXTests(unittest.TestCase):
   core.rollback(self.root);self.assertFalse((self.root/target).exists());self.assert_ui_preferences();self.intact()
  def test_legacy_bundled_ui_remains_valid_for_signed_rollback(self):
   m,data=self.bundled_ui(1)
+  for name in ("Fonts/AZSXUI-Numbers.ttf","Fonts/OFL.txt"):
+   m["files"][core.AZSXUI_SOURCE+name]={"size":1,"sha256":core.digest(b"x")}
+  self.assertIs(core.validate(m),m) # Complete font-bearing .5 inventory
   for name in ("Hud.lua","Theme.lua","Frames.lua"):del m["files"][core.AZSXUI_SOURCE+name]
   self.assertIs(core.validate(m),m)
  def test_ui_projection_inventory_rejects_preferences_unknown_files_and_partial_bundle(self):

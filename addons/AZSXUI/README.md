@@ -12,7 +12,7 @@ updated with signed AZSX updates; no separate archive is needed. Preferences sta
 in the native SavedVariables store. Do not edit the managed source files to
 configure the addon; use the commands below.
 
-For standalone use, place the `AZSXUI` folder inside the native game’s `benilla-config/AddOns/` directory and restart the client. The resulting path must be `benilla-config/AddOns/AZSXUI/AZSXUI.toc`. Keep its `.toc`, Lua, font and
+For standalone use, place the `AZSXUI` folder inside the native game’s `benilla-config/AddOns/` directory and restart the client. The resulting path must be `benilla-config/AddOns/AZSXUI/AZSXUI.toc`. Keep its `.toc`, Lua and
 licenses together. AZSX can later adopt matching files or, with consent and a
 backup, replace different code. Removing AZSX removes only its unchanged managed
 addon files and preserves preferences and unknown files.
@@ -36,10 +36,7 @@ addon files and preserves preferences and unknown files.
   Untargeted special enemies may therefore also have hidden names: Lua does not
   expose a GUID/unit token for every retained plate. Names in `AZS_UNITS` alone
   are not sufficient to identify a plate. Reused plates are checked each frame.
-- The native damage font is preserved by default. The earlier renamed OFL number
-  face remains an explicit opt-in (`numbers on`), rather than a default. Existing
-  saved `numbers=true` preferences are respected; use `numbers off` and restart
-  to restore the startup native face. Standalone Lua has no confirmed same-face size control. With the matching
+- AZSXUI uses the native world-number font. With the matching
   AZSX DLL, native outgoing damage renders at one third size for normal hits and one half for critical hits without changing fonts.
 - AZSXUI owns the circular custom-event and native-cache minimap pins, their native
   portrait mask, tracking-ring border, hover text and edge projection. Supply and
@@ -78,15 +75,12 @@ Commands:
 /azsxui plates on
 /azsxui plates off
 /azsxui scale 0.6
-/azsxui numbers on
-/azsxui numbers off
 ```
 
-Plate styling and marker toggles change immediately and are reversible. The number-face preference
-applies after restarting the client because the engine caches it at load time.
+Plate styling and marker toggles change immediately and are reversible.
 AZSXUI initially enables enemy plates and Overlapping once. Native visibility
 keys/options remain available and later choices are respected; bindings are unchanged. Avoid enabling another addon that styles the
-same plates/pins or selects a conflicting damage font at the same time.
+same plates or pins.
 
 ## Camera and inspection
 
@@ -115,24 +109,12 @@ scoped live observations; portable tests alone are not rendering evidence.
 
 ## Licenses and references
 
-AZSXUI code: GNU GPL v3, see `LICENSE`. The number font is a renamed derivative of
-Barlow Condensed SemiBold by Jeremy Tribby and contributors, under the SIL Open
-Font License; see `Fonts/OFL.txt`. No native game fonts or textures are bundled.
+AZSXUI code: GNU GPL v3, see `LICENSE`.
 
 Technical references: [Survivor Plates and Survivor UI](https://github.com/morderous/survivor-ui)
 and [SurvivorUI Classic](https://github.com/morderous/survivorui-classic).
 These projects demonstrated the native Lua plate widgets and the `DAMAGE_TEXT_FONT`
 route. AZSXUI keeps its own small implementation and does not depend on them.
-
-The source font was read from survivor-ui commit
-`eb1f4eee5aee80e2a2d957f0a15fb09a7343c625`, file
-`SurvivorUI/Fonts/BarlowCondensed-SemiBold.ttf`.
-Source SHA-256: `7b619d14bc2327509a9ef32b0890f709626f7ecc9ff61191c2a4314c5499d2d9`.
-Rebuild the renamed derivative with:
-
-```sh
-uv run --with fonttools python tools/build/azsxui_font.py --source <source-font.ttf> --output addons/AZSXUI/Fonts/AZSXUI-Numbers.ttf
-```
 
 ## AZSX event widgets
 
@@ -431,9 +413,7 @@ Outgoing damage stays attached to native enemy impacts, with the unchanged
 native face at one third of native size for normal hits and one half for critical hits.
 Healing size and other world-text categories are unchanged. Critical spell
 icons remain deferred; no screen-fixed feed or heuristic Lua target match is
-introduced. The older optional reduced-geometry font is unnecessary for this
-mode and compounds scaling if explicitly enabled; use `/azsxui numbers off`
-and restart to keep the native face.
+introduced.
 
 Native item pickups use API 1.6 structured local `drop` receipts: the original
 native name, rarity, new-collection flag and icon are copied from the existing

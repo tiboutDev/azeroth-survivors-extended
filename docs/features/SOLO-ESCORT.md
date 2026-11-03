@@ -70,7 +70,7 @@ and identity; run end removes all remaining effects. No uncertain native launch 
 The retained AZSX Lua provider exports structured escort and gadget data via
 API 1.13. AZSXUI displays the objective beneath the minimap, a native-icon
 `INV_Misc_EngGizmos_06` marker at the chicken while it is active, and a persistent gadget
-badge beside the health/Fortune medallions after extraction. A brief native-textured green pulse marks an activation or active effect without replaying the reward toast. The marker uses
+badge in the effects row below health after extraction. A brief native-textured green pulse marks an activation or active effect without replaying the reward toast. The marker uses
 read-only live scene coordinates and disappears with the scene. Native aura
 templates supply encounter debuff borders. AZSXUI does not own gameplay. The selected 0.138.0 descriptor guards native scene, spline,
 projectile, combat and broadcast contacts. A future client needs a complete

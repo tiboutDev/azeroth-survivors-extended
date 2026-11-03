@@ -185,7 +185,7 @@ two-build result, runtime scope and preserved publication boundaries.
 If approval is pending or declined, keep the candidate separate and mark preparation
 incomplete. The producer never approves its own candidate. After explicit approval,
 preserve the superseded reference in private evidence, update
-`validation/asx-reproducible-build-xwin.json` and [REPRODUCIBILITY.md](REPRODUCIBILITY.md)
+`validation/azsx-reproducible-build-xwin.json` and [REPRODUCIBILITY.md](REPRODUCIBILITY.md)
 with the decision/date/scope, then run:
 
 ```sh

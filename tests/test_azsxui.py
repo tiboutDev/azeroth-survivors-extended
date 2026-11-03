@@ -110,11 +110,11 @@ class AZSXUITests(unittest.TestCase):
     def test_native_defaults_apply_once_and_later_choices_are_preserved(self):
         self.run_lua('assert(plateShows==1 and NAMEPLATES_ON==1 and layout=="overlap");layout="stack";NAMEPLATES_ON=0;loadAddon();tick();assert(plateShows==1 and layout=="stack" and NAMEPLATES_ON==0);AZSXUIDB.scale=.9;AZSXUIDB.compactPlates=nil;loadAddon();assert(AZSXUIDB.scale==.9);AZSXUIDB.scale=.7;AZSXUIDB.compactPlates=nil;loadAddon();assert(AZSXUIDB.scale==.5)')
     def test_native_damage_face_is_preserved_by_default(self):
-        self.run_lua('assert(DAMAGE_TEXT_FONT=="native.ttf" and AZSXUIDB.numbers==false)')
+        self.run_lua('AZSXUIDB.numbers=true;DAMAGE_TEXT_FONT="other.ttf";loadAddon();assert(DAMAGE_TEXT_FONT=="other.ttf" and AZSXUIDB.numbers==nil)')
     def test_toggle_restores_native_widgets_and_does_not_toggle_visibility(self):
         self.run_lua('function ShowNameplates()error("visibility changed")end;p=makePlate("Boar",1,0,0);tick();SlashCmdList.AZSXUI("plates off");assert(p:GetWidth()==100);assert(p.regions[4].alpha==1);assert(p.regions[5].alpha==1);assert(p.regions[6].alpha==1)')
-    def test_invalid_settings_are_bounded_and_numbers_change_next_start(self):
-        self.run_lua('local old=DAMAGE_TEXT_FONT;SlashCmdList.AZSXUI("numbers off");assert(DAMAGE_TEXT_FONT==old);loadAddon();assert(DAMAGE_TEXT_FONT=="native.ttf");AZSXUIDB.scale=0/0;p=makePlate("Boar",1,0,0);tick();assert(p:GetWidth()==50)')
+    def test_invalid_settings_are_bounded(self):
+        self.run_lua('AZSXUIDB.scale=0/0;p=makePlate("Boar",1,0,0);tick();assert(p:GetWidth()==50)')
     def test_unrelated_world_children_are_untouched(self):
         self.run_lua('p=makePlate("Other",1,0,0);p.regions[1].texture="other";tick();assert(p:GetWidth()==100);assert(p.regions[4].alpha==1)')
     def test_unit_pool_discovery_handles_new_children_and_recycled_names(self):

@@ -29,11 +29,6 @@ BINARY_EXT = {'.exe', '.dll', '.mpq', '.bin', '.png', '.jpg', '.jpeg', '.blp', '
 RESOURCE_PATH = 'resources/windows/version.res'
 RESOURCE_SHA256 = 'a6f67c43eab06f32b9cb887f9e7053af4056a58feaa8551fae0dd768d93b1263'
 
-# AZSXUI Combat: renamed OFL Barlow derivative, never a native game font.
-AZSXUI_FONT_PATH = 'addons/AZSXUI/Fonts/AZSXUI-Numbers.ttf'
-AZSXUI_FONT_SHA256 = '5e4052210ae5677f6f19b331c89190ee7af461ac7e66287f0b67c925e4ffb21e'
-AZSXUI_FONT_LICENSE = 'addons/AZSXUI/Fonts/OFL.txt'
-AZSXUI_FONT_LICENSE_SHA256 = '10b0e6bb43166a50fbe7cde2895bd7f703738a5da843acb5c97c95dc9ea26817'
 
 ASSET_NAME_RULE = re.compile(r'\b\w+\.(?:mpq|blp|m2|wmo|adt|wdt|wdl|dbc)\b', re.I)
 
@@ -209,11 +204,6 @@ def forbidden_binary(rel, suffix, raw=None):
     suffix = suffix.lower()
     if suffix == '.res':
         return not approved_embedded_resource(rel, raw or b'')
-    if rel == AZSXUI_FONT_PATH and suffix == '.ttf':
-        license_path = ROOT / AZSXUI_FONT_LICENSE
-        return not (hashlib.sha256(raw or b'').hexdigest() == AZSXUI_FONT_SHA256
-                    and license_path.is_file()
-                    and hashlib.sha256(license_path.read_bytes()).hexdigest() == AZSXUI_FONT_LICENSE_SHA256)
     return suffix in BINARY_EXT
 
 
@@ -239,10 +229,6 @@ def scan():
                 continue
             hits.append((rel, 0, 'binary/asset file', 'unreviewed Windows resource file'))
             continue
-        if rel == AZSXUI_FONT_PATH and suffix == '.ttf':
-            raw = path.read_bytes()
-            if not forbidden_binary(rel, suffix, raw):
-                continue
         if forbidden_binary(rel, suffix, resource_bytes):
             note = f'a {suffix} file must not be in the audit repo'
             hits.append((rel, 0, 'binary/asset file', note))

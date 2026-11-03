@@ -2,7 +2,7 @@
 
 Reproducibility is one gate in the [release preparation checklist](RELEASE-CHECKLIST.md); candidate production never approves a release.
 
-The [approved local WSL reference](../../validation/asx-reproducible-build-xwin.json)
+The [approved local WSL reference](../../validation/azsx-reproducible-build-xwin.json)
 identifies the approved **0.138.0-azsx.5** normal DLL (2,276,864 bytes)
 for native **0.138.0**:
 

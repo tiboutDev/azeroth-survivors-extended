@@ -329,7 +329,7 @@ pending, a later encounter updates its schedule and stage. There is at most one
 active trial. Placement is map-wide as defined above, with bounded scheduled
 retries if no walkable location is found.
 
-The scene contains the native purple ground rune, Classic Sayge display 491,
+The scene contains the native purple ground rune, Classic Sayge display 491 with a lava orb in his right hand and a glowing black book in his left,
 and three pairs of black candles placed through native terrain clipping. A
 blocked candle position is omitted rather than stacked at the center. Sayge is
 a presentation-only native Unit: friendly faction, non-attackable/non-selectable,
@@ -354,7 +354,7 @@ Experience 12% and Gold 25%. Final displayed
 percentages are whole numbers. The next successful trial raises normalized power
 above the previous success until the cap of 40; a repeat category also advances
 past rounding ties where possible. Missing trials does not hold back map stage.
-Category is uniformly random; Luck does not affect the roll. Structured legacy rarity follows power rather than a separate random roll;
+Solo gives equal chances for Luck, XP and Gold. With N eligible participants, each personal draw uses weights N, 1 and 1 respectively. The Luck stat does not affect the roll. Structured legacy rarity follows power rather than a separate random roll;
 visual Fortune text uses green +X% values instead of rarity labels. These ranges are provisional solo tuning,
 not approved final balance. At the endless cap further replacements can equal
 power; growth is bounded.

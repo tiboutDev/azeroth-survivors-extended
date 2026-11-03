@@ -34,7 +34,7 @@ def verify(reference, candidate):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--reference", type=Path, default=Path(__file__).resolve().parents[1] / "validation/asx-reproducible-build-xwin.json")
+    parser.add_argument("--reference", type=Path, default=Path(__file__).resolve().parents[1] / "validation/azsx-reproducible-build-xwin.json")
     parser.add_argument("--candidate", type=Path, required=True)
     args = parser.parse_args()
     verify(json.loads(args.reference.read_text()), json.loads(args.candidate.read_text()))

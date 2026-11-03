@@ -58,7 +58,7 @@ def execution_inputs(root=ROOT):
  files=dict(artifact_record.ui_inputs(root));python_files=python_inputs(root)
  for name in scenario_suites.load_suites(root)['suites']:
   files.update({k:v for k,v in validation_inputs(name,root,python_files).items()if k!='scenario'})
- for relative in ('azsx/supported-games.json','compat/suites.json','tools/dev/fixtures/azsx-pin-hover-audit.lua','tools/dev/azsxui_probe_trial.py','tools/dev/fixtures/azsxui-hud-probe.lua','tools/dev/fixtures/azsxui-api-probe.lua','tools/dev/codex_trial.py'):
+ for relative in ('azsx/supported-games.json','compat/suites.json','tools/dev/fixtures/azsx-pin-hover-audit.lua','tools/dev/fixtures/azsx-ritual-ui-audit.lua','tools/dev/azsxui_probe_trial.py','tools/dev/fixtures/azsxui-hud-probe.lua','tools/dev/fixtures/azsxui-api-probe.lua','tools/dev/codex_trial.py'):
   files[relative]=artifact_record.digest(safe(root,relative))
  return files
 

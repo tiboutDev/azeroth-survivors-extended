@@ -387,7 +387,7 @@ Candidate profiles: `official-party-ui`, `support`, `azsxui`. [Scenario mappings
 | --- | --- | --- |
 | AZSX-24.01 | Normal/critical damage | Native face, world projection and animation; fresh normal sizes divided by three and critical sizes by two, once, never compounded by reuse. |
 | AZSX-24.02 | Healing/other categories | Damage seam leaves their size unchanged; allied healing retains identity/fractional accumulation. |
-| AZSX-24.03 | Fonts/icons | Native face default. Critical spell icons/guessed Lua impact projection not implemented. Optional older OFL face also changes healing and compounds scaling; never enable silently. |
+| AZSX-24.03 | Fonts/icons | AZSXUI leaves the world-number font unchanged, including on profiles with the retired numbers preference. Critical spell icons are not implemented. |
 
 ### AZSX-25 — Participant markers
 
@@ -437,7 +437,7 @@ Candidate profiles: `rules`, `diagnostics`, `official-party-ui`. [Scenario mappi
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-28.01 | Scheduling | Enabled trial replaces boss Fortunes; one opportunity 15 to 90 simulation seconds after each eligible boss, none after the final normal encounter, endless continues. One map-wide walkable rune/decorative Sayge/candles; sample interior navigation cells across its large footprint, no combat actor/reward contribution. |
+| AZSX-28.01 | Scheduling | Enabled trial replaces boss Fortunes; one opportunity 15 to 90 simulation seconds after each eligible boss, none after the final normal encounter, endless continues. One map-wide walkable rune/decorative Sayge/candles; sample interior navigation cells across its large footprint, no combat actor/reward contribution. Only Sayge gets the lava orb in the right hand (display 23173) and glowing black book in the left (23322). |
 | AZSX-28.02 | Unfinished trial/later boss | Keep identity/location/progress, upgrade reward stage without reset/replacement/banked extras. No availability deadline or premature reward. |
 | AZSX-28.03 | Presence/death/pause | Twenty cumulative seconds; every active coop actor must be alive/playing/inside. Leaving/death suspends without reset, resume when all return; native pause freezes time. |
 | AZSX-28.04 | Progress UI | Visible only for local inside actor, collective waiting explicit; never interpolate suspended progress. |
@@ -463,7 +463,7 @@ movement, targeting and progression except explicitly listed AZSX rules. No reti
 custom simulation, difficulty interception, global OS hooks or secondary transport.
 Preserve bounded reads, caller ABI/flags/registers, ownership and callback ordering.
 Use available native event/UI resources; do not silently add external game assets.
-The documented optional font is distinct from the default native damage path.
+AZSXUI ships no font override.
 UI/code/docs remain English; machine paths, private keys and mutable test status
 do not belong here.
 

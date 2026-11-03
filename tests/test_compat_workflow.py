@@ -41,7 +41,11 @@ class WorkflowTests(unittest.TestCase):
  def test_generated_binding_and_features_match(self):
   _,client,_=binding_registry.load_binding()
   self.assertEqual(binding_registry.owned_path(client["descriptor"]).read_text(),binding_registry.render())
-  self.assertEqual(len(feature_catalog.load_features()),34)
+  behavior=(azsx_dev.ROOT/'docs/compatibility/AZSX-BEHAVIOR.md').read_text()
+  features=feature_catalog.load_features()
+  catalog={feature['id'] for feature in features}
+  self.assertEqual(set(re.findall(r'^#{2,3} (AZSX-\d+) ',behavior,re.M)),catalog)
+  self.assertEqual(set(re.findall(r'^\| (AZSX-\d+)\.\d+ ',behavior,re.M)),{f['id'] for f in features if f['mode']!='None'})
  def test_production_native_access_has_no_historical_descriptor_dependency(self):
   root=Path(__file__).resolve().parents[1]
   for path in(root/"crates/azsx-game/src/official_native").rglob('*.rs'):

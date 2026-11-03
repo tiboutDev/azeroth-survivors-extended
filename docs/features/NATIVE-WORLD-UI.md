@@ -36,10 +36,7 @@ occur. Windows execution tests cover repeated baselines, categories and heals.
 This adds one exact native compatibility contact. Critical spell icons remain
 deferred; there is no Lua renderer or guessed target matching.
 
-AZSXUI preserves the native world-number face by default. Its earlier optional
-OFL face has one-third glyph geometry and also affects healing: keep
-`/azsxui numbers off` for the native-face result above (restart after changing
-the face). Enabling the old geometry option compounds native damage scaling.
+AZSXUI leaves the world-number font to the client.
 No outgoing size CVar or `FontString` option is claimed to control world text.
 
 AZSXUI `Minimap.lua` renders custom supplies/trials and native `AZS_CHESTS` caches

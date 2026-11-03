@@ -59,11 +59,18 @@ python3 tools/dev/azsx_dev.py impact --comparison "$EVIDENCE/comparison.json" > 
 python3 tools/dev/azsx_dev.py plan compatibility > "$EVIDENCE/plan.json"
 ```
 
-Review **every** AZSX-01 through AZSX-29 section in [AZSX-BEHAVIOR.md](AZSX-BEHAVIOR.md).
+Review every ID in the [feature catalog](../../compat/features.json), including disabled features, against its section in [AZSX-BEHAVIOR.md](AZSX-BEHAVIOR.md).
 Create its per-patch evidence table: criterion IDs, trigger/expected outcome,
 PASS/FAIL/NOT RUN/BLOCKED/NOT APPLICABLE, proof and remaining limits. Review both
 roles, spending/granting, alive/dead actors and session resets. Revisit its recurring
 regression priorities; those priorities do not replace the rest of the catalog.
+
+For the current baseline, include these cases when selecting evidence:
+
+- **Profile load (AZSX-14).** Start with a missing discovery and an existing higher rarity. Reopen the same profile and verify that the second launch leaves its bytes unchanged.
+- **Presentation (AZSX-23, AZSX-24, AZSX-34).** Check standalone AZSXUI and mod-enabled play separately. Inspect the initial HUD, hovered boss debuffs and both weapon hands. Verify the melee animation in a run as well as the selected look in the Armory and menu.
+- **Events (AZSX-22, AZSX-27, AZSX-28, AZSX-30, AZSX-31).** Check the yellow crystal's personal Luck, a healing potion crossing its HP threshold, and Sayge's scene creation and cleanup. Record hand visibility separately from packet fields. Confirm the disabled demon stays absent from normal play.
+- **Cooperative effects (AZSX-07, AZSX-08, AZSX-32, AZSX-33).** Use distinct producer, beneficiary and killing player where relevant. Check who triggers the effect, who receives it and whose stats scale it.
 
 Update the exact descriptor, selected adapter, native registry/import inventory
 and disposable-profile acceptance only after review. Preserve native-owned and

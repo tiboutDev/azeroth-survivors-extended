@@ -19,6 +19,15 @@ extension_spec.loader.exec_module(extensions)
 
 
 class BackgroundTrials(unittest.TestCase):
+    def test_ritual_evidence_only_satisfies_the_ritual(self):
+        host = "scenario step: ritual action=0\nscenario step: ritual action=1"
+        assess = extensions.observed_event_steps
+        self.assertEqual(assess(host, 1, False, False, True, False), {"observed_ritual_steps": True})
+        self.assertEqual(assess(host, 1, True, True, True, False), {
+            "observed_goblin_steps": False, "observed_supply_steps": False, "observed_ritual_steps": True})
+        self.assertEqual(assess(host, 2, True, False, False, True), {
+            "observed_goblin_steps": False, "observed_coop_steps": False})
+
     def test_disposable_profiles_accept_the_current_exact_supported_image(self):
         # A launcher-only version bump used to pass all gates while the live
         # fixture refused to create any disposable character for that image.

@@ -252,7 +252,7 @@
     },
     {
       "id": "AZSX-24",
-      "contract": "Native normal/critical damage text uses the unchanged native face, projection and animation at one third of native size for normal hits and one half for critical hits through an exact-build guarded renderer seam. Native green healing and other categories retain size; Windows ABI tests cover repeated baselines and flags. No guessed Lua target projection or critical spell icons. Independent AZSXUI preserves the native face by default; its earlier optional reduced-geometry OFL face also affects healing and compounds damage scaling if enabled. Native direct/periodic healing and identity-bound fractional accumulation remain attached above allies.",
+      "contract": "Native normal/critical damage text uses the unchanged native face, projection and animation at one third of native size for normal hits and one half for critical hits through an exact-build guarded renderer seam. Native green healing and other categories retain size; Windows ABI tests cover repeated baselines and flags. No guessed Lua target projection or critical spell icons. AZSXUI leaves the world-number font unchanged. Native direct/periodic healing and identity-bound fractional accumulation remain attached above allies.",
       "mode": "Both",
       "reference": "[Contract](../features/NATIVE-WORLD-UI.md)",
       "native_domains": [

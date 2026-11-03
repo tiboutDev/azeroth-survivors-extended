@@ -15,6 +15,17 @@ def compatibility_scope(normal=False, enchantments=False, reward_wallet=False, i
  return not diagnostic_probe and not focused_mode and completion in ("","tooltip")
 
 
+def observed_event_steps(host, players, goblins, supplies, ritual, coop_events):
+ checks={}
+ if goblins:checks["observed_goblin_steps"]="scenario step: goblin phase=1 action=1"in host and"scenario step: goblin phase=2 action=2"in host
+ if players==1 and supplies:
+  checks["observed_supply_steps"]=all(f"scenario step: supplies phase={phase} created={phase}"in host for phase in range(1,12))
+ if players==1 and ritual:
+  checks["observed_ritual_steps"]="scenario step: ritual action=0"in host and"scenario step: ritual action=1"in host
+ if players==2 and coop_events:checks["observed_coop_steps"]=all(f"scenario step: coop action={phase}"in host for phase in range(1,5))
+ return checks
+
+
 def adapter_log_clean(text):
  # A precisely formatted INFO policy refusal is expected on goblins. Warnings,
  # malformed messages and all other adapter rejections remain failures.
@@ -650,11 +661,7 @@ end)
      for name,value in evidence["checks"].items():checks[f"lua_{index}_{name}"]=value
      (out/f"lua-evidence-{index}.json").write_text(json.dumps(evidence,indent=2)+"\n")
    if os.environ.get("AZSX_TEST_OBSERVED_STEPS")=="1":
-    checks["observed_goblin_steps"]="scenario step: goblin phase=1 action=1"in host and"scenario step: goblin phase=2 action=2"in host
-    if players==1:
-     checks["observed_supply_steps"]=all(f"scenario step: supplies phase={phase} created={phase}"in host for phase in range(1,12))
-     checks["observed_ritual_steps"]="scenario step: ritual action=0"in host and"scenario step: ritual action=1"in host
-    else:checks["observed_coop_steps"]=all(f"scenario step: coop action={phase}"in host for phase in range(1,5))
+    checks.update(observed_event_steps(host, players, goblins, supplies, ritual, coop_events))
    if escort_preview:
     checks={k:checks[k] for k in ("clients_alive","started","clean_scripts","clean_adapter","startup_ack","coop_joined","equal_progression","shared_wallet","group_pause") if k in checks}
     states=re.findall(r"escort preview group: inside=(true|false) held=([0-9.]+)",host)

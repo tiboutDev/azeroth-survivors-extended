@@ -201,6 +201,8 @@ is used. Production event schedules and independent persistence fixtures retain
 their previous rules. Step logs identify initiated actions; existing gameplay/UI
 assessors separately require actual results before early completion.
 
+A focused ritual run requires its own observed steps. Combined solo events additionally require supply and goblin steps; combined coop requires goblin and cooperative steps. Inspect a captured frame before marking either hand model visible.
+
 The observed-step fixture moves owned participants to a walkable witness position
 after cooperative event rewards are acknowledged, before measuring the second
 goblin. This isolates motion sampling from ordinary attacks without changing

@@ -6,16 +6,17 @@ import layout
 PRODUCT="azeroth-survivors-extended"
 MANIFEST="AZSX/App/manifest.json"
 STATE="AZSX/Data/State/install.json"
-AZSXUI_FILES=('AZSXUI.toc', 'AZSXUI.lua', 'Bindings.xml', 'Camera.lua', 'Minimap.lua', 'Events.lua', 'Buffs.lua', 'Hud.lua', 'Theme.lua', 'Frames.lua', 'Fonts/AZSXUI-Numbers.ttf', 'Fonts/OFL.txt', 'LICENSE', 'README.md')
+AZSXUI_FILES=('AZSXUI.toc', 'AZSXUI.lua', 'Bindings.xml', 'Camera.lua', 'Minimap.lua', 'Events.lua', 'Buffs.lua', 'Hud.lua', 'Theme.lua', 'Frames.lua', 'LICENSE', 'README.md')
+PREVIOUS_AZSXUI_FILES=AZSXUI_FILES+('Fonts/AZSXUI-Numbers.ttf','Fonts/OFL.txt')
 AZSXUI_SOURCE="AZSX/App/AddOns/AZSXUI/"
 AZSXUI_TARGET="benilla-config/AddOns/AZSXUI/"
-def ui_target(name):return name in {AZSXUI_TARGET+n for n in AZSXUI_FILES}
+def ui_target(name):return name in {AZSXUI_TARGET+n for n in PREVIOUS_AZSXUI_FILES}
 def projections(m):
     result={"avrt.dll":"AZSX/App/Bin/avrt.dll"}
-    result.update({AZSXUI_TARGET+n:AZSXUI_SOURCE+n for n in AZSXUI_FILES if AZSXUI_SOURCE+n in m["files"]})
+    result.update({AZSXUI_TARGET+n:AZSXUI_SOURCE+n for n in PREVIOUS_AZSXUI_FILES if AZSXUI_SOURCE+n in m["files"]})
     return result
 def legacy_ui_target(name):
-    return name in {"benilla-config/AddOns/ASX/ASX.toc","benilla-config/AddOns/ASX/Presentation.lua", *("benilla-config/AddOns/ASXUI/"+n.replace("AZSX", "ASX") for n in AZSXUI_FILES)}
+    return name in {"benilla-config/AddOns/ASX/ASX.toc","benilla-config/AddOns/ASX/Presentation.lua", *("benilla-config/AddOns/ASXUI/"+n.replace("AZSX", "ASX") for n in PREVIOUS_AZSXUI_FILES)}
 PRIVATE={"state","logs","backups","updates","settings","data","config"}
 RESERVED={"con","prn","aux","nul",*(f"com{i}" for i in range(1,10)),*(f"lpt{i}" for i in range(1,10))}
 VERSION=re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
@@ -116,7 +117,7 @@ def validate(m,reviewed=True):
     required={"start-azsx.cmd","README-AZSX.txt","AZSX/App/Bin/avrt.dll","AZSX/App/Launcher/launch.py","AZSX/App/Launcher/supported-games.json","AZSX/App/Defaults/channel.json"}
     if not required<=files.keys():raise ValueError("Incomplete AZSX distribution")
     ui_files={n for n in files if n.startswith(AZSXUI_SOURCE)}
-    if ui_files and ui_files not in ({AZSXUI_SOURCE+n for n in AZSXUI_FILES},{AZSXUI_SOURCE+n for n in AZSXUI_FILES if n not in ("Hud.lua","Theme.lua","Frames.lua")}):raise ValueError("Incomplete or unknown bundled AZSXUI inventory")
+    if ui_files and ui_files not in ({AZSXUI_SOURCE+n for n in AZSXUI_FILES},{AZSXUI_SOURCE+n for n in PREVIOUS_AZSXUI_FILES},{AZSXUI_SOURCE+n for n in PREVIOUS_AZSXUI_FILES if n not in ("Hud.lua","Theme.lua","Frames.lua")}):raise ValueError("Incomplete or unknown bundled AZSXUI inventory")
     return original
 def manifest(root):return layout.manifest(validate(get(root,MANIFEST,{})))
 def inspect(root,m=None):
