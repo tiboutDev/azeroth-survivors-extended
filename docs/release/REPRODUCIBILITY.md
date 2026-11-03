@@ -3,11 +3,11 @@
 Reproducibility is one gate in the [release preparation checklist](RELEASE-CHECKLIST.md); candidate production never approves a release.
 
 The [approved local WSL reference](../../validation/azsx-reproducible-build-xwin.json)
-identifies the approved **0.138.0-azsx.5** normal DLL (2,276,864 bytes)
+identifies the approved **0.138.0-azsx.6** normal DLL (2,301,440 bytes)
 for native **0.138.0**:
 
 ```text
-6ae7343e140968be6e8ca51ee6871f2f65040ab7675bdb624835fd6e332ecb4a
+9837b8b36c3cb96e5eaa92339e0e00011fa8ace975cb4ea1f7153d5c36b4b26a
 ```
 
 Two fresh isolated builds produced identical bytes with unchanged source inputs.
@@ -16,7 +16,7 @@ debug directory. The exact DLL passed fresh solo and two-player normal live tria
 plus all 26 installation/startup/coop/export/uninstall checks of its
 signed archive on a verified private Windows desktop. The user explicitly
 approved this replacement reference on **2026-11-03**. The superseded
-0.138.0-azsx.4 reference remains in Git history and preserved private evidence.
+0.138.0-azsx.5 reference remains in Git history and preserved private evidence.
 The old release assets were not modified. These bounded trials use local
 native-engine loopback; they do not establish public-lobby or WAN parity.
 
