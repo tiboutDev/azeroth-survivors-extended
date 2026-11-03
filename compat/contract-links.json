@@ -865,7 +865,7 @@
     "official_native.scene_units.ritual_scene_entries": [
       "AZSX-28"
     ],
-    "official_native.scene_units.sayge_fields": [
+    "official_native.scene_units.scene_fields": [
       "AZSX-28"
     ],
     "official_native.scene_units.send_owned_scene_packet": [
@@ -3538,7 +3538,7 @@
       "role": "native-operation",
       "shared": false
     },
-    "official_native.scene_units.sayge_fields": {
+    "official_native.scene_units.scene_fields": {
       "reason": "Native Sayge/candle scene construction and owned scene replication.",
       "references": [
         "crates/azsx-game/src/official_native/scene_units.rs",
