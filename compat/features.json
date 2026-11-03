@@ -368,6 +368,16 @@
         "support"
       ],
       "disposition": "active"
+    },
+    {
+      "id": "AZSX-34",
+      "contract": "Worn (spec) adapts the equipped set weapon to the dominant talent tree in the Armory, on the main menu and in a run. Explicit native Look choices take priority.",
+      "mode": "Both",
+      "reference": "[Contract](../features/FEATURE-RULES.md)",
+      "native_domains": [
+        "ui"
+      ],
+      "disposition": "active"
     }
   ]
 }

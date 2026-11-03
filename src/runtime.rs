@@ -82,6 +82,7 @@ mod encounters;
 mod rituals;
 
 mod ui_context;
+mod weapon_appearance;
 mod world_events;
 
 #[cfg(feature="test-hooks")]

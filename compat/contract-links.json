@@ -1624,6 +1624,42 @@
     "official_native.talent_panel.enrich_talent_panel": [
       "AZSX-07",
       "AZSX-10"
+    ],
+    "official_native.weapon_appearance.model": [
+      "AZSX-34"
+    ],
+    "official_native.weapon_appearance.table": [
+      "AZSX-34"
+    ],
+    "official_native.weapon_appearance.set_tier": [
+      "AZSX-34"
+    ],
+    "official_native.weapon_appearance.word": [
+      "AZSX-34"
+    ],
+    "official_native.weapon_appearance.id": [
+      "AZSX-34"
+    ],
+    "official_native.weapon_appearance.weapon_entries": [
+      "AZSX-34"
+    ],
+    "official_native.weapon_appearance.weapon_trees": [
+      "AZSX-34"
+    ],
+    "official_native.weapon_appearance.weapon_projection": [
+      "AZSX-34"
+    ],
+    "official_native.weapon_appearance.weapon_template": [
+      "AZSX-34"
+    ],
+    "official_native.weapon_appearance.weapon_metadata": [
+      "AZSX-34"
+    ],
+    "official_native.weapon_appearance.project_hands": [
+      "AZSX-34"
+    ],
+    "official_native.weapon_appearance.preview_weapons": [
+      "AZSX-34"
     ]
   },
   "evidence": {
@@ -5256,6 +5292,114 @@
       ],
       "role": "native-operation",
       "shared": true
+    },
+    "official_native.weapon_appearance.model": {
+      "role": "native-operation",
+      "reason": "Used by the specialization weapon Look adapter to resolve the cosmetic hands independently of gameplay gear.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
+    },
+    "official_native.weapon_appearance.table": {
+      "role": "native-operation",
+      "reason": "Used by the specialization weapon Look adapter to resolve the cosmetic hands independently of gameplay gear.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
+    },
+    "official_native.weapon_appearance.set_tier": {
+      "role": "native-operation",
+      "reason": "Used by the specialization weapon Look adapter to resolve the cosmetic hands independently of gameplay gear.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
+    },
+    "official_native.weapon_appearance.word": {
+      "role": "native-operation",
+      "reason": "Used by the specialization weapon Look adapter to resolve the cosmetic hands independently of gameplay gear.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
+    },
+    "official_native.weapon_appearance.id": {
+      "role": "native-operation",
+      "reason": "Used by the specialization weapon Look adapter to resolve the cosmetic hands independently of gameplay gear.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
+    },
+    "official_native.weapon_appearance.weapon_entries": {
+      "role": "native-operation",
+      "reason": "Used by the specialization weapon Look adapter to resolve the cosmetic hands independently of gameplay gear.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
+    },
+    "official_native.weapon_appearance.weapon_trees": {
+      "role": "native-operation",
+      "reason": "Used by the specialization weapon Look adapter to resolve the cosmetic hands independently of gameplay gear.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
+    },
+    "official_native.weapon_appearance.weapon_projection": {
+      "role": "native-operation",
+      "reason": "Used by the specialization weapon Look adapter to resolve the cosmetic hands independently of gameplay gear.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
+    },
+    "official_native.weapon_appearance.weapon_template": {
+      "role": "native-operation",
+      "reason": "Used by the specialization weapon Look adapter to resolve the cosmetic hands independently of gameplay gear.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
+    },
+    "official_native.weapon_appearance.weapon_metadata": {
+      "role": "native-operation",
+      "reason": "Used by the specialization weapon Look adapter to resolve the cosmetic hands independently of gameplay gear.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
+    },
+    "official_native.weapon_appearance.project_hands": {
+      "role": "native-operation",
+      "reason": "The local preview and in-run model share the equipped set, dominant tree and manual Look precedence.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
+    },
+    "official_native.weapon_appearance.preview_weapons": {
+      "role": "native-operation",
+      "reason": "The local preview and in-run model share the equipped set, dominant tree and manual Look precedence.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
     }
   },
   "conservative_notes": {

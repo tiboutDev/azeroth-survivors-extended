@@ -54,7 +54,7 @@ class Native138(unittest.TestCase):
        self.assertFalse(rva<target<boundary and not(rva<=i.address<boundary),f"branch into contact {key:x}: {i.address:x}->{target:x}")
     count+=1
   # Nine unconsumed/retired seams were removed from the old 71-contact set.
-  self.assertEqual(count,81)  # Polymorph seams plus talent condition/area guards.
+  self.assertEqual(count,87)  # Polymorph seams plus talent condition/area guards.
   for retired in (0x10d95b,0x10d9e0,0x5908da8,0x594bfd9,0x594e3de,0x595f6da,0x595f91d,0x595ff10,0x5983784):
    self.assertNotIn(retired,contacts)
 

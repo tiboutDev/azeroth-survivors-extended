@@ -79,7 +79,9 @@
       "crates/azsx-game/src/official_native/combat_text.rs",
       "crates/azsx-game/src/official_native/raid_markers.rs",
       "native-ui/*.lua",
-      "crates/azsx-game/src/official_native/presentation.rs"
+      "crates/azsx-game/src/official_native/presentation.rs",
+      "crates/azsx-game/src/official_native/weapon_appearance.rs",
+      "src/runtime/weapon_appearance.rs"
     ],
     "lifecycle": [
       "src/runtime/lifecycle*.rs",

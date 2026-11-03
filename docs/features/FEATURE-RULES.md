@@ -497,3 +497,7 @@ Cooperative eight-piece armor effects use the wearer's equipment. An allied kill
 A legendary necklace can trigger its explosion when a teammate finishes an enemy carrying your matching damage-over-time spell. The Power Word: Shield necklace bursts around the player you protected using your area bonus. Holy Light and Regrowth necklaces shield the player you heal for up to 40% of your maximum health. Vampiric Renew and Vampiric Rejuvenation grant the healed player 5% leech on their own damage for 10 and 12 seconds respectively.
 
 During a cooperative run, the Talents panel adds a short Co-op note below selected talent descriptions to explain ally targeting, shield ownership and control effects. Fortified and Ardent Defender combine their taunt trigger and allied shield condition in one note. Dire Bear Form identifies Shred as its taunt.
+
+## Set weapon appearance
+
+In the Armory, **Worn (spec)** shows the specialization variant of the equipped set weapon on the Armory character model, in the main-menu portrait and in a run. Fury uses two one-handed weapons. Protection Warriors and Holy or Protection Paladins use a one-handed weapon and a shield. Enhancement Shamans use a two-handed weapon, including Sulfuras with Earthshatter. The tree with the most learned points determines the look. Ties, empty builds and other specializations use the native appearance. Manual Look choices apply to their hand slots. Gear bonuses come from the equipped pieces.

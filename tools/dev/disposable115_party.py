@@ -11,7 +11,7 @@ def writer(executable):
  if len(keys)!=1:raise ValueError("Ambiguous native save codec")
  fixture=json.loads((Path(__file__).parent/"fixtures/party-talents115.json").read_text())
  if fixture["sha256"]!=SHA or actual not in [SHA,*fixture.get("compatible_sha256",[])]:raise ValueError("Unreviewed talent fixture/image")
- def prepare(folder,slot,name_override=None,class_override=None,known_items=None):
+ def prepare(folder,slot,name_override=None,class_override=None,known_items=None,weapon_trial=False,manual_weapon=False):
   if slot not in (1,2,3):raise ValueError("This UI scenario has three profiles")
   path=Path(folder)/"characters.txt"
   if path.exists():raise ValueError("Never replace existing progression")
@@ -24,6 +24,11 @@ def writer(executable):
    name=name_override
   text=f"pick|{cls}|{race}|0|elwynn|{name}|0,0,0,0,0|100,100,100,100\nhero|{cls}|{race}|0|0,0,0,0,0\n"
   talents={}if class_override==11 else {"demonic_familiar":1}if cls==9 else fixture["classes"].get(str(cls),{})
+  if weapon_trial and cls==7:
+   talents={"enh_thundering_strikes":5}
+   known_items=[107840,107940]
+   text+="equip|7|15:107840,16:107940"+chr(10)
+   if manual_weapon:text+="look|7|15:1784217601"+chr(10)
   ranks=",".join(f"{key}:{rank}"for key,rank in talents.items())
   text+=f"talent|{cls}|50000|{ranks}\n"
   if known_items is not None:

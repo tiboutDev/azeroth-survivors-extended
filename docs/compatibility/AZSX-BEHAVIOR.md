@@ -3,7 +3,7 @@
 Use the [compatibility checklist](COMPATIBILITY-CHECKLIST.md) for execution order; this catalog owns the expected behavior criteria.
 
 Maintained acceptance reference for **current main source**, reviewed against
-official **0.138.0**. Covers AZSX-01–AZSX-31, including disabled and upstream-owned behavior.
+official **0.138.0**. Covers AZSX-01–AZSX-34, including disabled and upstream-owned behavior.
 This is not proof that an installed DLL or published archive passes these requirements.
 Uncommitted source fixes are not automatically in a prepared release.
 The turret experiment remains outside this baseline.
@@ -544,3 +544,13 @@ Candidate profiles: `combat`, `support`, `official`. [Scenario mappings and limi
 | AZSX-33.05 | A teammate finishes an enemy carrying a legendary necklace DoT | Each eligible producer triggers the matching native explosion once. A qualifying set bonus can also trigger. |
 | AZSX-33.06 | A shield or healing necklace targets another player | The Power Word: Shield necklace bursts around the protected player with the caster's area bonus. Holy Light and Regrowth apply an absorb pool capped at 40% of caster maximum health on cast. |
 | AZSX-33.07 | Vampiric Renew or Rejuvenation heals another player | The recipient gains 5% leech on their own damage for 10 or 12 simulation seconds respectively. Recasting the same necklace on the same recipient refreshes its duration. |
+
+### AZSX-34 — Specialization weapon appearance
+
+Candidate profile: `official`.
+
+| Criterion | Trigger / case | Required outcome |
+| --- | --- | --- |
+| AZSX-34.01 | Start a run with Worn (spec) | Project the equipped weapon using its set and the unique highest talent tree. Preserve actual gear and stats. |
+| AZSX-34.02 | Select a native Look | Keep the explicit hand appearance. Use native appearance for tied or empty trees. |
+| AZSX-34.03 | Inspect the Armory character model or main-menu portrait | Resolve both visible hands from the selected class and saved ranks using the same set mapping and Look precedence as the run. |

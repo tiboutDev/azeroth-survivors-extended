@@ -50,6 +50,7 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
     }
     if rules {
         super::ui_context::install(runtime)?;
+        super::weapon_appearance::install(runtime)?;
     }
     for entry in adapter.bonus_column_entries() {
         if runtime

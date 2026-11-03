@@ -305,6 +305,12 @@
         "official"
       ],
       "scope_note": "The two-player diagnostic uses native standard and empowered set definitions, controlled native events, and real enemy HP, DoT and vulnerability readbacks. Exact-image code checks cover personal spell-kill bindings and the seven controlled-target modifiers. This does not certify complete gear acquisition or every class pairing. The necklace scenario uses generated native perks with a two-player corpse event, a shield break and four real support casts followed by the native cast event. Readbacks cover witness HP, both absorb pools and both leech factors. The full necklace acquisition path and damage-meter UI are outside this fixture."
+    },
+    "AZSX-34": {
+      "profiles": [
+        "official"
+      ],
+      "scope_note": "Table checks cover every specialization and set mapping. All 41 selected display IDs were found in the live native item display catalog. Diagnostic solo and party captures cover Earthshatter Enhancement and starter Protection Warrior. The Earthshatter Enhancement preview was captured in the Armory and on the main menu. The native Armory writes the explicit Worn piece choice to the profile. A separate solo run loaded this choice and displayed the native Earthshatter hands. The full visual set matrix has not been captured."
     }
   }
 }

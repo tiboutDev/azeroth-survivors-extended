@@ -1915,6 +1915,11 @@ impl SelectedAdapter {
 }
 
 impl SelectedAdapter {
+    pub fn preview_weapons(self,m:&dyn MutableMemory,base:u64,collection:u64,picker:u64,looks:u64,visible:u64)->Result<Option<[u32;2]>>{self.native.preview_weapons(m,base,collection,picker,looks,visible)}
+    pub fn weapon_entries(self)->[Entry;6]{self.native.weapon_entries()}
+    pub fn weapon_projection(self,m:&dyn MutableMemory,base:u64,profile:u64,visible:u64)->Result<Option<[u32;2]>>{self.native.weapon_projection(m,base,profile,visible)}
+    pub fn weapon_template(self,entry:u32)->Option<u32>{self.native.weapon_template(entry)}
+    pub fn weapon_metadata(self,m:&dyn MutableMemory,out:u64,entry:u32)->Result<()>{self.native.weapon_metadata(m,out,entry)}
     pub fn talent_panel_entry(self) -> Entry { self.native.talent_panel_entry() }
     pub fn enrich_talent_panel(self, m: &dyn MutableMemory, base: u64, frame: u64, talent: u64) -> Result<()> {
         self.native.enrich_talent_panel(m, base, frame, talent)
@@ -2126,3 +2131,5 @@ impl SelectedAdapter {
     pub fn set_vulnerability(self,m:&dyn Mem,frame:u64,field:u64)->Result<(u64,u64,u32,f32,[f32;2])>{self.native.set_vulnerability(m,frame,field)}
     pub fn set_vulnerability_write(self,m:&dyn MutableMemory,game:u64,enemy:u64,expected:[f32;2],next:[f32;2])->Result<bool>{self.native.set_vulnerability_write(m,game,enemy,expected,next)}
 }
+
+pub use crate::official_native::weapon_appearance::WORN_NATIVE;

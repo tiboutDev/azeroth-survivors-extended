@@ -906,6 +906,7 @@ pub use gems::AmuletChoice;
 
 mod bonus_tooltip;
 mod talent_panel;
+pub(crate) mod weapon_appearance;
 
 impl Adapter {
 
