@@ -1,3 +1,11 @@
+-- Optional mod capabilities are discovered at use time, including after addon load.
+function AZSXUI_HasModAPI()
+ return type(AZSX_GetAPIVersion)=="function" and AZSX_GetAPIVersion()==1 and type(AZSX_GetState)=="function"
+end
+function AZSXUI_ModState()
+ if AZSXUI_HasModAPI()then return AZSX_GetState(1)end
+end
+
 -- Native HUD toggles are persistent CVars. Keep the player's original values
 -- in SavedVariables as well as restoring them on a normal logout.
 local nativeParts={"build","tally","clock","loot","revive","bosses"}
@@ -129,4 +137,12 @@ function AZSXUI_StyleOpenPanel(frame,rightOpen)
    else t:SetPoint("LEFT",frame,"LEFT",17,0);t:SetPoint("RIGHT",frame,"RIGHT",0,0)end
   end
  end
+end
+
+-- Shared silhouette for the personal status row beneath health.
+function AZSXUI_CreateStatusIcon(b)
+ b:SetWidth(36);b:SetHeight(36)
+ b.icon=b:CreateTexture(b:GetName().."Icon","ARTWORK");b.icon:SetWidth(30);b.icon:SetHeight(30)
+ b.icon:SetPoint("CENTER",b,"CENTER",0,0)
+ b.border=b:CreateTexture(nil,"OVERLAY");b.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder");b.border:SetTexCoord(0,.625,0,.625);b.border:SetWidth(40);b.border:SetHeight(40);b.border:SetPoint("CENTER",b.icon,"CENTER",0,0)
 end

@@ -6,7 +6,7 @@ use azsx_gameplay::{Phase,supplies::{Supply,Reward,Buffs,Consumable,Family,Disco
 use std::{cell::{Cell,RefCell},collections::BTreeMap,sync::{Mutex,atomic::{AtomicBool,Ordering}}};
 static ENABLED:AtomicBool=AtomicBool::new(false);
 struct Reserve{rules:Supply,object:EventObject}
-struct State{game:u64,owner:u64,clock:f32,next:f32,sequence:u64,rng:u64,bosses:u32,reserves:Vec<Reserve>,buffs:Buffs,discovery:Option<Discovery>,auras:BTreeMap<Family,u32>,fixture:u32}
+struct State{look:super::supply_costumes::Look,game:u64,owner:u64,clock:f32,next:f32,sequence:u64,rng:u64,bosses:u32,reserves:Vec<Reserve>,buffs:Buffs,discovery:Option<Discovery>,auras:BTreeMap<Family,u32>,fixture:u32}
 static STATE:Mutex<Option<State>>=Mutex::new(None);
 impl State{fn draw(&mut self,n:u32)->u32{loop{self.rng=self.rng.wrapping_add(0x9e3779b97f4a7c15);let mut z=self.rng;z=(z^(z>>30)).wrapping_mul(0xbf58476d1ce4e5b9);z=(z^(z>>27)).wrapping_mul(0x94d049bb133111eb);z^=z>>31;let max=u64::MAX-u64::MAX%u64::from(n);if z<max{return(z%u64::from(n))as u32}}}}
 pub fn install(r:&dyn Services){
@@ -30,10 +30,11 @@ pub fn aura(game:u64,owner:u64,rows:&[(Family,u32)]){super::world_events::coop::
 pub fn active()->bool{super::world_events::coop::active()||STATE.lock().is_ok_and(|s|s.as_ref().is_some_and(|s|!s.buffs.is_empty()||!s.auras.is_empty()))}
 pub fn finish(r:&dyn Services,game:u64){if !ENABLED.load(Ordering::Acquire){return}if let Err(e)=tick(r,game){r.events_warn(&format!("Lost Supplies stopped: {e}; core AZSX remains active."));ENABLED.store(false,Ordering::Release);reset();}}
 fn notice(r:&dyn Services,game:u64,text:&str){if let Err(e)=unsafe{r.events_notice(game, "Lost Supplies", text)}{r.events_warn(&format!("Supply announcement rejected: {e}"));}}
+pub(super) fn potion_fixture()->bool{cfg!(feature="test-hooks") && std::env::var("AZSX_TEST_SUPPLY_POTION").as_deref()==Ok("1")}
 fn tick(r:&dyn Services,game:u64)->Result<(),String>{
  let Some(p)=r.events_solo_run(game)?else{return Ok(())};let Some(actor)=p.actors.first()else{return Ok(())};let now=p.clock;
- let old={let mut state=STATE.lock().map_err(|_|"Supplies state unavailable")?;if state.as_ref().is_none_or(|s|s.game!=game||s.owner!=actor.guid||now<s.clock){let old=state.take();*state=Some(State{game,owner:actor.guid,clock:now,next:now+30.,sequence:0,rng:game^actor.guid^std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos()as u64,bosses:0,reserves:vec![],buffs:Buffs::default(),discovery:None,auras:BTreeMap::new(),fixture:0});old}else{None}};if let Some(old)=old{cleanup(r,&old)}
- let(remove,mut discovery,refresh,spawn)={
+ let old={let mut state=STATE.lock().map_err(|_|"Supplies state unavailable")?;if state.as_ref().is_none_or(|s|s.game!=game||s.owner!=actor.guid||now<s.clock){let old=state.take();*state=Some(State{look:Default::default(),game,owner:actor.guid,clock:now,next:now+30.,sequence:0,rng:game^actor.guid^std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos()as u64,bosses:0,reserves:vec![],buffs:Buffs::default(),discovery:None,auras:BTreeMap::new(),fixture:0});old}else{None}};if let Some(old)=old{cleanup(r,&old)}
+ let(remove,mut discovery,refresh,spawn,potion,look)={
   let mut state=STATE.lock().map_err(|_|"Supplies state unavailable")?;let s=state.as_mut().ok_or("Supplies state missing")?;s.clock=now;let ended=actor.phase==Phase::Inactive||actor.hp<=0.;let mut refresh=s.buffs.expire(now);if ended{refresh|=s.buffs.clear()}
   let mut discovery=None;if !ended&&actor.phase==Phase::Playing{for reserve in &mut s.reserves{if let Some(d)=reserve.rules.claim(now,(0,actor.guid),actor.position,true){discovery=Some(d);break}}}
   if let Some(d)=discovery{refresh|=s.buffs.accept(now,d.reward)}// Keep the last owned slots until the native aura boundary retires expired rows.
@@ -41,8 +42,12 @@ fn tick(r:&dyn Services,game:u64)->Result<(),String>{
   let mut spawn=false;if !ended&&actor.phase==Phase::Playing&&now>=s.next{s.next=now+30.+s.draw(21)as f32;spawn=s.draw(100)<50&&!fixture_enabled()}
   #[cfg(feature="test-hooks")]if fixture_enabled()&&!ended&&actor.phase==Phase::Playing{let times=[6.,8.,20.,20.25,20.5,20.75,21.,21.25,24.,25.,28.];let ready=if super::scenario_steps::enabled(){super::scenario_steps::supply_ready(s.fixture,s.reserves.len(),s.discovery.map(|d|d.event))}else{(s.fixture as usize)<times.len()&&now>=times[s.fixture as usize]};if ready{s.fixture+=1;spawn=true}}
   let spawn=if spawn&&s.reserves.len()<8{s.sequence=s.sequence.saturating_add(1);let draws=(0..32).map(|_|(s.draw(u32::MAX),s.draw(u32::MAX))).collect::<Vec<_>>();let(a,b,c)=(s.draw(100),s.draw(100),s.draw(u32::MAX));let mut reward=Reward::roll(s.bosses,a,b,c);
-   #[cfg(feature="test-hooks")]if fixture_enabled(){reward=match s.fixture{3..=8=>Reward::Buff(Consumable{family:Family::ALL[(s.fixture-3)as usize],tier:((s.fixture-3)%3+1)as u8}),9=>Reward::Material{rarity:0,variant:0},10=>Reward::Material{rarity:3,variant:1},11=>Reward::Buff(Consumable{family:Family::Recovery,tier:3}),_=>Reward::Material{rarity:0,variant:1}};}
-   Some((s.sequence,s.bosses,s.fixture,reward,draws))}else{None};(remove,discovery,refresh,spawn)
+   #[cfg(feature="test-hooks")]if fixture_enabled(){reward=match s.fixture{3..=8=>Reward::Buff(Consumable::new(Family::ALL[(s.fixture-3)as usize],((s.fixture-3)%3+1)as u8).unwrap()),9=>Reward::Material{rarity:0,variant:0},10=>Reward::Material{rarity:3,variant:1},11=>Reward::Buff(Consumable{family:Family::Recovery,tier:3}),_=>Reward::Material{rarity:0,variant:1}};}
+   #[cfg(feature="test-hooks")]if potion_fixture() && s.fixture==3{reward=Reward::Buff(Consumable::new(Family::Healing,1).unwrap());}
+   Some((s.sequence,s.bosses,s.fixture,reward,draws,super::supply_costumes::bonus(s.sequence,||azsx_gameplay::supplies::Costume::roll(|n|s.draw(n)))))}else{None};
+  let potion=if actor.phase==Phase::Playing{s.buffs.take_potion(actor.hp,actor.maximum)}else{None};
+  let look=s.look.observe(now,actor,discovery.and_then(|d|d.bonus));
+  (remove,discovery,refresh,spawn,potion,look)
  };
  for object in remove{unsafe{r.events_remove_event_object(game, object)}?;r.events_info(&format!("supplies removed: guid={}",object.guid()));}
  if let Some(ref mut d)=discovery{if d.gold>0{d.gold=r.events_credit_supply(game,actor.guid,d.gold)?;}}
@@ -56,13 +61,29 @@ fn tick(r:&dyn Services,game:u64)->Result<(),String>{
   r.events_clamp_event_health(game, actor.guid, actor.hp)?;
   r.events_info(&format!("supplies stats rebuilt: active={} inputs_restored={} families={}",active(),r.events_test_stat_input(game)?==before,buffs(game,actor.guid).len()));
  }
+ #[cfg(feature="test-hooks")]
+ if potion_fixture() && discovery.is_some_and(|d|matches!(d.reward,Reward::Buff(c) if c.family==Family::Healing)){
+  if std::env::var("AZSX_TEST_STATUS_ROW").as_deref()==Ok("1"){
+   r.events_solo_fortune(game,actor.guid,azsx_gameplay::blessings::Blessing::roll(1,1,0))?;
+   if let Some(runtime)=super::RUNTIME.get(){super::solo_gadgets::award_group(runtime,game,&[(actor.slot,actor.guid)])?;}
+  }else{r.events_clamp_event_health(game,actor.guid,actor.maximum*0.30)?;}
+ }
+ #[cfg(feature="test-hooks")]
+ if potion_fixture() && std::env::var("AZSX_TEST_STATUS_ROW").as_deref()==Ok("1") && now>=38. && buffs(game,actor.guid).iter().any(|(c,_,_)|c.family==Family::Healing){
+  r.events_clamp_event_health(game,actor.guid,actor.maximum*0.30)?;
+ }
+ if let Some(c)=potion{
+  if r.events_drink_potion(game,(actor.slot,actor.guid),c)?{r.events_info(&format!("Lost Supplies: {} consumed by {}",c.name(),actor.guid));}
+  else if let Ok(mut guard)=STATE.lock(){if let Some(s)=guard.as_mut().filter(|s|s.game==game && s.owner==actor.guid && s.clock==now){s.buffs.accept(now,Reward::Buff(c));}}
+ }
  if let Some(d)=discovery{if let Ok(mut state)=STATE.lock(){if let Some(s)=state.as_mut().filter(|s|s.game==game&&s.owner==actor.guid){s.discovery=Some(d)}}r.events_info(&format!("supplies discovered: event={} reward={:?} name={} gold={} clock={now}",d.event,d.reward,d.reward.name(),d.gold));}
- if let Some((sequence,bosses,fixture,reward,draws))=spawn{
+ if let Some(look)=look{let updated=r.events_supply_look(game,(actor.slot,actor.guid),look)?;if let Ok(mut guard)=STATE.lock(){if let Some(s)=guard.as_mut().filter(|s|s.game==game&&s.owner==actor.guid&&s.clock==now){s.look=updated;}}}
+ if let Some((sequence,bosses,fixture,reward,draws,extra))=spawn{
   let area=r.events_area(game)?;
   let point=if fixture_enabled()&&fixture>1{let distance=if fixture==2{4.5}else{1.};
    #[cfg(feature="test-hooks")]let distance=if super::scenario_steps::enabled(){1.}else{distance};unsafe{r.events_ground(game, [actor.position[0]+distance,actor.position[1]], 0.3, 2.)}?}else{super::world_events::place(r,game,area,2.,&draws)?};
   let Some(point)=point else{r.events_info("supplies attempt: no valid world location");return Ok(())};
-  let object=unsafe{r.events_object(game, 0, point)}?;let rules=Supply::new(sequence,now,point,&[(0,actor.guid)],reward,bosses).ok_or("Invalid supplies location")?;
+  let object=unsafe{r.events_object(game, 0, point)}?;let mut rules=Supply::new(sequence,now,point,&[(0,actor.guid)],reward,bosses).ok_or("Invalid supplies location")?;rules.roll_bonuses(||extra);
   let mut owned=Some(Reserve{rules,object});{let mut state=STATE.lock().map_err(|_|"Supplies state unavailable")?;if let Some(s)=state.as_mut().filter(|s|s.game==game&&s.owner==actor.guid&&s.clock==now){s.reserves.push(owned.take().unwrap());r.events_info(&format!("supplies active reserves: count={}",s.reserves.len()));}}
   if owned.is_some(){unsafe{r.events_remove_event_object(game, object)}?;return Ok(())}
   #[cfg(feature="test-hooks")]if super::scenario_steps::enabled(){r.events_info(&format!("scenario step: supplies phase={fixture} created={sequence} clock={now}"));}
@@ -95,3 +116,5 @@ pub fn native_stats(r:&dyn Services,game:u64,native:impl FnOnce()){
 
 #[cfg(feature="test-hooks")]
 static AUDIT:std::sync::Mutex<std::collections::BTreeSet<(u64,Vec<(u8,u8)>)>>=std::sync::Mutex::new(std::collections::BTreeSet::new());
+
+pub(super) fn shrunk(game:u64,owner:u64)->bool{STATE.lock().ok().is_some_and(|g|g.as_ref().is_some_and(|s|s.game==game && s.owner==owner && s.look.effect==Some(azsx_gameplay::supplies::Costume::Small))) || super::world_events::coop::shrunk(game,owner)}

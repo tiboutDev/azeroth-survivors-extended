@@ -9,15 +9,16 @@ pub enum Color{Red,Blue,Green,Yellow}
 impl Color{
  pub const ALL:[Self;4]=[Self::Red,Self::Blue,Self::Green,Self::Yellow];
  pub fn roll(draw:u32)->Self{Self::ALL[(draw%4)as usize]}
- pub fn percent(self)->u32{[12,7,15,2][self as usize]}
- pub fn stat(self)->u32{[0,1,2,3][self as usize]}
+ pub fn percent(self)->u32{[12,7,15,8][self as usize]}
+
  pub fn name(self)->&'static str{["Red Crystal","Blue Crystal","Green Crystal","Yellow Crystal"][self as usize]}
 }
 #[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]pub struct Totals(pub [u32;4]);
 impl Totals{
  pub fn add(&mut self,color:Color)->bool{let n=&mut self.0[color as usize];if *n>=1_000_000{return false}*n+=1;true}
  pub fn count(self)->u32{self.0.iter().sum()}
- pub fn inputs(self)->Vec<(u32,f32)>{Color::ALL.into_iter().filter_map(|c|{let n=self.0[c as usize];(n>0).then_some((c.stat(),n as f32*c.percent()as f32/100.))}).collect()}
+ pub fn luck(self)->f32{self.0[Color::Yellow as usize] as f32*Color::Yellow.percent() as f32/100.}
+ pub fn inputs(self)->Vec<(u32,f32)>{[Color::Red,Color::Blue,Color::Green].into_iter().enumerate().filter_map(|(kind,c)|{let n=self.0[c as usize];(n>0).then_some((kind as u32,n as f32*c.percent()as f32/100.))}).collect()}
 }
 #[derive(Clone,Debug)]pub struct Crystal{pub id:u64,pub color:Color,pub position:[f32;3],pub deadline:Option<f32>,eligible:BTreeSet<Owner>,claimed:BTreeSet<Owner>}
 impl Crystal{
@@ -44,9 +45,9 @@ impl Director{
   let mut s=Self{next:0.,rng:seed};s.next=30.+s.interval();s
  }
  fn interval(&mut self)->f32{
-  // Open interval (0,1); the exponential mean is 174 simulation seconds.
+  // Keep the average interval at 174 seconds while spacing out lucky draws.
   let u=(f64::from(self.draw(u32::MAX))+1.)/(f64::from(u32::MAX)+1.);
-  (-u.ln()*174.).max(1.)as f32
+  (90. - u.ln()*84.) as f32
  }
  pub fn draw(&mut self,n:u32)->u32{assert!(n>0);loop{self.rng=self.rng.wrapping_add(0x9e3779b97f4a7c15);let mut z=self.rng;z=(z^(z>>30)).wrapping_mul(0xbf58476d1ce4e5b9);z=(z^(z>>27)).wrapping_mul(0x94d049bb133111eb);z^=z>>31;let max=u64::MAX-u64::MAX%u64::from(n);if z<max{return(z%u64::from(n))as u32}}}
  pub fn due(&mut self,now:f32,present:usize)->bool{
@@ -58,7 +59,7 @@ impl Director{
  use super::*;
  #[test]fn mixed_collection_uses_balanced_native_inputs(){
   let mut totals=Totals::default();for color in Color::ALL{assert!(totals.add(color));}assert!(totals.add(Color::Blue));
-  assert_eq!(totals.count(),5);assert_eq!(totals.inputs(),vec![(0,0.12),(1,0.14),(2,0.15),(3,0.02)]);
+  assert_eq!(totals.count(),5);assert_eq!(totals.luck(),0.08);assert_eq!(totals.inputs(),vec![(0,0.12),(1,0.14),(2,0.15)]);
  }
 
  #[test]fn personal_claims_start_one_shared_deadline_and_keep_model_until_complete(){let ids=[(0,11),(1,22)];let mut c=Crystal::new(1,Color::Red,[0.;3],&ids).unwrap();assert!(!c.done(1000.));assert!(c.claim(1000.,ids[0],[0.;3],true));assert_eq!(c.deadline,Some(1060.));assert!(!c.done(1001.));assert!(!c.claim(1001.,ids[0],[0.;3],true));assert!(c.claim(1059.,ids[1],[0.;3],true));assert_eq!(c.deadline,Some(1060.));assert!(c.done(1059.));}
@@ -67,9 +68,9 @@ impl Director{
  #[test]fn free_colors_and_mean_rate_without_a_count_cap(){
   let mut colors=[0;4];let mut repeated=false;let mut total=0;let mut over_six=false;
   for seed in 0..2000{
-   let mut d=Director::new(seed);let mut count=0;
-   while d.next<=900.{let at=d.next;assert!(d.due(at,0));count+=1;}
-   total+=count;over_six|=count>6;
+   let mut d=Director::new(seed);let mut count=0;let mut early=0;
+   while d.next<=900.{let at=d.next;assert!(d.due(at,0));assert!(d.next-at>=89.999);if at<=240.{early+=1;}count+=1;}
+   assert!(early<=2);total+=count;over_six|=count>6;
    let a=d.draw(4);let b=d.draw(4);repeated|=a==b;colors[a as usize]+=1;
   }
   assert!(repeated&&over_six);

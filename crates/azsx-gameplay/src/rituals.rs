@@ -1,5 +1,7 @@
 //! Solo ritual policy. Shared presence can supply `inside` in a later coop integration.
 use crate::blessings::Blessing;
+/// Uniform delay after an eligible completed encounter, in simulation seconds.
+pub fn spawn_delay(mut draw: impl FnMut(u32)->u32)->f32 { (15+draw(76)) as f32 }
 pub const RADIUS:f32=8.;
 pub const HOLD_SECONDS:f32=20.;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]pub enum Outcome {Pending,Success,Expired}

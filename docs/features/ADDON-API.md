@@ -1,4 +1,4 @@
-# AZSX addon contract 1.13
+# AZSX addon contract 1.14
 
 The DLL appends the provider to the selected native WorldStateFrame initialization script.
 Neither `AddOns/ASX` nor `AddOns/AZSX` is installed or required. The retained
@@ -37,7 +37,7 @@ modifies AZSX or snapshots obtained by another consumer.
 
 | Field | Meaning |
 |---|---|
-| `api.major`, `api.minor` | Contract version, currently 1.13 |
+| `api.major`, `api.minor` | Contract version, currently 1.14 |
 | `available` | Boolean; check before accessing run fields |
 | `reason` | When unavailable: `outside_run`, `stale`, or `missing_or_invalid_payload` |
 | `revision` | Monotonic content revision within this Lua environment; not persisted across client reloads |
@@ -191,7 +191,7 @@ remain compatible and must ignore the added field.
 From minor 10, `state.data.crystals` is present from run initialization, including before the first pickup. It contains integer
 `red`, `blue`, `green`, `yellow`, `total`, and the native presentation `index`
 (0–31; 32 means no free native slot). `bonuses` contains accumulated percentage
-values named `damage`, `cooldownRecovery`, `maximumHealth`, `criticalStrikeChance`. The legacy `areaOfEffect` field remains zero for compatibility; yellow crystals now grant critical strike chance.
+values named `damage`, `cooldownRecovery`, `maximumHealth`, `luck`. The legacy `areaOfEffect` and `criticalStrikeChance` fields are zero.
 `state.texts.crystals` contains the AZSX-authored title, icon, collection note, per-color tooltip `details` and `footer`. Zero counts carry discovery guidance.
 Every getter/handler snapshot remains detached. No crystal position is exposed
 to the minimap bridge. Aura indices are presentation metadata, not identities.
@@ -261,7 +261,7 @@ three-second quiet window, renewed on each receipt, add their gains into one pop
 collection total. Repeated/stale totals are ignored within that burst. Item
 ordering and gaps in observed totals prevent merging; gameplay grants are untouched.
 
-## Cooperative information aura (v1.9)
+## Cooperative help (available since v1.9)
 
 `data.cooperativeRules` is present only with a fresh cooperative payload in an
 available run phase, including dead, paused and choosing. It is independent of
@@ -273,28 +273,11 @@ the native coop projection even when its numeric fields are unavailable.
 | --- | --- |
 | `id` | Stable semantic identifier `cooperative_rules` |
 | `permanent` | `true`: no timed expiration during this cooperative run; not persistence across runs |
-| `priority` | `1`: display before other helpful auras |
+| `priority` | `1`: legacy display priority |
 | `areaBonusShare` | `0.5`: fraction of positive global area/range bonuses retained; informational only |
 
 `texts.cooperativeRules` contains `title`, native `icon` texture path, `rule`,
-and a `notes` array. These are detached copies, like the rest of the API. Render
-the rule in normal text, followed by a blank line and gray notes:
-
-```text
-Cooperative Rules
-Area and range bonuses are 50% effective.
-
-The stats panel shows effective values.
-Item and reward descriptions may show base bonuses.
-```
-
-The retained AZSX presentation bridge creates `AZSXCooperativeRulesBuff`, a 32-pixel
-informational button using the native Prayer of Fortitude icon. It consumes no
-native aura slot, has no timer or cancellation action, and never modifies stats.
-It is deliberately absent from native `UnitBuff` / `GetPlayerBuff` enumeration;
-other addons consume the public record instead. The bridge supplies a leading
-native-buff-row fallback without AZSXUI. A stale payload hides the button and
-releases any hovered tooltip; heartbeat refreshes do not create duplicate icons.
+a `notes` array and a `details` array of tooltip lines. The rule and notes fields remain available for existing addons. The help button displays the title and details on hover or click. A stale payload hides the button and dismisses its tooltip.
 
 A renderer may optionally reuse that button via
 `AZSX_SetCooperativeRulesDocked(owner, true)`, where `owner` is its nonempty addon
@@ -302,7 +285,7 @@ name. This returns the button when currently available and reserves its placemen
 for that single owner (even if temporarily unavailable). A competing owner gets
 `nil`. Do not change its scripts or native aura APIs. Restore any borrowed anchors
 and call `AZSX_SetCooperativeRulesDocked(owner, false)` when disabling the layout;
-this releases the reservation and restores the bridge's native-row fallback.
+this releases the reservation and restores the bridge's ally-frame fallback.
 Only the owning name can release it. The fallback remains visible while AZSXUI's
 HUD is off. Addons that render a separate icon should coordinate ownership to
 avoid duplicate informational displays. Availability checks remain mandatory.
@@ -349,9 +332,17 @@ terminal stage.
 
 ## API 1.13: utility gadgets and yellow critical chance
 
-Yellow crystals contribute `criticalStrikeChance` in percentage points; the
+In 1.13, yellow crystals contributed `criticalStrikeChance` in percentage points; the
 legacy `areaOfEffect` crystal total remains zero. The current engineering kinds
 are `net`, `rocket_boots`, `grenade`, `shrink_ray`. Retired Sapper/Belt records
 are rejected; the native projectile's former Mortar wire slot now identifies
 the zero-damage Stun Grenade. The major-version getters and detached-copy
 contract remain unchanged.
+
+## API 1.14: yellow crystal Luck
+
+Each yellow crystal adds 8 to the owner’s `data.crystals.bonuses.luck` percentage.
+
+## Personal kill ranking
+
+`data.killRanking` contains one row per current participant (GUID string, slot, name and native personal kills in `guid`, `slot`, `name` and `kills`). Rows sort by descending kills and then slot. Solo and incomplete snapshots omit the field.

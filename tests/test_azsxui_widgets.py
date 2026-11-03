@@ -17,7 +17,29 @@ function GameTooltip:SetPlayerBuff(index)self.nativeIndex=index;self.title="Orig
 AZSXUI_DockAuras(view)
 ''')
  def test_badges_use_structured_counts_active_party_bonus_and_native_tooltip(self):
-  self.lua.execute('assert(AZSXUICrystalMedallion:IsShown() and AZSXUICrystalMedallion.total:GetText()=="10" and AZSXUICrystalMedallion.counts==nil and AZSXUICrystalMedallion:GetWidth()==36);assert(AZSXUIFortuneMedallion.value:GetText()=="+18%" and AZSXUIFortuneMedallion.category:GetText()=="XP");assert(BuffButton0:GetAlpha()==0 and BuffButton1:GetAlpha()==0);hudCall("AZSXUICrystalMedallion","OnEnter");assert(GameTooltip.nativeIndex==0 and GameTooltip.title=="Original native tooltip");hudCall("AZSXUIFortuneMedallion","OnEnter");assert(GameTooltip.nativeIndex==1)')
+  self.lua.execute('assert(AZSXUICrystalMedallion:IsShown() and AZSXUICrystalMedallion.total:GetText()=="10" and AZSXUICrystalMedallion.counts==nil and AZSXUICrystalMedallion:GetWidth()==36);assert(not AZSXUIFortuneMedallion.value and not AZSXUIFortuneMedallion.category);assert(BuffButton0:GetAlpha()==0 and BuffButton1:GetAlpha()==0);hudCall("AZSXUICrystalMedallion","OnEnter");assert(GameTooltip.nativeIndex==0 and GameTooltip.title=="Original native tooltip");hudCall("AZSXUIFortuneMedallion","OnEnter");assert(GameTooltip.nativeIndex==1)')
+ def test_charged_potion_joins_row_then_releases_reused_slot(self):
+  self.lua.execute("""
+local gadget=CreateFrame("Button","AZSXUIEngineeringBadge",UIParent);gadget:SetWidth(28);gadget:Show()
+local native=GetPlayerBuffTexture
+function GetPlayerBuffTexture(i)if i==2 then return "potion"end;return native(i)end
+view.data.consumables={[7]={index=2}};view.texts.consumables={[7]={icon="potion"}}
+AZSXUI_DockAuras(view)
+local left=AZSXUICrystalMedallion.anchor[4]
+assert(BuffButton2:GetAlpha()==0 and AZSXUIPotionBadge.icon.portraitMasked)
+assert(gadget.anchor[4]<AZSXUIPotionBadge.anchor[4] and left==-(AZSXUIPotionBadge.anchor[4]+AZSXUIPotionBadge:GetWidth()))
+view.data.consumables={};AZSXUI_DockAuras(view)
+assert(BuffButton2.anchor[2]==AZSXUIHudAuras and AZSXUICrystalMedallion.anchor[4]>left)
+""")
+ def test_potion_without_native_button_uses_owner_icon_until_spent(self):
+  self.lua.execute("""
+view.data.consumables={[7]={index=32}}
+view.texts.consumables={[7]={icon="potion",name="Healing Potion",description="One charge."}}
+AZSXUI_DockAuras(view)
+assert(AZSXUIPotionBadge:IsShown() and AZSXUIPotionBadge.anchor[2]==AZSXUIHudVitals)
+hudCall("AZSXUIPotionBadge","OnEnter");assert(GameTooltip.title=="Healing Potion")
+view.data.consumables={};AZSXUI_DockAuras(view);assert(not AZSXUIPotionBadge:IsShown())
+""")
  def test_zero_crystals_keep_medallion_and_native_tooltip_fallback(self):
   self.lua.execute('view.data.crystals={red=0,blue=0,green=0,yellow=0,total=0,index=32};view.texts.crystals.note="Crystals collected: 0";view.texts.crystals.details={"Find crystals across the map to gain permanent bonuses."};AZSXUI_DockAuras(view);assert(AZSXUICrystalMedallion:IsShown() and AZSXUICrystalMedallion.total:GetText()=="");hudCall("AZSXUICrystalMedallion","OnEnter");assert(GameTooltip.title=="Crystal Resonance")')
  def test_missing_crystal_native_slot_cannot_bind_to_the_fortune_slot(self):
@@ -29,7 +51,7 @@ AZSXUI_DockAuras(view)
  def test_right_click_forwards_current_native_handler_but_not_a_reused_index(self):
   self.lua.execute('cancelled=0;BuffButton1.scripts.OnClick=function()assert(this==BuffButton1 and arg1=="RightButton");cancelled=cancelled+1 end;arg1="RightButton";hudCall("AZSXUIFortuneMedallion","OnClick");assert(cancelled==1);function GetPlayerBuffTexture()return "ordinary"end;hudCall("AZSXUIFortuneMedallion","OnClick");assert(cancelled==1)')
  def test_fortune_rounding_matches_provider(self):
-  self.lua.execute('view.data.fortune.best=1000;AZSXUI_DockAuras(view);assert(AZSXUIFortuneMedallion.value:GetText()=="+13%");local b=AZSXUIFortuneMedallion;assert(b.nature:IsShown() and string.find(b.naturePath,"INV_Misc_Book_09",1,true));view.data.fortune.category=0;AZSXUI_DockAuras(view);assert(string.find(b.naturePath,"Tarot_Stack_01",1,true));view.data.fortune.category=2;AZSXUI_DockAuras(view);assert(string.find(b.naturePath,"Coin_01",1,true));view.data.fortune.category=4;AZSXUI_DockAuras(view);assert(not b.nature:IsShown() and not b.natureRim:IsShown())')
+  self.lua.execute('view.data.fortune.best=1000;AZSXUI_DockAuras(view);local b=AZSXUIFortuneMedallion;assert(b.nature:IsShown() and string.find(b.naturePath,"INV_Misc_Book_09",1,true));view.data.fortune.category=0;AZSXUI_DockAuras(view);assert(string.find(b.naturePath,"Tarot_Stack_01",1,true));view.data.fortune.category=2;AZSXUI_DockAuras(view);assert(string.find(b.naturePath,"Coin_01",1,true));view.data.fortune.category=4;AZSXUI_DockAuras(view);assert(not b.nature:IsShown() and not b.natureRim:IsShown())')
 
 class NativeWidgetTests(unittest.TestCase):
  def setUp(self):

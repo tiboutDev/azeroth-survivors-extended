@@ -24,29 +24,44 @@ unsafe fn unit_block(
     let speeds = [0.; 6];
     create(out, guid, 3, 0, point.as_ptr(), 0., speeds.as_ptr(), fields);
 }
-fn sayge_fields(guid: u64) -> Vec<(u16, u32)> {
-    vec![
+fn scene_fields(guid: u64, entry: u32, display: u32, scale: f32) -> Vec<(u16, u32)> {
+    let mut fields = vec![
         (0, guid as u32),
         (1, (guid >> 32) as u32),
         (2, 9),
-        (3, SAYGE_ENTRY),
-        (4, 1.0f32.to_bits()),
+        (3, entry),
+        (4, scale.to_bits()),
         (22, 1),
         (28, 1),
         (34, 55),
         (35, 35),
         (36, 0x100),
+    ];
+    if entry == SAYGE_ENTRY {
+        // Classic virtual hand slots use item display IDs, followed by packed item metadata.
+        fields.extend_from_slice(&[
+            (37, 23173), // Lava orb, main hand
+            (38, 23322), // Glowing black book, off hand
+            (40, u32::from_le_bytes([2, 14, 1, 13])),
+            (42, u32::from_le_bytes([4, 0, 1, 23])),
+        ]);
+    }
+    fields.extend_from_slice(&[
         // Friendly faction, non-attackable and non-selectable. No combat target or NPC gossip.
         (46, 0x02000002),
         (129, 0.3f32.to_bits()),
         (130, 0),
-        (131, 491),
-        (132, 491),
+        (131, display),
+        (132, display),
         (143, 0),
         (145, 1.0f32.to_bits()),
         (147, 0),
         (148, 0),
-    ]
+    ]);
+    if entry == SAYGE_ENTRY {
+        fields.push((164, 1)); // Draw the held items.
+    }
+    fields
 }
 impl Adapter {
     pub fn ritual_scene_entries(self) -> Vec<Entry> {
@@ -136,8 +151,7 @@ impl Adapter {
         let create: Create = std::mem::transmute((base + v::EVENT_UNIT_CREATE.0) as usize);
         let pack: Pack = std::mem::transmute((base + v::EVENT_UPDATE_PACKET.0) as usize);
         let mut fields = [0u64; 3];
-        for (index, mut value) in sayge_fields(guid) {
-            match index { 3 => value = entry, 4 => value = scale.to_bits(), 131 | 132 => value = display, _ => {} }
+        for (index, value) in scene_fields(guid, entry, display, scale) {
             set(fields.as_mut_ptr(), index, value);
         }
         let mut block = [0, 1, 0, 0];
@@ -176,8 +190,10 @@ mod tests {
     use super::*;
     #[test]
     fn decorative_fields_exclude_interaction_and_combat_ownership() {
-        let f = sayge_fields(0xf130a50010000001);
+        let f = scene_fields(0xf130a50010000001, SAYGE_ENTRY, 491, 1.);
         let value = |key| f.iter().find(|(k, _)| *k == key).map(|(_, v)| *v);
+        assert_eq!((value(37), value(38), value(164)), (Some(23173), Some(23322), Some(1)));
+        assert!(scene_fields(1, 0xa50030, 6909, 4.5).iter().all(|(k, _)| !matches!(k, 37..=45 | 164)));
         assert_eq!(value(35), Some(35));
         assert_eq!(value(46), Some(0x02000002));
         assert_eq!(value(131), Some(491));

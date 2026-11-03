@@ -25,11 +25,11 @@ font and alpha. Missing/ambiguous ranks and untargeted rows remain hidden; the
 addon never infers plate identity from a matching encounter name alone.
 
 Native damage uses its unchanged face, projection, lifetime and normal/critical
-animation, at one third of the freshly calculated native size. The selected
+animation, at one third of the freshly calculated normal size and one half of the freshly calculated critical size. The selected
 `DAMAGE_TEXT_SIZE` seam is guarded by exact executable identity and instruction
-bytes. The renderer owns the current row in r14 and the interpolated/clamped
-size in xmm7. Only normal/critical categories (0/2), excluding native green
-healing, multiply xmm7 by 1/3 before the original conversion and projection.
+bytes. The renderer owns the current row in rbx and the interpolated/clamped
+size in xmm8. Only normal/critical categories (0/2), excluding native green
+healing, multiply xmm8 by 1/3 and 1/2 respectively before the original conversion and projection.
 No stored size is modified, so repeated frames do not compound the reduction.
 All other registers and integer flags are preserved; no callbacks or allocations
 occur. Windows execution tests cover repeated baselines, categories and heals.
@@ -46,7 +46,7 @@ AZSXUI `Minimap.lua` renders custom supplies/trials and native `AZS_CHESTS` cach
 with the same circular portrait/tracking-ring style. The retained AZSX Lua code
 exposes the versioned `AZSX_GetState(1)` contract (validated current personal
 events, exact projection and session identity). It creates no minimap widgets. Accurate panning
-and ping inversion still require this bridge; standalone plate styling does not.
+and ping inversion still require this bridge; the standalone HUD, nameplates, native boss bars and guardian objectives run directly on the 0.138.0 client.
 The addon hides pins when projection is absent/stale, outside a run or disabled,
 and retires old local-ping references on session change. Native cache purchases,
 scenes, availability, raid markers and minimap controls remain untouched.
@@ -79,7 +79,7 @@ native world-to-screen or exact combat-destination API. Multiple same-name
 enemies, interest-set omissions, lethal hits before plate discovery and plate
 visibility remain important limits. AZSXUI does not disable native damage or
 ship the reference fallback against the requested enemy-impact behavior.
-Native same-face one-third sizing now uses the exact seam described above;
+Native same-face damage sizing now uses the exact seam described above;
 exact critical-icon association remains deferred. The reference review is not
 live validation of that external addon.
 No external code, custom textures or fonts have been copied into AZSXUI.
@@ -214,30 +214,26 @@ are implemented; aura and party/build presentation remain possible future work.
 AZSXUI reads boss, awake-guardian and AZSX goblin health from the native addon
 tables. Goblins are native `AZS_UNITS` elite rows named `Venture Co. Treasurer`,
 the fixed AZSX definition/query name, carrying actual spawn ID/HP/max HP. The
-40-row native list bounds discovery; missing data hides the cosmetic row. The native `debuffs` arrays for bosses and guardians, plus `AZS_GetDebuffs(id)` for the goblin, supply compact icons beneath the matching bars. Their icon and debuff border come from the native `PartyBuffButtonTemplate`, with the original native data and entity IDs; no target-name matching or new hook is needed.
+40-row native list bounds discovery; missing data hides the cosmetic row. Encounter health bars match the top counter ribbon in width. Up to two bars share each centered line, with room beneath for the largest debuff list on that line. The native `debuffs` arrays for bosses and guardians, plus `AZS_GetDebuffs(id)` for the goblin, supply compact icons beneath the matching bars. Their icon and debuff border come from the native `PartyBuffButtonTemplate`, with the original native data and entity IDs; no target-name matching or new hook is needed.
 This does not infer a nameplate GUID or introduce a new native memory contact.
 
 Bottom HUD order is equipment, statistics, native XP, then native gryphons.
 XP's complete casting-border artwork remains intact and draws over the stats
 panel joint. The owned XP level is restored on disable, preserving external
-changes. The player health capsule sits 208 UI units above the screen bottom, clear of a five-row statistics panel. Native comma-separated item effects occupy separate tooltip lines while retaining owner text and enchantment lines. The stats panel has three vertical column rules, no horizontal group
-separator, a thin native tooltip border and a clipped lower edge. Objectives use a taller closed ornamented native header, inset from the minimap
+changes. The player health capsule sits 252 UI units above the screen bottom, clear of a five-row statistics panel. Native comma-separated item effects occupy separate tooltip lines while retaining owner text and enchantment lines. The stats panel has three vertical column rules, no horizontal group
+separator, a thin native tooltip border and a clipped lower edge. Objectives use a compact closed ornamented native header, inset from the minimap
 anchor instead of touching the screen edge. Crystal Resonance has one total count on its icon; its full tooltip is
 unchanged.
 
 ## Current tracker presentation
 
 The counter ribbon is detached eight UI units from the top with a complete ornamented
-native border. The 40-unit Objectives header is inset eight units from its
+native border. The 30-unit Objectives header is inset eight units from its
 minimap anchor; one Guardians quest contains live names/counts and upcoming
-arrivals, alongside a separate Sayge quest. Rows size to their text. All active
+arrivals, alongside spawned bosses, Sayge and the chicken escort. Rows size to their text. All active
 lairs receive pins, with explicit retained-frame levels: Sayge, live guardians,
 Supplies, caches, then soon-returning guardians. No coordinate jitter or
-replacement native ping logic is added. The foreground player arrow reads
-`AZS_GetPlayerPosition()` each frame, validates its map/run identity, and follows
-rendered movement/facing between `AZS_RUN` snapshots. Invalid/unavailable live
-samples hide the AZSX proxy and preserve the native fallback; no new memory
-reader or hook is needed.
+replacement native ping logic is added. AZSXUI reads the live player position to fade nearby pins. The native minimap draws the player arrow.
 
 Encounter names are centered, without percentages. Player HP displays only its
 current amount. The character-sheet command and stats-button click open/close the native character
@@ -250,7 +246,7 @@ assign skull; no automatic unmarking is performed. The diagnostic raid-table obs
 that raw-table observation rather than counting it as a pass. Existing participant marker policy remains
 unchanged, with skull available for manual use.
 
-Arrival timers are on a separate line beneath their guardian and appear only
+Spawned bosses appear first, one objective per living boss. Guardian arrival timers follow the name and appear only
 at 30 native seconds or less. Earlier incoming entries have no numeric timer.
 Counter cells anchor by their vertical center, including after HUD reactivation.
 AZSXUI suppresses item-drop toasts for native `isNew=false` receipts; earned marks
@@ -265,12 +261,7 @@ sequential display. The Supplies sale amount remains AZSX-owned and uses the nat
 small gold coin artwork, without converting whole AZSX gold into another currency.
 Quest titles and individual entries have larger gaps than an entry and its timer.
 
-The native player arrow is also presented above AZSX pins using the existing
-`Interface\Minimap\MinimapArrow` texture, native `AZS_RUN.px/py/pf`, and the same
-live minimap projection. It has no mouse handler and adds no memory contact.
-The original native arrow remains intact as the fallback; the foreground copy
-hides when metadata is unavailable, pins are disabled or the hero is outside a
-panned view. Its frame level is above every AZSX event/cache/guardian pin.
+Pins fade to 15% opacity at the player and recover full relative opacity at 20 UI units. Their positions and mouse targets stay available at every opacity. Overlapping projected pins of the same type, priority and rim status share one icon with a count.
 
 ### Encounter debuff parity
 
@@ -278,5 +269,6 @@ Encounter icons use the actual native `TargetDebuffButtonTemplate`, native
 count children, target-button sizes and `DebuffTypeColor` borders. They retain
 per-entity native debuff data and show at most sixteen icons. Hover forwards the
 native target tooltip only when the selected entity ID and one unique native
-aura icon agree. Unselected, stale or ambiguous auras never borrow another
-entity's tooltip; they remain visible without a fabricated description.
+aura icon agree. Otherwise the tooltip shows the encounter's own effect name, stack count and remaining time when available.
+
+At run entry, the action bar, player vitals and aura positions are applied together when the native bar is ready. Empty equipment slots reserve the layout while the first owner payload is pending.

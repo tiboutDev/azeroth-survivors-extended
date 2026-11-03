@@ -7,6 +7,7 @@ struct State {
     epoch: u64,
     clock: f32,
     ids: Vec<(u32, u64)>,
+    kills: BTreeMap<u64,u32>,
     names: BTreeMap<u64, String>,
     builds: BTreeMap<u64, PartyBuild>,
     encoded: BTreeMap<u64, (String, String)>,
@@ -76,6 +77,7 @@ fn wire_extra(state: &mut State, own: u64, heartbeat: u64, extra:&str) -> Option
         return None;
     }
     let mut text = format!("1|{}|{own}|{heartbeat}\n", state.epoch);
+    let complete_kills=state.ids.len()>1 && state.ids.iter().all(|(_,id)|state.kills.contains_key(id) && state.names.contains_key(id) && state.builds.contains_key(id));
     for (slot, id) in &state.ids {
         let build=state.builds.get(id);
         // The exact native recipient is known independently of cosmetic roster
@@ -84,6 +86,7 @@ fn wire_extra(state: &mut State, own: u64, heartbeat: u64, extra:&str) -> Option
         let Some(name)=name else{continue};
         if *id!=own&&build.is_none(){continue}
         text.push_str(&format!("M|{id}|{slot}|{}\n", hex(name.as_bytes())));
+        if complete_kills{text.push_str(&format!("K|{id}|{}\n",state.kills[id]));}
         if let Some(b)=blessings::view(*slot,*id){
             let best=blessings::strongest(b.category);
             text.push_str(&format!("B|{id}|{}|{}|{}|{}|{}\n",b.boss,b.category,b.rarity,b.amount,(best*10000.0).round() as u32));
@@ -176,7 +179,7 @@ pub fn reset() {
         if let Some(s) = state.as_mut() {
             s.epoch = s.epoch.wrapping_add(1);
             s.ids.clear();
-            s.builds.clear();s.enchantments.clear();
+            s.kills.clear();s.builds.clear();s.enchantments.clear();
             s.encoded.clear();
             s.drops.clear();
         }
@@ -215,10 +218,13 @@ pub fn capture(r: &Runtime, actor: u32, value: &serde_json::Value) {
         if s.ids != ids || party.clock + 0.5 < s.clock {
             s.epoch = s.epoch.wrapping_add(1);
             s.ids = ids;
-            s.builds.clear();s.enchantments.clear();
+            s.kills.clear();s.builds.clear();s.enchantments.clear();
             s.encoded.clear();
             s.drops.clear();
         }
+        if let Some(kills)=value["kills"].as_u64().and_then(|v|u32::try_from(v).ok()){
+            s.kills.insert(owner.guid,kills);
+        } else {s.kills.remove(&owner.guid);}
         let changed = s.builds.get(&owner.guid) != Some(&build);
         s.clock = party.clock;
         s.builds.insert(owner.guid, build);
@@ -264,7 +270,7 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
                     let heartbeat=HEARTBEAT.get_or_init(std::time::Instant::now).elapsed().as_secs();
                     let epoch=STATE.lock().ok().map(|mut state|{
                         let s=state.get_or_insert_with(State::default);
-                        if s.ids!=[(0,actor.guid)] || p.clock+0.5<s.clock{s.epoch=s.epoch.wrapping_add(1);s.ids=vec![(0,actor.guid)];s.builds.clear();s.enchantments.clear();s.encoded.clear();s.drops.clear();}
+                        if s.ids!=[(0,actor.guid)] || p.clock+0.5<s.clock{s.epoch=s.epoch.wrapping_add(1);s.ids=vec![(0,actor.guid)];s.kills.clear();s.builds.clear();s.enchantments.clear();s.encoded.clear();s.drops.clear();}
                         s.clock=p.clock;s.epoch
                     }).unwrap_or(0);
                     let mut text=format!("1|{epoch}|{}|{heartbeat}\nM|{}|0|{}\n",actor.guid,actor.guid,hex(b"Player"));
@@ -275,8 +281,8 @@ unsafe extern "system" fn addons(output: *mut u8, game: *mut u8, native_context:
                     if let Some(row)=super::solo_gadgets::wire(game as u64,actor.guid){text.push_str(&row);}
                     if let Some(b)=blessings::view(0,actor.guid){text.push_str(&format!("B|{}|{}|{}|{}|{}|{}\n",actor.guid,b.boss,b.category,b.rarity,b.amount,b.amount));if let Some(receipt)=blessings::receipt(0,actor.guid){text.pop();text.push_str(&format!("|{receipt}\n"));}}
                     if let Some((event,held,inside))=super::rituals::view(game as u64,actor.guid){text.push_str(&format!("R|{}|{event}|{held}|{}|{}\n",actor.guid,u8::from(inside),u8::from(inside)));}
-                    for(c,remaining,index)in super::supplies::buffs(game as u64,actor.guid){if index<32&&remaining>0.{text.push_str(&format!("C|{}|{}|{}|{}|{index}|{}|{}|{}\n",actor.guid,c.family as u8,c.tier,remaining.ceil()as u32,hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}
-                    if let Some(d)=super::supplies::discovery(game as u64,actor.guid){text.push_str(&format!("D|{}|{}|{}|{}|{}|{}|{}|{}\n",actor.guid,d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.reward.text().as_bytes()),d.reward.quality()));}
+                    for(c,remaining,index)in super::supplies::buffs(game as u64,actor.guid){if (index<32 || c.family==azsx_gameplay::supplies::Family::Healing)&&remaining>0.{text.push_str(&format!("C|{}|{}|{}|{}|{index}|{}|{}|{}\n",actor.guid,c.family as u8,c.tier,c.wire_seconds(remaining),hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}
+                    if let Some(d)=super::supplies::discovery(game as u64,actor.guid){text.push_str(&format!("D|{}|{}|{}|{}|{}|{}|{}|{}\n",actor.guid,d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.text().as_bytes()),d.reward.quality()));}
                     if let Some(map)=super::ui_context::minimap(r,actor.guid){
                         text.push_str(&format!("A|{}|{}|{}",actor.guid,(map.center[0]*100.).round()as i32,(map.center[1]*100.).round()as i32));
                         for radius in map.radii{text.push_str(&format!("|{}",(f64::from(radius)*1_000_000.).round()as u64));}
@@ -353,8 +359,8 @@ fn event_text(r:&Runtime,game:u64,slot:u32)->String{
  if let Some(row)=super::demon::wire(game,owner).or_else(||super::solo_escort::wire(game,owner)){text.push_str(&row);}
  if let Some(row)=super::solo_gadgets::wire(game,owner){text.push_str(&row);}
  if let Some((event,held,inside))=super::world_events::coop::view(game,owner){text.push_str(&format!("R|{owner}|{event}|{held}|{}|{}\n",u8::from(inside),u8::from(super::world_events::coop::all_inside(game))));}
- for(c,remaining,index)in super::supplies::buffs(game,owner){if index<32&&remaining>0.{text.push_str(&format!("C|{owner}|{}|{}|{}|{index}|{}|{}|{}\n",c.family as u8,c.tier,remaining.ceil()as u32,hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}
- if let Some(d)=super::supplies::discovery(game,owner){text.push_str(&format!("D|{owner}|{}|{}|{}|{}|{}|{}|{}\n",d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.reward.text().as_bytes()),d.reward.quality()));}
+ for(c,remaining,index)in super::supplies::buffs(game,owner){if (index<32 || c.family==azsx_gameplay::supplies::Family::Healing)&&remaining>0.{text.push_str(&format!("C|{owner}|{}|{}|{}|{index}|{}|{}|{}\n",c.family as u8,c.tier,c.wire_seconds(remaining),hex(c.name().as_bytes()),hex(c.icon().as_bytes()),hex(c.text().as_bytes())));}}
+ if let Some(d)=super::supplies::discovery(game,owner){text.push_str(&format!("D|{owner}|{}|{}|{}|{}|{}|{}|{}\n",d.event,d.reward.rarity(),d.gold,hex(d.reward.name().as_bytes()),hex(d.reward.icon().as_bytes()),hex(d.text().as_bytes()),d.reward.quality()));}
  if let Some(mut map)=party.actors.iter().find_map(|a|super::ui_context::minimap(r,a.guid)){
   if slot!=0{map.center=[actor.position[0],actor.position[1]];map.ping=[0.,0.];}
   text.push_str(&format!("A|{owner}|{}|{}",(map.center[0]*100.).round()as i32,(map.center[1]*100.).round()as i32));

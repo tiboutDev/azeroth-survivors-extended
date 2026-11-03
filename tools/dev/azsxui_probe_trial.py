@@ -45,6 +45,12 @@ def run_probe(args,gate):
     (output/"result.json").write_text(json.dumps(result,indent=2)+"\n")
     (output/"api-samples.txt").write_text("\n".join(lines))
     print(json.dumps(result),flush=True)
+    if hud_probe:
+        if result["azsx_dll_present"] or not any("standaloneHUD=true" in line for line in lines):
+            raise SystemExit("Standalone HUD was not observed without the DLL")
+        from script_diagnostics import assess
+        unexpected=assess("\n".join(line for line in text.splitlines() if "AZSXUI_HUD_PROBE" not in line))
+        if not unexpected["passed"]:raise SystemExit(str(unexpected["errors"][:3]))
     if not lines:raise SystemExit("No Lua probe samples; inspect native.log")
 
 background.__file__=__file__

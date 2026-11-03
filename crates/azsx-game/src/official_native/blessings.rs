@@ -10,6 +10,29 @@ fn q(m: &dyn Mem, a: u64) -> Result<u64> {
     ))
 }
 impl Adapter {
+    pub fn codex_entries(self) -> [Entry; 4] {
+        [0x5c4dd97, 0x5c4ddf8, 0x5c4d7f0, 0x5c56eb0].map(|key| Entry {
+            rva: self.rva(key), bytes: self.expected(key, &[]),
+        })
+    }
+
+    /// RSI is the initialized collection on both reviewed load boundaries.
+    /// The native discovery operation inserts in key order and retains the highest rarity.
+    pub unsafe fn discover_economy_trinkets(self, base: usize, collection: usize, persist: bool) -> usize {
+        let [_, _, discover, save] = self.codex_entries();
+        let discover: unsafe extern "system" fn(usize, *const u8, usize, u8) -> bool =
+            std::mem::transmute(base + discover.rva as usize);
+        let mut added = 0;
+        for key in ["insignia", "eldre_thalas", "chosen"] {
+            if discover(collection, key.as_ptr(), key.len(), 0) { added += 1; }
+        }
+        // On native recovery/default paths, leave the timing of disk writes to the game.
+        if persist && added > 0 {
+            let save: unsafe extern "system" fn(usize) = std::mem::transmute(base + save.rva as usize);
+            save(collection);
+        }
+        added
+    }
     pub fn blessing_entries(self) -> Vec<Entry> {
         if !self.supports_extensions() {
             return vec![];
@@ -106,8 +129,11 @@ impl Adapter {
         if !self.supports_extensions() {
             return Err("Unsupported fortune stats".into());
         }
+        self.apply_fortune_stat(m,game,b.category,b.factor())
+    }
+    pub(crate) fn apply_fortune_stat(self,m:&dyn MutableMemory,game:u64,category:u8,factor:f32)->Result<()> {
         let field = *v::BLESSING_STAT_FIELDS
-            .get(b.category as usize)
+            .get(category as usize)
             .ok_or("Invalid fortune category")?;
         let v = f32::from_le_bytes(
             m.read(game + self.field117(field), 4)?
@@ -117,10 +143,10 @@ impl Adapter {
         if !v.is_finite() || v < 0.0 {
             return Err("Invalid blessing base stat".into());
         }
-        let next = if b.category == 3 {
-            v * (1.0 + b.factor())
+        let next = if category == 3 {
+            v * (1.0 + factor)
         } else {
-            v + b.factor()
+            v + factor
         };
         m.write(game + self.field117(field), &next.to_le_bytes())
     }

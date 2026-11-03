@@ -1,8 +1,8 @@
 # AZSXUI
 
-Independent Lua presentation addon for Azeroth Survivors. It works without the
-AZSX DLL for its nameplate styling. Minimap rendering uses the optional AZSX
-projection/event bridge described below. No addon memory reads. Camera mode chains the native WorldFrame mouse scripts.
+Standalone Lua interface for Azeroth Survivors 0.138.0. The native client supplies the action bar, health, level and experience, combat counters, character stats, nameplates, boss bars and guardian objectives. Camera controls work independently of the mod.
+
+A compatible AZSX addon API enables mod events and map pins, personal equipment details, cooperative rules, shared economy and kill rankings as their data becomes available. Standalone play keeps the game's equipment and loot displays. Native world-number scaling and additional healing numbers require the DLL.
 
 ## Install
 
@@ -12,8 +12,7 @@ updated with signed AZSX updates; no separate archive is needed. Preferences sta
 in the native SavedVariables store. Do not edit the managed source files to
 configure the addon; use the commands below.
 
-For standalone nameplate styling without AZSX, copy this source folder to the
-same addon location and restart the client. Keep its `.toc`, Lua, font and
+For standalone use, place the `AZSXUI` folder inside the native game’s `benilla-config/AddOns/` directory and restart the client. The resulting path must be `benilla-config/AddOns/AZSXUI/AZSXUI.toc`. Keep its `.toc`, Lua, font and
 licenses together. AZSX can later adopt matching files or, with consent and a
 backup, replace different code. Removing AZSX removes only its unchanged managed
 addon files and preserves preferences and unknown files.
@@ -41,14 +40,13 @@ addon files and preserves preferences and unknown files.
   face remains an explicit opt-in (`numbers on`), rather than a default. Existing
   saved `numbers=true` preferences are respected; use `numbers off` and restart
   to restore the startup native face. Standalone Lua has no confirmed same-face size control. With the matching
-  AZSX DLL, native outgoing damage renders at one third size without changing fonts.
+  AZSX DLL, native outgoing damage renders at one third size for normal hits and one half for critical hits without changing fonts.
 - AZSXUI owns the circular custom-event and native-cache minimap pins, their native
   portrait mask, tracking-ring border, hover text and edge projection. Supply and
   trial icons retain their styles; caches use the native `INV_Box_02` icon; supplies retain `INV_Crate_01`.
   Both keep the same circular mask and tracking ring. A Mechanical Chicken
 escort uses the native `INV_Misc_EngGizmos_06` icon at its current exposed position and
-removes the pin when the scene ends. A Banished Demon binding uses the native
-  `Spell_Shadow_Cripple` icon and the same objective/marker lifecycle.
+removes the pin when the scene ends.
   Native cache coordinates come directly from `AZS_CHESTS`. Native cache opening,
   purchases, event progress and per-recipient availability stay authoritative.
 
@@ -138,7 +136,7 @@ uv run --with fonttools python tools/build/azsxui_font.py --source <source-font.
 
 ## AZSX event widgets
 
-`Events.lua` owns Supply/Fortune/crystal pickup panels and Sayge's progress bar. It also observes the solo or cooperative Mechanical Chicken escort and shows the equipped engineering gadget beside the health/Fortune medallions, using the native-style AZSX API 1.13. The addon does not control movement or rewards.
+`Events.lua` owns Supply/Fortune/crystal pickup panels and Sayge's progress bar. It also observes the solo or cooperative Mechanical Chicken escort and shows the equipped engineering gadget in the status row below health, using the native-style AZSX API 1.13. The addon does not control movement or rewards.
 `AZSX_GetState(1)` supplies structured values in `data` and every semantic title,
 reward, note and color in `texts`, all from AZSX. AZSXUI does not calculate
 rewards, timers or gameplay. Goblin appearance/defeat/escape announcements keep
@@ -190,10 +188,9 @@ The guardian minimap guide uses all native `AZS_GetLairs()` entries (with `AZS_G
 Only the replaced native flag is hidden; its prior HUD preference is restored
 when pins/projection are unavailable. Sayge progress uses WoW's native casting
 bar texture/border, with the trial title inside and status below. Fortunes use
-green +X% values rather than visible rarity labels. Supplies buffs last 60 game
-seconds; unclaimed piles last 90 game seconds (claimed piles still retire early).
+green +X% values rather than visible rarity labels. Timed Supplies buffs last 15–120 game seconds; unclaimed piles last 90 game seconds (claimed piles still retire early).
 
-The seventh consumable family (`6`, Swiftness) and the separate
+Consumable family 6 is Swiftness. Family 7 is an armed healing potion with zero remaining seconds until it is consumed. The separate
 `discovery.quality` field describe the effect family and Classic name color. AZSXUI uses supplied colors
 and text; it does not infer color from buff tier or gold value.
 
@@ -271,15 +268,15 @@ not a supported simultaneous layout; use `/azsxui hud off` before enabling it.
 ### Persistent health, auras and cooperative context
 
 The HUD places a health-only bar and separate native helpful/harmful aura rows
-at a screen-relative bottom offset of 208 UI units, independent of the action/XP
+at a screen-relative bottom offset of 252 UI units, independent of the action/XP
 and equipment stack. Helpful/harmful auras stay above health with their
-native durations above their icons. The statistics panel opens immediately above native XP, in front of equipment. Close it to inspect or cancel a buff. The experience bar centers the run level and native XP progress together, for example `Level 5 · 21 / 27`. Health reads native
+native durations above their icons. The statistics panel opens immediately above native XP, in front of equipment. Close it to inspect or cancel a buff. Encounter health bars match the top counter ribbon in width. Up to two bars share each centered line, with room beneath for the largest debuff list on that line. The experience bar centers the run level and native XP progress together, for example `Level 5 · 21 / 27`. Health reads native
 `UnitHealth`/`UnitHealthMax`. The portrait/resources are omitted and the original
 player and target roots are visually hidden with their updates retained.
 Disabling the HUD restores their alpha/mouse state. Native aura buttons retain
 their IDs, cancellation, tooltip and duration handlers and full readable size.
-With the HUD enabled, Fortune and Crystal Resonance have dedicated medallions
-beside health. With the HUD disabled, Fortune leads the native helpful row,
+With the HUD enabled, Crystal Resonance, Fortune, the equipped gadget and the
+charged healing potion share one centered row below health. Only occupied slots appear. With the HUD disabled, Fortune leads the native helpful row,
 followed by Crystal Resonance.
 
 Cooperative spell/item children receive a shared native metal/stone panel
@@ -331,11 +328,8 @@ applied uniformly to the body and native 128px portrait-alpha caps. Applying
 the same modulation avoids a visible join; clipping preserves low-HP proportions. Ally spell/item panels are centered vertically on their retained
 party roots; buffs remain outside their right edge.
 
-Crystal Resonance sits to the left of health with four colored collection
-counts. Sayge's Fortune sits on the right with its category and active +X%
-value; a small circular native icon overlaps the orb at its lower-right corner:
-Darkmoon cards for Luck, a book for XP, and a coin for Gold. Category text and
-the original tooltip remain available. XP/Gold use the supplied strongest-party
+Crystal Resonance shows the total collected. Sayge's Fortune keeps its category and bonus in the tooltip; a small circular native icon overlaps the orb at its lower-right corner:
+Darkmoon cards for Luck, a book for XP, and a coin for Gold. The gadget and healing potion use the same circular portrait and rim. XP/Gold use the supplied strongest-party
 value when applicable. Both
 consume the current AZSX snapshot, hide on unavailable data, and use the original
 native player-buff tooltip when its current aura can be identified. Missing or
@@ -434,7 +428,7 @@ invalid or excessive data (more than eight health rows). Default event popups
 move below this stack; explicitly customized popup anchors remain unchanged.
 
 Outgoing damage stays attached to native enemy impacts, with the unchanged
-native face at one third of native size through a guarded AZSX DLL seam.
+native face at one third of native size for normal hits and one half for critical hits.
 Healing size and other world-text categories are unchanged. Critical spell
 icons remain deferred; no screen-fixed feed or heuristic Lua target match is
 introduced. The older optional reduced-geometry font is unnecessary for this
@@ -487,7 +481,7 @@ Popup duration suffixes move to a dedicated `Duration:` line, retaining the AZSX
 text and numeric coloring. This does not change authoritative durations.
 Goblins no longer receive an automatic skull; manual raid markers remain native.
 
-Arrival timers are on a separate line beneath their guardian and appear only
+Spawned bosses appear first, one objective per living boss. Guardian arrival timers follow the name and appear only
 at 30 native seconds or less. Earlier incoming entries have no numeric timer.
 Counter cells anchor by their vertical center, including after HUD reactivation.
 AZSXUI suppresses item-drop toasts for native `isNew=false` receipts; earned marks
@@ -502,9 +496,7 @@ Supplies sold for gold show the exact AZSX amount with the native WoW tooltip
 gold coin. Quest titles, objective entries and arrival timers use distinct
 spacing; arrival timers remain limited to the final 30 seconds.
 
-The player arrow is repeated above AZSX pins with its native texture and Lua
-position/facing. Native map input and the original arrow stay intact. Disabling
-pins, unavailable data or a panned-offscreen hero hides this foreground copy.
+The native map draws the player arrow. AZSX pins fade near the hero and remain hoverable. Overlapping pins of the same kind and status share one count badge until they separate.
 
 ### Live stats, level and reward receipts
 
@@ -521,13 +513,4 @@ native total, preserving decimals and unrelated item order.
 
 ## Cooperative Rules information
 
-During a cooperative run, a permanent **Cooperative Rules** information icon is
-shown first in the helpful-buff row. Its tooltip explains the 50% effectiveness
-of area/range bonuses. A separated gray note clarifies that the stats panel shows
-effective values while item/reward descriptions may show base bonuses.
-
-This icon grants no effect, has no countdown, cannot be cancelled, and remains
-present while dead or paused. It disappears in solo and outside the run. AZSXUI
-places it in its HUD; the AZSX presentation bridge also displays it beside native
-buffs when AZSXUI is absent or its HUD is disabled. The AZSX addon API exposes its
-values and texts for other addons. No additional assets are required.
+Hover the kill counter to see current party members ranked by their personal run kills. Tied players share a rank. Hover or click the circular question mark to the right of the top counter ribbon for co-op rules on shared XP, party gold, personal chest choices and global area/range bonuses. Without the custom HUD, the help button sits beside the first ally frame.

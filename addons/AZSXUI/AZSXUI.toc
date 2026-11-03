@@ -1,6 +1,6 @@
 ## Interface: 11200
 ## Title: AZSXUI
-## Notes: Native nameplate styling, world numbers, minimap markers and configurable AZSX event widgets.
+## Notes: HUD and nameplates for Azeroth Survivors 0.138.0. Optional AZSX integration adds event and party widgets.
 ## Author: AZSX contributors
 ## Version: 0.1.0
 ## SavedVariables: AZSXUIDB, ASXUIDB

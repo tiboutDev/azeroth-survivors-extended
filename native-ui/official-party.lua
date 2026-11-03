@@ -81,7 +81,7 @@ local function decode(wire)
     local newline=string.find(text,"\n",1,true)
     if not newline then return nil end
     local lines=split(text,"\n")
-    if table.getn(lines)>198 then return nil end
+    if table.getn(lines)>203 then return nil end
     local head=split(lines[1],"|")
     if table.getn(head)~=4 or head[1]~="1" or not integer(head[2],0,1e12) or not identity(head[3]) or not integer(head[4],0,1e9) then return nil end
     local result={epoch=head[2],own=head[3],members={},ordered={},signature=string.sub(text,newline+1)}
@@ -90,7 +90,7 @@ local function decode(wire)
     for n=2,table.getn(lines) do
         if lines[n]~="" then
             local a=split(lines[n],"|")
-            if a[1]~="F" and a[1]~="C" and a[1]~="R" and a[1]~="A" and a[1]~="P" and a[1]~="D" then table.insert(signature,lines[n])end
+            if a[1]~="K" and a[1]~="F" and a[1]~="C" and a[1]~="R" and a[1]~="A" and a[1]~="P" and a[1]~="D" then table.insert(signature,lines[n])end
             local id=identity(a[2])
             if not id then return nil end
             if a[1]=="M" and table.getn(a)==4 then
@@ -100,6 +100,10 @@ local function decode(wire)
                 lastSlot=slot
                 local member={id=id,slot=slot,name=name,spells={},items={},consumables={},markers={}}
                 result.members[id]=member;table.insert(result.ordered,member)
+            elseif a[1]=="K" and table.getn(a)==3 and result.members[id] then
+                local kills=integer(a[3],0,4294967295)
+                if not kills or result.members[id].kills~=nil then return nil end
+                result.members[id].kills=kills
             elseif a[1]=="L" and table.getn(a)==3 and id==result.own and result.members[id] then
                 local count=integer(a[3],0,5)
                 if count==nil or result.members[id].equipment then return nil end
@@ -154,9 +158,9 @@ local function decode(wire)
                 if result.members[id].ritual or not event or not held or not inside or (table.getn(a)==6 and allInside==nil) then return nil end
                 result.members[id].ritual={event=event,held=held,inside=inside==1,allInside=allInside and allInside==1}
             elseif a[1]=="C" and table.getn(a)==9 and result.members[id] then
-                local family,tier,left,index=integer(a[3],0,6),integer(a[4],1,3),integer(a[5],1,60),integer(a[6],0,31)
+                local family,tier,left,index=integer(a[3],0,7),integer(a[4],1,3),integer(a[5],0,120),integer(a[6],0,family==7 and 32 or 31)
                 local name,icon,text=unhex(a[7],128),unhex(a[8],96),unhex(a[9],256)
-                if not family or not tier or not left or not index or not name or name=="" or string.find(name,"[%c]") or not icon or not string.find(icon,"^INV_[%w_]+$") or not text or string.find(text,"[%c]") or result.members[id].consumables[family] then return nil end
+                if not family or not tier or not left or (left==0)~=(family==7) or not index or not name or name=="" or string.find(name,"[%c]") or not icon or not string.find(icon,"^INV_[%w_]+$") or not text or string.find(text,"[%c]") or result.members[id].consumables[family] then return nil end
                 for _,buff in pairs(result.members[id].consumables)do if buff.index==index then return nil end end
                 result.members[id].consumables[family]={family=family,tier=tier,remaining=left,index=index,name=name,icon=icon,text=text}
             elseif a[1]=="D" and (table.getn(a)==8 or table.getn(a)==9) and result.members[id] then
@@ -223,7 +227,7 @@ local function refreshModel()
         local nextModel=decode(wire)
         if not nextModel or not model or model.epoch~=nextModel.epoch or model.own~=nextModel.own or model.signature~=nextModel.signature then model=nextModel
         else
-            for id,member in pairs(model.members)do member.fatigue=nextModel.members[id].fatigue;member.consumables=nextModel.members[id].consumables;member.discovery=nextModel.members[id].discovery;member.ritual=nextModel.members[id].ritual;member.soloEvent=nextModel.members[id].soloEvent;member.engineering=nextModel.members[id].engineering;member.minimap=nextModel.members[id].minimap;member.markers=nextModel.members[id].markers end
+            for id,member in pairs(model.members)do member.kills=nextModel.members[id].kills;member.fatigue=nextModel.members[id].fatigue;member.consumables=nextModel.members[id].consumables;member.discovery=nextModel.members[id].discovery;member.ritual=nextModel.members[id].ritual;member.soloEvent=nextModel.members[id].soloEvent;member.engineering=nextModel.members[id].engineering;member.minimap=nextModel.members[id].minimap;member.markers=nextModel.members[id].markers end
         end
         modelWire=wire
     end
@@ -492,7 +496,7 @@ local function crystalPresentation(c)
             {"red","Red",12,"Damage","ffff6060"},
             {"blue","Blue",7,"Cooldown recovery","ff609fff"},
             {"green","Green",15,"Maximum health","ff50d870"},
-            {"yellow","Yellow",2,"Critical strike chance","ffffd050"},
+            {"yellow","Yellow",8,"Luck","ffffd050"},
         })do
             local count=c[row[1]]
             if count>0 then
@@ -558,7 +562,8 @@ if GetPlayerBuff then
     local native=GetPlayerBuff
     GetPlayerBuff=function(index,filter)
         local slot,permanent=native(index,filter)
-        if slot and supplyBuff(slot) then return slot,0 end
+        local buff=slot and supplyBuff(slot)
+        if buff then return slot,buff.family==7 and 1 or 0 end
         return slot,permanent
     end
 end
@@ -577,8 +582,11 @@ if GameTooltip and GameTooltip.SetPlayerBuff then
         if buff then
             tooltip:ClearLines();tooltip:AddLine(buff.name,1,1,1)
             tooltip:AddLine(buff.text,1,1,1,true)
-            local duration=SecondsToTime and SecondsToTime(buff.remaining) or (buff.remaining.." sec")
-            tooltip:AddLine(duration.." remaining",1,1,1);tooltip:Show()
+            if buff.remaining>0 then
+                local duration=SecondsToTime and SecondsToTime(buff.remaining) or (buff.remaining.." sec")
+                tooltip:AddLine(duration.." remaining",1,1,1)
+            end
+            tooltip:Show()
         end
     end
 end
@@ -595,7 +603,7 @@ end
 local supplyBuffSignature=nil
 local function refreshSupplyBuffButtons()
     local own=supplyOwner();local parts={}
-    if own then for family=0,6 do local b=own.consumables[family];if b then table.insert(parts,family..":"..b.index..":"..b.icon)end end end
+    if own then for family=0,7 do local b=own.consumables[family];if b then table.insert(parts,family..":"..b.index..":"..b.icon)end end end
     if own and own.crystals then local c=own.crystals;table.insert(parts,"G:"..c.index..":"..c.total)end
     local signature=table.concat(parts,"|")
     if signature==supplyBuffSignature then return end
@@ -674,7 +682,8 @@ function AZSX_GetEventPresentation()
     if not own then return nil end
     local view={epoch=model.epoch,own=model.own,owner={}}
     local d=own.discovery
-    if d then view.owner.discovery={event=d.event,title="Lost Supplies",icon="Interface\\Icons\\"..d.icon,reward=d.name,note=d.gold>0 and ("Sold for "..d.gold.." gold")or(d.text.." - 60 seconds"),color=({{1,1,1},{0.12,1,0}})[d.quality or 1]}end
+    local bonusAt=d and string.find(d.text," + ",1,true)
+    if d then view.owner.discovery={event=d.event,title="Lost Supplies",icon="Interface\\Icons\\"..d.icon,reward=d.name,note=d.gold>0 and (("Sold for "..d.gold.." gold")..(bonusAt and string.sub(d.text,bonusAt)or ""))or d.text,color=({{1,1,1},{0.12,1,0}})[d.quality or 1]}end
     local b=blessingFor("player")
     if b then view.blessing={boss=b.boss,title="Sayge's Dark Fortune",icon=blessingIcon,reward="+"..blessingPercent(b.amount).." "..blessingLabels[b.category+1],note="Fortune of "..blessingNames[b.category+1],color={0.12,1,0}}end
     local ritual=own.ritual
@@ -696,6 +705,12 @@ local function apiEncode(value)
     local parts={"{"};for _,key in ipairs(keys)do table.insert(parts,apiEncode(key));table.insert(parts,apiEncode(value[key]))end
     table.insert(parts,"}");return table.concat(parts)
 end
+local coopHelpSections={
+    {"Shared XP", "Fallen allies still gain XP.\nChoose upgrades after revival."},
+    {"Shared gold", "Chests and rerolls use party gold."},
+    {"Chest rewards", "Each eligible player picks a reward."},
+    {"Area & range", "Global bonuses are halved.\nA +20% bonus gives +10% in co-op."},
+}
 local function apiState()
     refreshModel()
     local phase=AZS_GetPhase and AZS_GetPhase()or "unknown"
@@ -703,7 +718,7 @@ local function apiState()
     local own=allowed and supplyOwner()or nil
     local input=phase..":"..tostring(own~=nil)..":"..tostring(AZS_RUN_UPDATED)..":"..tostring(modelWire)
     if apiCache and input==apiInput then return apiCache end
-    local state={api={major=1,minor=13},available=own~=nil,phase=phase,data={},texts={}}
+    local state={api={major=1,minor=14},available=own~=nil,phase=phase,data={},texts={}}
     if own then
         state.session={epoch=model.epoch,recipientGUID=model.own}
         state.data={sharedEconomy=apiCopy(own.economy),crystals=apiCopy(own.crystals),fortune=apiCopy(own.blessing),fatigue=apiCopy(own.fatigue),consumables=apiCopy(own.consumables),discovery=apiCopy(own.discovery),sayge=apiCopy(own.ritual),soloEvent=apiCopy(own.soloEvent),engineering=apiCopy(own.engineering),minimap=apiCopy(own.minimap),markers=apiCopy(own.markers)}
@@ -727,13 +742,13 @@ local function apiState()
         local crystalText
         if state.data.crystals then
             local c=state.data.crystals
-            c.bonuses={damage=c.red*12,cooldownRecovery=c.blue*7,maximumHealth=c.green*15,areaOfEffect=0,criticalStrikeChance=c.yellow*2}
+            c.bonuses={damage=c.red*12,cooldownRecovery=c.blue*7,maximumHealth=c.green*15,areaOfEffect=0,criticalStrikeChance=0,luck=c.yellow*8}
             local presentation=crystalPresentation(c)
             crystalText={title="Crystal Resonance",icon=crystalIcon,note=presentation.summary,details=presentation.details,footer=presentation.footer}
             crystalText.pickups={}
             local names={"Red","Blue","Green","Yellow"}
             local keys={"red","blue","green","yellow"}
-            local gains={"+12% damage","+7% cooldown recovery","+15% maximum health","+2% critical strike chance"}
+            local gains={"+12% damage","+7% cooldown recovery","+15% maximum health","+8% Luck"}
             local colors={{1,.25,.2},{.3,.65,1},{.12,1,0},{1,.82,0}}
             for i,key in ipairs(keys)do
                 crystalText.pickups[key]={title=names[i].." Crystal collected",reward=gains[i],note="Crystal Resonance - lasts until the end of the run.",icon=crystalIcon,color={.12,1,0},titleColor=colors[i]}
@@ -773,10 +788,26 @@ local function apiState()
             state.texts.engineering={title=names[e.kind],icon="Interface\\Icons\\"..icons[e.kind],description=descriptions[e.kind],reward=names[e.kind],duration="Until the end of the run"}
         end
         if own.economy then
+            local ranks={}
+            for _,member in ipairs(model.ordered)do
+                if member.kills==nil then ranks={};break end
+                table.insert(ranks,{guid=member.id,slot=member.slot,name=member.name,kills=member.kills})
+            end
+            if table.getn(ranks)>0 then
+                table.sort(ranks,function(a,b)
+                    if a.kills==b.kills then return a.slot<b.slot end
+                    return a.kills>b.kills
+                end)
+                state.data.killRanking=ranks
+            end
             state.data.cooperativeRules={id="cooperative_rules",permanent=true,priority=1,areaBonusShare=0.5}
-            state.texts.cooperativeRules={title="Cooperative Rules",icon="Interface\\Icons\\Spell_Holy_PrayerofFortitude",
+            state.texts.cooperativeRules={title="Co-op rules",icon="Interface\\Icons\\INV_Misc_QuestionMark",
                 rule="Area and range bonuses are 50% effective.",
-                notes={"The stats panel shows effective values.","Item and reward descriptions may show base bonuses."}}
+                notes={"The stats panel shows effective values.","Item and reward descriptions may show base bonuses."},
+                details={}}
+            for _,section in ipairs(coopHelpSections)do
+                table.insert(state.texts.cooperativeRules.details,section[1].." — "..string.gsub(section[2],"\n"," "))
+            end
         end
         if state.texts.supplies then state.texts.supplies.name=own.discovery.name;state.texts.supplies.description=own.discovery.text end
     else
@@ -788,7 +819,7 @@ local function apiState()
     state.updatedAt=own and modelTime or nil
     apiCache=state;apiInput=input;return state
 end
-function AZSX_GetAPIVersion()return 1,13 end
+function AZSX_GetAPIVersion()return 1,14 end
 function AZSX_GetState(major)
     if major~=nil and major~=1 then return nil,"unsupported_version"end
     return apiCopy(apiState())
@@ -835,72 +866,66 @@ function AZSXOfficialPartyReadout()
     return result, built, model and model.own, azsxNativeActive, blessingFor("player")
 end
 
--- Informational aura: no native buff slot, cancellation or gameplay mutation.
--- Exists without AZSXUI. Other consumers can render the detached API record.
-local cooperativeButton,cooperativeDock,cooperativeAnchor
-local function cooperativeRestore()
-    local e=cooperativeAnchor
-    if e then
-        local a,b,c,x,y=e.frame:GetPoint(1)
-        if a=="TOPRIGHT"and b==cooperativeButton and c=="TOPLEFT"and x==-5 and y==0 then
-            e.frame:ClearAllPoints();for _,point in ipairs(e.points)do e.frame:SetPoint(unpack(point))end
-        end
-    end
-    cooperativeAnchor=nil
-end
+-- Informational help button shared with AZSXUI and optional API consumers.
+local cooperativeButton,cooperativeDock
 local function cooperativeRefresh()
     local state=apiState()
     local text=state.available and state.data.cooperativeRules and state.texts.cooperativeRules
     if not text then
-        cooperativeRestore()
         if cooperativeButton then
             setShown(cooperativeButton,false)
-            if cooperativeButton.hovered then GameTooltip:Hide();cooperativeButton.hovered=false end
+            if cooperativeButton.help then cooperativeButton.help:Hide()end
         end
         return nil
     end
     if not cooperativeButton then
         local b=CreateFrame("Button","AZSXCooperativeRulesBuff",UIParent);cooperativeButton=b
-        b:SetWidth(32);b:SetHeight(32)
-        b.icon=b:CreateTexture(nil,"ARTWORK");b.icon:SetAllPoints(b);b.icon:SetTexture(text.icon)
-        b:SetScript("OnEnter",function()
+        b:SetWidth(26);b:SetHeight(26)
+        b.icon=b:CreateTexture("AZSXCooperativeHelpIcon","ARTWORK");b.icon:SetWidth(22);b.icon:SetHeight(22)
+        b.icon:SetPoint("CENTER",b,"CENTER",0,0);SetPortraitToTexture(b.icon:GetName(),text.icon)
+        local rim=b:CreateTexture(nil,"OVERLAY");rim:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+        rim:SetTexCoord(0,.625,0,.625);rim:SetWidth(29);rim:SetHeight(29);rim:SetPoint("CENTER",b.icon,"CENTER",0,0)
+        local function showRules()
             local current=apiState()
             local t=current.available and current.data.cooperativeRules and current.texts.cooperativeRules
-            if not t then GameTooltip:Hide();return end
-            b.hovered=true;GameTooltip:SetOwner(b,"ANCHOR_RIGHT");GameTooltip:ClearLines()
-            GameTooltip:AddLine(t.title,1,1,1);GameTooltip:AddLine(t.rule,1,1,1,true)
-            GameTooltip:AddLine(" ")
-            for _,note in ipairs(t.notes)do GameTooltip:AddLine(note,.65,.65,.65,true)end
-            GameTooltip:Show()
-        end)
-        b:SetScript("OnLeave",function()b.hovered=false;GameTooltip:Hide()end)
+            if not t then return end
+            if not b.help then
+                local panel=CreateFrame("Frame","AZSXCooperativeHelpPanel",b)
+                panel:SetFrameStrata("TOOLTIP");panel:EnableMouse(false);panel:SetWidth(292)
+                panel:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",edgeSize=12,insets={left=3,right=3,top=3,bottom=3}})
+                panel:SetBackdropColor(.045,.04,.03,1);panel:SetBackdropBorderColor(.65,.57,.4,1)
+                local fill=panel:CreateTexture(nil,"BORDER")
+                fill:SetPoint("TOPLEFT",panel,"TOPLEFT",3,-3);fill:SetPoint("BOTTOMRIGHT",panel,"BOTTOMRIGHT",-3,3)
+                fill:SetTexture(.055,.05,.04,1)
+                local y=12
+                local function line(value,size,height,r,g,blue)
+                    local label=panel:CreateFontString(nil,"OVERLAY","GameFontNormal")
+                    label:SetFont("Fonts\\FRIZQT__.TTF",size,"")
+                    label:SetTextColor(r,g,blue);label:SetJustifyH("LEFT")
+                    label:SetPoint("TOPLEFT",panel,"TOPLEFT",13,-y);label:SetText(value)
+                    y=y+height
+                end
+                line(t.title,17,26,1,.82,0)
+                for _,section in ipairs(coopHelpSections)do
+                    line(section[1],14,18,1,.84,.53)
+                    local _,breaks=string.gsub(section[2],"\n","")
+                    line(section[2],14,(breaks+1)*17+7,.96,.96,.96)
+                end
+                panel:SetHeight(y+4);b.help=panel
+            end
+            b.help:ClearAllPoints()
+            if cooperativeDock then b.help:SetPoint("TOPRIGHT",b,"BOTTOMRIGHT",0,-5)
+            else b.help:SetPoint("TOPLEFT",b,"BOTTOMLEFT",0,-5)end
+            b.help:Show()
+        end
+        b:SetScript("OnEnter",showRules);b:SetScript("OnClick",showRules)
+        b:SetScript("OnLeave",function()if b.help then b.help:Hide()end end)
     end
     if not cooperativeDock then
-        local first=getglobal("BuffButton0")
-        -- Follow a cosmetic reorder to its leading native button. Anchoring
-        -- to an interior button would create a cycle with reordered auras.
-        local seen={}
-        while first and type(first.GetPoint)=="function"do
-            if seen[first]then first=nil;break end
-            seen[first]=true
-            local _,parent=first:GetPoint(1)
-            if type(parent)=="string"then parent=getglobal(parent)end
-            local name=parent and parent.GetName and parent:GetName()
-            if type(name)~="string"or not string.find(name,"^BuffButton%d+$")then break end
-            first=parent
-        end
-        if first and first:IsShown()and type(first.GetNumPoints)=="function"and first:GetNumPoints()>0 then
-            local _,parent=first:GetPoint(1)
-            if parent~=cooperativeButton then
-                cooperativeRestore()
-                local points={};for i=1,first:GetNumPoints()do points[i]={first:GetPoint(i)}end
-                cooperativeAnchor={frame=first,points=points}
-                cooperativeButton:ClearAllPoints();for _,point in ipairs(points)do cooperativeButton:SetPoint(unpack(point))end
-                first:ClearAllPoints();first:SetPoint("TOPRIGHT",cooperativeButton,"TOPLEFT",-5,0)
-            end
-        else
-            cooperativeRestore();cooperativeButton:ClearAllPoints();cooperativeButton:SetPoint("TOPRIGHT",UIParent,"TOPRIGHT",-205,-13)
-        end
+        local party=getglobal("PartyMemberFrame1")
+        cooperativeButton:ClearAllPoints()
+        if party and party:IsVisible()then cooperativeButton:SetPoint("LEFT",party,"RIGHT",6,0)
+        else cooperativeButton:SetPoint("TOPLEFT",UIParent,"TOPLEFT",12,-85)end
     end
     setShown(cooperativeButton,true);return cooperativeButton
 end
@@ -909,7 +934,7 @@ function AZSX_SetCooperativeRulesDocked(owner,docked)
     if type(owner)~="string"or owner==""then return nil end
     if docked then
         if cooperativeDock and cooperativeDock~=owner then return nil end
-        cooperativeRestore();cooperativeDock=owner;return cooperativeRefresh()
+        cooperativeDock=owner;return cooperativeRefresh()
     elseif cooperativeDock==owner then
         cooperativeDock=nil;return cooperativeRefresh()
     end

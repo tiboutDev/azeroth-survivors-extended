@@ -6,6 +6,9 @@ frame:SetScript('OnUpdate',function()
  local now=GetTime();if now<6 or now-last<8 or count>=4 then return end
  last=now;count=count+1
  local rows={'sample='..count,'phase='..tostring(AZS_RUN and AZS_RUN.ph)}
+ local hud=AZSXUI_HudReadout and AZSXUI_HudReadout()
+ local frames=AZSXUI_FramesReadout and AZSXUI_FramesReadout()
+ table.insert(rows,"standaloneHUD="..tostring(hud and hud.enabled and frames and frames.vitalsShown and frames.health~="—" and frames.level~="" and not AZSXUI_HasModAPI() and not AZSXCooperativeRulesBuff and not AZSXUIEngineeringBadge))
  for _,name in ipairs({'MainMenuBar','MainMenuBarArtFrame','MainMenuBarLeftEndCap','MainMenuBarRightEndCap','MainMenuExpBar','AZS_MainMenuBarTexture4','CharacterFinger0Slot','CharacterFinger1Slot','CharacterNeckSlot','CharacterTrinket0Slot','CharacterTrinket1Slot'})do
   local v=getglobal(name);table.insert(rows,name..'='..tostring(v and v:GetObjectType())..':'..tostring(v and v:GetWidth())..':'..tostring(v and v:IsShown()))
  end

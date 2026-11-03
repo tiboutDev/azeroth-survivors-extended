@@ -20,7 +20,7 @@ class EvidenceTests(unittest.TestCase):
   for stage,slot,level,phase in [(2,0,1,"Downed"),(2,0,2,"Downed"),(4,0,2,"Playing"),(6,1,2,"Downed"),(6,1,3,"Downed"),(8,1,3,"Playing")]:
    actors=[{"phase":"Playing","level":level,"xp":0}for _ in range(2)];actors[slot]["phase"]=phase
    lines.append("XP progression state: "+json.dumps({"stage":stage,"actors":actors}))
-  audit="AZSX_DIAG "+json.dumps({"kind":"ui.progression","data":{"api":"ok","live":30,"visible":30,"betweenSnapshots":20}})
+  audit="AZSX_DIAG "+json.dumps({"kind":"ui.progression","data":{"api":"ok","live":30,"nativeMapFrames":30,"betweenSnapshots":20}})
   host="\n".join(lines+[audit]);guest='XP received HUD: {"level":3}\n'+audit
   self.assertTrue(assess(host,guest)["passed"])
   self.assertFalse(assess(host.replace('"xp": 0}, {"phase": "Playing", "level": 3, "xp": 0','"xp": 10}, {"phase": "Playing", "level": 3, "xp": 0'),guest)["passed"])

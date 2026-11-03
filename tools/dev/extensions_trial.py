@@ -37,6 +37,7 @@ def consumable_stat_evidence(text):
   if row[4]!="true" or len(base)!=8 or len(actual)!=8:continue
   full=full or len(buffs)==6
   for family,_,value in buffs:
+   if family in (6,7):continue  # Speed and armed healing are not ring stat inputs.
    index={0:1,1:3,2:5,3:2,4:4,5:7}[family]
    expected=base[index]/(1+value) if family==0 else base[index]+value
    matches=actual[index]>base[index] if family==3 else math.isclose(actual[index],expected,rel_tol=1e-5,abs_tol=1e-5)
@@ -45,6 +46,10 @@ def consumable_stat_evidence(text):
 
 
 def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,immunity=False,gems=False,goblins=False,supplies=False,ritual=False):
+ if os.environ.get("AZSX_TEST_CODEX_DISCOVERY")=="1":
+  if players!=1 or not normal:raise ValueError("Codex startup requires one normal client")
+  from codex_trial import run as codex_trial
+  return codex_trial(seconds)
  all_events=os.environ.get("AZSX_TEST_ALL_EVENTS")=="1"
  diagnostic_probe=os.environ.get("AZSX_TEST_DIAGNOSTIC_PROBE")=="1"
  scenario=os.environ.get("AZSX_TEST_SCENARIO")
@@ -102,7 +107,9 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
  compat121=compatibility_scope(diagnostic_probe=diagnostic_probe or focused_event,normal=normal,enchantments=enchantments,reward_wallet=reward_wallet,
                               immunity=immunity,gems=gems,
                               completion=completion,goblins=goblins,supplies=supplies,ritual=ritual)
- if coop_events or focused_event:compat121=False
+ crystal_check=os.environ.get("AZSX_TEST_CRYSTAL_STATS")=="1"
+ if crystal_check and normal:raise ValueError("Crystal stat fixture requires a diagnostic client")
+ if coop_events or focused_event or crystal_check:compat121=False
  prepare=writer(exe);out=ROOT/"test-results"/(("gems-"+str(players)+"-"if gems else"enchantments-"+str(players)+"-"if enchantments else"extensions-normal-"if normal else"extensions-"+str(players)+"-")+uuid.uuid4().hex[:8]);out.mkdir()
  clean={k:v for k,v in os.environ.items()if not k.upper().startswith(("AZSX_","AZCOOP_","COOP_","WOW_","BENILLA_"))}
  with socket.socket()as p:p.bind(("127.0.0.1",0));port=p.getsockname()[1]
@@ -112,7 +119,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
  children=[];handles=[];password=uuid.uuid4().hex;goblin_mark_baselines=[]
  try:
   for slot in range(1,players+1):
-   folder=out/f"player-{slot}";save=folder/"appdata/wenilla-rogue";save.mkdir(parents=True);prepare(save,2 if mixed_profiles and slot==1 else 1,name_override="ExtensionHero"if slot==1 else"ExtensionAlly",class_override=(7 if slot==1 else None) if weapon_visual else (11 if slot==2 else None) if mixed_profiles else 3 if immunity else None,weapon_trial=weapon_visual,manual_weapon=os.environ.get("AZSX_TEST_MANUAL_WEAPON")=="1")
+   folder=out/f"player-{slot}";save=folder/"appdata/wenilla-rogue";save.mkdir(parents=True);prepare(save,2 if mixed_profiles and slot==1 else 1,name_override="ExtensionHero"if slot==1 else"ExtensionAlly",class_override=(7 if slot==1 else None) if weapon_visual else (11 if slot==2 else None) if mixed_profiles else 3 if immunity else None,weapon_trial=weapon_visual,manual_weapon=os.environ.get("AZSX_TEST_MANUAL_WEAPON")=="1",spec_piece=os.environ.get("AZSX_TEST_WEAPON_SPEC_PIECE")=="1")
    if goblins:goblin_mark_baselines.append(sum(int(v)for v in re.findall(r"^marks\|\d+\|(\d+)$",prepare.read(save),re.M)))
    (folder/"localappdata").mkdir();(folder/"shots").mkdir();(folder/"config.toml").write_text('[cvars]\ngxWindow = "1"\ngxResolution = "800x600"\n'+''.join(f'{k} = "0"\n'for k in("MasterVolume","MusicVolume","SoundVolume","AmbienceVolume","EnableMusic","EnableAmbience","MasterSoundEffects")))
    if os.environ.get("AZSX_TEST_WORLD_UI")=="1":
@@ -202,6 +209,54 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     env={k:v for k,v in env.items()if not k.startswith("AZCOOP_TEST_")}
     (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
    elif slot==1 and not focused_event and not completion and not immunity and not enchantments and not gems and not supplies and not ritual:env["AZCOOP_TEST_EXTENSIONS"]="1"
+   if os.environ.get("AZSX_TEST_HUD_STARTUP")=="1":
+    if not (normal and visual):raise ValueError("HUD startup review requires a visual normal client")
+    ui=folder/"AddOns/AZSXUI"
+    with (ui/"AZSXUI.toc").open("a")as toc:toc.write("\nStartupProbe.lua\n")
+    (ui/"StartupProbe.lua").write_text("""local probe=CreateFrame("Frame",nil,UIParent)
+local line=probe:CreateFontString(nil,"OVERLAY","GameFontNormal")
+line:SetPoint("TOPLEFT",UIParent,"TOPLEFT",15,-25)
+probe:SetScript("OnUpdate",function()
+ if not AZS_GetPhase or AZS_GetPhase()~="playing" then return end
+ local hud=AZSXUI_HudReadout and AZSXUI_HudReadout()
+ local frames=AZSXUI_FramesReadout and AZSXUI_FramesReadout()
+ local ok=hud and hud.enabled and AZSXUIHudVitals and AZSXUIHudVitals:IsShown() and frames.playerAlpha==0 and math.abs(MainMenuExpBar:GetWidth()-437)<.1
+ line:SetText(ok and "First playing update: HUD ready" or ("First update: enabled="..tostring(hud and hud.enabled).." HP="..tostring(AZSXUIHudVitals and AZSXUIHudVitals:IsShown()).." alpha="..tostring(frames and frames.playerAlpha).." XP="..tostring(MainMenuExpBar:GetWidth()).." bar="..tostring(MainMenuBar:IsShown()).."/"..tostring(MainMenuBar:IsVisible())))
+ probe:SetScript("OnUpdate",nil)
+end)
+""")
+   if os.environ.get("AZSX_TEST_COOP_HELP")=="1":
+    if not (normal and visual and players==2):raise ValueError("Co-op help review requires two visual normal clients")
+    with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("Audit.lua\n")
+    (addon/"Audit.lua").write_text("""local probe=CreateFrame("Frame",nil,UIParent)
+probe:SetScript("OnUpdate",function()
+ local button=AZSXCooperativeRulesBuff
+ if button and button:IsVisible() and AZS_RUN and (AZS_RUN.t or 0)>2 then
+  local enter=button:GetScript("OnEnter");if enter then enter()end
+ end
+end)
+""")
+   if os.environ.get("AZSX_TEST_BOSS_GRID")=="1":
+    if not (normal and visual and players==1):raise ValueError("Boss grid review requires a visual normal solo client")
+    config=folder/"config.toml"
+    config.write_text(config.read_text().replace("800x600","1440x810"))
+    with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("Audit.lua\n")
+    (addon/"Audit.lua").write_text("""local probe=CreateFrame("Frame",nil,UIParent)
+probe:SetScript("OnUpdate",function()
+ if not AZS_GetBosses or not AZS_RUN or (AZS_RUN.t or 0)<1 then return end
+ local effects={{name="Poison",icon="Ability_Poisons",remaining=8},{name="Rend",icon="Ability_Gouge",remaining=5}}
+ local entries={}
+ for i,name in ipairs({"Captain Greenskin","Edwin VanCleef","Mr. Smite","Cookie"})do
+  entries[i]={id=-3300-i,name=name,hp=100-i*13,hpm=100,debuffs=math.mod(i,2)==1 and effects or {}}
+ end
+ AZS_GetBosses=function()return entries end
+ probe:SetScript("OnUpdate",nil)
+end)
+""")
+   if os.environ.get("AZSX_TEST_PIN_HOVER")=="1":
+    if not (normal and visual and players==1):raise ValueError("Encounter hover review requires one visual normal client")
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\nAudit.lua\n")
+    (addon/"Audit.lua").write_bytes((ROOT/"tools/dev/fixtures/azsx-pin-hover-audit.lua").read_bytes())
    if owner_tips:
     (addon/"Audit.lua").write_bytes((ROOT/"tools/dev/fixtures/azsx-tooltip121-audit.lua").read_bytes())
     with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("Audit.lua\n")
@@ -275,13 +330,50 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     if os.environ.get("AZSX_TEST_WORLD_UI")=="1":env["WOW_ROGUE_SHOTS_EVERY"]="12"
     env["WOW_ROGUE_SHOTS"]=str(folder/"shots")
     if env.get("AZSX_TEST_ESCORT_PREVIEW")=="1" or demon_preview:env["WOW_ROGUE_SHOTS_EVERY"]="8"
-   if os.environ.get("AZSX_TEST_TALENT_PANEL")=="1":
+   if os.environ.get("AZSX_TEST_HUD_STARTUP")=="1":env["WOW_ROGUE_SHOTS_EVERY"]="2"
+   if os.environ.get("AZSX_TEST_TALENT_PANEL") in ("1","armory"):
     if not visual:raise ValueError("Talent panel review requires native captures")
     env={k:v for k,v in env.items() if not k.startswith("AZCOOP_TEST_")}
     (addon/"AZSXAudit.toc").write_text(chr(10).join(("## Interface: 11200","## Title: AZSX","")))
     env["AZSX_TEST_TALENT_PANEL"]="1"
-    env["WOW_ROGUE_KEY"]="n@18"
+    if os.environ["AZSX_TEST_TALENT_PANEL"]=="armory":
+     if players!=1:raise ValueError("Armory inspection requires one client")
+     env.pop("WOW_ROGUE_AUTOSTART",None);env.pop("WOW_ROGUE_AUTOPLAY",None)
+     env["WOW_ROGUE_ARMORY"]="1"
+     env["WOW_ROGUE_TAPS"]="541,103;493,330;493,330"
+    else:env["WOW_ROGUE_KEY"]="n@18"
     env["WOW_ROGUE_SHOTS_EVERY"]="8"
+   if os.environ.get("AZSX_TEST_SUPPLY_COSTUME") in ("skeleton","pirate","ninja","small"):
+    if normal:raise ValueError("Costume preview requires diagnostic clients")
+    env={k:v for k,v in env.items() if not k.startswith(("AZCOOP_TEST_","AZSX_TEST_"))}
+    env.update(AZSX_TEST_SUPPLY_COSTUME=os.environ["AZSX_TEST_SUPPLY_COSTUME"],AZSX_LOST_SUPPLIES="1")
+    env["AZSX_TEST_LOST_SUPPLIES" if players==1 else "AZSX_TEST_COOP_EVENTS"]="1"
+    env["WOW_ROGUE_SHOTS_EVERY"]="6"
+   if os.environ.get("AZSX_TEST_SUPPLY_POTION")=="1":
+    if normal:raise ValueError("Supply potion fixture requires a diagnostic build")
+    env={k:v for k,v in env.items() if not k.startswith(("AZCOOP_TEST_","AZSX_TEST_"))}
+    env.update(AZSX_TEST_SUPPLY_POTION="1",AZSX_LOST_SUPPLIES="1",AZSX_TREASURE_GOBLINS="0")
+    env["AZSX_TEST_LOST_SUPPLIES" if players==1 else "AZSX_TEST_COOP_EVENTS"]="1"
+   if os.environ.get("AZSX_TEST_STATUS_ROW")=="1":
+    if not visual or players!=1 or env.get("AZSX_TEST_SUPPLY_POTION")!="1":raise ValueError("Status row requires a solo visual potion fixture")
+    env.update(AZSX_TEST_STATUS_ROW="1",WOW_ROGUE_SHOTS_EVERY="2")
+   if crystal_check:
+    env={k:v for k,v in env.items() if not k.startswith(("AZCOOP_TEST_","AZSX_TEST_"))}
+    env.update(AZSX_TEST_CRYSTALS="1",AZSX_TEST_CRYSTAL_PLAYERS=str(players))
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
+   if os.environ.get("AZSX_TEST_KILL_RANKS")=="1":
+    env={k:v for k,v in env.items() if not k.startswith(("AZCOOP_TEST_","AZSX_TEST_"))}
+    env["AZSX_TEST_KILL_RANKS"]="1"
+    (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\nAudit.lua\n")
+    (addon/"Audit.lua").write_text("""local probe=CreateFrame("Frame",nil,UIParent)
+probe:SetScript("OnUpdate",function()
+ local button=AZSXUIKillCounter
+ if button and button:IsVisible() and AZS_RUN and (AZS_RUN.t or 0)>3 then
+  local previous=this;this=button;button:GetScript("OnEnter")();this=previous
+  probe:SetScript("OnUpdate",nil)
+ end
+end)
+""")
    if weapon_visual:
     if not visual:raise ValueError("Weapon inspection requires native captures")
     env={k:v for k,v in env.items() if not k.startswith("AZCOOP_TEST_")}
@@ -591,8 +683,10 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
                   demon_group_pause_resume=any(sequence[i:i+3]==["true","false","true"] for i in range(len(sequence)-2)),
                   demon_reward_once=host.count("Banished Demon Banish granted once:")==1,
                   demon_guest_api=all(any(row.get("available") is True and isinstance(row.get("event"),dict) and row["event"].get("kind")=="banished_demon" for row in rows) for rows in demon_rows))
-   if os.environ.get("AZSX_TEST_TALENT_PANEL")=="1":
+   if os.environ.get("AZSX_TEST_TALENT_PANEL") in ("1","armory"):
     checks={k:checks[k] for k in ("clients_alive","started","clean_scripts","clean_adapter","ui_captures_available","startup_ack","coop_joined") if k in checks}
+    if os.environ["AZSX_TEST_TALENT_PANEL"]=="armory":
+     checks={k:v for k,v in checks.items() if k in ("clients_alive","clean_scripts","clean_adapter","ui_captures_available")}
    if weapon_visual:
     checks={k:checks[k] for k in ("clients_alive","started","clean_scripts","clean_adapter","ui_captures_available","startup_ack","coop_joined") if k in checks}
     if os.environ.get("AZSX_TEST_WEAPON_ARMORY") in ("1","menu"):
@@ -603,9 +697,23 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
      checks["manual_worn"]=any("class=Ok([7," in line and "result=Ok(None)" in line for t in logs for line in t.splitlines())
     else:
      checks["projection"]=all(any("class=Ok(["+str(c)+"," in line and "result=Ok(Some(" in line for t in logs for line in t.splitlines()) for c in ([7,1] if players==2 else [7]))
+    if os.environ.get("AZSX_TEST_WEAPON_SPEC_PIECE")=="1" and not os.environ.get("AZSX_TEST_WEAPON_ARMORY"):
+     checks["selected_set_over_worn_set"]=any("class=Ok([7," in line and "result=Ok(Some([1784312834, 0]))" in line for log in logs for line in log.splitlines())
     if os.environ.get("AZSX_TEST_WEAPON_MELEE")=="1":
      checks["melee_grip"]=all("Weapon melee animation 57 -> 58" in log for log in logs)
     checks["weapon_display_catalog"]=all("Weapon display catalog (41)" in t for t in logs)
+   if os.environ.get("AZSX_TEST_SUPPLY_POTION")=="1":
+    checks={k:v for k,v in checks.items() if k in ("clients_alive","started","clean_scripts","clean_adapter","coop_joined")}
+    expected="Supply potion readback: slot="+str(players-1)+" tier="+str(players)+" verified=true"
+    checks["personal_auto_heal"]=host.count(expected)==1 and "verified=false" not in host
+   if os.environ.get("AZSX_TEST_SUPPLY_COSTUME"):
+    checks={k:v for k,v in checks.items() if k in ("clients_alive","started","clean_scripts","clean_adapter","coop_joined","ui_captures_available")}
+   if crystal_check:
+    from crystal_core_evidence import assess_core
+    checks={k:v for k,v in checks.items() if k in ("started","startup_ack","clean_scripts","clean_adapter","coop_joined","clients_alive")}
+    checks.update(assess_core(host,players)["checks"])
+   if os.environ.get("AZSX_TEST_KILL_RANKS")=="1":
+    checks={k:v for k,v in checks.items() if k in ("started","startup_ack","clean_scripts","clean_adapter","coop_joined","clients_alive")}
    result=dict(observed_steps=os.environ.get("AZSX_TEST_OBSERVED_STEPS")=="1",scenario=scenario,diagnostic_probe=diagnostic_probe,support_only=support_only,all_events=all_events,owner_tooltip_readback=owner_tips,completion121=completion,players=players,normal=normal,game_version=version,compat121=compat121,enchantments=enchantments,gems=gems,goblins=goblins,immunity=immunity,diagnostic_inputs=not normal,dll_sha256=proof["dll_sha256"],game_sha256=sha,checks=checks,passed=all(checks.values()),grants=grants,ui=ui,desktop_input=False,screenshots=visual,visual_review_required=visual,ritual_ui_single=ritual_ui and seconds<150,visual_discovery_hold=visual and supplies and os.environ.get("AZSX_TEST_VISUAL_HOLD_DISCOVERY")=="1")
    return result
   until=time.monotonic()+min(seconds,260 if supplies or ritual else 280 if completion in ("support","fatigue","fatigue-self") else 210 if goblins else 180 if enchantments else 150)

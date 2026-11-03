@@ -22,6 +22,7 @@ struct State {
     speed: bool,
     scaled: bool,
     scale_base: f32,
+    ray_scale:f32,
     next_check: f32,
     mortars: BTreeMap<u64, Receipt>,
 }
@@ -45,7 +46,7 @@ fn retire(r: &Runtime, s: State) {
     if !valid(r, &s) { return }
     if s.scaled {
         let _ = unsafe { r.adapter.solo_player_scale(&r.local, r.local.base as u64,
-            s.game, s.owner, s.scale_base) };
+            s.game, s.owner, if super::supplies::shrunk(s.game,s.owner){0.5}else{s.scale_base}) };
     }
     if s.speed { let _ = refresh(r, s.game, s.slot, s.owner); }
 }
@@ -74,7 +75,7 @@ pub fn award_group(r: &Runtime, game: u64, recipients: &[(u32,u64)])
     for &(slot, owner) in recipients {
         let mut s = State { game, slot, owner, clock:p.clock, rng:game ^ owner ^ seed,
             equipment:None, revision:1, serial:0, speed:false, scaled:false,
-            scale_base:r.adapter.solo_player_scale_base(), next_check:p.clock,
+            ray_scale:1.,scale_base:r.adapter.solo_player_scale_base(), next_check:p.clock,
             mortars:BTreeMap::new() };
         let kind = Gadget::ALL[s.draw() as usize % Gadget::ALL.len()];
         #[cfg(feature="test-hooks")]
@@ -149,7 +150,7 @@ fn tick_actor(r: &Runtime, game: u64, now: f32, a: &ActorObservation) -> Result<
     };
     if scaled {
         unsafe { r.adapter.solo_player_scale(&r.local, r.local.base as u64,
-            game, a.guid, base) }?;
+            game, a.guid, if super::supplies::shrunk(game,a.guid){0.5}else{base}) }?;
     }
     if speed { refresh(r, game, a.slot, a.guid)?; }
     if let Some((receipt, enemy)) = pending {
@@ -214,6 +215,8 @@ fn activate(
                 1 => 1.,
                 _ => 1.5,
             };
+            if let Ok(mut states)=STATE.lock(){if let Some(s)=states.get_mut(&owner){s.ray_scale=scale;}}
+            let scale=if super::supplies::shrunk(game,owner){0.5}else{scale};
             unsafe {
                 r.adapter
                     .solo_player_scale(&r.local, r.local.base as u64, game, owner, scale)
@@ -326,3 +329,5 @@ pub fn wire(game: u64, owner: u64) -> Option<String> {
         centis(e.effect_until())
     ))
 }
+
+pub(super) fn current_scale(game:u64,owner:u64)->f32{STATE.lock().ok().and_then(|g|g.get(&owner).filter(|s|s.game==game && s.scaled).map(|s|s.ray_scale)).unwrap_or(1.)}

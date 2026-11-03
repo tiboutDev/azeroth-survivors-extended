@@ -112,7 +112,12 @@ pub fn native_stats(r:&dyn Services,game:u64,native:impl FnOnce()){
   let first=SEEN.lock().ok().is_some_and(|mut seen|seen.len()<128&&seen.insert((id,counts.0)));
   if first{struct Guard(bool);impl Drop for Guard{fn drop(&mut self){PROBE.with(|p|p.set(self.0));}}let _guard=Guard(PROBE.with(|p|p.replace(true)));r.events_refresh_stats(game).ok().and_then(|_|r.events_ring_stat_values(game).ok())}else{None}
  }else{None};
- match r.events_crystal_stats(game,counts){Ok(loan)=>{STATS.with(|v|v.borrow_mut().push(game));let _scope=Scope{r,loan};native();},Err(e)=>{r.events_warn(&format!("Crystal inputs rejected: {e}"));native();}}
+ match r.events_crystal_stats(game,counts){Ok(loan)=>{STATS.with(|v|v.borrow_mut().push(game));let _scope=Scope{r,loan};native();
+  if counts.luck()>0. && r.events_run_source(game).ok().flatten()==Some(id){
+   #[cfg(feature="test-hooks")]let before=base.and_then(|_|r.events_crystal_luck_value(game).ok());
+   if let Err(e)=r.events_apply_crystal_luck(game,counts){r.events_warn(&format!("Crystal Luck rejected: {e}"));}
+   #[cfg(feature="test-hooks")]if let Some(before)=before{if let Ok(after)=r.events_crystal_luck_value(game){r.events_info(&format!("crystal Luck: slot={} owner={} yellow={} before={before} after={after}",id.0,id.1,counts.0[3]));}}
+  }},Err(e)=>{r.events_warn(&format!("Crystal inputs rejected: {e}"));native();}}
  #[cfg(feature="test-hooks")]if let Some(base)=base{
   let actual=r.events_ring_stat_values(game);let before=r.events_test_stat_input(game);let refresh=r.events_refresh_stats(game);let repeat=r.events_ring_stat_values(game);
   r.events_info(&format!("crystal native stats: slot={} owner={} counts={:?} base={base:?} actual={actual:?} stable={} restored={} refresh={refresh:?}",id.0,id.1,counts.0,actual==repeat,before==r.events_test_stat_input(game)));

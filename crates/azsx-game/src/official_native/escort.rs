@@ -667,7 +667,8 @@ mod mortar_abi_tests {
 
 /// Exact native values-update schema: one block, no movement block, and only
 /// OBJECT_FIELD_SCALE_X (4). Gameplay radius/reach/position/stats are absent.
-fn player_scale_packet(guid: u64, scale: f32) -> Vec<u8> {
+fn player_scale_packet(guid:u64,scale:f32)->Vec<u8>{player_value_packet(guid,4,scale.to_bits())}
+fn player_value_packet(guid: u64, field:u16,value:u32) -> Vec<u8> {
     let mut packet = vec![1, 0, 0, 0, 0, 0];
     let bytes = guid.to_le_bytes();
     let mut mask = 0u8;
@@ -682,12 +683,45 @@ fn player_scale_packet(guid: u64, scale: f32) -> Vec<u8> {
             packet.push(byte);
         }
     }
-    packet.push(1);
-    packet.extend_from_slice(&16u32.to_le_bytes());
-    packet.extend_from_slice(&scale.to_le_bytes());
+    let words=usize::from(field/32)+1;
+    packet.push(words as u8);
+    packet.resize(packet.len()+4*(words-1),0);
+    packet.extend_from_slice(&(1u32<<(field%32)).to_le_bytes());
+    packet.extend_from_slice(&value.to_le_bytes());
     packet
 }
 impl Adapter {
+    /// Mirror the live model choice in the 0.138.0 player create block
+    /// (5cda615..5cda731). Read the actor's current form again at expiry.
+    pub fn supply_display(self,m:&dyn Mem,game:u64,id:(u32,u64),effect:Option<azsx_gameplay::supplies::Costume>)->Result<u32>{
+        use azsx_gameplay::supplies::Costume;
+        let row=self.support_row(m,game,id.0)?;
+        let field=|at|row+self.row_field(row==game,at);
+        if m.read(field(0x478),8)?!=id.1.to_le_bytes(){return Err("Costume owner changed".into())}
+        let race_sex=m.read(field(0x32d),2)?;
+        let race=usize::from(race_sex[0]);let female=race_sex[1]!=0;
+        if !(1..=8).contains(&race){return Err("Invalid costume race".into())}
+        let base=[49,51,53,55,57,59,1563,1478][race-1]+u32::from(female);
+        if effect==Some(Costume::Skeleton){return Ok(7550)}
+        let h=m.read(field(0x838),16)?;
+        let ptr=u64::from_le_bytes(h[..8].try_into().unwrap());let n=u64::from_le_bytes(h[8..].try_into().unwrap());
+        if n>512 || (n>0 && (ptr<65536 || ptr.checked_add(n*64).is_none())){return Err("Invalid player form vector".into())}
+        if n>0 {
+            for perk in m.read(ptr,n as usize*64)?.chunks_exact(64){
+                if perk[0]!=26{continue}
+                let horde=(0x164 & (1u32<<race))!=0;
+                match u32::from_le_bytes(perk[4..8].try_into().unwrap()){
+                    768=>return Ok(if horde{8571}else{892}),
+                    9634=>return Ok(if horde{2289}else{2281}),
+                    _=>{}
+                }
+            }
+        }
+        Ok(match effect{Some(Costume::Pirate)=>if female{4619}else{4620},Some(Costume::Ninja)=>if female{4618}else{4617},_=>base})
+    }
+    pub unsafe fn supply_display_packet(self,m:&dyn Mem,base:u64,game:u64,owner:u64,display:u32)->Result<()>{
+        self.event_broadcast(m,base,game,0xa9,&player_value_packet(owner,0x83,display))
+    }
     pub fn solo_visual_entries(self) -> Vec<Entry> { Vec::new() }
     pub fn solo_player_scale_base(self) -> f32 {
         v::SOLO_PLAYER_SCALE_BASE

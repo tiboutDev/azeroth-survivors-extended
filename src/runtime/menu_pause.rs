@@ -19,7 +19,6 @@ unsafe extern "system" fn key(_c: &mut crate::stub::Context) {
         .unwrap_or_else(|| KEY_ORIGINAL.load(Ordering::Acquire));
     KEY_NEXT.store(target, Ordering::Release);
 }
-pub(super) fn coop_active() -> bool { ACTIVE.load(Ordering::Acquire) }
 pub fn observe_role(role: azsx_game::official::Role) {
     ACTIVE.store(
         matches!(

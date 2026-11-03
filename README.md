@@ -30,7 +30,7 @@ Complete Sayge’s Trial between bosses to earn a personal Luck, Experience or G
 📦 **Explore for rewards** — *Balance in progress*\
 Find Lost Supplies for temporary buffs or gold, and chase Venture Co. Treasure Goblins for personal rewards. First-goblin bad-luck protection applies after the first boss.
 
-The current source also includes a [Mechanical Chicken escort](docs/features/SOLO-ESCORT.md) and a [Banished Demon encounter](docs/features/BANISHED-DEMON.md) in solo and co-op. Check release notes before expecting either event in an installed build.
+The [Mechanical Chicken escort](docs/features/SOLO-ESCORT.md) is available in solo and co-op. The unfinished [Banished Demon encounter](docs/features/BANISHED-DEMON.md) is disabled.
 
 [Explore the build features →](docs/player/FEATURES.md#build-choices)
 

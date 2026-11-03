@@ -53,6 +53,7 @@ AZS_RUN={t=10,kills=12,gold=34,chest=40,nb=170}
 function AZS_GetRunTime()return AZS_RUN.t end
 AZS_STATS={dmg=1.2,cd=1,crit=.05,cm=2,area=1,cnt=0,echo=0,bp=0,dots=1,doth=0,big=0,exe=0,cc=0,dotd=0,shd=0,auto=0,pet=0,hp=100,arm=0,reg=1,spd=1,pick=9,lch=0,heal=0,thn=0,liv=0,xp=1,gold=1,luck=0}
 view={available=true,session={epoch="one",recipientGUID="11"},data={equipment={{slot=1,rank=2}}},texts={equipment={{name="Native ring",icon="INV_Jewelry_Ring_01",text="Exact native tooltip\n+10 damage"}}}}
+function AZSX_GetAPIVersion()return 1,14 end
 function AZSX_GetState()return view end
 function hudCall(name,event)local previous=this;this=objects[name];this.scripts[event]();this=previous end
 function hudTick(n)for i=1,n or 4 do now=now+.1;arg1=.1;AZSXUIHudController.scripts.OnUpdate()end end
@@ -64,6 +65,33 @@ class HUDTests(unittest.TestCase):
         self.lua.execute((ROOT/'addons/AZSXUI/Theme.lua').read_text())
         self.lua.execute((ROOT/'addons/AZSXUI/Hud.lua').read_text());self.lua.execute('arg1="AZSXUI";AZSXUIHudController.scripts.OnEvent();hudTick()')
     def run_lua(self,s):self.lua.execute(s)
+    def test_first_equipment_payload_populates_existing_slots(self):
+        self.run_lua('''phase="ready";hudTick();phase="playing";view.available=false;view.reason="missing_or_invalid_payload"
+arg1=.001;AZSXUIHudController.scripts.OnUpdate()
+assert(AZSXUIHudEquipment:IsShown() and not hudPrefs.build and not AZSXUIHudEquipment1.item)
+view.available=true;hudTick();assert(AZSXUIHudEquipment1.item.name=="Native ring")
+view.available=false;hudTick();assert(not AZSXUIHudEquipment:IsShown() and hudPrefs.build)''')
+    def test_kill_tooltip_updates_and_shares_ranks_on_ties(self):
+        self.run_lua('''function GameTooltip:ClearAllPoints()end
+function GameTooltip:SetPoint(...)self.anchor=arg end
+function GameTooltip:ClearLines()self.ranks={};self.lines={}end
+function GameTooltip:AddDoubleLine(name,count)table.insert(self.ranks,{name,count})end
+view.data.killRanking={{name="First",kills=5},{name="Second",kills=5},{name="Third",kills=1}}
+hudCall("AZSXUIKillCounter","OnEnter");assert(GameTooltip.ranks[2][1]=="1.  Second" and GameTooltip.ranks[3][1]=="3.  Third")
+view.data.killRanking[1].kills=8;hudTick();assert(GameTooltip.ranks[1][2]=="8" and GameTooltip.ranks[2][1]=="2.  Second")
+hudCall("AZSXUIKillCounter","OnLeave");view.data.killRanking=nil
+hudCall("AZSXUIKillCounter","OnEnter");assert(GameTooltip.title=="Kills")''')
+    def test_native_party_keeps_native_stats_and_build_without_supported_provider(self):
+        self.run_lua('''function GetNumPartyMembers()return 1 end;AZS_STATS.xp=1.25;AZS_STATS.gold=1.5
+function AZSX_GetState()error("unsupported API called")end
+for _,major in ipairs({0,2})do
+ if major==0 then AZSX_GetAPIVersion=nil else function AZSX_GetAPIVersion()return major end end
+ hudTick();assert(AZSXUI_HudReadout().enabled and hudPrefs.build and not AZSXUIHudEquipment:IsShown())
+ hudCall("AZSXUIHudStats","OnClick");hudTick()
+ local vals={};for _,r in ipairs(AZSXUI_HudReadout().rows)do vals[r.key]=r.value end
+ assert(vals.xp=="+25%" and vals.gold=="+50%")
+ hudCall("AZSXUIHudStats","OnClick")
+end''')
     def test_native_xp_and_action_handlers_stay_native(self):
         self.run_lua('assert(AZSXUI_HudReadout().enabled);assert(MainMenuExpBar:GetWidth()==437 and MainMenuExpBar:GetHeight()==13);ActionButton1.scripts.OnClick();assert(nativeClickCount==1);assert(AZSXUIHudRoot:GetFrameLevel()<MainMenuBarArtFrame:GetFrameLevel());assert(AZSXUIHudDrawer:GetFrameLevel()<MainMenuBarArtFrame:GetFrameLevel());assert(AZSXUIHudStats.anchor[4]==403 and AZSXUIHudCombat==nil and AZSXUIHudCharacter==nil)')
     def test_top_counters_are_independent_of_bottom_stack_and_clock_restores(self):

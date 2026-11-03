@@ -124,7 +124,7 @@ class NativePartyLua(unittest.TestCase):
   h=lambda text:text.encode().hex()
   row=f"Q|11|1|0|1|{h('Recruit Helm')}|{h('INV_Helmet_02')}\n"
   self.publish(("1|1|11|1\nM|11|0|506c61796572\n"+row).encode().hex())
-  self.lua.execute('local s=AZSX_GetState(1);assert(s.api.minor==13 and s.data.loot[1].event==1 and s.data.loot[1].isNew and s.texts.loot[1].icon=="INV_Helmet_02");s.texts.loot[1].icon="mutated";assert(AZSX_GetState(1).texts.loot[1].icon=="INV_Helmet_02")')
+  self.lua.execute('local s=AZSX_GetState(1);assert(s.api.minor==14 and s.data.loot[1].event==1 and s.data.loot[1].isNew and s.texts.loot[1].icon=="INV_Helmet_02");s.texts.loot[1].icon="mutated";assert(AZSX_GetState(1).texts.loot[1].icon=="INV_Helmet_02")')
   self.publish(("1|1|11|1\nM|11|0|506c61796572\n"+row.replace("Q|11|","Q|22|")).encode().hex())
   self.lua.execute('assert(not AZSX_GetState(1).available)')
  def test_native_drop_duplicate_sequence_and_invalid_texture_fail_closed(self):
@@ -166,17 +166,22 @@ class NativePartyLua(unittest.TestCase):
   self.lua.execute('assert(GetPlayerBuffTimeLeft(2)==123)')
  def test_speed_family_and_reference_quality_do_not_invalidate_other_features(self):
   h=lambda s:s.encode().hex();base="1|1|11|1\nM|11|0|506c61796572\n"
-  c=f"C|11|6|2|60|2|{h('Swiftness Potion')}|{h('INV_Potion_95')}|{h('+15% movement speed')}\n"
-  d=f"D|11|1|2|0|{h('Swiftness Potion')}|{h('INV_Potion_95')}|{h('+15% movement speed')}|1\n"
+  c=f"C|11|6|1|15|2|{h('Swiftness Potion')}|{h('INV_Potion_95')}|{h('+20% movement speed')}\n"
+  d=f"D|11|1|2|0|{h('Swiftness Potion')}|{h('INV_Potion_95')}|{h('+20% movement speed')}|1\n"
   self.publish((base+c+d+"P|11|1|0|0|0|90\n").encode().hex())
-  self.lua.execute('local major,minor=AZSX_GetAPIVersion();assert(major==1 and minor>=2);local s=AZSX_GetState(1);assert(s.available and s.data.consumables[6].remaining==60 and s.data.discovery.quality==1 and s.texts.supplies.color[1]==1 and s.data.markers[1].left==90)')
+  self.lua.execute('local major,minor=AZSX_GetAPIVersion();assert(major==1 and minor>=2);local s=AZSX_GetState(1);assert(s.available and s.data.consumables[6].remaining==15 and s.data.discovery.quality==1 and s.texts.supplies.color[1]==1 and s.data.markers[1].left==90)')
+ def test_armed_personal_potion_has_no_countdown_and_keeps_crystals_independent(self):
+  h=lambda s:s.encode().hex()
+  record=f"C|11|7|2|0|2|{h('Superior Healing Potion')}|{h('INV_Potion_53')}|{h('Restores 30% of maximum health at or below 35% health.')}\n"
+  self.publish(("1|1|11|1\nM|11|0|506c61796572\n"+record).encode().hex())
+  self.lua.execute('local s=AZSX_GetState(1);assert(s.available and s.data.consumables[7].remaining==0 and s.data.consumables[7].tier==2)')
  def test_current_supply_duration_and_marker_wire_bounds(self):
   h=lambda s:s.encode().hex();base="1|1|11|1\nM|11|0|506c61796572\n"
   c=f"C|11|0|2|60|2|{h('Elixir')}|{h('INV_Potion_10')}|{h('+10% recovery')}\n"
   pin="P|11|1|0|100|200|90\n"
   self.publish((base+c+pin).encode().hex())
   self.lua.execute('local s=AZSX_GetState(1);assert(s.available and s.data.consumables[0].remaining==60 and s.data.markers[1].left==90)')
-  self.publish((base+c.replace('|60|2|','|61|2|')+pin).encode().hex());self.lua.execute('assert(not AZSX_GetState(1).available)')
+  self.publish((base+c.replace('|60|2|','|121|2|')+pin).encode().hex());self.lua.execute('assert(not AZSX_GetState(1).available)')
   self.publish((base+c+pin.replace('|90','|91')).encode().hex());self.lua.execute('assert(not AZSX_GetState(1).available)')
  def test_supply_metadata_refreshes_native_cached_button_without_repeating_each_countdown(self):
   h=lambda s:s.encode().hex();base="1|1|11|1\nM|11|0|506c61796572\n"

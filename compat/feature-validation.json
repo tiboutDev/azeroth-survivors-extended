@@ -59,7 +59,7 @@
         "support",
         "periodic"
       ],
-      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage. The opt-in AZSX_TEST_TALENT_BLOCK combined support campaign checks native Swiftmend and Rapture cooldowns plus permitted/forbidden shield bursts; unit and exact-image checks cover area and conditional ownership. Receipts must state live coverage limits. A two-player diagnostic exercised the native Ancestral Fortitude Stormstrike counter with a shaman in each role. The free Healing Wave selected the wounded ally and delivered half the ordinary wave amount. The talent panel visual scenario compares the same selected Warrior talent in solo and cooperative inspection. Native frame captures require visual review."
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage. The opt-in AZSX_TEST_TALENT_BLOCK combined support campaign checks native Swiftmend and Rapture cooldowns plus permitted/forbidden shield bursts; unit and exact-image checks cover area and conditional ownership. Receipts must state live coverage limits. A two-player diagnostic exercised the native Ancestral Fortitude Stormstrike counter with a shaman in each role. The free Healing Wave selected the wounded ally and delivered half the ordinary wave amount. The talent panel visual scenario supports solo, cooperative inspection and an Armory view before starting a run. Native frame captures require visual review."
     },
     "AZSX-08": {
       "profiles": [
@@ -282,14 +282,7 @@
         "official-party-ui",
         "azsxui"
       ],
-      "scope_note": "Portable group-presence, stage and one-time reward policy; exact 0.138.0 Banish/definition/spawn guard and Windows ABI checks. Native fight, guest projection and visual presentation require artifact-scoped solo and two-client trials.",
-      "targeted_scenario": {
-        "profile": "official",
-        "trigger": "In an isolated 0.138.0 solo run and then two-client coop run, approach the bound demon, have one participant leave and return during preparation, defeat the released native demon and inspect both participants.",
-        "expected": "One shared host-created scene; preparation suspends and resumes; one native demon fight and exactly one shared native Banish charge; guest API/objective/marker agree; no duplicate reward or HUD interruption.",
-        "limit": "A bounded diagnostic uses an accelerated first opportunity and participant positioning. Normal random cadence and all three kits require separate scope; the static binding scene has no unreviewed channel animation.",
-        "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
-      }
+      "scope_note": "Disabled in normal builds. Historical encounter tests cover the retained prototype. The opt-in diagnostic preview is outside release acceptance."
     },
     "AZSX-32": {
       "profiles": [

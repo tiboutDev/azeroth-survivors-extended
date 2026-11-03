@@ -13,6 +13,7 @@ use std::{collections::BTreeMap, sync::Mutex};
 type Id = (u32, u64);
 #[derive(Default)]
 struct Person {
+    look:super::super::supply_costumes::Look,
     buffs: Buffs,
     auras: BTreeMap<Family, u32>,
     discovery: Option<Discovery>,
@@ -102,7 +103,7 @@ pub fn encounter(r: &dyn Services, game: u64, total: u64) {
                         + if fixture_enabled() {
                             3.
                         } else {
-                            20. + s.draw(21) as f32
+                            azsx_gameplay::rituals::spawn_delay(|n|s.draw(n))
                         },
                 );
                 #[cfg(feature="test-hooks")]
@@ -321,7 +322,9 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
         reset();
     }
     let mut hides = vec![];
+    let mut looks=Vec::new();
     let mut discoveries = vec![];
+    let mut potions = vec![];
     let mut refresh = vec![];
     let mut removals = vec![];
     let mut rewards = vec![];
@@ -368,9 +371,11 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
             let Some(person) = s.people.get_mut(&id) else {
                 continue;
             };
+            let mut extra=None;
             if person.buffs.expire(now) {
                 refresh.push(id)
             }
+            if actor.hp<=0. || actor.phase==Phase::Downed{person.buffs.discard_potion();}
             if actor.hp > 0. && actor.phase == Phase::Playing {
                 for reserve in &mut s.reserves {
                     if let Some(d) = reserve.rules.claim(now, id, actor.position, true) {
@@ -378,11 +383,14 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
                         if person.buffs.accept(now, d.reward) && !refresh.contains(&id) {
                             refresh.push(id)
                         }
+                        extra=d.bonus;
                         discoveries.push((id, d));
                         break;
                     }
                 }
+                if let Some(c)=person.buffs.take_potion(actor.hp,actor.maximum){potions.push((id,c));}
             }
+            if let Some(look)=person.look.observe(now,actor,extra){looks.push((id,look));}
         }
         let mut i = 0;
         while i < s.reserves.len() {
@@ -457,7 +465,15 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
             r.events_remove_event_object(game, object)
         }?;
     }
+    for (id,look) in looks{
+        let updated=r.events_supply_look(game,id,look)?;
+        if let Ok(mut guard)=STATE.lock(){if let Some(person)=guard.as_mut().filter(|s|s.game==game&&s.clock==now&&s.owner==host.guid).and_then(|s|s.people.get_mut(&id)){person.look=updated;}}
+    }
     for (id, mut d) in discoveries {
+        #[cfg(feature="test-hooks")]
+        if super::super::supplies::potion_fixture() && matches!(d.reward,Reward::Buff(c) if c.family==Family::Healing){
+            if let Some(a)=p.actors.iter().find(|a|(a.slot,a.guid)==id){r.events_clamp_event_health(game,a.guid,a.maximum*0.30)?;}
+        }
         if d.gold > 0 {
             d.gold = r.events_group_sale(game,id,d.gold)?;
         }
@@ -480,6 +496,14 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
         for id in refresh {
             if let Some(a) = p.actors.iter().find(|a| a.slot == id.0 && a.guid == id.1) {
                 r.events_clamp_event_health(game, id.1, a.hp)?;
+            }
+        }
+    }
+    for (id,c) in potions {
+        if r.events_drink_potion(game,id,c)?{r.events_info(&format!("Lost Supplies: {} consumed by {}",c.name(),id.1));}
+        else if let Ok(mut guard)=STATE.lock(){
+            if let Some(person)=guard.as_mut().filter(|s|s.game==game && s.owner==host.guid && s.clock==now).and_then(|s|s.people.get_mut(&id)){
+                person.buffs.accept(now,Reward::Buff(c));
             }
         }
     }
@@ -560,7 +584,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
                     "coop ritual spawned: position={point:?} stage={stage}"
                 ));
             } else {
-                let (sequence, rolls) = {
+                let (sequence, rolls, extras) = {
                     let mut guard = STATE.lock().map_err(|_| "Event state unavailable")?;
                     let s = guard.as_mut().ok_or("Event state reset")?;
                     s.sequence += 1;
@@ -570,16 +594,16 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
                             let (a, b, c) = (s.draw(100), s.draw(100), s.draw(u32::MAX));
                             let reward = if fixture_enabled() {
                                 if s.sequence == 1 {
-                                    Reward::Buff(Consumable {
-                                        family: if id.0 == 0 {
+                                    Reward::Buff(Consumable::new(if id.0 == 0 {
                                             Family::Critical
+                                        } else if super::super::supplies::potion_fixture(){
+                                            Family::Healing
                                         } else if catalog_fixture(){
                                             Family::Swiftness
                                         } else {
                                             Family::Defense
                                         },
-                                        tier: 2,
-                                    })
+                                        2).unwrap())
                                 } else {
                                     Reward::Material {
                                         rarity: 1,
@@ -592,7 +616,8 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
                             (*id, reward)
                         })
                         .collect::<Vec<_>>();
-                    (s.sequence, rolls)
+                    let extras:Vec<_>=ids.iter().map(|_|super::super::supply_costumes::bonus(s.sequence,||azsx_gameplay::supplies::Costume::roll(|n|s.draw(n)))).collect();
+                    (s.sequence, rolls, extras)
                 };
                 let mut rules = Supply::new(
                     sequence,
@@ -603,6 +628,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
                     stage,
                 )
                 .ok_or("Invalid supply roster")?;
+                let mut extras=extras.into_iter();rules.roll_bonuses(||extras.next().flatten());
                 if !rules.personal_rewards(&rolls, stage) {
                     return Err("Invalid personal supply rewards".into());
                 }
@@ -808,3 +834,5 @@ pub(in crate::runtime) fn observed_rewards_complete(game:u64)->bool{
 }
 
 fn catalog_fixture()->bool{cfg!(feature="test-hooks")&&std::env::var("AZSX_TEST_EVENT_CATALOG_REVIEW").as_deref()==Ok("1")}
+
+pub(crate) fn shrunk(game:u64,owner:u64)->bool{STATE.lock().ok().is_some_and(|g|g.as_ref().is_some_and(|s|s.game==game && s.people.iter().any(|(id,p)|id.1==owner && p.look.effect==Some(azsx_gameplay::supplies::Costume::Small))))}

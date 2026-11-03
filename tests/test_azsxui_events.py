@@ -14,7 +14,7 @@ class EventTests(unittest.TestCase):
         self.run_lua('''view.engineering={event=1,kind="grenade",nextTrigger=450,remaining=0,title="Goblin Stun Grenade",description="Native projectile",reward="Goblin Stun Grenade equipped",duration="Until the end of the run",icon="Interface/Icons/INV_Gizmo_01"}
 local original=AZSX_GetState
 function AZSX_GetState(...)local s=original(unpack(arg));s.data.engineering=view.engineering;s.texts.engineering=view.engineering;return s end
-local vitals=CreateFrame("Frame","AZSXUIHudVitals",UIParent);local fortune=CreateFrame("Frame","AZSXUIFortuneMedallion",UIParent);tick();assert(objects.AZSXUIEngineeringBadge:IsShown() and objects.AZSXUIEngineeringBadge.icon.texture==view.engineering.icon and objects.AZSXUIEngineeringBadge.anchor[2]==fortune)
+tick();assert(objects.AZSXUIEngineeringBadge:IsShown() and objects.AZSXUIEngineeringBadge.icon.texture==view.engineering.icon and objects.AZSXUIEngineeringBadge.anchor[2]==UIParent)
 assert(objects.AZSXUIEngineeringRewardToast:IsShown() and objects.AZSXUIEngineeringRewardToast.reward.text==view.engineering.reward)
 now=now+6;tick();assert(not objects.AZSXUIEngineeringRewardToast:IsShown())
 tick();assert(not objects.AZSXUIEngineeringRewardToast:IsShown())

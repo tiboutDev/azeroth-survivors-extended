@@ -82,10 +82,10 @@ end
 local function statsView()
  if AZS_GetPhase and AZS_GetPhase()=="ready"then return {} end
  local stats={};for key,value in pairs(AZS_STATS or{})do stats[key]=value end
- local view=AZSX_GetState and AZSX_GetState(1)
+ local view=AZSXUI_ModState()
  local common=view and view.available and view.data and(view.data.sharedEconomy or view.data.economy)
  local count=GetNumPartyMembers and GetNumPartyMembers()
- if common or(finite(count)and count>0 and count<5)then stats.xp=nil;stats.gold=nil end
+ if common or(AZSXUI_HasModAPI() and finite(count)and count>0 and count<5)then stats.xp=nil;stats.gold=nil end
  if common then for _,key in ipairs({"xp","gold"})do if finite(common[key])and common[key]>=0 then stats[key]=common[key]end end end
  return stats
 end
@@ -134,6 +134,20 @@ local function hoverTip(owner,title,body)
  GameTooltip:SetOwner(owner,"ANCHOR_TOP");GameTooltip:SetText(title,1,1,1)
  if body and body~=""then GameTooltip:AddLine(body,1,.82,0,1)end;GameTooltip:Show()
 end
+local hoveredKills
+local function showKills(button,state)
+ local ranks=state and state.available and state.data and state.data.killRanking
+ if not ranks then hoverTip(button,"Kills");return end
+ GameTooltip:SetOwner(button,"ANCHOR_NONE");GameTooltip:ClearLines()
+ GameTooltip:ClearAllPoints();GameTooltip:SetPoint("TOPRIGHT",button,"BOTTOMRIGHT",-4,-5)
+ GameTooltip:AddLine("Kills by player",1,.82,0)
+ local place=0
+ for i,row in ipairs(ranks)do
+  if i==1 or row.kills~=ranks[i-1].kills then place=i end
+  GameTooltip:AddDoubleLine(place..".  "..row.name,tostring(row.kills),1,1,1,1,.82,0)
+ end
+ GameTooltip:Show()
+end
 local function setEquipment(button,item)
  local old=button.item
  if equipmentHovered==button and(not item or not old or old.name~=item.name or old.text~=item.text or old.rank~=item.rank)then GameTooltip:Hide();equipmentHovered=nil end
@@ -143,7 +157,7 @@ local function build()
  local bar,art,xp=MainMenuBar,MainMenuBarArtFrame,MainMenuExpBar
  if not bar or not art or not xp or not AZS_MAIN_BAR_SLICES or not AZS_MAIN_BAR_ROWS or not AZS_MainBar_Slice then return false end
  if math.abs(bar:GetWidth()-397)>.1 then return false end
- root=CreateFrame("Frame","AZSXUIHudRoot",UIParent);root:SetWidth(441);root:SetHeight(66);root:SetPoint("BOTTOM",bar,"BOTTOM",0,0)
+ root=CreateFrame("Frame","AZSXUIHudRoot",bar);root:SetWidth(441);root:SetHeight(66);root:SetPoint("BOTTOM",bar,"BOTTOM",0,0)
  root:SetFrameStrata(art:GetFrameStrata());root:SetFrameLevel(math.max(0,art:GetFrameLevel()-2))
  for i,slice in ipairs({{0,0,256,0},{2,18,39,256},{1,1,45,277},{2,28,66,321},{2,66,28,359},{0,1,45,397}})do
   local t=root:CreateTexture(nil,"ARTWORK");t:SetHeight(43)
@@ -157,7 +171,7 @@ local function build()
  counters:SetBackdrop({bgFile="Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,tileSize=16,edgeSize=8,insets={left=3,right=3,top=3,bottom=1}});counters:SetBackdropColor(.06,.055,.045,1);counters:SetBackdropBorderColor(.5,.46,.39,1)
  counters.values={}
  for i,entry in ipairs({{"Kills","Ability_DualWield","kills"},{"Gold","INV_Misc_Coin_01","gold"},{"Cache cost","INV_Box_02","chest"}})do
-  local b=CreateFrame("Button",nil,counters);b:SetWidth(counters:GetWidth()/3);b:SetHeight(36);b:SetPoint("LEFT",counters,"LEFT",(i-1)*counters:GetWidth()/3,0)
+  local b=CreateFrame("Button",entry[3]=="kills"and"AZSXUIKillCounter"or nil,counters);b:SetWidth(counters:GetWidth()/3);b:SetHeight(36);b:SetPoint("LEFT",counters,"LEFT",(i-1)*counters:GetWidth()/3,0)
   local icon=b:CreateTexture(nil,"ARTWORK");icon:SetTexture("Interface\\Icons\\"..entry[2]);icon:SetWidth(20);icon:SetHeight(20);icon:SetPoint("LEFT",b,"LEFT",13,0)
   local label=text(b,12);label:SetPoint("LEFT",icon,"RIGHT",6,0);label:SetText("—");label:SetTextColor(1,.82,0)
   if entry[3]=="gold"then
@@ -165,7 +179,12 @@ local function build()
    counters.goldGlow:SetPoint("CENTER",label,"CENTER",0,0);counters.goldGlow:SetWidth(64);counters.goldGlow:SetHeight(32)
    counters.goldGlow:SetVertexColor(1,.72,.16,.5);counters.goldGlow:SetBlendMode("ADD");counters.goldGlow:Hide()
   end
-  b.azsxCounterTitle=entry[1];b:SetScript("OnEnter",function()hoverTip(this,this.azsxCounterTitle)end);b:SetScript("OnLeave",function()GameTooltip:Hide()end)
+  if entry[3]=="kills"then
+   b:SetScript("OnEnter",function()hoveredKills=this;showKills(this,AZSXUI_ModState())end)
+   b:SetScript("OnLeave",function()hoveredKills=nil;GameTooltip:Hide()end)
+  else
+   b.azsxCounterTitle=entry[1];b:SetScript("OnEnter",function()hoverTip(this,this.azsxCounterTitle)end);b:SetScript("OnLeave",function()GameTooltip:Hide()end)
+  end
   table.insert(counters.values,{key=entry[3],label=label,button=b,index=i})
  end
  mask=CreateFrame("ScrollFrame","AZSXUIHudDrawerMask",root);mask:SetWidth(xp:GetWidth());mask:SetHeight(200);mask:SetPoint("BOTTOM",counters,"TOP",0,0)
@@ -234,14 +253,26 @@ local function activate()
  enabled=true;root:Show()
 end
 local function deactivate()
+ if hoveredKills then hoveredKills=nil;GameTooltip:Hide()end
  local wasEnabled=enabled;enabled=false;if wasEnabled then restore()end;close();progress=0;selected=nil;visibleDefs=nil
  if equipmentHovered then GameTooltip:Hide();equipmentHovered=nil end
  if root then root:Hide();mask:Hide();equipment:Hide();clock:Hide()end
 end
+local receivedEquipment=false
+local lastPhase
+local function runPhase(phase)
+ return phase=="ready"or phase=="playing"or phase=="choosing"or phase=="paused"or phase=="dead"
+end
 local function refresh()
  local phase=AZS_GetPhase and AZS_GetPhase()
- local active=phase=="ready"or phase=="playing"or phase=="choosing"or phase=="paused"or phase=="dead"
- if not ready or not db().hud or not active or not MainMenuBar or not MainMenuBar:IsVisible()then deactivate();return end
+ if phase=="ready" or not enabled then receivedEquipment=false end
+ local transition=lastPhase~=phase or not enabled
+ lastPhase=phase
+ if not ready or not db().hud or not runPhase(phase) or not MainMenuBar then
+  local wasEnabled=enabled;deactivate()
+  if wasEnabled and AZSXUI_SyncHudFrames then AZSXUI_SyncHudFrames()end
+  return
+ end
  activate();if not enabled then return end;claimCharacterToggle()
  local run=phase~="ready"and AZS_RUN or nil;local valid=type(run)=="table"
  for _,c in ipairs(counters.values)do local v=valid and run[c.key];if finite(v)and v>=0 then c.label:SetText(string.format("%.0f",v))else c.label:SetText("—");valid=false end end
@@ -260,12 +291,16 @@ local function refresh()
   clock.next:SetText(finite(nextTime)and nextTime>=0 and("next boss in "..timestamp(nextTime))or"")
   replacePart("clock",true);clock:Show()
  else replacePart("clock",false);clock:Hide()end
- local view=phase~="ready"and AZSX_GetState and AZSX_GetState(1);local items=view and view.available and view.data and view.data.equipment;local texts=view and view.texts and view.texts.equipment
+ local view=phase~="ready"and AZSXUI_ModState();local items=view and view.available and view.data and view.data.equipment;local texts=view and view.texts and view.texts.equipment
+ if hoveredKills and (not GameTooltip.IsOwned or GameTooltip:IsOwned(hoveredKills))then showKills(hoveredKills,view)end
  local session=view and view.available and view.session and(view.session.epoch..":"..view.session.recipientGUID)or nil
  if session~=lastSession or(lastClock and finite(run and run.t)and run.t<lastClock-.5)then close();lastSession=session end
  lastClock=run and run.t
  local available=type(items)=="table"and type(texts)=="table"and table.getn(items)<=5 and table.getn(items)==table.getn(texts)
- if available then
+ if available then receivedEquipment=true end
+ local waiting=view and not view.available and not receivedEquipment and view.reason=="missing_or_invalid_payload"
+ if waiting then items={};texts={}end
+ if available or waiting then
   local display,counts={}, {amulet=0,ring=0,trinket=0};local typed=true
   for _,item in ipairs(items)do if not counts[item.category]then typed=false end end
   if typed then
@@ -284,16 +319,27 @@ local function refresh()
    if not string.find(path,"^Interface[\\/]")then path="Interface\\Icons\\"..path end
    SetPortraitToTexture(b.icon:GetName(),path)
   end
-  if available then equipment:Show()else equipment:Hide()end
+  if available or waiting then equipment:Show()else equipment:Hide()end
  else for _,b in ipairs(icons)do setEquipment(b,nil)end;equipment:Hide()end
- replacePart("build",available)
+ replacePart("build",available or waiting)
  if visibleDefs and selected then layoutStats(selected,statsView())end
+ if transition and AZSXUI_SyncHudFrames then AZSXUI_SyncHudFrames()end
 end
 controller:RegisterEvent("ADDON_LOADED")
-controller:SetScript("OnEvent",function()if arg1=="AZSXUI"then ready=true;db()end end)
+controller:RegisterEvent("PLAYER_LOGIN")
+controller:RegisterEvent("PLAYER_ENTERING_WORLD")
+controller:SetScript("OnEvent",function()
+ if arg1=="AZSXUI"then ready=true;db()
+ elseif event~="PLAYER_ENTERING_WORLD"and event~="PLAYER_LOGIN"then return end
+ if ready then refresh()end
+end)
 controller:SetScript("OnUpdate",function()
- local dt=arg1 or 0;if not finite(dt)or dt<0 then dt=0 end;dt=math.min(dt,.1)
- elapsed=elapsed+dt;if elapsed>=.25 then elapsed=0;refresh()end
+ local dt=arg1 or 0;if not finite(dt)or dt<0 then dt=0 end
+ elapsed=elapsed+dt
+ local phase=AZS_GetPhase and AZS_GetPhase()
+ if phase~=lastPhase or elapsed>=.25 or (not enabled and ready and runPhase(phase) and db().hud and MainMenuBar)then
+  elapsed=0;refresh()
+ end
  if not enabled then return end
  if leaveAt and GetTime()>=leaveAt and not pinned then target=0;leaveAt=nil end
  progress=target
@@ -310,7 +356,7 @@ controller:SetScript("OnUpdate",function()
 end)
 function AZSXUI_ConfigureHud(value)
  if value~="on"and value~="off"then return false end
- db().hud=value=="on";if not db().hud then deactivate()else refresh()end;return true
+ db().hud=value=="on";refresh();return true
 end
 function AZSXUI_HudReadout()
  local out={enabled=enabled,selected=selected,pinned=pinned,progress=progress,height=drawer and drawer.visibleHeight or 0,rows={},equipment={},affordable=enabled and counters and counters.goldGlow:IsShown()or false}

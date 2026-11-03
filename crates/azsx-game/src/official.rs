@@ -1002,6 +1002,10 @@ impl SelectedAdapter {
     pub fn blessing_pool_index(self, m: &dyn Mem, f: u64, i: u64) -> Result<u64> {
         self.native.blessing_pool_index(m, f, i)
     }
+    pub fn codex_entries(self) -> [Entry; 4] { self.native.codex_entries() }
+    pub unsafe fn discover_economy_trinkets(self, base: usize, collection: usize, persist: bool) -> usize {
+        self.native.discover_economy_trinkets(base, collection, persist)
+    }
     pub fn blessing_stats(
         self,
         m: &dyn MutableMemory,
@@ -1903,6 +1907,9 @@ impl SelectedAdapter {
     ) -> Result<Option<EventMinimap>> {
         self.native.event_minimap(m, script, owner)
     }
+    pub fn drink_supply_potion(self,m:&dyn MutableMemory,game:u64,id:(u32,u64),potion:azsx_gameplay::supplies::Consumable)->Result<bool>{
+        self.native.drink_supply_potion(m,game,id,potion)
+    }
     pub fn clamp_event_health(
         self,
         m: &dyn MutableMemory,
@@ -2032,6 +2039,9 @@ impl SelectedAdapter {
 }
 
 impl SelectedAdapter{
+ pub fn apply_crystal_luck(self,m:&dyn MutableMemory,g:u64,totals:azsx_gameplay::crystals::Totals)->Result<()>{
+  self.native.apply_fortune_stat(m,g,0,totals.luck())
+ }
  pub fn crystal_stats(self,m:&dyn MutableMemory,g:u64,totals:azsx_gameplay::crystals::Totals)->Result<Option<StatInputLoan>>{self.native.crystal_stats(m,g,totals)}
  pub fn project_crystal_aura(self,m:&dyn MutableMemory,f:&FatigueAura,count:u32)->Result<Option<u32>>{self.native.project_crystal_aura(m,f,count)}
 }
@@ -2067,6 +2077,8 @@ impl SelectedAdapter {
     pub fn solo_new_mortar_token(self,serial:u32)->Option<u64>{self.native.solo_new_mortar_token(serial)}
     pub fn solo_mortar_token(self,m:&dyn Mem,spell:u32,effect:u64)->Result<Option<u64>>{self.native.solo_mortar_token(m,spell,effect)}
     pub unsafe fn solo_launch_mortar(self,m:&dyn Mem,base:u64,game:u64,owner:u64,draw:u32,token:u64)->Result<Option<SoloMortarLaunch>>{self.native.solo_launch_mortar(m,base,game,owner,draw,token)}
+    pub fn supply_display(self,m:&dyn Mem,game:u64,id:(u32,u64),effect:Option<azsx_gameplay::supplies::Costume>)->Result<u32>{self.native.supply_display(m,game,id,effect)}
+    pub unsafe fn supply_display_packet(self,m:&dyn Mem,base:u64,game:u64,owner:u64,display:u32)->Result<()>{self.native.supply_display_packet(m,base,game,owner,display)}
     pub fn solo_player_scale_base(self)->f32{self.native.solo_player_scale_base()}
     pub unsafe fn solo_player_scale(self,m:&dyn Mem,base:u64,game:u64,owner:u64,scale:f32)->Result<()>{self.native.solo_player_scale(m,base,game,owner,scale)}
 }
@@ -2134,4 +2146,4 @@ impl SelectedAdapter {
     pub fn set_vulnerability_write(self,m:&dyn MutableMemory,game:u64,enemy:u64,expected:[f32;2],next:[f32;2])->Result<bool>{self.native.set_vulnerability_write(m,game,enemy,expected,next)}
 }
 
-pub use crate::official_native::weapon_appearance::WORN_NATIVE;
+pub use crate::official_native::weapon_appearance::{WORN_NATIVE,piece_look,selected_piece};

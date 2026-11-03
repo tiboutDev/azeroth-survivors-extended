@@ -5,6 +5,8 @@ use std::sync::atomic::AtomicUsize;
 pub static DAMAGE_NEXT: AtomicUsize = AtomicUsize::new(0);
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 static THIRD: f32 = 1.0 / 3.0;
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+static HALF: f32 = 0.5;
 /// The selected renderer keeps the current entry in RBX and its fresh size in
 /// the descriptor-selected XMM7/XMM8. Preserve every other register and flags.
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
@@ -12,14 +14,18 @@ static THIRD: f32 = 1.0 / 3.0;
 pub unsafe extern "C" fn damage_entry() {
     core::arch::naked_asm!(
  "pushfq",
+ "cmp dword ptr [rbx + 0x34], {green}", "je 3f",
  "cmp byte ptr [rbx + 0x38], 0", "je 2f",
  "cmp byte ptr [rbx + 0x38], 2", "jne 3f",
- "2:", "cmp dword ptr [rbx + 0x34], {green}", "je 3f",
+ ".if {fresh} == 8", "mulss xmm8, dword ptr [rip + {half}]",
+ ".elseif {fresh} == 7", "mulss xmm7, dword ptr [rip + {half}]", ".endif",
+ "jmp 3f",
+ "2:",
  ".if {fresh} == 8", "mulss xmm8, dword ptr [rip + {third}]",
  ".elseif {fresh} == 7", "mulss xmm7, dword ptr [rip + {third}]",
  ".else", ".error \"Unsupported combat-text size register\"", ".endif",
  "3:", "popfq", "jmp qword ptr [rip + {next}]",
- green=const crate::current::HEAL_TEXT_COLOR,fresh=const crate::current::DAMAGE_TEXT_XMM,third=sym THIRD,next=sym DAMAGE_NEXT);
+ green=const crate::current::HEAL_TEXT_COLOR,fresh=const crate::current::DAMAGE_TEXT_XMM,third=sym THIRD,half=sym HALF,next=sym DAMAGE_NEXT);
 }
 type NativeEntityQuery = unsafe extern "system" fn(u64, u64, *const u8) -> u8;
 type NativeEntityLookup = unsafe extern "system" fn(*const u64, u64) -> u64;
@@ -266,7 +272,7 @@ mod tests {
                 if green { row[0x34..0x38].copy_from_slice(&crate::current::HEAL_TEXT_COLOR.to_le_bytes()); }
                 for _ in 0..3 {
                     unsafe { invoke(row.as_mut_ptr(), 0.0275); }
-                    let expected = if !green && (cat == 0 || cat == 2) { 0.0275 / 3.0 } else { 0.0275 };
+                    let expected = match (green, cat) { (false, 0) => 0.0275 / 3.0, (false, 2) => 0.0275 / 2.0, _ => 0.0275 };
                     let (fresh, other) = if expected_register == 8 { (0x60, 0x50) } else { (0x50, 0x60) };
                     let read = |at| f32::from_le_bytes(row[at..at + 4].try_into().unwrap());
                     assert!((read(fresh) - expected).abs() < 1e-8);

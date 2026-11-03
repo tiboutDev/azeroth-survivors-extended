@@ -101,7 +101,7 @@ claims that every feature has been exercised in a normal running selected client
 | AZSX-26 | Preserve optional goblin spawning, fleeing, bounds, equipment, amulet choices and whole native mark rewards. |
 | AZSX-27 | Preserve personal supplies, consumable/stat loans, materials, masked minimap pins and discovery UI. |
 | AZSX-28 | Preserve persistent Sayge trials, native scenes, group presence, Fortune replacement and progress UI. |
-| AZSX-29 | Keep 50% of positive AoE bonuses in coop, preserve base spell sizes and solo, and expose effective values plus native informational aura. |
+| AZSX-29 | Keep 50% of positive AoE bonuses in coop, preserve base spell sizes and solo, and expose effective values and the co-op help button. |
 
 Native achievements, sets, marks,
 crowd-control rules, caster collision and ability caps remain native. A client
@@ -157,10 +157,7 @@ and verified before installation; presentation no longer duplicates their bytes.
 Offline contact inventory includes both ends of the downed-XP detours and native
 return sites, and resolves historical role keys before comparing images.
 
-The Crystal Resonance core assessor checks the approved 12/7/15/12 nominal
-inputs. Its diagnostic probe observes the inner stat rebuild, before the outer
-coop AoE reduction. Effective native/HUD area values require their separate
-observation; nominal crystal evidence does not establish that display claim.
+The Crystal Resonance assessor checks personal damage, cooldown recovery and maximum health. A yellow pickup must add 8% Luck per crystal to the collecting actor, with critical chance and area unchanged.
 
 The ranked-enchantment probe observes the completed outer rebuild: Reach must
 therefore retain its full bonus in solo and exactly half in coop. The runner

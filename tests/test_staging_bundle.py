@@ -26,7 +26,9 @@ class BundleTests(unittest.TestCase):
   for name in('src','crates','tests','Cargo.toml','tools/dev/native-inventory','tools/dev/build-windows.sh'):
    self.assertFalse((self.root/name).exists(),name)
   self.assertEqual((self.root/'unknown.txt').read_text(),'preserve')
-  self.assertLess(len(azsx_dev.execution_inputs()),60)
+  inputs=azsx_dev.execution_inputs()
+  self.assertIn('tools/dev/fixtures/azsx-pin-hover-audit.lua',inputs)
+  self.assertLessEqual(len(inputs),60)
   self.stage() # Idempotent byte identities, even on a pristine minimal receiver.
  def test_changed_execution_bytes_and_missing_inventory_are_rejected(self):
   self.stage();file=self.root/'native-ui/official-party.lua';saved=file.read_bytes();file.write_bytes(saved+b'changed')

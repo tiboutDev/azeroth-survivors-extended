@@ -56,7 +56,7 @@ Explicitly revisit guest Escape/overlapping choices, talents without pause, cach
 and paid reroll debits from both roles, skip rounding, dead ordinary XP **and
 whole-level** rewards through both revivals, shared-stat HUD, excluded trinkets,
 Fortune deduplication, second-player Supplies claim/effect, Sayge leaving/dying,
-smooth foreground player arrow and multiple guardian pins. These priorities do
+native player arrow and multiple guardian pins. These priorities do
 not replace the other sections.
 
 ## Acceptance catalog
@@ -156,7 +156,7 @@ Candidate profiles: `support`, `periodic`. [Scenario mappings and limits](../../
 | AZSX-07.03 | Source/recipient dies, departs or aura replaced | Retire appropriate identities/effects; no ticks reach reused slots or another run. |
 | AZSX-07.04 | Swiftmend / Tree of Life on allies | Swiftmend may select an eligible ally below 40% HP within support range; native producer cooldown remains 8 seconds. Tree of Life may heal allies; its overheal cap uses the producer maximum HP. |
 | AZSX-07.05 | Ancestral Fortitude | The native Stormstrike counter casts one free half-power Healing Wave using ordinary support targeting. |
-| AZSX-07.06 | Inspect an annotated talent during a cooperative run | Append the English Co-op note below the native current-rank text on host and guest. Fortified and Ardent Defender combine taunt and absorb-shield information under one Co-op label. Dire Bear Form identifies Shred as its taunt. Solo and armory display the original descriptions. |
+| AZSX-07.06 | Inspect an annotated talent in the Armory or during a solo or cooperative run | Append the English Co-op note below the native current-rank text on host and guest. Fortified and Ardent Defender combine taunt and absorb-shield information under one Co-op label. Dire Bear Form identifies Shred as its taunt. The same note appears below the native description in every mode. |
 
 ### AZSX-08 — Hybrid support and retaliation
 
@@ -242,7 +242,7 @@ Candidate profiles: `rules`, `official`. [Scenario mappings and limits](../../co
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
 | AZSX-14.01 | Solo/coop candidate pools | insignia, eldre_thalas and chosen remain excluded; their return is a regression. remote/Gnomish Universal Remote stays available. |
-| AZSX-14.02 | Existing inventory/unrelated gear | No deletion of existing items or broad exclusion of other equipment. |
+| AZSX-14.02 | Existing inventory and Codex | Discover only missing excluded trinkets at Common when loading the profile. Keep existing rarities, inventory and unrelated discoveries. A fully discovered profile requires no Codex save. |
 
 ### AZSX-15 — Reserved removed feature
 
@@ -343,8 +343,8 @@ Candidate profiles: `crystals`, `official-party-ui`, `azsxui`. [Scenario mapping
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-22.01 | Generation | Dry ground-checked independent map-wide native models, equal free colors, no minimap pins/kill drops. After 30 seconds, independent random intervals average 174 simulation seconds, targeting about five opportunities by minute 15 without a count ceiling; max two simultaneous scenes, with deferred opportunities and no backlog replay. The same rate continues in endless; terrain/early end can reduce discoveries. |
-| AZSX-22.02 | Color pickup | Red +12% damage, Blue +7% cooldown recovery, Green +15% max HP, Yellow +2 percentage points of critical strike chance; personal additive permanent run gains. Native amulet effects remain, no AZSX amulet gem. |
+| AZSX-22.01 | Generation | Dry ground-checked independent map-wide native models, equal free colors, no minimap pins/kill drops. The first opportunity is at or after 2:00. Later intervals are at least 90 seconds and average 174 simulation seconds, targeting about five opportunities by minute 15 without a count ceiling; max two simultaneous scenes, with deferred opportunities and no backlog replay. The same rate continues in endless; terrain/early end can reduce discoveries. |
+| AZSX-22.02 | Color pickup | Red +12% damage, Blue +7% cooldown recovery, Green +15% max HP, Yellow +8% Luck; personal additive permanent run gains. Native amulet effects remain, no AZSX amulet gem. |
 | AZSX-22.03 | First/group claims | Alive proximity grants once per appearance-time identity; model stays visible even to collector. First claim starts shared 60 simulation seconds, never extended by later claims. |
 | AZSX-22.04 | All claims/expiry/solo/departure | Common removal on all remaining claims or timeout, solo immediate; unclaimed has no timer. Pause freezes time, late/reused identities cannot claim. |
 | AZSX-22.05 | Death/revival/UI restore | Bonuses survive death, reset next run. One permanent effect visible at zero with discovery guidance, then color counts and per-stat totals; only new pickups notify, no replay of restored totals. |
@@ -357,19 +357,20 @@ Candidate profiles: `azsxui`. [Scenario mappings and limits](../../compat/featur
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
+| AZSX-23.00 | Standalone addon | The base HUD works on the native 0.138.0 client without an AZSX DLL. Keep native equipment, loot and personal stats when the mod API is absent. |
 | AZSX-23.01 | Enable/disable | Existing native artwork, reversible owned anchors/levels/scripts/visibility; UI settings never change gameplay. |
 | AZSX-23.02 | Actions/XP/equipment | One stats extension; native XP art/top border intact. Order amulet, ring, ring, trinket, trinket, native empty silhouettes. |
 | AZSX-23.03 | Stats input | Hover previews; button/character binding toggle AZSX stats and native character sheet together; checked indicator follows state, no animation. |
 | AZSX-23.04 | Stats layout | 29 supported native stats, nonzero rows, four columns/three vertical separators; short labels/full-term help. Width XP+32 units, no bottom border, above items below XP art/foreground gryphons. |
 | AZSX-23.05 | Shared stat changes | Refresh visible rows with actual effective coop XP/gold multipliers; missing shared value hides instead of falling back to personal stats. |
-| AZSX-23.06 | HP/auras/tooltips | Raised independent compact native-textured capsule at 208 UI units, clear of a five-row stats panel, current HP and level only; aura rows above HP with durations above icons. Player/target roots hide reversibly; item tooltips show each native comma-separated effect on its own line and retain actual owner text and verified enchantments. |
-| AZSX-23.07 | Permanent effects/channel bars | The experience bar centers the run level and native XP progress together, for example `Level 5 · 21 / 27`. Fortune/Crystal medallions beside HP, total crystal count and Fortune category overlay. Icon-free Sayge/native resurrection style; remaining Sayge seconds inside track. |
+| AZSX-23.06 | HP/auras/tooltips | Raised independent compact native-textured capsule at 252 UI units, clear of a five-row stats panel, current HP and level only; aura rows above HP with durations above icons. Player/target roots hide reversibly; item tooltips show each native comma-separated effect on its own line and retain actual owner text and verified enchantments. |
+| AZSX-23.07 | Permanent effects/channel bars | Encounter health bars match the top counter ribbon in width. Up to two bars share each centered line, with room beneath for the largest debuff list on that line. The experience bar centers the run level and native XP progress together, for example `Level 5 · 21 / 27`. Centered status row below HP for crystals, Fortune, the equipped gadget and the armed healing potion, matching round icons, crystal count and Fortune category overlay. Fortune details appear on hover. Icon-free Sayge/native resurrection style; remaining Sayge seconds inside track. |
 | AZSX-23.08 | Top strip | Kills/gold/cache icons/values vertically centered in ornamented 300-unit strip inset eight units; full border, clock below, soft center light behind affordable gold rather than a ring. |
-| AZSX-23.09 | Encounter bars | Boss/awake guardian/goblin bars below top clock, centered names without percentages; multiple supported rows visible; native per-entity debuffs use TargetDebuffButtonTemplate, its count child, native target sizes and dispel colors below each row. Native target tooltips require an exact selected-entity match and a unique native aura icon; otherwise they stay hidden. Up to 16 icons and a bounded overflow count. |
+| AZSX-23.09 | Encounter bars | Boss/awake guardian/goblin bars below top clock, centered names without percentages; multiple supported rows visible; native per-entity debuffs use TargetDebuffButtonTemplate, its count child, native target sizes and dispel colors below each row. Native target tooltips require an exact selected-entity match and a unique native aura icon; otherwise the tooltip uses the hovered encounter's own effect data. Up to 16 icons and a bounded overflow count. |
 | AZSX-23.10 | Nameplates | First load enables enemy/Overlapping once, preserving later choices. Half-width six-unit smooth capsules, no levels/skulls. Names only for unique highlighted elite/guardian/boss/final; ambiguous/untargeted hidden. |
-| AZSX-23.11 | Objectives | Always-visible ornamented inset header below minimap; grouped Guardians and separate Sayge quest, hierarchical spacing. Upcoming guardians appear within 60 seconds; arrival timer on separate indented line only final 30 seconds. |
+| AZSX-23.11 | Objectives | Always-visible ornamented inset header below minimap; living spawned bosses, grouped Guardians, Sayge and chicken escort objectives, with single-spaced lines. Upcoming guardians appear within 60 seconds; inline arrival timer only in the final 30 seconds. |
 | AZSX-23.12 | Multiple minimap pins | All valid active lairs; priority Sayge > active guardian > Supplies > cache > returning guardian. Distinct native cache/Supplies icons, no crystal pins; retire individual scenes without blanking others. |
-| AZSX-23.13 | Movement/turn/zoom/pan | Foreground native-art player arrow uses valid AZS_GetPlayerPosition each frame, not snapshots; pins use live native projection/zoom. Invalid data restores native arrow/flag fallback, no guessed center. |
+| AZSX-23.13 | Movement/turn/zoom/pan | Overlapping pins of the same type, priority and rim status share a count badge and split as the projection changes. Only the native arrow is drawn. Projected pins fade near the live player, retain their hover targets and recover opacity when the player moves away or position data is unavailable. |
 | AZSX-23.14 | Minimap decoration | Sun/title/close strip hidden reversibly; map/ring/zoom remain native. |
 | AZSX-23.15 | Popups | Compact native art, wrapped content/stacking without overlap. Green numeric bonuses/white labels, separate duration, sale amount/native gold coin. New item receipts use real icon; duplicates silent; no chat-parsed substitute for item receipt. |
 | AZSX-23.16 | Settings/ally panels | Widget position/scale/opacity/visibility persist in native SavedVariables; hiding changes only display. Ally builds use matching theme with buffs outside right; no clipped text/texture gaps. |
@@ -384,7 +385,7 @@ Candidate profiles: `official-party-ui`, `support`, `azsxui`. [Scenario mappings
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-24.01 | Normal/critical damage | Native face, world projection and animation; each fresh size divided by three once, never compounded by reuse. |
+| AZSX-24.01 | Normal/critical damage | Native face, world projection and animation; fresh normal sizes divided by three and critical sizes by two, once, never compounded by reuse. |
 | AZSX-24.02 | Healing/other categories | Damage seam leaves their size unchanged; allied healing retains identity/fractional accumulation. |
 | AZSX-24.03 | Fonts/icons | Native face default. Critical spell icons/guessed Lua impact projection not implemented. Optional older OFL face also changes healing and compounds scaling; never enable silently. |
 
@@ -423,7 +424,7 @@ Candidate profiles: `rules`, `diagnostics`, `official-party-ui`. [Scenario mappi
 | --- | --- | --- |
 | AZSX-27.01 | Generation | Map-wide native cargo, first attempt 30 seconds then every 30–50 with 50% chance; multiple 90-second reserves. Pause freezes time, no player-near fallback. |
 | AZSX-27.02 | Host and guest claim same reserve | Fixed personal reward per appearance-time identity, once each. Hide only for collector; other can still collect. All claims/expiry remove globally, late/reused identities excluded. |
-| AZSX-27.03 | Consumables | Seven 60-second personal families: recovery 8/12/16%, crit chance 4/7/10 points, reduction 3/5/7 points with no HP bonus, max HP 20/30/40%, crit damage 20/35/50%, area 15/25/35%, speed 10/15/20%. Tiers encounters 0–1/2–3/4+. |
+| AZSX-27.03 | Consumables | Eight equiprobable personal families. Use distinct Classic items for encounter-based upgrades. Giant Growth grants 25% area for 60s and Swiftness 20% speed for 15s at all stages. Elixirs and oils last 60–90s, flasks 120s. One healing potion charge restores 20/30/40% of its living owner’s maximum HP at or below 35%. |
 | AZSX-27.04 | Refresh/rebuild/expiry | Different families coexist; same refreshes without stacking time/power or downgrading stronger tier. No rebuild accumulation/free max-HP heal; expire owned aura rows. |
 | AZSX-27.05 | Materials | Immediate whole-gold sale once per personal claim to shared wallet, usual strongest contributions/no skip division. Show actual credited amount, no crafting inventory. |
 | AZSX-27.06 | Quality/options/aura independence | Cosmetic reference item quality independent of tier/sale bucket. lost_supplies controls generation; no choice/pause. Projection works without Fortune/fatigue active. |
@@ -436,7 +437,7 @@ Candidate profiles: `rules`, `diagnostics`, `official-party-ui`. [Scenario mappi
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-28.01 | Scheduling | Enabled trial replaces boss Fortunes; after first boss/between bosses, not after final normal encounter, endless continues. One map-wide walkable rune/decorative Sayge/candles; sample interior navigation cells across its large footprint, no combat actor/reward contribution. |
+| AZSX-28.01 | Scheduling | Enabled trial replaces boss Fortunes; one opportunity 15 to 90 simulation seconds after each eligible boss, none after the final normal encounter, endless continues. One map-wide walkable rune/decorative Sayge/candles; sample interior navigation cells across its large footprint, no combat actor/reward contribution. |
 | AZSX-28.02 | Unfinished trial/later boss | Keep identity/location/progress, upgrade reward stage without reset/replacement/banked extras. No availability deadline or premature reward. |
 | AZSX-28.03 | Presence/death/pause | Twenty cumulative seconds; every active coop actor must be alive/playing/inside. Leaving/death suspends without reset, resume when all return; native pause freezes time. |
 | AZSX-28.04 | Progress UI | Visible only for local inside actor, collective waiting explicit; never interpolate suspended progress. |
@@ -452,8 +453,8 @@ Mode: **Coop**. Disposition: **active**. Details: [Rules](../features/FEATURE-RU
 | AZSX-29.02 | Solo, baseline, reductions | Solo unchanged; 1.0 remains 1.0; values below 1.0 remain unchanged; no changes to individual spell base radii. |
 | AZSX-29.03 | Actor/rebuild/snapshot | Host and every authoritative remote actor adjusted once per complete rebuild. Nested same-game callbacks do not compound the reduction; guest snapshots are never scaled again. |
 | AZSX-29.04 | Presentation | Effective global stat reflects the reduced result; item descriptions may still show their nominal bonus. Do not rewrite item history or individual spell definitions. |
-| AZSX-29.05 | Cooperative information aura | Show Cooperative Rules before helpful buffs; no timer, cancellation or native slot. Tooltip gives the 50% rule, blank separation, then the two gray display notes. Remain present while dead/paused/choosing; hide in solo, outside a run or on stale/missing payload. |
-| AZSX-29.06 | Independent addon presentation | API 1.9 exposes detached cooperativeRules values/texts without AZSXUI. AZSXUI borrows the bridge button for first position; disabling the HUD restores native-row fallback without duplicate frames, anchor cycles or altered native IDs/clicks. |
+| AZSX-29.05 | Cooperative help | Hover the kill counter to see current party members ranked by their personal run kills. Tied players share a rank. Show a circular question mark outside the right edge of the top ribbon. Hover or click for shared XP, gold, chest rewards and the 50% area/range bonus rule. Remain present while dead/paused/choosing; hide in solo, outside a run or on stale/missing payload. |
+| AZSX-29.06 | Independent addon presentation | Detached rules remain available to addons. Without the custom HUD, anchor help by the first ally frame and leave native buff anchors untouched. |
 
 ## Cross-cutting invariants and source map
 
@@ -495,7 +496,7 @@ Candidate profiles: `rules`, `official`, `official-party-ui`, `azsxui`. [Scenari
 | AZSX-30.01 | Solo scheduling and placement | No placement before the first completed native boss; first attempt 30–90 simulation seconds afterward. One successful reservation per run at most; route length scales with the native map radius (maximum 180 yards), with four candidate ground sites and eight headings each. Every segment and the interiors of the start and five-yard extraction footprints must be walkable and reject native liquid samples. Native Mechanical Chicken at scale 4.5 and Goblin Teleporter, plus up to four ground-checked native gnomish debris objects behind the start; missing debris never blocks the escort. All owned objects retire together, with no external assets. Failed placement may retry without spending the quota; the host creates at most one shared escort in coop. |
 | AZSX-30.02 | Presence and movement | Invulnerable chicken advances by native spline only while every active participant is alive and within six yards. Leaving suspends cumulative progress without reset; native pause freezes time. |
 | AZSX-30.03 | Extraction and failure | Arrival reserves one independently drawn gadget per current participant exactly once, removes chicken and portal; expiry, invalid route or cleanup grants nothing; a downed participant suspends the escort. No uncertain native commit is retried. |
-| AZSX-30.04 | Engineering reward | Each participant receives one of four unranked, run-local utility/cosmetic gadgets: Net, Rocket Boots, Stun Grenade or Shrink Ray. The optional UI lists the escort beneath the minimap, marks its native position while active, and keeps the gadget beside the health/Fortune medallions; a versioned detached API works without AZSXUI. Variable route totals from 8 to 120 must never invalidate the full AZSX payload or hide unrelated UI. The requested Egg_05 icon is absent in 0.138.0, so the verified native EngGizmos icon is used. |
+| AZSX-30.04 | Engineering reward | Each participant receives one of four unranked, run-local utility/cosmetic gadgets: Net, Rocket Boots, Stun Grenade or Shrink Ray. The optional UI lists the escort beneath the minimap, marks its native position while active, and keeps the gadget in the status row below health; a versioned detached API works without AZSXUI. Variable route totals from 8 to 120 must never invalidate the full AZSX payload or hide unrelated UI. The requested Egg_05 icon is absent in 0.138.0, so the verified native EngGizmos icon is used. |
 | AZSX-30.05 | Native effects | Net roots at most three nearest ordinary enemies within eight yards; Boots use native movement reconstruction; Grenade launches a zero-damage native projectile and controls at most three ordinary enemies within three yards at its identified impact. Native immunity/diminishing returns remain authoritative. Shrink Ray changes only visual scale (x0.5/x1/x1.5). |
 | AZSX-30.06 | Retired damaging/shield gadgets | Sapper and Protection Belt are absent from reward draws and active effects. No engineering damage, backlash or shield grant remains. Parachute is unavailable until native movement/visual/replication contracts are reviewed. |
 | AZSX-30.07 | Compatibility boundary | Exact 0.138.0 executable and selected entry bytes, fields, actor identity and source guard activation. Missing or changed contacts disable the escort; do not substitute guessed offsets or synthetic rewards. |
@@ -503,9 +504,11 @@ Candidate profiles: `rules`, `official`, `official-party-ui`, `azsxui`. [Scenari
 
 ### AZSX-31 — Banished Demon
 
-Mode: **Solo, Coop**. Disposition: **active**. Details: [Contract](../features/BANISHED-DEMON.md).
+Mode: **Solo, Coop**. Disposition: **disabled**. Details: [Contract](../features/BANISHED-DEMON.md).
 
-Candidate profiles: `rules`, `official`, `official-party-ui`, `azsxui`. [Scenario mappings and limits](../../compat/feature-validation.json).
+Normal builds skip encounter initialization. The retained criteria below apply only to the explicit diagnostic preview.
+
+Historical profiles: `rules`, `official`, `official-party-ui`, `azsxui`. [Scenario mappings and limits](../../compat/feature-validation.json).
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
@@ -551,7 +554,7 @@ Candidate profile: `official`.
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-34.01 | Start a run with Worn (spec) | Project the equipped weapon using its set and the unique highest talent tree. Preserve actual gear and stats. |
+| AZSX-34.01 | Start a run with Worn piece (spec) | Project the equipped weapon using its set and the unique highest talent tree. This piece (spec) uses the selected owned set piece instead. Preserve actual gear and stats. |
 | AZSX-34.02 | Select a native Look | Keep the explicit hand appearance. Use native appearance for tied or empty trees. |
 | AZSX-34.03 | Inspect the Armory character model or main-menu portrait | Resolve both visible hands from the selected class and saved ranks using the same set mapping and Look precedence as the run. |
 | AZSX-34.04 | A melee action requests a one- or two-handed strike while a specialization weapon is visible | Match the requested strike to the visible grip for the attacking entity. Preserve spell casts, off-hand hits and native equipment choices. |

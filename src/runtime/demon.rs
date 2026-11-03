@@ -27,6 +27,8 @@ impl State {
     }
 }
 pub fn install(r: &Runtime) {
+    // Keep the unfinished encounter dormant outside its isolated preview fixture.
+    if !cfg!(feature="test-hooks") || std::env::var("AZSX_TEST_DEMON_PREVIEW").as_deref()!=Ok("1") { return }
     if std::env::var("AZSX_BANISHED_DEMON").as_deref()==Ok("0") { return }
     let result=(|| -> Result<(), String> {
         for entry in r.adapter.demon_entries().into_iter()

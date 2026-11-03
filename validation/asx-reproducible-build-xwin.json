@@ -3,8 +3,8 @@
   "artifact": {
     "file": "avrt.dll",
     "game_version": "0.138.0",
-    "sha256": "721c702b20fc1b7215b30dfcb40bd1687770b99152a08fc3cde7f88266a2ec33",
-    "size_bytes": 2118144,
+    "sha256": "937bd02a46c0e6c010aca3710189bcd72f1a40a6e93a52d67bc91e59dda3b271",
+    "size_bytes": 2238464,
     "target": "x86_64-pc-windows-msvc"
   },
   "build_recipe": {
@@ -26,11 +26,9 @@
       "2"
     ],
     "external_environment": {
-      "configuration_sha256": "02e163cff9b5f83d5d004c18ed5240f3ab73f51c8edc074f7c8f52dcdf295d03",
+      "configuration_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
       "scope": "Same reviewed external toolchain environment; no cross-host reproduction claim",
-      "sdk_overlay_sha256": [
-        "a8ab1b9689a46161e19394d770da7815b7aeeb9c6f1b6095a1ac292e1246571b"
-      ]
+      "sdk_overlay_sha256": []
     },
     "release_debug": "0",
     "rustflags": [
@@ -41,7 +39,7 @@
       "-Clink-arg=/DEBUG:NONE",
       "-Clink-arg=/TIMESTAMP:1"
     ],
-    "source_fingerprint_sha256": "5c6f0c5a2b9497aebfad4b7fa128991b6efdad5932be6a3f61eab23f0ab7a3d8",
+    "source_fingerprint_sha256": "c2e6e12ad75b3ef06a8d86a018f9a987c7f89fe3451e1d7690b2238f6bf216b4",
     "test_hooks": "disabled-and-checked-absent",
     "tool_versions": {
       "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
@@ -52,7 +50,7 @@
       "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
     }
   },
-  "build_recipe_sha256": "b023e5906c64c264a5b973265eee77758936be1c171431c37ba3af6705d28db7",
+  "build_recipe_sha256": "0f0dda049e06d58e5f048bbffc881fbccf0bf41434f08a6fe532ad612eb2d159",
   "builder": "xwin-msvc",
   "builder_script": "tools/build/azsx_release_binary.py",
   "cargo_lock_sha256": "ce8aeedc81c5368e6acb2ad3155ff9c2310250d56cc6d0623b9222980f2ec206",
@@ -223,8 +221,8 @@
       },
       {
         "path": "crates/azsx-game/src/bindings/official138.rs",
-        "sha256": "d57809ce642d028c88c8531b421eb8151b46fb6f4502d0079c496c250e8b1786",
-        "size_bytes": 37551
+        "sha256": "7643dd332eba0a1a511a5daffb51ba8f7bab372deaf638714776b4faeac0a24d",
+        "size_bytes": 38995
       },
       {
         "path": "crates/azsx-game/src/enemies.rs",
@@ -243,13 +241,13 @@
       },
       {
         "path": "crates/azsx-game/src/official.rs",
-        "sha256": "a8d16a87e5682bc05aca4d563901577c7046721850122be26bf35685f40c8b5e",
-        "size_bytes": 65530
+        "sha256": "10b81be92d1039d4c3acfbd536e2ea9cf5d7622402a8437372ab032a4a2edfdd",
+        "size_bytes": 70561
       },
       {
         "path": "crates/azsx-game/src/official_native.rs",
-        "sha256": "0fab9a18db9a2178c812414766978690e6d7eda031fb85d808b156bbf7fadb95",
-        "size_bytes": 34215
+        "sha256": "09d066449c39aab682be78b12a978509f46d4b68fb6506d481591fdeeb2417bc",
+        "size_bytes": 34350
       },
       {
         "path": "crates/azsx-game/src/official_native/blessings.rs",
@@ -268,8 +266,8 @@
       },
       {
         "path": "crates/azsx-game/src/official_native/combat.rs",
-        "sha256": "a7a25bafd300685bf00fbe930f841c38129547c1d761a0ecf081721bf7b34309",
-        "size_bytes": 20389
+        "sha256": "7832adfd4358690655a55c6a2f0991080ba6084a826217b79585014a8ce736bd",
+        "size_bytes": 18581
       },
       {
         "path": "crates/azsx-game/src/official_native/combat_text.rs",
@@ -352,6 +350,11 @@
         "size_bytes": 5189
       },
       {
+        "path": "crates/azsx-game/src/official_native/polymorph.rs",
+        "sha256": "eea316b9b1d23158d7cdd178c9ada91e15bb7ed3d7f56734bb0e824a3c581b19",
+        "size_bytes": 20750
+      },
+      {
         "path": "crates/azsx-game/src/official_native/presentation.rs",
         "sha256": "925c1a4f2beae15a5cb51d44e910872bc5f57d851495f9b911520c8d4688664b",
         "size_bytes": 12101
@@ -367,24 +370,39 @@
         "size_bytes": 7746
       },
       {
+        "path": "crates/azsx-game/src/official_native/sets.rs",
+        "sha256": "2ec420449e590a045e5cf8d2c4f30e7cb255f5a8128cc20b681d521a61156b41",
+        "size_bytes": 30382
+      },
+      {
         "path": "crates/azsx-game/src/official_native/stat_inputs.rs",
         "sha256": "208848b7eb007d8f45fe81202599c205f40c214d7f44417846307daa71793b54",
         "size_bytes": 4169
       },
       {
         "path": "crates/azsx-game/src/official_native/support.rs",
-        "sha256": "dbbd5d8a68f8cc86bdb7df6c1a2790ee0140de8e299cfeab07dd610cf7658e5e",
-        "size_bytes": 23044
+        "sha256": "30ea43ce0cf685ea90b1310872554b515ca37598fb3da81e6184c199c3808db5",
+        "size_bytes": 24057
       },
       {
         "path": "crates/azsx-game/src/official_native/support/advanced.rs",
-        "sha256": "c7a02af28039e3f1c5d22110751d86b2b48295f483cfea1630487bea27f65152",
-        "size_bytes": 9640
+        "sha256": "470b9564f634d53b9c8efbe9c8bc8211327d7ddd7dc2d7fdf22c4945d29a18de",
+        "size_bytes": 7636
       },
       {
         "path": "crates/azsx-game/src/official_native/support/effects.rs",
-        "sha256": "8031e17ebbacc270d0e80db22af4f54557732ef871bbbd836bb462473df96082",
-        "size_bytes": 40322
+        "sha256": "121c3ca9eb228d6ea9ed4c185f6d5d1bab1e461050b79cf0625fea943856d6c6",
+        "size_bytes": 43466
+      },
+      {
+        "path": "crates/azsx-game/src/official_native/support/talents.rs",
+        "sha256": "8e658a44072953ade130d246948fbf0d6a4b7603cdf8ed6b77cac2775c817927",
+        "size_bytes": 13178
+      },
+      {
+        "path": "crates/azsx-game/src/official_native/talent_panel.rs",
+        "sha256": "1a09aee57c98008005faf72e726c31ba562b74270e1a1a7dbce2130e9ff951cc",
+        "size_bytes": 3041
       },
       {
         "path": "crates/azsx-game/src/official_native/treasure_goblins.rs",
@@ -400,6 +418,11 @@
         "path": "crates/azsx-game/src/official_native/wallet.rs",
         "sha256": "7778dc058921749feff92067f10b363628ab43f8160923a7d2328d14dafa9530",
         "size_bytes": 18220
+      },
+      {
+        "path": "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "sha256": "e59e82b92dba9a43a06791155e446a9b4fce0fa19bb612318e3ebb8cadeef8a1",
+        "size_bytes": 16101
       },
       {
         "path": "crates/azsx-game/src/official_native/world_events.rs",
@@ -543,8 +566,8 @@
       },
       {
         "path": "crates/azsx-gameplay/src/spells.rs",
-        "sha256": "2ea14672efe1ba0a006613d7222c8cc48472cb5f0403bf48c949f160f4bf4b50",
-        "size_bytes": 6455
+        "sha256": "935c96ebfb916fca3853bd891f656180c6b6fd41b730ec4eb37c9dc93a97429c",
+        "size_bytes": 6498
       },
       {
         "path": "crates/azsx-gameplay/src/supplies.rs",
@@ -553,8 +576,8 @@
       },
       {
         "path": "crates/azsx-gameplay/src/support.rs",
-        "sha256": "f6c9f051def057d551427584be11d0231959bb48bc3d2c5875630cc7d62284ca",
-        "size_bytes": 11149
+        "sha256": "d1be458e7212a90aac44418571f7306ccc90fb38d31d7bfb4be07494ae707bdf",
+        "size_bytes": 11161
       },
       {
         "path": "crates/azsx-gameplay/src/taunts.rs",
@@ -638,8 +661,8 @@
       },
       {
         "path": "src/runtime.rs",
-        "sha256": "eae9cd608d7eb2057b4a160c0737ce756a6570af12193390878a4d56d9963243",
-        "size_bytes": 1944
+        "sha256": "4c58208cfbb1e9468863cd84c32cf9197e167337069fe01b8c94934ced198c36",
+        "size_bytes": 1967
       },
       {
         "path": "src/runtime/addon_api.rs",
@@ -683,13 +706,18 @@
       },
       {
         "path": "src/runtime/bootstrap.rs",
-        "sha256": "585b261a115b54662eed081346a5a4f000841e5194d6dabdaaea1520a5bcabe7",
-        "size_bytes": 11277
+        "sha256": "98518b03cd5b70170ce2c7af07d768dc40e54ef9631336d88e61b3ab54b34769",
+        "size_bytes": 11213
       },
       {
         "path": "src/runtime/combat.rs",
-        "sha256": "f8fb56e0cc644f0bf93a00dfaa73201fccd759e6ac69467305565b673d9c5da2",
-        "size_bytes": 25886
+        "sha256": "1f965421fd43a91ef07e022fe40f24bbecff352e68332eaef9272ac5c88c690d",
+        "size_bytes": 32442
+      },
+      {
+        "path": "src/runtime/combat/sets.rs",
+        "sha256": "7e6527091a0b05f1fff1b49c957becb28b544aa12ac0a5ae9b9daa109057adb4",
+        "size_bytes": 10951
       },
       {
         "path": "src/runtime/combat_text.rs",
@@ -768,8 +796,8 @@
       },
       {
         "path": "src/runtime/fixture.rs",
-        "sha256": "5bd9440dec202f06948dbbcf654aba845196759bc21233e17467317fb645cbac",
-        "size_bytes": 64884
+        "sha256": "68e209e1413631b030198987f9b0efdbcd6c6bcaa82418a926b8e2487ae06935",
+        "size_bytes": 71762
       },
       {
         "path": "src/runtime/gems.rs",
@@ -778,8 +806,8 @@
       },
       {
         "path": "src/runtime/io.rs",
-        "sha256": "94a527d1ae3c6607f9fa9c1ab44d00e9a6fd1ffa538d1313c50ef8961211e267",
-        "size_bytes": 11965
+        "sha256": "ba3565cd00de158281045aa00fb39dfec0a873796686e65f9deaec50b2cca0fb",
+        "size_bytes": 11641
       },
       {
         "path": "src/runtime/lifecycle.rs",
@@ -808,8 +836,8 @@
       },
       {
         "path": "src/runtime/menu_pause.rs",
-        "sha256": "d564c40a7778ea79126990e4f2d20588d62ecd49491e5deac334e84c813a89c9",
-        "size_bytes": 13864
+        "sha256": "2936ffeefe1e59c16f38f208fcb5496b80e5f0c2cf469a833a3f9aeda0e221d1",
+        "size_bytes": 13935
       },
       {
         "path": "src/runtime/menu_pause/coordination_tests.rs",
@@ -923,8 +951,8 @@
       },
       {
         "path": "src/runtime/support.rs",
-        "sha256": "b8b1d03fbe7ea2f94bd45f9cd8e9fccb7df06a23b6c5b06c0fad8b9816b76504",
-        "size_bytes": 42193
+        "sha256": "382e45bb128c2016623aa033b829c538edb20cd5200db29d40f947552c6137d4",
+        "size_bytes": 48610
       },
       {
         "path": "src/runtime/treasure_goblins.rs",
@@ -953,13 +981,18 @@
       },
       {
         "path": "src/runtime/ui_context.rs",
-        "sha256": "6ba58fa9127ba270c20f96e443a82013be03ff5da53451ca469e658ee3a3d152",
-        "size_bytes": 2629
+        "sha256": "ef562f9409212a0b5d9d268bf82e3a27f4dfb511be7e4ffaf8747b4eefb7f622",
+        "size_bytes": 5055
       },
       {
         "path": "src/runtime/wallet.rs",
         "sha256": "9abb8559096b2ce070f9a80e71567fd0a3a8d49c20bee21803e6144bce44e54e",
         "size_bytes": 25231
+      },
+      {
+        "path": "src/runtime/weapon_appearance.rs",
+        "sha256": "85160b0adbdb0f76f7eaa22f09b86feadca65a7451da826e4da88729f9a01d71",
+        "size_bytes": 10314
       },
       {
         "path": "src/runtime/world_events.rs",
@@ -1047,17 +1080,17 @@
         "size_bytes": 2004
       }
     ],
-    "sha256": "5c6f0c5a2b9497aebfad4b7fa128991b6efdad5932be6a3f61eab23f0ab7a3d8"
+    "sha256": "c2e6e12ad75b3ef06a8d86a018f9a987c7f89fe3451e1d7690b2238f6bf216b4"
   },
   "status": "technically-reviewed-local-reference",
   "technical_review": {
-    "human_approval": "Explicit user approval of this exact SHA-256 for 0.138.0-azsx.3 in the release preparation conversation on 2026-11-02",
+    "human_approval": "Explicit user approval of this exact SHA-256 for 0.138.0-azsx.4 on 2026-11-03.",
     "not_established": [
       "Cross-host reproduction",
       "Windows-native reproduction",
       "Publication authorization"
     ],
-    "result": "Two independent identical normal distribution builds; full portable gate, Lua 5.1, Windows unit/ABI evidence, hygiene and history privacy review; exact normal DLL solo and two-player coop; all 26 signed archive installation/coop/export/uninstall checks passed.",
+    "result": "Two identical normal builds. Portable gates, 119 Windows tests, normal solo and two-player loopback trials and all 26 signed archive checks passed.",
     "scope": "Same reviewed local WSL/xwin environment"
   },
   "tool_versions": {

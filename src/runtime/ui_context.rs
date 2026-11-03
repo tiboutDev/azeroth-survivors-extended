@@ -28,7 +28,6 @@ unsafe extern "system" fn lookup(appdata:u64)->u64{
 crate::context_stub_rw!(panel_entry, 0, panel, PANEL_ORIGINAL);
 static PANEL_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 unsafe extern "system" fn panel(c: &mut crate::stub::Context) {
-    if !super::menu_pause::coop_active() { return; }
     let Some(r) = super::RUNTIME.get() else { return };
     let io = super::io::Access { local: &r.local, adapter: r.adapter };
     if let Err(e) = r.adapter.enrich_talent_panel(&io, r.local.base as u64, c.rbp, c.r14) {

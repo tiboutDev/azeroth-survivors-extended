@@ -1,5 +1,5 @@
 //! Project the run character's visible hands after the native Look resolver.
-use super::{RUNTIME, Runtime, io};
+use super::{io, Runtime, RUNTIME};
 use std::sync::atomic::{AtomicUsize, Ordering};
 static LOOK: AtomicUsize = AtomicUsize::new(0);
 static ITEM: AtomicUsize = AtomicUsize::new(0);
@@ -48,7 +48,7 @@ unsafe extern "system" fn item(out: u64, entry: u32) -> u64 {
     }
     result
 }
-use azsx_game::official::WORN_NATIVE;
+use azsx_game::official::{piece_look, selected_piece, WORN_NATIVE};
 const MAIN: usize = 15;
 const OFF: usize = 16;
 static BUTTON: AtomicUsize = AtomicUsize::new(0);
@@ -69,12 +69,21 @@ unsafe extern "system" fn resolve(out: u64, race: u8, class: u8, equipped: u64, 
     for slot in [MAIN, OFF] {
         if copy[slot * 8..slot * 8 + 8] == manual_worn() {
             copy[slot * 8..slot * 8 + 8].fill(0);
+        } else if let Some(item) = decode_slot(&copy, class, slot) {
+            copy[slot * 8 + 4..slot * 8 + 8].copy_from_slice(&item.to_le_bytes());
         }
     }
     original(out, race, class, equipped, copy.as_ptr() as u64)
 }
 fn manual_worn() -> [u8; 8] {
     ((u64::from(WORN_NATIVE) << 32) | 1).to_le_bytes()
+}
+fn decode_slot(gear: &[u8], class: u8, slot: usize) -> Option<u32> {
+    let row = &gear[slot * 8..slot * 8 + 8];
+    if row[..4] != 1u32.to_le_bytes() {
+        return None;
+    }
+    selected_piece(class, slot, u32::from_le_bytes(row[4..].try_into().ok()?))
 }
 type Validate = unsafe extern "system" fn(u64, u64, u64, usize, u8) -> u64;
 unsafe extern "system" fn validate(out: u64, gear: u64, known: u64, n: usize, race: u8) -> u64 {
@@ -85,11 +94,25 @@ unsafe extern "system" fn validate(out: u64, gear: u64, known: u64, n: usize, ra
     let Ok(before) = r.local.read(gear as usize, 0xe8) else {
         return original(out, gear, known, n, race);
     };
+    let class = before[0xe4];
+    for slot in [MAIN, OFF] {
+        if let Some(item) = decode_slot(&before, class, slot) {
+            let _ = r
+                .local
+                .write(gear as usize + slot * 8 + 4, &item.to_le_bytes());
+        }
+    }
     let result = original(out, gear, known, n, race);
     if matches!(before[0xe4], 1 | 2 | 7) {
         for slot in [MAIN, OFF] {
             if before[slot * 8..slot * 8 + 8] == manual_worn() {
                 let _ = r.local.write((out as usize) + slot * 8, &manual_worn());
+            } else if let Some(item) = decode_slot(&before, class, slot) {
+                let at = out as usize + slot * 8;
+                let expected = ((u64::from(item) << 32) | 1).to_le_bytes();
+                if r.local.read(at, 8).ok().as_deref() == Some(expected.as_slice()) {
+                    let _ = r.local.write(at, &before[slot * 8..slot * 8 + 8]);
+                }
             }
         }
     }
@@ -121,10 +144,10 @@ unsafe extern "system" fn button(c: &mut crate::stub::Context) {
     };
     // Borrow the same button parent, theme and action type as the Worn button.
     // Native action None is the default automatic look. Explicit Worn is the
-    // only additional persisted value, checked only on supported hand slots.
+    // manual Worn sentinel; selected spec pieces carry their native item ID.
     let add: unsafe extern "system" fn(u64, u64, *const u8, usize, f32, bool, *const u8, bool) =
         std::mem::transmute(r.local.base + 0x296900);
-    let label = b"Worn (spec)";
+    let label = b"Worn piece (spec)";
     add(
         c.rbp + 0x2a8,
         c.rbx,
@@ -135,6 +158,38 @@ unsafe extern "system" fn button(c: &mut crate::stub::Context) {
         action.as_ptr(),
         false,
     );
+    // Mirror the native This piece checks at 0x3c18f2: selected item, slot and ownership.
+    if let (Some(piece), Some(collection), Some(class)) =
+        (word(c.r13), word(view + 0x120), data(selector + 0x30, 1))
+    {
+        if piece != 0 && collection != 0 && data(piece + 0x68, 1).is_some_and(|v| v[0] == action[8])
+        {
+            if let Some(item) = data(piece + 0x50, 4)
+                .and_then(|v| v.try_into().ok())
+                .map(u32::from_le_bytes)
+            {
+                if let Some(encoded) = piece_look(class[0], slot as usize, item) {
+                    let owned: unsafe extern "system" fn(u64, u32) -> bool =
+                        std::mem::transmute(r.local.base + 0x5c4d7a0);
+                    if owned(collection, item) {
+                        let choice = (u64::from(encoded) << 32) | 1;
+                        action[..8].copy_from_slice(&choice.to_le_bytes());
+                        let label = b"This piece (spec)";
+                        add(
+                            c.rbp + 0x2a8,
+                            c.rbx,
+                            label.as_ptr(),
+                            label.len(),
+                            13.,
+                            current == choice,
+                            action.as_ptr(),
+                            false,
+                        );
+                    }
+                }
+            }
+        }
+    }
     action[..8].copy_from_slice(&manual_worn());
     let _ = r.local.write((c.rbp + 0xb0) as usize, &action);
     let _ = r.local.write(

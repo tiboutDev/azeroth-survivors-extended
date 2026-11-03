@@ -264,7 +264,7 @@ once per recipient/buff combination; it is compiled only with `test-hooks`.
 The reported-fixes scenario also requires an observed absence of automatic
 goblin skull assignment in fresh diagnostic profiles,
 remote visual-stop packets on actual host pause edges, and API observations of
-60-second consumables and 90-second supply pins for both clients. Parser boundary
+15–120 second consumables, persistent healing charges and 90-second supply pins for both clients. Parser boundary
 tests accept exactly 60/90 and reject 61/91. Expected INFO goblin taunt-immunity
 records are distinguished from actual warnings/errors or other rejections.
 
@@ -491,10 +491,7 @@ claim a normal-runtime regression or suppress their mismatches. Keep their
 failed evidence. The UI-only mode retains the standard economic, native talent
 pause and four-stage character/stats-command assertions unchanged.
 
-A yellow crystal has nominal +12% area; require a real guest collection log,
-then native guest `area=1.06` and AZSXUI `Area +6%`, with a rendered panel capture.
-This checks reception is not scaled twice. Document missing collection, closed
-panel, skipped commands and mismatches as failures or uncovered cases.
+Use `AZSX_TEST_CRYSTAL_STATS=1` with a diagnostic extensions trial to verify personal crystal stats. Require the collecting actor’s Luck delta to equal 0.08 per yellow crystal, with no critical chance or area gain. For a cooperative UI claim, also inspect the guest’s native Luck value and HUD.
 
 ### Cross-version archive migration preflight
 
@@ -515,3 +512,5 @@ Require at least one original projectile impact with an observed native control
 receipt and never more than three affected ordinary targets per impact.
 The impact center follows the identified target's current native position,
 not its former launch-time position. A launch without effective control fails.
+
+For excluded-trinket Codex discovery, run the normal solo extensions trial with `AZSX_TEST_CODEX_DISCOVERY=1`. Its disposable profile includes an existing higher-rarity entry and unrelated progress. Two menu launches verify persistence and an unchanged second save. Add `AZSX_TEST_CODEX_FRESH=1` to exercise a profile with no save file through its first native save and restart.

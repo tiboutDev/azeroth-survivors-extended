@@ -94,7 +94,7 @@ refresh=function(force)
     end
 end
 controller:SetScript("OnUpdate",function()
-    if not subscribed and type(AZSX_RegisterStateHandler)=="function"then
+    if not subscribed and type(AZSX_GetAPIVersion)=="function"and AZSX_GetAPIVersion()==1 and type(AZSX_RegisterStateHandler)=="function"then
         AZSX_RegisterStateHandler(function(state)cachedState=state;lastState=GetTime();refresh(false)end);subscribed=true
     end
     refresh(false)

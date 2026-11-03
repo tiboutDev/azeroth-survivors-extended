@@ -18,6 +18,7 @@ mod io;
 mod party_ui;
 mod fatigue;
 mod blessings;
+mod codex;
 mod bonus_tooltip;
 mod bonus_ui;
 mod bonus_catalog;
@@ -77,6 +78,7 @@ mod combat_text;
 mod treasure_goblins;
 
 mod supplies;
+mod supply_costumes;
 
 mod encounters;
 mod rituals;

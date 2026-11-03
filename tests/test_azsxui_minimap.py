@@ -17,14 +17,25 @@ class MinimapTests(unittest.TestCase):
 
     def test_demon_native_icon_pin_retires_after_release(self):
         self.run_lua('solo={event=8,kind="banished_demon",stage=0,x=10,y=20};soloText={title="Banished Demon",note="Break the binding"};tick();local p=AZSXUI_MinimapReadout();assert(table.getn(p)==1 and p[1].kind==5 and p[1].priority==4 and string.find(objects.AZSXEventPin1Icon.texture,"Spell_Shadow_Cripple",1,true));solo.stage=3;tick();assert(table.getn(AZSXUI_MinimapReadout())==0)')
-    def test_native_player_arrow_stays_above_all_pin_categories_and_restores_fallback(self):
-        self.run_lua('AZS_RUN.px=10;AZS_RUN.py=20;AZS_RUN.pf=0;custom={{event=1,kind=1,x=10,y=20,left=0}};AZS_CHESTS={{id=1,x=10,y=20}};tick();local a=objects.AZSXUIPlayerMinimapArrow;assert(a:IsShown() and a.anchor[4]==0 and a.anchor[5]==0);for _,p in ipairs(AZSXUI_MinimapReadout())do assert(a:GetFrameLevel()>p.level)end;AZS_RUN.px=10000;tick();assert(not a:IsShown());AZS_RUN.px=10;tick();assert(a:IsShown());AZSXUIDB={pins=false};tick();assert(not a:IsShown())')
-    def test_rendered_player_updates_between_snapshots_without_moving_custom_markers(self):
-        self.run_lua('AZS_RUN.px=10;AZS_RUN.py=20;AZS_RUN.pf=0;AZS_ZONE={map=0,run="native-run"};sample={apiVersion=1,mapId=0,runId="native-run",x=11,y=20,facing=0};function AZS_GetPlayerPosition()return sample,nil end;custom={{event=1,kind=1,x=10,y=20,left=0}};tick();local a=objects.AZSXUIPlayerMinimapArrow;assert(a.anchor[5]==1);local n=allocations;sample.x=12;sample.facing=1;now=now+1/60;objects.AZSXUIMinimapController.scripts.OnUpdate();assert(a.anchor[5]==2 and allocations==n and AZSXUI_MinimapReadout()[1].y==0 and AZS_RUN.px==10)')
-    def test_missing_or_foreign_render_sample_keeps_the_native_arrow_fallback(self):
-        self.run_lua('AZS_RUN={px=10,py=20,pf=0};AZS_ZONE={map=1,run="current"};sample={apiVersion=1,mapId=1,runId="current",x=10,y=20,facing=0};function AZS_GetPlayerPosition()return sample end;tick();local a=objects.AZSXUIPlayerMinimapArrow;assert(a:IsShown());sample.mapId=2;tick();assert(not a:IsShown());sample.mapId=1;sample.runId="old";tick();assert(not a:IsShown());sample.runId="current";sample.x=0/0;tick();assert(not a:IsShown());function AZS_GetPlayerPosition()return nil,{code="NO_PLAYER"}end;tick();assert(not a:IsShown())')
+    def test_native_player_arrow_remains_unique_and_overlapping_pin_keeps_its_tooltip(self):
+        self.run_lua('AZS_RUN.px=10;AZS_RUN.py=20;AZS_RUN.pf=0;AZS_CHESTS={{id=1,x=10,y=20}};tick();local pin=objects.AZSXEventPin1;assert(not objects.AZSXUIPlayerMinimapArrow and pin.alpha==.15 and pin:IsShown());enter("AZSXEventPin1");assert(GameTooltip.detail=="Next cache: 250 gold");AZS_RUN.px=40;tick();assert(pin.alpha==1)')
+    def test_overlap_follows_live_player_without_moving_or_reallocating_the_pin(self):
+        self.run_lua('sample={apiVersion=1,x=10,y=20,facing=0};function AZS_GetPlayerPosition()return sample end;custom={{event=1,kind=1,x=10,y=20,left=0}};tick();local pin=objects.AZSXEventPin1;local n=allocations;sample.x=25;sample.facing=1;now=now+1/60;objects.AZSXUIMinimapController.scripts.OnUpdate();assert(pin.alpha>.15 and pin.alpha<1 and allocations==n and AZSXUI_MinimapReadout()[1].y==0)')
+    def test_foreign_or_missing_position_restores_pin_opacity(self):
+        self.run_lua('custom={{event=1,kind=1,x=10,y=20,left=0}};AZS_ZONE={map=1,run="current"};sample={apiVersion=1,mapId=1,runId="current",x=10,y=20,facing=0};function AZS_GetPlayerPosition()return sample end;tick();local pin=objects.AZSXEventPin1;assert(pin.alpha==.15);sample.mapId=2;tick();assert(pin.alpha==1);sample.mapId=1;sample.runId="old";tick();assert(pin.alpha==1);sample.runId="current";sample.x=0/0;tick();assert(pin.alpha==1)')
     def test_native_caches_and_custom_events_share_art_projection_and_separate_identities(self):
         self.run_lua('custom={{event=1,kind=0,x=60,y=20,left=60},{event=2,kind=1,x=10,y=30,left=0}};AZS_CHESTS={{id=4294967386,x=60,y=20,z=0}};tick();local pins=AZSXUI_MinimapReadout();assert(table.getn(pins)==3 and pins[3].event==4294967386 and pins[1].kind~=pins[3].kind);assert(pins[1].x==pins[3].x and pins[1].y==pins[3].y);assert(objects.AZSXEventPin3.icon.portraitMasked and objects.AZSXEventPin3:GetWidth()==20 and objects.AZSXEventPin3.icon.texture~=objects.AZSXEventPin1.icon.texture);enter("AZSXEventPin3");assert(GameTooltip.detail=="Next cache: 250 gold")')
+    def test_overlapping_caches_count_split_on_zoom_and_retire_without_hiding_supplies(self):
+        self.run_lua("""
+        AZS_CHESTS={{id=1,x=10,y=20},{id=2,x=24,y=20},{id=3,x=14,y=20}}
+        custom={{event=8,kind=0,x=10,y=20,left=30}};tick()
+        local pins=AZSXUI_MinimapReadout()
+        assert(table.getn(pins)==2 and pins[2].quantity==3 and objects.AZSXEventPin2.badge:IsShown())
+        function Minimap:GetZoom()return 5 end;tick()
+        assert(table.getn(AZSXUI_MinimapReadout())==4 and not objects.AZSXEventPin2.badge:IsShown())
+        function Minimap:GetZoom()return 0 end;AZS_CHESTS[3]=nil;tick()
+        assert(AZSXUI_MinimapReadout()[2].quantity==2)
+        """)
     def test_cache_and_supply_icons_are_distinct_native_resources(self):
         self.run_lua('custom={{event=1,kind=0,x=10,y=20,left=60}};AZS_CHESTS={{id=1,x=10,y=20}};tick()')
         supply=self.lua.eval('objects.AZSXEventPin1.icon.texture')
@@ -44,7 +55,7 @@ class MinimapTests(unittest.TestCase):
     def test_paused_and_choosing_preserve_available_caches(self):
         self.run_lua('AZS_CHESTS={{id=1,x=10,y=20}};for _,p in ipairs({"playing","paused","choosing"})do phase=p;tick();assert(table.getn(AZSXUI_MinimapReadout())==1)end')
     def test_invalid_native_cache_coordinates_are_ignored_and_view_is_bounded(self):
-        self.run_lua('AZS_CHESTS={{id=1,x=0/0,y=0},{id=2,x=math.huge,y=0},{id=-1,x=0,y=0},{id=4,x="0",y=0}};tick();assert(table.getn(AZSXUI_MinimapReadout())==0);AZS_CHESTS={};for i=1,200 do AZS_CHESTS[i]={id=i,x=10,y=20}end;tick();assert(table.getn(AZSXUI_MinimapReadout())==128)')
+        self.run_lua('AZS_CHESTS={{id=1,x=0/0,y=0},{id=2,x=math.huge,y=0},{id=-1,x=0,y=0},{id=4,x="0",y=0}};tick();assert(table.getn(AZSXUI_MinimapReadout())==0);AZS_CHESTS={};for i=1,200 do AZS_CHESTS[i]={id=i,x=10,y=20}end;tick();assert(table.getn(AZSXUI_MinimapReadout())==1 and AZSXUI_MinimapReadout()[1].quantity==128)')
     def test_missing_or_invalid_live_zoom_hides_pins_without_using_payload_fallback(self):
         self.run_lua('AZS_CHESTS={{id=1,x=10,y=20}};map.zoom=0;tick();assert(table.getn(AZSXUI_MinimapReadout())==1);Minimap.GetZoom=nil;tick();assert(table.getn(AZSXUI_MinimapReadout())==0);for _,bad in ipairs({-1,6,.5,0/0})do function Minimap:GetZoom()return bad end;tick();assert(table.getn(AZSXUI_MinimapReadout())==0);arg2=.1;arg3=.2;objects.AZSXUIMinimapController.scripts.OnEvent()end;function Minimap:GetZoom()return 0 end;tick();assert(table.getn(AZSXUI_MinimapReadout())==1)')
     def test_missing_projection_is_not_replaced_with_hero_coordinates(self):

@@ -36,12 +36,12 @@ annotation. Crystal Resonance replaces the old immutable amulet gem.
 
 Four native UnGoro crystal colors provide personal additive gains per pickup:
 Red +12% damage, Blue +7% cooldown recovery, Green +15% maximum health,
-Yellow +2 percentage points of critical strike chance. Color draws are independent and equally likely;
+Yellow +8% Luck. Color draws are independent and equally likely;
 repeated colors are allowed. No rarity, pity rotation or ordering against other
 events is applied. All collected bonuses reset at the next run, not on death.
 
 After a 30-second opening grace period, independent random intervals average
-174 simulation seconds, targeting about five crystal opportunities by minute 15.
+174 simulation seconds, with at least 90 seconds between opportunities and the first at or after 2:00, targeting about five crystal opportunities by minute 15.
 There is no per-run count ceiling or fixed timetable: some runs have fewer, some
 have more than six. At most two models coexist; occupied slots defer the next
 opportunity. Failed native placement consumes that opportunity, and short runs
@@ -93,6 +93,8 @@ application, tooltip and notification.
 
 Coop XP and Gold use the strongest current fortune in each category. Other
 Luck remains personal. Rebuild native inputs before replacing bonuses.
+AZSX automatically discovers Insignia of the Horde, Royal Seal of Eldre'Thalas and Mark of the Chosen in the Codex at startup. Missing entries start at Common. Existing discoveries keep their best rarity.
+
 Three economy trinkets are excluded from the selected reward pool without
 removing existing inventory. The pickup-range Gnomish Universal Remote is available
 again. Movement speed and pickup radius are not Fortune rewards. Rules and
@@ -210,27 +212,27 @@ seconds, with fixed 50% success and no pity. Reserves may coexist and each lasts
 player collects within two yards. Content and power are fixed at appearance;
 claims reserve slot/GUID/event identity before native IO and never reroll.
 
-90% of rewards are consumables, with seven equally likely families. Each lasts
-60 simulation seconds. Different families coexist. The same family renews to
-60 seconds without adding durations or power; a lower tier cannot downgrade a
-still-active stronger effect. Tiers follow completed native encounters:
-0–1 = I, 2–3 = II, 4+ = III, with no further endless growth.
+90% of rewards are consumables. Choose one of eight families uniformly and resolve the actual Classic item for the current encounter stage. All durations use simulation time. Repeated timed effects refresh the strongest active item of that family. Different families can coexist.
 
-| Family | Tier I | Tier II | Tier III |
+| Family | 0–1 completed bosses | 2–3 completed bosses | 4+ completed bosses |
 | --- | --- | --- | --- |
-| Cooldown recovery | +8% | +12% | +16% |
-| Critical strike chance | +4 points | +7 points | +10 points |
-| Damage reduction | +3 points | +5 points | +7 points |
-| Maximum health | +20% | +30% | +40% |
-| Critical strike damage | +20% | +35% | +50% |
-| Area of effect | +15% | +25% | +35% |
-| Movement speed | +10% | +15% | +20% |
+| Cooldown recovery | Elixir of Wisdom, 8% · 60s | Elixir of Greater Intellect, 12% · 75s | Flask of Distilled Wisdom, 16% · 120s |
+| Critical strike chance | Elixir of Lesser Agility, 4 points · 60s | Elixir of Greater Agility, 7 points · 75s | Elixir of the Mongoose, 10 points · 90s |
+| Damage reduction | Elixir of Defense, 3 points · 60s | Elixir of Greater Defense, 5 points · 75s | Elixir of Superior Defense, 7 points · 90s |
+| Maximum health | Elixir of Fortitude, 20% · 60s | Elixir of Brute Force, 30% · 75s | Flask of the Titans, 40% · 120s |
+| Critical strike damage | Minor Wizard Oil, 20% · 60s | Wizard Oil, 35% · 75s | Brilliant Wizard Oil, 50% · 90s |
+| Area of effect | Elixir of Giant Growth, 25% · 60s | Same item | Same item |
+| Movement speed | Swiftness Potion, 20% · 15s | Same item | Same item |
+| Emergency healing | Healing Potion, 20% max HP | Superior Healing Potion, 30% max HP | Major Healing Potion, 40% max HP |
+
+Healing potions arm one personal charge until used, death or run end. A duplicate retains the stronger charge. At or below 35% health a living, playing owner consumes the charge and gains the listed percentage of current maximum health, including when claimed below the threshold. Potion healing is independent of spells and leech.
+
+At the production rate of 0.75 supply opportunities per minute, a player collecting every pile expects about 1.27 healing potion rewards per 15 minutes before placement losses. Nominal timed-effect coverage is about 0.53, 0.63 or 0.82 active effects per player at the three stages before duplicate refreshes and missed pickups.
 
 Defense uses generic native stat input 5: damage reduction only, with no maximum-health contribution. This input is distinct from jewelry kind 5 (Archimtiros), whose item-specific conversion also grants health. No compensating negative-health input is applied.
 
 Classic elixirs, flasks and wizard oils provide the names/icons. Their effects
-are AZSX adaptations. Giant Growth retains its real name across tiers rather
-than inventing nonexistent Classic variants. Native damage/speed/restoration
+are AZSX adaptations. Giant Growth and Swiftness each have a single strength at all stages. Native damage/speed/restoration
 runes remain unchanged. Maximum-health rebuilds never grant a free heal; current
 health is limited to its prior budget and the new maximum. Temporary input
 loans restore after every rebuild; reset also removes derived consumable bonuses.
@@ -317,7 +319,7 @@ Enabled independently through `darkmoon_trials` in the optional event settings
 is independent of either feature.
 
 No trial before the first boss. A native completed encounter schedules one trial
-20–40 simulation seconds later, except after the final normal encounter. Endless
+15–90 simulation seconds later, except after the final normal encounter. Endless
 continues scheduling. An unfinished trial stays at its original location until
 completion or run end, with no availability deadline. Later encounters upgrade
 its reward stage without resetting accumulated presence, replacing the scene or
@@ -419,10 +421,9 @@ entries and the same projection as cache/event pins. Explicit pin layers put
 Sayge above active guardians, Supplies, caches and returning guardians. The
 native HUD flag preference is restored when pins/projection are unavailable.
 
-Swiftness Potion is a personal 60-second Supplies effect granting +10%, +15% or
-+20% movement speed. Native reconstruction resets its baseline; the bounded
+Swiftness Potion grants +20% personal movement speed for 15 seconds. Native reconstruction resets its baseline; the bounded
 post-rebuild addition must not accumulate across refreshes and disappears on
-expiry. The seven aura families have unique personal slots.
+expiry. The eight aura families have unique personal slots.
 
 Supply names use Classic item quality independently of the gameplay tier and
 material sale-power bucket: all referenced potions/elixirs/flasks/oils are Common
@@ -496,8 +497,8 @@ Cooperative eight-piece armor effects use the wearer's equipment. An allied kill
 
 A legendary necklace can trigger its explosion when a teammate finishes an enemy carrying your matching damage-over-time spell. The Power Word: Shield necklace bursts around the player you protected using your area bonus. Holy Light and Regrowth necklaces shield the player you heal for up to 40% of your maximum health. Vampiric Renew and Vampiric Rejuvenation grant the healed player 5% leech on their own damage for 10 and 12 seconds respectively.
 
-During a cooperative run, the Talents panel adds a short Co-op note below selected talent descriptions to explain ally targeting, shield ownership and control effects. Fortified and Ardent Defender combine their taunt trigger and allied shield condition in one note. Dire Bear Form identifies Shred as its taunt.
+In the Armory and during solo or cooperative runs, the Talents panel adds a short Co-op note below selected talent descriptions to explain ally targeting, shield ownership and control effects. Fortified and Ardent Defender combine their taunt trigger and allied shield condition in one note. Dire Bear Form identifies Shred as its taunt.
 
 ## Set weapon appearance
 
-In the Armory, **Worn (spec)** shows the specialization variant of the equipped set weapon on the Armory character model, in the main-menu portrait and in a run. Fury uses two one-handed weapons. Protection Warriors and Holy or Protection Paladins use a one-handed weapon and a shield. Enhancement Shamans use a two-handed weapon, including Sulfuras with Earthshatter. The tree with the most learned points determines the look. Ties, empty builds and other specializations use the native appearance. Manual Look choices apply to their hand slots. Melee strike animations follow the visible weapon grip. Gear bonuses come from the equipped pieces.
+In the Armory, **Worn piece (spec)** shows the specialization variant of the equipped set weapon on the Armory character model, in the main-menu portrait and in a run. **This piece (spec)** uses the selected unlocked piece for that hand and follows specialization changes. Fury uses two one-handed weapons. Protection Warriors and Holy or Protection Paladins use a one-handed weapon and a shield. Enhancement Shamans use a two-handed weapon, including Sulfuras with Earthshatter. The tree with the most learned points determines the look. Ties, empty builds and other specializations use the native appearance. Manual Look choices apply to their hand slots. Melee strike animations follow the visible weapon grip. Gear bonuses come from the equipped pieces.

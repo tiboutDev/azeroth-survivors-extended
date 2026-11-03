@@ -37,12 +37,17 @@ pub(super) trait Services {
     fn events_verify_ritual(&self) -> Result<()>;
     fn events_verify_fixture_boss(&self) -> Result<()>;
     fn events_refresh_stats(&self, game: u64) -> Result<()>;
+    fn events_apply_crystal_luck(&self,_game:u64,_totals:azsx_gameplay::crystals::Totals)->Result<()>{Err("Crystal Luck unavailable".into())}
+    #[cfg(feature="test-hooks")]
+    fn events_crystal_luck_value(&self,_game:u64)->Result<f32>{Err("Crystal Luck observation unavailable".into())}
     fn events_crystal_stats(&self,_game:u64,_totals:azsx_gameplay::crystals::Totals)->Result<Option<StatInputLoan>>{Err("Crystal stat inputs unavailable".into())}
     fn events_damage_fixture_target(&self, game: u64, target: u64, damage: f32) -> Result<()>;
     fn events_credit_supply(&self, game: u64, owner: u64, amount: u32) -> Result<u32>;
 
     fn events_blessing_fixture_definition(&self, g: u64, i: u32) -> Result<u64>;
     fn events_blessing_fixture_targets(&self, g: u64) -> Result<Vec<u64>>;
+    fn events_supply_look(&self,game:u64,id:(u32,u64),look:super::supply_costumes::Look)->Result<super::supply_costumes::Look>;
+    fn events_drink_potion(&self,game:u64,id:(u32,u64),potion:azsx_gameplay::supplies::Consumable)->Result<bool>;
     fn events_clamp_event_health(&self, game: u64, owner: u64, before: f32) -> Result<()>;
     fn events_apply_consumable_speed(&self,game:u64,value:f32)->Result<()>;
     fn events_movement_speed(&self,game:u64)->Result<f32>;
@@ -122,6 +127,11 @@ pub(super) trait Services {
     fn events_world_party(&self, game: u64) -> Result<Option<PartyObservation>>;
 }
 impl Services for Runtime {
+    fn events_apply_crystal_luck(&self,game:u64,totals:azsx_gameplay::crystals::Totals)->Result<()>{
+        self.adapter.apply_crystal_luck(&io::Access{local:&self.local,adapter:self.adapter},game,totals)
+    }
+    #[cfg(feature="test-hooks")]
+    fn events_crystal_luck_value(&self,game:u64)->Result<f32>{Ok(self.adapter.blessing_stat_values(&self.local,game)?[0])}
     fn events_crystal_stats(&self,game:u64,totals:azsx_gameplay::crystals::Totals)->Result<Option<StatInputLoan>>{self.adapter.crystal_stats(&io::Access{local:&self.local,adapter:self.adapter},game,totals)}
     fn events_goblin_notice(&self, game: u64, text: &str) -> Result<()> {
         unsafe {
@@ -240,6 +250,24 @@ impl Services for Runtime {
     }
     fn events_blessing_fixture_targets(&self, g: u64) -> Result<Vec<u64>> {
         self.adapter.blessing_fixture_targets(&self.local, g)
+    }
+    fn events_supply_look(&self,game:u64,id:(u32,u64),look:super::supply_costumes::Look)->Result<super::supply_costumes::Look>{look.apply(self,game,id)}
+    fn events_drink_potion(&self,game:u64,id:(u32,u64),potion:azsx_gameplay::supplies::Consumable)->Result<bool>{
+        let access=io::Access{local:&self.local,adapter:self.adapter};
+        #[cfg(feature="test-hooks")]
+        let before=if super::supplies::potion_fixture(){self.adapter.event_party(&access,game)?}else{None};
+        let used=self.adapter.drink_supply_potion(&access,game,id,potion)?;
+        #[cfg(feature="test-hooks")]
+        if let Some(old)=before {
+            if let Some(after)=self.adapter.event_party(&access,game)? {
+                let target=old.actors.iter().find(|a|(a.slot,a.guid)==id);
+                let verified=used && target.is_some_and(|a|azsx_gameplay::supplies::potion_health(a.hp,a.maximum,potion).is_some_and(|expected|
+                    after.actors.iter().any(|b|b.guid==a.guid && (b.hp-expected).abs()<0.01))) &&
+                    old.actors.iter().filter(|a|a.guid!=id.1).all(|a|after.actors.iter().any(|b|a.guid==b.guid && a.hp==b.hp));
+                self.log.info(&format!("Supply potion readback: slot={} tier={} verified={verified}",id.0,potion.tier));
+            }
+        }
+        Ok(used)
     }
     fn events_clamp_event_health(&self, game: u64, owner: u64, before: f32) -> Result<()> {
         self.adapter.clamp_event_health(

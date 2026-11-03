@@ -4,13 +4,13 @@ This review compares current AZSX rules with the independent [native reference](
 
 ## Implemented first pass
 
-- Crystals: Red +12% damage, Blue +7% cooldown recovery input, Green +15% maximum health, Yellow +2 percentage points of critical strike chance. Permanent personal additive gains; existing free color draws, spawn budgets and claims remain.
+- Crystals: Red +12% damage, Blue +7% cooldown recovery input, Green +15% maximum health, Yellow +8% Luck. Permanent personal additive gains; existing free color draws, spawn budgets and claims remain.
 - Supplies Recovery: +8/+12/+16%; Vitality: +20/+30/+40% maximum health. Other families, 60-second effects, 90-second reserves and encounter thresholds remain.
 - Defense remains +3/+5/+7 points of damage reduction only. The earlier review incorrectly inferred hidden health from Archimtiros. Generic stat input 5 and jewelry definition kind 5 are distinct dispatch domains: the former adds reduction only, the latter also adds item-specific health. There is no hidden health to subtract. Warding enchantments also use the generic reduction input.
 - Native input restoration, same-family refresh without power stacking, and no free maximum-health heal remain required.
 - Lua API bonus totals, native tooltips and pickup text use the revised crystal values.
 
-A first Common acquisition gives Accuria +25.5% damage, Quick Strike +13.5% recovery input, Heavy Dark Iron +25.2618% health and Spell Power +21% area. The revised crystals are approximately half these contributions, without consuming equipment slots. This is a budget comparison, not equal combat utility.
+A first Common acquisition gives Accuria +25.5% damage, Quick Strike +13.5% recovery input, Heavy Dark Iron +25.2618% health and Spell Power +21% area. Red, Blue and Green are approximately half their corresponding ring contributions, without consuming equipment slots. This is a budget comparison, not equal combat utility.
 
 Recovery input H gives cooldown factor 1/(1+H). A +7% input alone shortens cooldowns by approximately 6.54%, and gives less relative reduction when H is already high. Existing character caps and additive baselines still apply.
 
@@ -66,3 +66,5 @@ Apply once after the complete authoritative native rebuild, including every
 participant context. Solo and base radii remain native; guest snapshots are not
 adjusted again. No new native hook is introduced. This is a balancing hypothesis
 for improving melee participation, not a measured guarantee across all classes.
+
+Yellow grants 8% personal Luck per pickup. The replacement baseline is the disabled economy trinkets. A first Common Mark of the Chosen gives 22.5% Luck, Insignia of the Horde gives 18% XP and Royal Seal of Eldre'Thalas gives 37.5% gold. At encounter stage one, the median Sayge trial gives 21%, 17% and 35% respectively. A yellow crystal is an extra personal bonus: one yellow plus the median Luck Fortune gives 29%, between Common Mark ranks one (22.5%) and two (33%). Only one Fortune is active per player, while collected yellow crystals persist through Fortune replacements. At 4.6 spawn opportunities per 15 minutes and equal color weights, collecting every spawn averages about 1.15 yellow crystals (+9.2% Luck by run end). Luck improves native level-up upgrade rarity. The crystal director rolls colors and timing independently.

@@ -1666,6 +1666,9 @@
     ],
     "official_native.weapon_appearance.weapon_melee_animation": [
       "AZSX-34"
+    ],
+    "official_native.event_placement.drink_supply_potion": [
+      "AZSX-27"
     ]
   },
   "evidence": {
@@ -5282,7 +5285,7 @@
       "shared": false
     },
     "official_native.talent_panel.talent_panel_entry": {
-      "reason": "Inspect-panel current-rank text gains a cooperative note only for the pinned talent definitions and the in-run caller.",
+      "reason": "Inspect-panel current-rank text gains a cooperative note for the pinned talent definitions in all Talents panels.",
       "references": [
         "crates/azsx-game/src/official_native/talent_panel.rs",
         "src/runtime/ui_context.rs"
@@ -5291,7 +5294,7 @@
       "shared": true
     },
     "official_native.talent_panel.enrich_talent_panel": {
-      "reason": "Inspect-panel current-rank text gains a cooperative note only for the pinned talent definitions and the in-run caller.",
+      "reason": "Inspect-panel current-rank text gains a cooperative note for the pinned talent definitions in all Talents panels.",
       "references": [
         "crates/azsx-game/src/official_native/talent_panel.rs",
         "src/runtime/ui_context.rs"
@@ -5424,6 +5427,16 @@
         "crates/azsx-game/src/official_native/weapon_appearance.rs",
         "src/runtime/weapon_appearance.rs"
       ]
+    },
+    "official_native.event_placement.drink_supply_potion": {
+      "reason": "Revalidate native slot, GUID, phase and current health before applying the armed supply potion to its owner.",
+      "references": [
+        "crates/azsx-game/src/official_native/event_placement.rs",
+        "src/runtime/event_services.rs",
+        "src/runtime/supplies.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
     }
   },
   "conservative_notes": {

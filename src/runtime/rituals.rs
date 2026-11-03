@@ -40,7 +40,7 @@ pub fn encounter(r:&dyn Services,game:u64,count:u64){
   ritual.promote(s.encounters);s.next=None;
   r.events_info(&format!("ritual encounter: count={} retained={} stage={} position={:?}",s.encounters,ritual.id,ritual.encounter,ritual.position));
  }else{
-  s.attempts=0;s.next=if u64::from(s.encounters)<count||endless{Some(p.clock+20.+s.draw(21)as f32)}else{None};
+  s.attempts=0;s.next=if u64::from(s.encounters)<count||endless{Some(p.clock+azsx_gameplay::rituals::spawn_delay(|n|s.draw(n)))}else{None};
   #[cfg(feature="test-hooks")]if super::scenario_steps::enabled()&&s.next.is_some(){s.next=Some(p.clock);}
   r.events_info(&format!("ritual encounter: count={} scheduled={}",s.encounters,s.next.is_some()));
  }

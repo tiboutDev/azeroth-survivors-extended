@@ -33,6 +33,6 @@ def assess(host,guest):
    except ValueError:continue
    if record.get("kind")=="ui.progression":audit.append(record.get("data",{}))
   checks[f"slot_{slot}_live_position_available"]=any(a.get("api")=="ok"and a.get("live",0)>20 for a in audit)
-  checks[f"slot_{slot}_arrow_visible"]=any(a.get("visible",0)>20 for a in audit)
+  checks[f"slot_{slot}_native_minimap_visible"]=any(a.get("nativeMapFrames",0)>20 for a in audit)
   checks[f"slot_{slot}_position_updates_between_snapshots"]=any(a.get("betweenSnapshots",0)>10 for a in audit)
- return dict(checks=checks,passed=all(checks.values()),scope="Real native damage/death, kills, XP pickups, immediate shared levels and proximity resurrection; passive live-position/arrow sampling. No direct XP/level writes or synthetic catch-up.")
+ return dict(checks=checks,passed=all(checks.values()),scope="Real native damage/death, kills, XP pickups, immediate shared levels and proximity resurrection; passive live-position/minimap sampling. No direct XP/level writes or synthetic catch-up.")

@@ -1,5 +1,5 @@
 //! The inspect and armory panels share a formatter. Only extend the owned
-//! current-rank string on the inspect caller's stack, after native localization.
+//! current-rank string on the shared formatter's stack, after native localization.
 use super::Adapter;
 use crate::{official::{Entry, MutableMemory}, Result};
 
@@ -28,10 +28,6 @@ impl Adapter {
 
     pub fn enrich_talent_panel(self, m: &dyn MutableMemory, base: u64, frame: u64, talent: u64) -> Result<()> {
         let Some(line) = talent.checked_sub(base).and_then(|rva| rva.checked_add(0x40)).and_then(note) else { return Ok(()) };
-        // The in-run N panel uses the same caller as the armory. Its read-only
-        // flag selects the inspection help instead of the spend/refund help.
-        if m.read(frame + 0x458, 8)? != (base + 0x40c8dc).to_le_bytes()
-            || m.read(frame + 0x498, 1)? != [1] { return Ok(()) }
         let header = frame - 0x30;
         let raw = m.read(header, 24)?;
         let word = |at| u64::from_le_bytes(raw[at..at+8].try_into().unwrap());
@@ -40,7 +36,7 @@ impl Adapter {
             return Err("Invalid native talent description".into());
         }
         let mut value = m.read(ptr, len as usize)?;
-        value.extend_from_slice(b"\nCo-op: ");
+        value.extend_from_slice(b"\n\nCo-op: ");
         value.extend_from_slice(line.as_bytes());
         let size = value.len();
         let owned = m.allocate_native(&value)?;

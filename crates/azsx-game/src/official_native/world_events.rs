@@ -253,7 +253,7 @@ impl Adapter {
         if buffs.len() > azsx_gameplay::supplies::Family::ALL.len()
             || buffs
                 .iter()
-                .any(|(_, v)| !v.is_finite() || *v <= 0. || *v > azsx_gameplay::supplies::BUFF_SECONDS+0.01)
+                .any(|(family,v)| if *family==azsx_gameplay::supplies::Family::Healing { *v!=f32::INFINITY } else { !v.is_finite() || *v<=0. || *v>azsx_gameplay::supplies::MAX_BUFF_SECONDS+0.01 })
         {
             return Err("Invalid consumable aura budget".into());
         }
@@ -272,19 +272,21 @@ impl Adapter {
                 free.push(index)
             } else {
                 let spell = u32::from_le_bytes(row[4..8].try_into().unwrap());
-                if (2330..2337).contains(&spell) {
+                if (2330..2337).contains(&spell) || spell==2338 {
                     existing.insert(spell, index);
                 }
             }
         }
+        // 2337 belongs to Crystal Resonance.
+        let spell_for=|family| if family==azsx_gameplay::supplies::Family::Healing {2338u32} else {2330+family as u32};
         let requested = buffs
             .iter()
-            .map(|(family, _)| 2330 + *family as u32)
+            .map(|(family, _)| spell_for(*family))
             .collect::<std::collections::BTreeSet<_>>();
         if requested.len() != buffs.len() {
             return Err("Duplicate consumable aura family".into());
         }
-        // These six recipe-only IDs are AZSX presentation slots, never native class
+        // These recipe-only IDs are AZSX presentation slots, never native class
         // effects. Retire only our inactive rows; preserve every unrelated native row.
         for (spell, index) in &existing {
             if !requested.contains(spell) {
@@ -295,14 +297,14 @@ impl Adapter {
         let mut result = vec![];
         let mut free = free.into_iter();
         for (family, remaining) in buffs {
-            let spell = 2330 + *family as u32;
+            let spell = spell_for(*family);
             let Some(index) = existing.get(&spell).copied().or_else(|| free.next()) else {
                 continue;
             };
             let mut row = [0u8; 16];
             row[..4].copy_from_slice(&1u32.to_le_bytes());
             row[4..8].copy_from_slice(&spell.to_le_bytes());
-            row[8..12].copy_from_slice(&(f.clock + remaining).to_le_bytes());
+            if remaining.is_finite(){row[8..12].copy_from_slice(&(f.clock + remaining).to_le_bytes());}
             row[12..].copy_from_slice(&1u32.to_le_bytes());
             m.write(f.rows + index as u64 * 16, &row)?;
             result.push((*family, index as u32));
@@ -558,7 +560,7 @@ mod consumable_aura_tests {
         };
         let a = Adapter::select(crate::current::SHA256).unwrap();
         let buffs = [(Family::Recovery, 60.), (Family::Critical, 59.)];
-        assert!(a.project_consumable_auras(&m,&frame,&[(Family::Critical,60.1)]).is_err());
+        assert!(a.project_consumable_auras(&m,&frame,&[(Family::Critical,120.1)]).is_err());
         let first = a.project_consumable_auras(&m, &frame, &buffs).unwrap();
         assert_eq!(first, vec![(Family::Recovery, 1), (Family::Critical, 2)]);
         let second = a.project_consumable_auras(&m, &frame, &buffs).unwrap();
@@ -572,6 +574,13 @@ mod consumable_aura_tests {
             .unwrap()
             .is_empty());
         assert_eq!(&m.0.borrow()[32..48], &[0; 16]);
+        // A charge has no timeout and must not steal the adjacent crystal spell.
+        assert_eq!(a.project_crystal_aura(&m,&frame,2).unwrap(),Some(1));
+        assert_eq!(a.project_consumable_auras(&m,&frame,&[(Family::Healing,f32::INFINITY)]).unwrap(),vec![(Family::Healing,2)]);
+        assert_eq!(m.read(frame.rows+2*16+8,4).unwrap(),0u32.to_le_bytes());
+        a.project_consumable_auras(&m,&frame,&[]).unwrap();
+        assert_eq!(m.read(frame.rows+16+4,4).unwrap(),2337u32.to_le_bytes());
+
         assert_eq!(&m.0.borrow()[..8], &[1, 0, 0, 0, 0x44, 0, 0, 0]);
     }
 }

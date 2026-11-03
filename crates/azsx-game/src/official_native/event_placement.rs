@@ -227,6 +227,15 @@ impl Adapter {
             ping: [f(m, script + 0x6640)?, f(m, script + 0x6644)?],
         }))
     }
+    /// A personal supply restores native HP directly without casting a healing spell.
+    pub fn drink_supply_potion(self,m:&dyn MutableMemory,game:u64,id:(u32,u64),potion:azsx_gameplay::supplies::Consumable)->Result<bool>{
+        let Some(party)=self.event_party(m,game)? else{return Ok(false)};
+        let Some(actor)=party.actors.iter().find(|a|(a.slot,a.guid)==id && a.phase==azsx_gameplay::Phase::Playing) else{return Ok(false)};
+        let Some(hp)=azsx_gameplay::supplies::potion_health(actor.hp,actor.maximum,potion) else{return Ok(false)};
+        let row=self.support_row(m,game,id.0)?;
+        m.write(row+self.row_field(row==game,0x4f8),&hp.to_le_bytes())?;
+        Ok(true)
+    }
     pub fn clamp_event_health(
         self,
         m: &dyn MutableMemory,

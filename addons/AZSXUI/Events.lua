@@ -44,7 +44,7 @@ local function restoreLootPreference()
 end
 local function nativeNoticeActive()
     local locale=GetLocale and GetLocale()
-    return AZSXUI_GetHudAnchors and AZSXUI_GetHudAnchors()and(locale=="enUS"or locale=="enGB")
+    return AZSXUI_HasModAPI() and AZSXUI_GetHudAnchors and AZSXUI_GetHudAnchors()and(locale=="enUS"or locale=="enGB")
 end
 local function noticeData(message,channel)
     if type(message)~="string"or string.len(message)>2048 then return nil end
@@ -90,7 +90,7 @@ local function claimLoot()
     return lootPreference==true
 end
 local function structuredLoot()
-    local snapshot=AZSX_GetState and AZSX_GetState(1)
+    local snapshot=AZSXUI_ModState()
     if snapshot and snapshot.available and snapshot.api and snapshot.api.major==1 and snapshot.api.minor>=6 and snapshot.data and type(snapshot.data.loot)=="table"then return snapshot end
 end
 local function refreshLootReceipts()
@@ -469,24 +469,22 @@ local function refreshEngineering()
     if scope~=engineeringScope then engineeringScope=scope;engineeringSeen=e and e.event or nil;engineeringUntil=0;engineeringNext=nil;engineeringPulse=0 end
     if not e then if engineeringBadge then engineeringBadge:Hide()end;if engineeringToast then engineeringToast:Hide()end;return end
     if not engineeringBadge then
-        local f=CreateFrame("Button","AZSXUIEngineeringBadge",UIParent);f:SetWidth(28);f:SetHeight(28)
-        f.icon=f:CreateTexture(nil,"ARTWORK");f.icon:SetAllPoints(f)
-        f.border=f:CreateTexture(nil,"OVERLAY");f.border:SetTexture("Interface\\Buttons\\UI-Quickslot2");f.border:SetWidth(44);f.border:SetHeight(44);f.border:SetPoint("CENTER",f,"CENTER",0,0)
+        local f=CreateFrame("Button","AZSXUIEngineeringBadge",UIParent)
+        AZSXUI_CreateStatusIcon(f)
         f:SetScript("OnEnter",function()local d=model and model.engineering;if not d then return end;GameTooltip:SetOwner(f,"ANCHOR_TOP");GameTooltip:AddLine(d.title,1,.82,0);GameTooltip:AddLine(d.description,1,1,1,1);GameTooltip:AddLine(string.format("Next activation: %.0f s",d.nextTrigger/100),.7,.7,.7);if d.remaining>0 then GameTooltip:AddLine(string.format("Active: %.1f s",d.remaining/100),.2,1,.2)end;GameTooltip:AddLine(d.duration,.7,.7,.7);GameTooltip:Show()end)
         f:SetScript("OnLeave",function()GameTooltip:Hide()end);engineeringBadge=f
     end
-    engineeringBadge:ClearAllPoints()
-    local fortune=getglobal and getglobal("AZSXUIFortuneMedallion")
     local vitals=getglobal and getglobal("AZSXUIHudVitals")
-    if fortune and vitals and vitals:IsShown()then engineeringBadge:SetPoint("LEFT",fortune,"RIGHT",8,0)
-    elseif vitals and vitals:IsShown()then engineeringBadge:SetPoint("LEFT",vitals,"RIGHT",8,0)
-    else engineeringBadge:SetPoint("BOTTOM",UIParent,"BOTTOM",190,208)end
+    if not(vitals and vitals:IsShown())then
+        engineeringBadge:ClearAllPoints();engineeringBadge:SetPoint("BOTTOM",UIParent,"BOTTOM",190,208)
+    end
     if engineeringNext and e.nextTrigger>engineeringNext+100 then engineeringPulse=GetTime()+0.8 end
     engineeringNext=e.nextTrigger
     local active=e.remaining>0 or GetTime()<engineeringPulse
     engineeringBadge:SetScale(active and(1.04+0.03*math.sin(GetTime()*10))or 1)
     engineeringBadge.border:SetVertexColor(active and .3 or 1,1,active and .3 or 1)
-    engineeringBadge.icon:SetTexture(e.icon);engineeringBadge:Show()
+    if engineeringBadge.iconPath~=e.icon then SetPortraitToTexture(engineeringBadge.icon:GetName(),e.icon);engineeringBadge.iconPath=e.icon end
+    engineeringBadge:Show()
     if engineeringSeen~=e.event then
         engineeringSeen=e.event;engineeringUntil=GetTime()+5
         if not engineeringToast then engineeringToast=discoveryToast("AZSXUIEngineeringRewardToast",e.title,e.icon)end
@@ -495,7 +493,7 @@ local function refreshEngineering()
     if engineeringToast then if GetTime()<engineeringUntil then engineeringToast:Show()else engineeringToast:Hide()end end
 end
 local function update()
-    local snapshot=type(AZSX_GetAPIVersion)=="function"and AZSX_GetAPIVersion()==1 and type(AZSX_GetState)=="function"and AZSX_GetState(1)or nil
+    local snapshot=AZSXUI_ModState()
     model=nil
     if snapshot and snapshot.available then
         local data,texts=snapshot.data,snapshot.texts

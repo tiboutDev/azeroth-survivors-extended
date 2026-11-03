@@ -1,9 +1,9 @@
 //! Cosmetic models for the native 0.138.0 generated set weapons.
 use super::Adapter;
 use crate::{
-    Result,
     memory::Mem,
     official::{Entry, MutableMemory},
+    Result,
 };
 
 #[derive(Clone, Copy)]
@@ -407,6 +407,18 @@ fn set_tier(entry: u32, class: u8, index: u32) -> Option<usize> {
         _ => tier,
     })
 }
+// Save a selected specialization look separately from the native item ID.
+const PIECE_FLAG: u32 = 0x4000_0000;
+pub fn piece_look(class: u8, slot: usize, item: u32) -> Option<u32> {
+    if !matches!(class, 1 | 2 | 7) || !matches!(slot, 15 | 16) {
+        return None;
+    }
+    set_tier(item, class, slot as u32 - 7).map(|_| item | PIECE_FLAG)
+}
+pub fn selected_piece(class: u8, slot: usize, look_id: u32) -> Option<u32> {
+    let item = look_id & !PIECE_FLAG;
+    (piece_look(class, slot, item) == Some(look_id)).then_some(item)
+}
 fn word(b: &[u8], i: usize) -> u64 {
     u64::from_le_bytes(b[i..i + 8].try_into().unwrap())
 }
@@ -541,35 +553,52 @@ impl Adapter {
         };
         let hands = m.read(visible + 60, 8)?;
         let looks = m.read(look + 15 * 8, 16)?;
-        // Explicit main-hand looks always win. The native resolver has already
-        // projected This piece, Starting clothes, Hidden or explicit Worn.
-        if id(&looks, 0) == 1 {
-            return Ok(None);
-        }
         let main = id(&hands, 0);
-        let tier = match set_tier(main, class, 8) {
-            Some(t) => t,
-            None if main != 0 && id(&looks, 0) != 1 && id(&m.read(equipped_main, 4)?, 0) == 0 => 0,
-            _ => return Ok(None),
-        };
-        let Some(&(Some(right), left)) = sets.get(tier) else {
-            return Ok(None);
-        };
-        let off = if id(&looks, 8) == 1 {
-            let selected = id(&looks, 12);
-            if selected == WORN_NATIVE {
-                id(&hands, 4)
-            } else {
-                selected
-            }
+        let off = id(&hands, 4);
+        let selected_main = selected_piece(class, 15, id(&looks, 4));
+        let selected_off = selected_piece(class, 16, id(&looks, 12));
+        let automatic_main = id(&looks, 0) == 0;
+        let automatic_off = id(&looks, 8) == 0;
+        let main_tier = if automatic_main {
+            set_tier(main, class, 8)
         } else {
-            left.map_or(0, |m| VISUAL_BASE + m.display)
+            selected_main.and_then(|item| set_tier(item, class, 8))
         };
-        // An explicit occupied off hand takes precedence over a two-handed look.
-        if right.inventory == 17 && off != 0 {
+        let main_tier = if automatic_main
+            && main_tier.is_none()
+            && main != 0
+            && id(&m.read(equipped_main, 4)?, 0) == 0
+        {
+            Some(0)
+        } else {
+            main_tier
+        };
+        let pair = main_tier.and_then(|tier| sets.get(tier));
+        let off_pair = if automatic_off {
+            pair
+        } else {
+            selected_off
+                .and_then(|item| set_tier(item, class, 9))
+                .and_then(|tier| sets.get(tier))
+        };
+        if pair.is_none() && off_pair.is_none() {
             return Ok(None);
         }
-        let values = [VISUAL_BASE + right.display, off];
+        let left = if let Some(hands) = off_pair {
+            hands.1.map_or(0, |model| VISUAL_BASE + model.display)
+        } else if !automatic_off && selected_off.is_none() && id(&looks, 12) != WORN_NATIVE {
+            id(&looks, 12)
+        } else {
+            off
+        };
+        let right = pair.and_then(|hands| hands.0);
+        if right.is_some_and(|model| model.inventory == 17) && left != 0 {
+            return Ok(None);
+        }
+        let values = [
+            right.map_or(main, |model| VISUAL_BASE + model.display),
+            left,
+        ];
         m.write(visible + 60, &values.map(u32::to_le_bytes).concat())?;
         Ok(Some(values))
     }
@@ -592,6 +621,23 @@ impl Adapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn selected_looks_only_roundtrip_real_set_pieces_of_the_same_class_and_hand() {
+        for class in [1, 2, 7] {
+            for slot in [15, 16] {
+                for tier in 0..7 {
+                    let item =
+                        100000 + u32::from(class) * 1000 + (slot as u32 - 7) * 100 + tier * 10;
+                    let choice = piece_look(class, slot, item).unwrap();
+                    assert_eq!(selected_piece(class, slot, choice), Some(item));
+                    assert_eq!(selected_piece(class, 31 - slot, choice), None);
+                    assert_eq!(selected_piece(class, slot, item), None);
+                }
+            }
+        }
+        assert_eq!(selected_piece(7, 15, WORN_NATIVE), None);
+        assert_eq!(piece_look(1, 15, 107840), None);
+    }
     #[test]
     fn explicit_melee_requests_follow_the_rendered_grip() {
         let adapter = Adapter::select(crate::current::SHA256).unwrap();

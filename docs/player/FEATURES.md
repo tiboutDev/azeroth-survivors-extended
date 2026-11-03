@@ -72,7 +72,7 @@ are freely drawn, so the same color can appear several times.
 | Red | +12% damage |
 | Blue | +7% cooldown recovery |
 | Green | +15% maximum health |
-| Yellow | +2 percentage points of critical strike chance |
+| Yellow | +8% Luck |
 
 Each player present when a crystal appears can collect it once by passing close
 while alive. Your pickup does not take another player's reward. It also leaves
@@ -87,14 +87,11 @@ the model visible, so you can still point it out to the group.
 AZSXUI shows the crystal color and its bonus in a short pickup popup. Notices
 queue for nearby pickups and stack below the top HUD. **Crystal Resonance**
 appears as one buff from the start of the run, even before your first pickup: hover it for a discovery hint, then color counts and accumulated bonuses.
-Bonuses add up, survive death and reset with the next run. In co-op,
-**Cooperative Rules** comes first in the helpful-buff row. Fortune and then
-Crystal Resonance follow when present. In solo, Crystal Resonance follows
-Fortune, or comes first when Fortune is absent.
+Bonuses add up, survive death and reset with the next run.
 
 Amulets keep their native effects and **no longer assign an AZSX gem**. The
 spawn rate targets about **five opportunities by minute 15**, without a maximum
-number per run. The random timing can produce fewer or more than six. At most two
+number per run. The first crystal can appear from 2:00, with at least 90 seconds between opportunities. The random timing can produce fewer or more than six. At most two
 crystals are present together; early endings or unavailable terrain can reduce
 the actual number. The same rate continues in endless.
 
@@ -153,6 +150,8 @@ Fortune from a stronger effective party bonus.
 Disabling Sayge's Trial restores boss-based Fortunes: one personal roll per
 completed boss encounter, including encounters with several bosses. See
 [optional events](#optional-events).
+
+AZSX automatically discovers Insignia of the Horde, Royal Seal of Eldre'Thalas and Mark of the Chosen in the Codex at startup. Missing entries start at Common. Existing discoveries keep their best rarity.
 
 Fortunes no longer grant movement speed or pickup radius. The three economy
 trinkets associated with Luck, Experience and Gold remain excluded; **Gnomish
@@ -280,26 +279,22 @@ Claiming a pile hides it and its marker only for you; others can still collect
 theirs. Late arrivals cannot claim an existing reserve. The pile ends early
 once everyone eligible has collected it; otherwise its shared lifetime continues.
 
-Seven consumable families grant temporary bonuses:
+Lost Supplies can grant a personal healing potion or a timed bonus. Item names come from WoW Classic. Strength and duration are tuned for an AZSX run.
 
-| Bonus | Tier I | Tier II | Tier III |
+| Family | 0–1 completed bosses | 2–3 completed bosses | 4+ completed bosses |
 | --- | --- | --- | --- |
-| Cooldown recovery | +8% | +12% | +16% |
-| Critical strike chance | +4 points | +7 points | +10 points |
-| Damage reduction, without extra health | +3 points | +5 points | +7 points |
-| Maximum health | +20% | +30% | +40% |
-| Critical strike damage | +20 points | +35 points | +50 points |
-| Area of effect | +15% | +25% | +35% |
-| Movement speed (Swiftness Potion) | +10% | +15% | +20% |
+| Cooldown recovery | Elixir of Wisdom, 8% · 60s | Elixir of Greater Intellect, 12% · 75s | Flask of Distilled Wisdom, 16% · 120s |
+| Critical strike chance | Elixir of Lesser Agility, 4 points · 60s | Elixir of Greater Agility, 7 points · 75s | Elixir of the Mongoose, 10 points · 90s |
+| Damage reduction | Elixir of Defense, 3 points · 60s | Elixir of Greater Defense, 5 points · 75s | Elixir of Superior Defense, 7 points · 90s |
+| Maximum health | Elixir of Fortitude, 20% · 60s | Elixir of Brute Force, 30% · 75s | Flask of the Titans, 40% · 120s |
+| Critical strike damage | Minor Wizard Oil, 20% · 60s | Wizard Oil, 35% · 75s | Brilliant Wizard Oil, 50% · 90s |
+| Area of effect | Elixir of Giant Growth, 25% · 60s | Same item | Same item |
+| Movement speed | Swiftness Potion, 20% · 15s | Same item | Same item |
+| Emergency healing | Healing Potion, 20% max HP | Superior Healing Potion, 30% max HP | Major Healing Potion, 40% max HP |
 
-Cooldown recovery feeds the native cooldown formula; it is not a direct reduction
-of the same percentage. Maximum-health bonuses do not heal you on pickup.
+At 35% health or less, your armed healing potion is consumed automatically. You can hold one charge and keep the stronger potion on a duplicate pickup. The charge lasts until used, death or the end of the run. Timed buffs from the same family refresh the stronger effect. Native pauses freeze timers.
 
-Buffs last **60 seconds of game time**. Different families coexist. Another
-consumable of the same family refreshes the duration without stacking power or
-adding durations; it does not downgrade a stronger active tier. Power tiers
-improve after two and four completed boss encounters, with no further tier
-growth in endless. Native pauses freeze reserve and buff timers.
+Each personal reward also has an independent 8% chance to include a 60-second disguise. Noggenfogger Elixir makes the collector a skeleton or shrinks them. Savory Deviate Delight turns the collector into a pirate or ninja. A new disguise replaces the previous one. The skeleton can cover a druid's bear or cat form while its abilities remain active.
 
 Materials sell immediately for whole gold, into the shared wallet in co-op.
 The pickup popup shows the amount actually credited, including applicable
@@ -388,7 +383,7 @@ icons. The old player and target frames are hidden while this HUD is enabled.
 Boss, awake-guardian and goblin bars show centered names without percentages.
 Enemy nameplates use smaller smooth health capsules and are visible with
 overlapping layout by default. Native damage numbers keep their world positions
-and font while rendering at one third of their usual size.
+and font. Normal damage renders at one third of native size and critical damage at one half.
 
 Cooperative ally builds use matching textured panels, with buffs immediately
 outside their right edge. An ornamented Objectives header below the minimap
@@ -396,7 +391,7 @@ remains visible. One Guardians quest lists living guardians and upcoming arrival
 an arrival countdown appears on its own indented line during the final 30 seconds.
 Quest headings and objective entries have separate spacing. Sayge has its own quest.
 Minimap pins cover all active guardians, with event and cache priorities to keep
-important markers above less urgent ones. The player arrow stays above AZSX pins. Goblins no longer receive an automatic
+important markers above less urgent ones. Pins fade as the native player arrow passes over them. Overlapping pins of the same kind and status show a count and separate again when zoomed apart. Goblins no longer receive an automatic
 skull marker.
 
 Reward and ally panels use native parchment and border textures. Compact pickup
@@ -429,16 +424,7 @@ continue to describe nominal bonuses. This rule does not change enemy scaling.
 
 ## Cooperative Rules information
 
-During a cooperative run, a permanent **Cooperative Rules** information icon is
-shown first in the helpful-buff row. Its tooltip explains the 50% effectiveness
-of area/range bonuses. A separated gray note clarifies that the stats panel shows
-effective values while item/reward descriptions may show base bonuses.
-
-This icon grants no effect, has no countdown, cannot be cancelled, and remains
-present while dead or paused. It disappears in solo and outside the run. AZSXUI
-places it in its HUD; the AZSX presentation bridge also displays it beside native
-buffs when AZSXUI is absent or its HUD is disabled. The AZSX addon API exposes its
-values and texts for other addons. No additional assets are required.
+Hover the kill counter to see current party members ranked by their personal run kills. Tied players share a rank. Hover or click the circular question mark to the right of the top counter ribbon for co-op rules on shared XP, party gold, personal chest choices and global area/range bonuses. Without the custom HUD, the help button sits beside the first ally frame.
 
 ## Solo engineering escort
 
@@ -468,18 +454,9 @@ notes before expecting this source feature in an installed build.
 
 ## Banished Demon
 
-**Status: Playtesting**
+The unfinished Banished Demon event is disabled in solo and co-op.
 
-A bound demon can appear in a solo or cooperative run. All active players
-must stay close to the binding for two seconds to release it. Leaving pauses
-the preparation, and returning resumes it. Defeat the released demon to gain
-one Banish charge for the run's native card choices. The charge is shared in
-coop. The event uses native demon models and combat; the optional AZSXUI addon
-shows its location and objective. An appearance is possible, not guaranteed.
-
-See [the encounter details](../features/BANISHED-DEMON.md). Check the release
-notes before expecting this source feature in an installed build.
-
+## Cooperative effects
 
 Allies can trigger your Polymorph explosions; their damage remains yours.
 Hunter's Mark shares the strongest active bonus without stacking. Faerie Fire
@@ -499,4 +476,4 @@ Your armor set can trigger when a teammate finishes an enemy carrying your Serpe
 
 A legendary necklace can trigger its explosion when a teammate finishes an enemy carrying your matching damage-over-time spell. The Power Word: Shield necklace bursts around the player you protected using your area bonus. Holy Light and Regrowth necklaces shield the player you heal for up to 40% of your maximum health. Vampiric Renew and Vampiric Rejuvenation grant the healed player 5% leech on their own damage for 10 and 12 seconds respectively.
 
-During a cooperative run, the Talents panel adds a short Co-op note below selected talent descriptions to explain ally targeting, shield ownership and control effects.
+In the Armory and during solo or cooperative runs, the Talents panel adds a short Co-op note below selected talent descriptions to explain ally targeting, shield ownership and control effects.

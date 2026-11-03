@@ -1,8 +1,6 @@
 # Banished Demon
 
-This source feature targets the reviewed 0.138.0 native client. It can run in
-solo and in cooperative games. It is not evidence of an installed or published
-release. It uses only native client models, effects and combat definitions.
+**Disabled in solo and co-op.** The unfinished encounter is retained for the explicit diagnostic preview on native 0.138.0. The following sections document that prototype.
 
 ## Encounter
 
