@@ -130,7 +130,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
  children=[];handles=[];password=uuid.uuid4().hex;goblin_mark_baselines=[]
  try:
   for slot in range(1,players+1):
-   folder=out/f"player-{slot}";save=folder/"appdata/wenilla-rogue";save.mkdir(parents=True);prepare(save,2 if mixed_profiles and slot==1 else 1,name_override="ExtensionHero"if slot==1 else"ExtensionAlly",class_override=(7 if slot==1 else None) if weapon_visual else (11 if slot==2 else None) if mixed_profiles else 3 if immunity else None,weapon_trial=weapon_visual,manual_weapon=os.environ.get("AZSX_TEST_MANUAL_WEAPON")=="1",spec_piece=os.environ.get("AZSX_TEST_WEAPON_SPEC_PIECE")=="1")
+   folder=out/f"player-{slot}";save=folder/"appdata/wenilla-rogue";save.mkdir(parents=True);prepare(save,2 if mixed_profiles and slot==1 else 1,name_override="ExtensionHero"if slot==1 else"ExtensionAlly",class_override=(7 if slot==1 else None) if weapon_visual else (11 if slot==2 else None) if mixed_profiles else 3 if immunity else None,known_items=[101800] if os.environ.get("AZSX_TEST_COOP_HELP")=="1" and slot==players else None,weapon_trial=weapon_visual,manual_weapon=os.environ.get("AZSX_TEST_MANUAL_WEAPON")=="1",spec_piece=os.environ.get("AZSX_TEST_WEAPON_SPEC_PIECE")=="1")
    if goblins:goblin_mark_baselines.append(sum(int(v)for v in re.findall(r"^marks\|\d+\|(\d+)$",prepare.read(save),re.M)))
    (folder/"localappdata").mkdir();(folder/"shots").mkdir();(folder/"config.toml").write_text('[cvars]\ngxWindow = "1"\ngxResolution = "800x600"\n'+''.join(f'{k} = "0"\n'for k in("MasterVolume","MusicVolume","SoundVolume","AmbienceVolume","EnableMusic","EnableAmbience","MasterSoundEffects")))
    if os.environ.get("AZSX_TEST_WORLD_UI")=="1":
@@ -231,13 +231,24 @@ probe:SetScript("OnUpdate",function()
  if not AZS_GetPhase or AZS_GetPhase()~="playing" then return end
  local hud=AZSXUI_HudReadout and AZSXUI_HudReadout()
  local frames=AZSXUI_FramesReadout and AZSXUI_FramesReadout()
- local ok=hud and hud.enabled and AZSXUIHudVitals and AZSXUIHudVitals:IsShown() and frames.playerAlpha==0 and math.abs(MainMenuExpBar:GetWidth()-437)<.1
+ local ok=hud and hud.enabled and AZSXUIHudVitals and AZSXUIHudVitals:IsShown() and frames.playerAlpha==0 and math.abs(MainMenuExpBar:GetWidth()-393)<.1
  line:SetText(ok and "First playing update: HUD ready" or ("First update: enabled="..tostring(hud and hud.enabled).." HP="..tostring(AZSXUIHudVitals and AZSXUIHudVitals:IsShown()).." alpha="..tostring(frames and frames.playerAlpha).." XP="..tostring(MainMenuExpBar:GetWidth()).." bar="..tostring(MainMenuBar:IsShown()).."/"..tostring(MainMenuBar:IsVisible())))
  probe:SetScript("OnUpdate",nil)
 end)
 """)
+   if os.environ.get("AZSX_TEST_CHARACTER_STATS")=="1":
+    if not (normal and visual):raise ValueError("Character stats require a normal visual trial")
+    with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("Audit.lua\n")
+    (addon/"Audit.lua").write_text("""local probe=CreateFrame("Frame",nil,UIParent)
+local elapsed,step=0,0
+probe:SetScript("OnUpdate",function()
+ if not AZS_GetPhase or AZS_GetPhase()~="playing" then return end
+ elapsed=elapsed+arg1
+ if elapsed>10 and step==0 then step=1;ToggleCharacter("PaperDollFrame")end
+end)
+""")
    if os.environ.get("AZSX_TEST_COOP_HELP")=="1":
-    if not (normal and visual and players==2):raise ValueError("Co-op help review requires two visual normal clients")
+    if not (normal and visual):raise ValueError("Run information requires visual normal clients")
     with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("Audit.lua\n")
     (addon/"Audit.lua").write_text("""local probe=CreateFrame("Frame",nil,UIParent)
 probe:SetScript("OnUpdate",function()
@@ -715,6 +726,10 @@ end)
     checks["personal_auto_heal"]=host.count(expected)==1 and "verified=false" not in host
    if os.environ.get("AZSX_TEST_SUPPLY_COSTUME"):
     checks={k:v for k,v in checks.items() if k in ("clients_alive","started","clean_scripts","clean_adapter","coop_joined","ui_captures_available")}
+    display={"pirate":2026,"ninja":2029}.get(os.environ["AZSX_TEST_SUPPLY_COSTUME"])
+    if display is not None:
+     checks["costume_on_player"]=any(re.search(rf"display swap: guid [0-9a-f]+ Player .* -> {display} ",log) for log in native)
+     checks["costume_textures_loaded"]=not any("Path not found: textures/bakednpctextures/" in log for log in native)
    if crystal_check:
     from crystal_core_evidence import assess_core
     checks={k:v for k,v in checks.items() if k in ("started","startup_ack","clean_scripts","clean_adapter","coop_joined","clients_alive")}

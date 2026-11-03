@@ -35,9 +35,22 @@ for _,p in ipairs({"dead","paused","choosing","playing"})do phase=p;update();ass
 local before=allocations;now=now+.1;AZS_RUN_UPDATED=now;update();assert(allocations==before)
 now=now+5;update();assert(not objects.AZSXCooperativeRulesBuff:IsShown() and not AZSX_GetState().available)''')
         self.cooperative_wire(False)
-        self.lua.execute('assert(AZSX_GetState().available and not AZSX_GetState().data.cooperativeRules and not objects.AZSXCooperativeRulesBuff:IsShown())')
+        self.lua.execute('assert(AZSX_GetState().available and not AZSX_GetState().data.cooperativeRules and objects.AZSXCooperativeRulesBuff:IsShown())')
         self.cooperative_wire()
         self.lua.execute('phase="ready";update();assert(not objects.AZSXCooperativeRulesBuff:IsShown())')
+
+    def test_run_info_uses_local_class_and_all_zone_bosses(self):
+        self.lua=LuaRuntime(unpack_returned_tuples=True);self.lua.execute(STUB)
+        source=(ROOT/'native-ui/official-party.lua').read_text().replace('local azsxNativeActive = 0','local azsxNativeActive = 1',1)
+        self.lua.execute(source.replace('local runDropTable=nil','local runDropTable={elwynn={{name="First",[1]={"Helm"},[2]={"Other"}},{name="Final",[1]={"Sword"},[2]={}}}}'))
+        self.cooperative_wire(False)
+        self.lua.execute('''AZS_ZONE={zone="elwynn",class=1,heroic=3};update();enter("AZSXCooperativeRulesBuff")
+local b=objects.AZSXCooperativeRulesBuff;local panel=b.help;local texts={}
+for _,line in ipairs(panel.labels)do texts[line:GetText()]=true end
+assert(b.tier:GetText()=="H3" and texts["Difficulty: Heroic III"] and texts.First and texts.Final and texts["  Sword"] and not texts["  Other"] and not texts["Co-op rules"])
+AZS_ZONE.class=2;AZS_ZONE.heroic=0;now=now+.5;update();assert(b.tier:GetText()=="N");texts={}
+for _,line in ipairs(panel.labels)do if line:IsShown()then texts[line:GetText()]=true end end
+assert(texts["  Other"] and not texts.Final and not texts["  Sword"])''')
 
     def test_cooperative_help_lists_shared_rules_and_anchors_below_button(self):
         self.cooperative_wire()

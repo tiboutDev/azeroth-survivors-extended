@@ -1002,6 +1002,12 @@ impl SelectedAdapter {
     pub fn blessing_pool_index(self, m: &dyn Mem, f: u64, i: u64) -> Result<u64> {
         self.native.blessing_pool_index(m, f, i)
     }
+    pub fn run_owned_items(self, mem: &dyn crate::memory::Mem, collection:u64)->Result<Vec<u32>> {
+        self.native.run_owned_items(mem,collection)
+    }
+    pub unsafe fn run_drop_lua(self, mem:&dyn crate::memory::Mem,base:usize,owned:&[u32])->Result<String>{
+        self.native.run_drop_lua(mem,base,owned)
+    }
     pub fn codex_entries(self) -> [Entry; 4] { self.native.codex_entries() }
     pub unsafe fn discover_economy_trinkets(self, base: usize, collection: usize, persist: bool) -> usize {
         self.native.discover_economy_trinkets(base, collection, persist)
@@ -1925,7 +1931,7 @@ impl SelectedAdapter {
     pub fn preview_weapons(self,m:&dyn MutableMemory,base:u64,collection:u64,picker:u64,looks:u64,visible:u64)->Result<Option<[u32;2]>>{self.native.preview_weapons(m,base,collection,picker,looks,visible)}
     pub fn weapon_melee_animation(self,two_handed:bool,requested:u16)->Option<u16>{self.native.weapon_melee_animation(two_handed,requested)}
     pub fn weapon_two_handed(self,entry:u32)->Option<bool>{self.native.weapon_two_handed(entry)}
-    pub fn weapon_entries(self)->[Entry;8]{self.native.weapon_entries()}
+    pub fn weapon_entries(self)->[Entry;10]{self.native.weapon_entries()}
     pub fn weapon_projection(self,m:&dyn MutableMemory,base:u64,profile:u64,visible:u64)->Result<Option<[u32;2]>>{self.native.weapon_projection(m,base,profile,visible)}
     pub fn weapon_template(self,entry:u32)->Option<u32>{self.native.weapon_template(entry)}
     pub fn weapon_metadata(self,m:&dyn MutableMemory,out:u64,entry:u32)->Result<()>{self.native.weapon_metadata(m,out,entry)}

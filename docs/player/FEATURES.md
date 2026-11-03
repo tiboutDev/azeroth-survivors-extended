@@ -294,7 +294,7 @@ Lost Supplies can grant a personal healing potion or a timed bonus. Item names c
 
 At 35% health or less, your armed healing potion is consumed automatically. You can hold one charge and keep the stronger potion on a duplicate pickup. The charge lasts until used, death or the end of the run. Timed buffs from the same family refresh the stronger effect. Native pauses freeze timers.
 
-Each personal reward also has an independent 8% chance to include a 60-second disguise. Noggenfogger Elixir makes the collector a skeleton or shrinks them. Savory Deviate Delight turns the collector into a pirate or ninja. A new disguise replaces the previous one. The skeleton can cover a druid's bear or cat form while its abilities remain active.
+Each personal reward also has an independent 8% chance to include a 60-second disguise. Noggenfogger Elixir makes the collector a skeleton or shrinks them. Savory Deviate Delight uses Mr. Smite for its pirate disguise and the masked Edwin VanCleef for its ninja disguise. A new disguise replaces the previous one. The skeleton can cover a druid's bear or cat form while its abilities remain active.
 
 Materials sell immediately for whole gold, into the shared wallet in co-op.
 The pickup popup shows the amount actually credited, including applicable
@@ -357,15 +357,7 @@ plus what you expected and what happened.
 
 ### Compact AZSXUI HUD
 
-AZSXUI adds one statistics button beside the native action bar. Hover to consult
-stats without opening the character sheet. Clicking the button or pressing the
-configured character-sheet key opens the native character sheet and AZSX stats
-together; a second click/press closes both. All nonzero native stats fit into
-four columns, with short labels and complete terms on hover.
-Visible rows refresh while the panel is open. In coop, XP and gold show the
-effective AZSX shared-award bonuses instead of only personal native values.
-The panel opens immediately in front of equipment, beneath the native XP artwork
-and foreground gryphons. The native XP texture and top border stay intact.
+Opening the in-run character sheet also opens Stats. Its 29 rows are grouped under Offense, Specialization, Survival and Utility. Click Stats to collapse or reopen it. Utility shows shared XP and Gold in AZSX co-op, plus personal Luck and Pickup. Within each section, nonzero values appear first, followed by zeros and then unavailable values (—).
 
 A compact ornamented strip sits just below the screen's top edge, showing kills,
 gold and the next cache price. Gold has a soft light behind its value when a cache
@@ -375,7 +367,7 @@ Native slot silhouettes remain for empty positions. Descriptions use the owner's
 native item text, rank and any verified active ring enchantment. `/azsxui hud off` restores the native layout and previous visibility
 preferences.
 
-The raised compact player health bar shows current HP and character level, without a portrait or
+The raised compact player health bar shows current HP on the left and health percentage on the right, without a portrait or
 resources. Native buffs and debuffs stay above it, with durations above their
 icons. The old player and target frames are hidden while this HUD is enabled.
 Boss, awake-guardian and goblin bars show centered names without percentages.
@@ -421,7 +413,7 @@ continue to describe nominal bonuses. This rule does not change enemy scaling.
 
 ## Cooperative Rules information
 
-Hover the kill counter to see current party members ranked by their personal run kills. Tied players share a rank. Hover or click the circular question mark to the right of the top counter ribbon for co-op rules on shared XP, party gold, personal chest choices and global area/range bonuses. Without the custom HUD, the help button sits beside the first ally frame.
+Hover the kill counter to see current party members ranked by their personal run kills. Tied players share a rank. The circular Run information button shows N for Normal or H1–H5 for Heroic. Hover or click to see your class’s missing set pieces from all five bosses in this zone. In co-op, the same panel also explains the shared rules.
 
 ## Solo engineering escort
 

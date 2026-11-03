@@ -27,13 +27,14 @@ class MinimapTests(unittest.TestCase):
         self.run_lua('custom={{event=1,kind=0,x=60,y=20,left=60},{event=2,kind=1,x=10,y=30,left=0}};AZS_CHESTS={{id=4294967386,x=60,y=20,z=0}};tick();local pins=AZSXUI_MinimapReadout();assert(table.getn(pins)==3 and pins[3].event==4294967386 and pins[1].kind~=pins[3].kind);assert(pins[1].x==pins[3].x and pins[1].y==pins[3].y);assert(objects.AZSXEventPin3.icon.portraitMasked and objects.AZSXEventPin3:GetWidth()==20 and objects.AZSXEventPin3.icon.texture~=objects.AZSXEventPin1.icon.texture);enter("AZSXEventPin3");assert(GameTooltip.detail=="Next cache: 250 gold")')
     def test_overlapping_caches_count_split_on_zoom_and_retire_without_hiding_supplies(self):
         self.run_lua("""
-        AZS_CHESTS={{id=1,x=10,y=20},{id=2,x=24,y=20},{id=3,x=14,y=20}}
+        AZS_CHESTS={{id=1,x=10,y=20},{id=2,x=19,y=20},{id=3,x=14,y=20}}
         custom={{event=8,kind=0,x=10,y=20,left=30}};tick()
         local pins=AZSXUI_MinimapReadout()
         assert(table.getn(pins)==2 and pins[2].quantity==3 and objects.AZSXEventPin2.badge:IsShown())
+        AZS_CHESTS[2].x=20;tick();assert(table.getn(AZSXUI_MinimapReadout())==3)
         function Minimap:GetZoom()return 5 end;tick()
         assert(table.getn(AZSXUI_MinimapReadout())==4 and not objects.AZSXEventPin2.badge:IsShown())
-        function Minimap:GetZoom()return 0 end;AZS_CHESTS[3]=nil;tick()
+        function Minimap:GetZoom()return 0 end;AZS_CHESTS[2].x=19;AZS_CHESTS[3]=nil;tick()
         assert(AZSXUI_MinimapReadout()[2].quantity==2)
         """)
     def test_cache_and_supply_icons_are_distinct_native_resources(self):

@@ -1,13 +1,14 @@
 -- Native HUD presentation. No gameplay commands, native pointers or outgoing messages.
 local controller=CreateFrame("Frame","AZSXUIHudController",UIParent)
-local root,base,counters,clock,mask,drawer,equipment,buttons,rows,icons
+local root,base,counters,clock,drawer,equipment,rows,icons
 local ready,enabled=false,false
-local originalXPLevel,appliedXPLevel
-local originalCharacterToggle,ownedCharacterToggle
-local owned,original,hiddenArt,widths={},{},{},{}
+local statsButton,sheetVisible
+local sectionNames={"Offense","Specialization","Survival","Utility"}
+local sectionKeys={{"dmg","cd","crit","cm","area","cnt","echo","bp"},{"auto","pet","dots","doth","big","exe","cc","dotd","shd"},{"hp","arm","reg","spd","lch","heal","thn","liv"},{"xp","gold","luck","pick"}}
 local preferences={}
-local selected,pinned,visibleDefs,lastSession,lastClock,equipmentHovered
-local progress,target,elapsed,leaveAt=0,0,0,nil
+local pinned,lastSession,lastClock,equipmentHovered
+local progress,elapsed=0,0
+local nativeMore,replaceMore
 local font="Fonts\\FRIZQT__.TTF"
 local defs={
  combat={{"dmg","Damage","bonus"},{"cd","Haste","haste"},{"crit","Crit","decimalPercent"},{"cm","Crit dmg","percent"},{"area","Area","bonus"},{"cnt","Targets","targets"},{"echo","Echo","percent"},{"bp","Buff power","signedPercent"},{"dots","DoT stacks","integer"},{"doth","DoT haste","signedPercent"},{"big","Vs elites","signedPercent"},{"exe","Execute","signedPercent"},{"cc","Vs controlled","signedPercent"},{"dotd","Vs afflicted","signedPercent"},{"shd","Shielded","signedPercent"},{"auto","Melee","signedPercent"},{"pet","Pet damage","signedPercent"}},
@@ -16,7 +17,7 @@ local defs={
 -- Keep complete terms for hover help while the XP-width panel uses short labels.
 local shortLabels={dmg="DMG",bp="Buff pow",dots="DoT stk",big="Vs elite",cc="Vs CC",dotd="Vs DoT",pet="Pet dmg",hp="Max HP",arm="Reduction",spd="Speed",lch="Leech",heal="HP / kill",xp="XP",gold="Gold"}
 local allStats={}
-for _,kind in ipairs({"combat","character"})do for _,def in ipairs(defs[kind])do table.insert(allStats,def)end end
+for _,kind in ipairs({"combat","character"})do for _,def in ipairs(defs[kind])do allStats[def[1]]=def end end
 local function finite(v)return type(v)=="number"and v==v and math.abs(v)<1e12 end
 local function text(parent,size)
  local t=parent:CreateFontString(nil,"OVERLAY","GameFontNormalSmall");t:SetFont(font,size,"");return t
@@ -41,31 +42,12 @@ local function format(def,stats)
  local _,_,n=string.find(value,"^([%+%-]?[%d%.]+)")
  return value,tonumber(n)==0
 end
-local function points(widget)
- local out={};for i=1,widget:GetNumPoints()do table.insert(out,{widget:GetPoint(i)})end;return out
-end
-local function remember(widget)
- if not original[widget]then original[widget]={points=points(widget),alpha=widget:GetAlpha(),width=widget:GetWidth()}end
-end
-local function anchor(widget,point,parent,relative,x,y)
- remember(widget);widget:ClearAllPoints();widget:SetPoint(point,parent,relative,x,y);owned[widget]={point,parent,relative,x,y}
-end
-local function stillOwned(widget,expect)
- if widget:GetNumPoints()~=1 then return false end
- local a,b,c,d,e=widget:GetPoint(1)
- return a==expect[1]and b==expect[2]and c==expect[3]and math.abs((d or 0)-expect[4])<.01 and math.abs((e or 0)-expect[5])<.01
-end
 local function restore()
- if ownedCharacterToggle and ToggleCharacter==ownedCharacterToggle then ToggleCharacter=originalCharacterToggle end
- originalCharacterToggle,ownedCharacterToggle=nil,nil
- if originalXPLevel~=nil and MainMenuExpBar:GetFrameLevel()==appliedXPLevel then MainMenuExpBar:SetFrameLevel(originalXPLevel)end
- originalXPLevel,appliedXPLevel=nil,nil
- for widget,expect in pairs(owned)do
-  if stillOwned(widget,expect)then widget:ClearAllPoints();for _,a in ipairs(original[widget].points)do widget:SetPoint(unpack(a))end end
+ if replaceMore and AZS_UpdateMore==replaceMore then
+  AZS_UpdateMore=nativeMore
+  if PaperDollFrame and PaperDollFrame:IsVisible() and AZS_STATS then nativeMore()end
  end
- for widget,value in pairs(widths)do if math.abs(widget:GetWidth()-value)<.1 then widget:SetWidth(original[widget].width)end end
- for widget in pairs(hiddenArt)do if widget:GetAlpha()==0 then widget:SetAlpha(original[widget].alpha)end end
- owned,hiddenArt,original,widths={},{},{},{}
+ nativeMore,replaceMore=nil,nil
  for _,part in ipairs({"build","tally","clock"})do if preferences[part]~=nil then AZSXUI_RestoreNativeHud(part)end end
  preferences={}
 end
@@ -77,7 +59,8 @@ local function replacePart(part,active)
  else AZSXUI_RestoreNativeHud(part);preferences[part]=nil end
 end
 local function close()
- pinned=nil;target=0;progress=0;leaveAt=nil;if buttons and buttons.stats then buttons.stats:SetChecked(false)end;if mask then mask:Hide()end
+ pinned=nil;progress=0
+ if drawer then drawer:Hide()end
 end
 local function statsView()
  if AZS_GetPhase and AZS_GetPhase()=="ready"then return {} end
@@ -89,46 +72,33 @@ local function statsView()
  if common then for _,key in ipairs({"xp","gold"})do if finite(common[key])and common[key]>=0 then stats[key]=common[key]end end end
  return stats
 end
-local function layoutStats(kind,stats)
- selected=kind;visibleDefs={};stats=stats or statsView()
- for _,def in ipairs(allStats)do local value,zero=format(def,stats);if value and not zero then table.insert(visibleDefs,def)end end
- local n=table.getn(visibleDefs);local h=18+math.ceil(n/4)*23
- -- The native backdrop's lower edge sits outside the clipped viewport.
- drawer:SetHeight(h+8);mask:SetHeight(h);mask.content:SetHeight(h*2)
- for column,line in ipairs(drawer.dividers)do
-  local x=12+column*(drawer:GetWidth()-24)/4-4.5
-  line:ClearAllPoints();line:SetPoint("TOPLEFT",drawer,"TOPLEFT",x,-10);line:SetPoint("BOTTOMLEFT",drawer,"BOTTOMLEFT",x,18)
-  if n>0 then line:Show()else line:Hide()end
- end
- drawer:ClearAllPoints();drawer:SetPoint("TOPLEFT",mask.content,"TOPLEFT",0,-h)
- drawer.heading:SetText(kind=="combat"and"Combat"or"Character")
- for i,row in ipairs(rows)do
-  local def=visibleDefs[i]
-  if def then
-   local index=i-1
-   row:ClearAllPoints();row:SetPoint("TOPLEFT",drawer,"TOPLEFT",12+math.mod(index,4)*((drawer:GetWidth()-24)/4),-12-math.floor(index/4)*23)
-   row:SetWidth((drawer:GetWidth()-24)/4-9);row.label:SetText(shortLabels[def[1]]or def[2]);row.fullLabel=def[2];row.value:SetText(format(def,stats));row:Show()
-  else row:Hide()end
- end
- drawer.visibleHeight=h
+local function statOrder(a,b)
+ if a.column~=b.column then return a.column<b.column end
+ if a.group~=b.group then return a.group<b.group end
+ return a.order<b.order
 end
-local function open(kind,pin)
- if not enabled then return end
- if selected~=kind or target==0 then layoutStats(kind)end
- if pin then if pinned==kind then pinned=nil else pinned=kind end;target=pinned and 1 or 0 else target=1 end
- buttons.stats:SetChecked(pinned=="stats");progress=target;mask:SetVerticalScroll(drawer.visibleHeight);if target==1 then mask:Show()else mask:Hide()end
- leaveAt=nil
-end
-local function claimCharacterToggle()
- if type(ToggleCharacter)~="function"or ToggleCharacter==ownedCharacterToggle then return end
- local original=ToggleCharacter
- local replacement=function(tab)
-  if enabled and tab=="PaperDollFrame"then open("stats",true)end
-  -- The client may render its native character sheet outside Classic frames.
-  -- Always retain its own command, rather than guessing that backend's state.
-  return original(tab)
+local function refreshStats()
+ local stats=statsView()
+ if drawer and drawer:IsShown()then
+  local changed=false
+  for _,row in ipairs(rows)do
+   local value,zero=format(row.def,stats)
+   local group=not value and 3 or zero and 2 or 1
+   if row.group~=group then row.group=group;changed=true end
+   row.value:SetText(value or "—")
+   local brightness=value and not zero and 1 or .62
+   row.value:SetTextColor(brightness,brightness,brightness)
+  end
+  if changed then
+   table.sort(rows,statOrder)
+   local column,line=0,0
+   for _,row in ipairs(rows)do
+    if row.column~=column then column=row.column;line=0 end
+    row:ClearAllPoints();row:SetPoint("TOPLEFT",drawer,"TOPLEFT",10+(column-1)*117,-32-line*18)
+    line=line+1
+   end
+  end
  end
- originalCharacterToggle,ownedCharacterToggle=original,replacement;ToggleCharacter=replacement
 end
 local function hoverTip(owner,title,body)
  GameTooltip:SetOwner(owner,"ANCHOR_TOP");GameTooltip:SetText(title,1,1,1)
@@ -155,15 +125,10 @@ local function setEquipment(button,item)
 end
 local function build()
  local bar,art,xp=MainMenuBar,MainMenuBarArtFrame,MainMenuExpBar
- if not bar or not art or not xp or not AZS_MAIN_BAR_SLICES or not AZS_MAIN_BAR_ROWS or not AZS_MainBar_Slice then return false end
- if math.abs(bar:GetWidth()-397)>.1 then return false end
- root=CreateFrame("Frame","AZSXUIHudRoot",bar);root:SetWidth(441);root:SetHeight(66);root:SetPoint("BOTTOM",bar,"BOTTOM",0,0)
+ if not bar or not art or not xp or xp:GetWidth()<=0 then return false end
+ root=CreateFrame("Frame","AZSXUIHudRoot",bar);root:SetAllPoints(bar)
  root:SetFrameStrata(art:GetFrameStrata());root:SetFrameLevel(math.max(0,art:GetFrameLevel()-2))
- for i,slice in ipairs({{0,0,256,0},{2,18,39,256},{1,1,45,277},{2,28,66,321},{2,66,28,359},{0,1,45,397}})do
-  local t=root:CreateTexture(nil,"ARTWORK");t:SetHeight(43)
-  AZS_MainBar_Slice(t,"Interface\\MainMenuBar\\UI-MainMenuBar-Dwarf",AZS_MAIN_BAR_ROWS,slice,root:GetName(),"BOTTOMLEFT",0)
- end
- base=CreateFrame("Frame","AZSXUIHudBase",root);base:SetWidth(437);base:SetHeight(1);base:SetPoint("BOTTOM",xp,"TOP",0,0)
+ base=CreateFrame("Frame","AZSXUIHudBase",root);base:SetWidth(xp:GetWidth());base:SetHeight(1);base:SetPoint("BOTTOM",xp,"TOP",0,0)
  counters=CreateFrame("Frame","AZSXUIHudCounters",root);counters:SetWidth(300);counters:SetHeight(46);counters:SetPoint("TOP",UIParent,"TOP",0,-8)
  clock=CreateFrame("Frame","AZSXUIHudClock",counters);clock:SetWidth(300);clock:SetHeight(62);clock:SetPoint("TOP",counters,"BOTTOM",0,-8)
  clock.time=text(clock,32);clock.time:SetFont("Fonts\\MORPHEUS.TTF",32,"");clock.time:SetPoint("TOP",clock,"TOP",0,0);clock.time:SetTextColor(1,.82,0)
@@ -187,15 +152,8 @@ local function build()
   end
   table.insert(counters.values,{key=entry[3],label=label,button=b,index=i})
  end
- mask=CreateFrame("ScrollFrame","AZSXUIHudDrawerMask",root);mask:SetWidth(xp:GetWidth());mask:SetHeight(200);mask:SetPoint("BOTTOM",counters,"TOP",0,0)
- mask.content=CreateFrame("Frame",nil,mask);mask.content:SetWidth(mask:GetWidth());mask.content:SetHeight(400);mask:SetScrollChild(mask.content)
- drawer=CreateFrame("Frame","AZSXUIHudDrawer",mask.content);drawer:SetWidth(mask:GetWidth());drawer:SetHeight(200);drawer.visibleHeight=200
- drawer:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",tile=true,tileSize=16,edgeSize=12,insets={left=3,right=3,top=3,bottom=0}});drawer:SetBackdropColor(.035,.03,.025,1);drawer:SetBackdropBorderColor(.5,.46,.39,1)
- counters:SetFrameLevel(root:GetFrameLevel());mask:SetFrameLevel(root:GetFrameLevel());mask.content:SetFrameLevel(root:GetFrameLevel());drawer:SetFrameLevel(root:GetFrameLevel())
- drawer.heading=text(drawer,13);drawer.heading:SetPoint("TOPLEFT",drawer,"TOPLEFT",12,-10);drawer.heading:SetTextColor(1,.82,0);drawer.heading:Hide();if AZSXUI_StyleOpenPanel then AZSXUI_StyleOpenPanel(drawer)end;if AZSXUI_StyleTopCounters then AZSXUI_StyleTopCounters(counters)elseif AZSXUI_StylePanel then AZSXUI_StylePanel(counters)end
- drawer.dividers={};for i=1,3 do local t=drawer:CreateTexture(nil,"BORDER");t:SetTexture(.5,.46,.36,.55);t:SetWidth(1);table.insert(drawer.dividers,t)end
- drawer:EnableMouse(true);drawer:SetScript("OnEnter",function()leaveAt=nil end);drawer:SetScript("OnLeave",function()if not pinned then leaveAt=GetTime()+.2 end end)
- rows={};for i=1,29 do local r=CreateFrame("Frame",nil,drawer);r:SetHeight(18);r.label=text(r,11);r.label:SetPoint("LEFT",r,"LEFT",0,0);r.label:SetTextColor(.75,.72,.65);r.value=text(r,11);r.value:SetPoint("RIGHT",r,"RIGHT",0,0);r.value:SetTextColor(1,1,1);r:EnableMouse(true);r:SetScript("OnEnter",function()leaveAt=nil;if this.fullLabel then hoverTip(this,this.fullLabel)end end);r:SetScript("OnLeave",function()GameTooltip:Hide();if not pinned then leaveAt=GetTime()+.2 end end);r:Hide();table.insert(rows,r)end
+ rows={}
+ if AZSXUI_StyleTopCounters then AZSXUI_StyleTopCounters(counters)end
  equipment=CreateFrame("Frame","AZSXUIHudEquipment",root);equipment:SetWidth(224);equipment:SetHeight(40);equipment:SetFrameLevel(math.max(0,MainMenuBarArtFrame:GetFrameLevel()-3));icons={}
  for i=1,5 do
   local b=CreateFrame("Button","AZSXUIHudEquipment"..i,equipment);b:SetWidth(36);b:SetHeight(36);b:SetFrameLevel(equipment:GetFrameLevel());b:SetPoint("LEFT",equipment,"LEFT",(i-1)*44,0)
@@ -225,38 +183,54 @@ local function build()
    GameTooltip:Show()
   end);b:SetScript("OnLeave",function()GameTooltip:Hide();equipmentHovered=nil end);table.insert(icons,b)
  end
- buttons={};for i,kind in ipairs({"stats"})do
-  local b=CreateFrame("CheckButton","AZSXUIHudStats",root);b:SetWidth(36);b:SetHeight(36);b:SetPoint("BOTTOMLEFT",root,"BOTTOMLEFT",403,4)
-  b.icon=b:CreateTexture(nil,"ARTWORK");b.icon:SetAllPoints(b);b.icon:SetTexture("Interface\\Icons\\".."INV_Misc_Book_09")
-  b:SetCheckedTexture("Interface\\Buttons\\CheckButtonHilight");b:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress");b:SetNormalTexture("Interface\\Buttons\\UI-Quickslot2");b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-  b.azsxHudKind=kind;b:SetScript("OnEnter",function()open(this.azsxHudKind,false)end);b:SetScript("OnLeave",function()if not pinned then leaveAt=GetTime()+.2 end end);b:SetScript("OnClick",function()ToggleCharacter("PaperDollFrame")end);buttons[kind]=b
- end
  root:Hide();return true
+end
+local function attachStats()
+ if not PaperDollFrame then return end
+ if not replaceMore and type(AZS_UpdateMore)=="function" then
+  nativeMore=AZS_UpdateMore
+  replaceMore=function() if AZSMoreStats then AZSMoreStats:Hide()end end
+  AZS_UpdateMore=replaceMore;replaceMore()
+ end
+ if statsButton then return end
+ statsButton=CreateFrame("Button","AZSXUIHudStats",PaperDollFrame,"UIPanelButtonTemplate")
+ statsButton:SetWidth(68);statsButton:SetHeight(22);statsButton:SetPoint("TOPRIGHT",PaperDollFrame,"TOPRIGHT",-38,-43);statsButton:SetText("Stats")
+ drawer=CreateFrame("Frame","AZSXUIHudDrawer",statsButton)
+ drawer:SetWidth(485);drawer:SetHeight(205);drawer:SetPoint("TOPLEFT",PaperDollFrame,"TOPRIGHT",-28,-18)
+ if AZSXUI_StylePanel then AZSXUI_StylePanel(drawer)end
+ for column,keys in ipairs(sectionKeys)do
+  local x=10+(column-1)*117
+  local heading=text(drawer,12);heading:SetPoint("TOPLEFT",drawer,"TOPLEFT",x,-12);heading:SetText(sectionNames[column]);heading:SetTextColor(1,.82,0)
+  for line,key in ipairs(keys)do
+   local def=allStats[key];local row=CreateFrame("Frame",nil,drawer);row.def=def;row.order=line;row.column=column
+   row:SetWidth(108);row:SetHeight(18);row:SetPoint("TOPLEFT",drawer,"TOPLEFT",x,-32-(line-1)*18)
+   row.label=text(row,11);row.label:SetPoint("LEFT",row,"LEFT",0,0);row.label:SetText(shortLabels[key] or def[2])
+   row.value=text(row,11);row.value:SetPoint("RIGHT",row,"RIGHT",0,0)
+   row:EnableMouse(true);row:SetScript("OnEnter",function()hoverTip(row,def[2])end);row:SetScript("OnLeave",function()GameTooltip:Hide()end)
+   table.insert(rows,row)
+  end
+ end
+ drawer:Hide()
+ local function opened()
+  sheetVisible=true;drawer:Show();pinned="stats";progress=1;refreshStats()
+ end
+ statsButton:SetScript("OnHide",function()sheetVisible=false;close()end)
+ statsButton:SetScript("OnShow",opened)
+ statsButton:SetScript("OnClick",function()
+  if drawer:IsShown()then close()else drawer:Show();pinned="stats";progress=1;refreshStats()end
+ end)
 end
 local function activate()
  if enabled then return end
  if not root and not build()then return end
- -- Preserve native XP artwork, height, text and handlers; widen only its geometry.
- anchor(MainMenuExpBar,"BOTTOMLEFT",root,"BOTTOMLEFT",2,43)
- MainMenuExpBar:SetWidth(root:GetWidth()-4);widths[MainMenuExpBar]=root:GetWidth()-4
- local width=MainMenuExpBar:GetWidth();base:SetWidth(width);mask:SetWidth(width+32);mask.content:SetWidth(width+32);drawer:SetWidth(width+32)
  for _,c in ipairs(counters.values)do c.button:SetWidth(counters:GetWidth()/3);c.button:ClearAllPoints();c.button:SetPoint("LEFT",counters,"LEFT",(c.index-1)*counters:GetWidth()/3,0)end
- for i=0,4 do local t=getglobal(i==4 and"AZS_MainMenuBarTexture4"or("MainMenuBarTexture"..i));if t then remember(t);t:SetAlpha(0);hiddenArt[t]=true end end
- for i=1,6 do local b=getglobal("ActionButton"..i);if b then anchor(b,"BOTTOMLEFT",root,"BOTTOMLEFT",8+(i-1)*42,4)end end
- if ActionButton12 then anchor(ActionButton12,"BOTTOMLEFT",root,"BOTTOMLEFT",280,4)end
- if CharacterMicroButton then anchor(CharacterMicroButton,"BOTTOMLEFT",root,"BOTTOMLEFT",332,2)end
- if MainMenuBarLeftEndCap then anchor(MainMenuBarLeftEndCap,"BOTTOM",root,"BOTTOMLEFT",-32,0)end
- if MainMenuBarRightEndCap then anchor(MainMenuBarRightEndCap,"BOTTOM",root,"BOTTOMRIGHT",32,0)end
- -- Apply ownership before showing the root: callbacks may reopen the panel
- -- in the same UI cycle, before the controller's next OnUpdate.
- originalXPLevel=MainMenuExpBar:GetFrameLevel();appliedXPLevel=math.max(0,MainMenuBarArtFrame:GetFrameLevel()-1);MainMenuExpBar:SetFrameLevel(appliedXPLevel)
  enabled=true;root:Show()
 end
 local function deactivate()
  if hoveredKills then hoveredKills=nil;GameTooltip:Hide()end
- local wasEnabled=enabled;enabled=false;if wasEnabled then restore()end;close();progress=0;selected=nil;visibleDefs=nil
+ local wasEnabled=enabled;enabled=false;if wasEnabled then restore()end;close();progress=0
  if equipmentHovered then GameTooltip:Hide();equipmentHovered=nil end
- if root then root:Hide();mask:Hide();equipment:Hide();clock:Hide()end
+ if root then root:Hide();if statsButton then statsButton:Hide()end;equipment:Hide();clock:Hide()end
 end
 local receivedEquipment=false
 local lastPhase
@@ -273,7 +247,7 @@ local function refresh()
   if wasEnabled and AZSXUI_SyncHudFrames then AZSXUI_SyncHudFrames()end
   return
  end
- activate();if not enabled then return end;claimCharacterToggle()
+ activate();if not enabled then return end;attachStats();if statsButton then statsButton:Show()end
  local run=phase~="ready"and AZS_RUN or nil;local valid=type(run)=="table"
  for _,c in ipairs(counters.values)do local v=valid and run[c.key];if finite(v)and v>=0 then c.label:SetText(string.format("%.0f",v))else c.label:SetText("—");valid=false end end
  local affordable=valid and run.chest>0 and run.gold>=run.chest
@@ -294,7 +268,12 @@ local function refresh()
  local view=phase~="ready"and AZSXUI_ModState();local items=view and view.available and view.data and view.data.equipment;local texts=view and view.texts and view.texts.equipment
  if hoveredKills and (not GameTooltip.IsOwned or GameTooltip:IsOwned(hoveredKills))then showKills(hoveredKills,view)end
  local session=view and view.available and view.session and(view.session.epoch..":"..view.session.recipientGUID)or nil
- if session~=lastSession or(lastClock and finite(run and run.t)and run.t<lastClock-.5)then close();lastSession=session end
+ if session~=lastSession or(lastClock and finite(run and run.t)and run.t<lastClock-.5)then sheetVisible=false;close();lastSession=session end
+ if statsButton then
+  local visible=PaperDollFrame:IsVisible()
+  if visible and not sheetVisible then statsButton:GetScript("OnShow")()
+  elseif not visible and sheetVisible then sheetVisible=false;close()end
+ end
  lastClock=run and run.t
  local available=type(items)=="table"and type(texts)=="table"and table.getn(items)<=5 and table.getn(items)==table.getn(texts)
  if available then receivedEquipment=true end
@@ -322,7 +301,7 @@ local function refresh()
   if available or waiting then equipment:Show()else equipment:Hide()end
  else for _,b in ipairs(icons)do setEquipment(b,nil)end;equipment:Hide()end
  replacePart("build",available or waiting)
- if visibleDefs and selected then layoutStats(selected,statsView())end
+ refreshStats()
  if transition and AZSXUI_SyncHudFrames then AZSXUI_SyncHudFrames()end
 end
 controller:RegisterEvent("ADDON_LOADED")
@@ -341,17 +320,6 @@ controller:SetScript("OnUpdate",function()
   elapsed=0;refresh()
  end
  if not enabled then return end
- if leaveAt and GetTime()>=leaveAt and not pinned then target=0;leaveAt=nil end
- progress=target
- local level=math.max(0,MainMenuBarArtFrame:GetFrameLevel()-2)
- -- Native XP artwork extends above its status bar. Draw it over the panel,
- -- while keeping it below the unmodified native gryphon frame.
- if originalXPLevel==nil then originalXPLevel=MainMenuExpBar:GetFrameLevel();appliedXPLevel=originalXPLevel end
- if MainMenuExpBar:GetFrameLevel()==appliedXPLevel then appliedXPLevel=math.max(0,MainMenuBarArtFrame:GetFrameLevel()-1);MainMenuExpBar:SetFrameLevel(appliedXPLevel)end
- mask:SetFrameLevel(level);mask.content:SetFrameLevel(level);drawer:SetFrameLevel(level)
- for _,row in ipairs(rows)do row:SetFrameLevel(level)end
- mask:ClearAllPoints();mask:SetPoint("BOTTOM",base,"TOP",0,0)
- mask:SetVerticalScroll(drawer.visibleHeight);if progress==1 then mask:Show()else mask:Hide()end
  equipment:ClearAllPoints();equipment:SetPoint("BOTTOM",base,"TOP",0,8)
 end)
 function AZSXUI_ConfigureHud(value)
@@ -359,8 +327,8 @@ function AZSXUI_ConfigureHud(value)
  db().hud=value=="on";refresh();return true
 end
 function AZSXUI_HudReadout()
- local out={enabled=enabled,selected=selected,pinned=pinned,progress=progress,height=drawer and drawer.visibleHeight or 0,rows={},equipment={},affordable=enabled and counters and counters.goldGlow:IsShown()or false}
- if rows then for i,def in ipairs(visibleDefs or{})do table.insert(out.rows,{key=def[1],label=rows[i].label:GetText(),value=rows[i].value:GetText()})end end
+ local out={enabled=enabled,pinned=pinned,progress=progress,height=drawer and drawer:GetHeight() or 0,rows={},equipment={},affordable=enabled and counters and counters.goldGlow:IsShown()or false}
+ if pinned then for _,row in ipairs(rows)do table.insert(out.rows,{key=row.def[1],label=row.label:GetText(),value=row.value:GetText()})end end
  for i,b in ipairs(icons or{})do if b.item then out.equipment[i]={name=b.item.name,icon=b.item.icon,text=b.item.text}end end
  return out
 end

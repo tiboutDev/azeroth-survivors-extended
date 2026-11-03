@@ -276,8 +276,7 @@ the native coop projection even when its numeric fields are unavailable.
 | `priority` | `1`: legacy display priority |
 | `areaBonusShare` | `0.5`: fraction of positive global area/range bonuses retained; informational only |
 
-`texts.cooperativeRules` contains `title`, native `icon` texture path, `rule`,
-a `notes` array and a `details` array of tooltip lines. The rule and notes fields remain available for existing addons. The help button displays the title and details on hover or click. A stale payload hides the button and dismisses its tooltip.
+`texts.cooperativeRules` retains its cooperative-only title, icon, rule, notes and details. The shared button now opens Run information in both solo and co-op. Its badge uses the native zone difficulty. Each client uses its local collection and the native class-specific boss tables for the entire current zone; a boss defeat does not hide uncollected drops. The cooperative rules section appears only in co-op.
 
 A renderer may optionally reuse that button via
 `AZSX_SetCooperativeRulesDocked(owner, true)`, where `owner` is its nonempty addon

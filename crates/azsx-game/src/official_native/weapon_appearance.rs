@@ -440,9 +440,9 @@ impl Adapter {
             .filter(|v| v.class == 2)
             .map(|v| v.inventory == 17)
     }
-    pub fn weapon_entries(self) -> [Entry; 8] {
+    pub fn weapon_entries(self) -> [Entry; 10] {
         [
-            0x5ceedf2, 0x5bffe00, 0x3c18e0, 0x5c4b7f0, 0x5bff970, 0x2a2e7a, 0x6d3893, 0xaf0050,
+            0x5ceedf2, 0x5bffe00, 0x3c18e0, 0x5c4b7f0, 0x5bff970, 0x2a2e7a, 0x6d3893, 0xaf0050, 0x2828c0, 0x3c1caf,
         ]
         .map(|a| Entry {
             rva: self.rva(a),

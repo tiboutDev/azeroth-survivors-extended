@@ -51,6 +51,35 @@ unsafe extern "system" fn item(out: u64, entry: u32) -> u64 {
 use azsx_game::official::{piece_look, selected_piece, WORN_NATIVE};
 const MAIN: usize = 15;
 const OFF: usize = 16;
+// Collection cells call this predicate to decide whether to draw their native L.
+static MARK_LOOK: AtomicUsize = AtomicUsize::new(0);
+unsafe extern "system" fn mark_look(looks: u64, item: u32) -> bool {
+    let native: unsafe extern "system" fn(u64, u32) -> bool =
+        std::mem::transmute(MARK_LOOK.load(Ordering::Acquire));
+    if native(looks, item) { return true; }
+    for class in [1, 2, 7] {
+        for slot in [MAIN, OFF] {
+            if let Some(encoded) = piece_look(class, slot, item) {
+                return native(looks, encoded);
+            }
+        }
+    }
+    false
+}
+// The Showing row resolves the chosen collection item through the native race
+// variant and item-name formatters. Decode only its temporary lookup argument.
+static SHOWING: AtomicUsize = AtomicUsize::new(0);
+crate::context_stub_rw!(showing_entry, 0, showing, SHOWING);
+unsafe extern "system" fn showing(c: &mut crate::stub::Context) {
+    for class in [1, 2, 7] {
+        for slot in [MAIN, OFF] {
+            if let Some(item) = selected_piece(class, slot, c.rcx as u32) {
+                c.rcx = u64::from(item);
+                return;
+            }
+        }
+    }
+}
 static BUTTON: AtomicUsize = AtomicUsize::new(0);
 static VALIDATE: AtomicUsize = AtomicUsize::new(0);
 static RESOLVE: AtomicUsize = AtomicUsize::new(0);
@@ -227,7 +256,7 @@ static GRIPS: std::sync::Mutex<Vec<(u64, bool)>> = std::sync::Mutex::new(Vec::ne
 static EQUIPMENT: AtomicUsize = AtomicUsize::new(0);
 static ACTION: AtomicUsize = AtomicUsize::new(0);
 crate::context_stub_rw!(equipment_entry, 0, equipment, EQUIPMENT);
-crate::context_stub_rw!(action_entry, 0, action, ACTION);
+crate::context_stub_rw!(action_entry, 0, action, ACTION, write_rdi);
 pub(super) fn reset() {
     GRIPS.lock().unwrap_or_else(|e| e.into_inner()).clear()
 }
@@ -334,6 +363,18 @@ pub(super) fn install(r: &Runtime) -> Result<(), String> {
             trampoline: &ITEM,
         },
         crate::install::HookSpec {
+            name: "collection-look-name",
+            target: r.local.base + entries[9].rva as usize,
+            detour: showing_entry as *const () as usize,
+            trampoline: &SHOWING,
+        },
+        crate::install::HookSpec {
+            name: "collection-look-marker",
+            target: r.local.base + entries[8].rva as usize,
+            detour: mark_look as *const () as usize,
+            trampoline: &MARK_LOOK,
+        },
+        crate::install::HookSpec {
             name: "weapon-look-button",
             target: r.local.base + entries[2].rva as usize,
             detour: button_entry as *const () as usize,
@@ -410,5 +451,36 @@ mod catalog_probe {
             detour: catalog as *const () as usize,
             trampoline: &CATALOG,
         }])
+    }
+}
+
+#[cfg(test)]
+mod melee_forwarding_tests {
+    use super::*;
+    static NEXT: AtomicUsize = AtomicUsize::new(0);
+    crate::context_stub_rw!(entry, 0, choose, NEXT, write_rdi);
+
+    unsafe extern "system" fn choose(c: &mut crate::stub::Context) {
+        assert_eq!(c.rdi, 57);
+        c.rdi = 58;
+    }
+
+    #[unsafe(naked)]
+    unsafe extern "C" fn native_consumer() -> u64 {
+        core::arch::naked_asm!("mov eax, edi", "ret");
+    }
+
+    #[unsafe(naked)]
+    unsafe extern "C" fn swing() -> u64 {
+        core::arch::naked_asm!(
+            "push rdi", "sub rsp, 32", "mov edi, 57", "call {}", "add rsp, 32",
+            "pop rdi", "ret", sym entry
+        );
+    }
+
+    #[test]
+    fn two_hand_special_reaches_native_consumer() {
+        NEXT.store(native_consumer as *const () as usize, Ordering::Release);
+        assert_eq!(unsafe { swing() }, 58);
     }
 }

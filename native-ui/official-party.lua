@@ -867,28 +867,55 @@ function AZSXOfficialPartyReadout()
 end
 
 -- Informational help button shared with AZSXUI and optional API consumers.
+local runDropTable=nil
+local runClasses={warrior=1,paladin=2,hunter=3,rogue=4,priest=5,shaman=7,mage=8,warlock=9,druid=11}
+local heroicNames={"Heroic I","Heroic II","Heroic III","Heroic IV","Heroic V"}
+local collected={}
+local collectionRevision=0
+local function runInfo()
+    local zone=AZS_ZONE or {}
+    local class=tonumber(zone.class) or runClasses[string.lower(tostring(zone.cname or zone.class))]
+    local map=runDropTable and runDropTable[zone.zone]
+    if not map and runDropTable and AZS_SCHEDULE and AZS_SCHEDULE[1] then
+        for _,candidate in pairs(runDropTable)do
+            if candidate[1].name==AZS_SCHEDULE[1].name then map=candidate;break end
+        end
+    end
+    local h=tonumber(zone.heroic)
+    return class,map,h==0 and "Normal" or heroicNames[h or -1],h
+end
 local cooperativeButton,cooperativeDock
 local function cooperativeRefresh()
     local state=apiState()
     local text=state.available and state.data.cooperativeRules and state.texts.cooperativeRules
-    if not text then
+    if not state.available then
         if cooperativeButton then
             setShown(cooperativeButton,false)
             if cooperativeButton.help then cooperativeButton.help:Hide()end
         end
         return nil
     end
+    local class,map,difficulty,h=runInfo()
+    if class and state.texts.loot then
+        collected[class]=collected[class] or {}
+        for _,item in pairs(state.texts.loot)do
+            if not collected[class][item.name]then collected[class][item.name]=true;collectionRevision=collectionRevision+1 end
+        end
+    end
     if not cooperativeButton then
         local b=CreateFrame("Button","AZSXCooperativeRulesBuff",UIParent);cooperativeButton=b
         b:SetWidth(26);b:SetHeight(26)
         b.icon=b:CreateTexture("AZSXCooperativeHelpIcon","ARTWORK");b.icon:SetWidth(22);b.icon:SetHeight(22)
-        b.icon:SetPoint("CENTER",b,"CENTER",0,0);SetPortraitToTexture(b.icon:GetName(),text.icon)
+        b.icon:SetPoint("CENTER",b,"CENTER",0,0);SetPortraitToTexture(b.icon:GetName(),"Interface\\Icons\\INV_Misc_QuestionMark")
+        b.tier=b:CreateFontString(nil,"OVERLAY","GameFontNormalSmall")
+        b.tier:SetFont("Fonts\\FRIZQT__.TTF",12,"OUTLINE");b.tier:SetPoint("BOTTOMRIGHT",b,"BOTTOMRIGHT",3,-2)
         local rim=b:CreateTexture(nil,"OVERLAY");rim:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
         rim:SetTexCoord(0,.625,0,.625);rim:SetWidth(29);rim:SetHeight(29);rim:SetPoint("CENTER",b.icon,"CENTER",0,0)
         local function showRules()
             local current=apiState()
             local t=current.available and current.data.cooperativeRules and current.texts.cooperativeRules
-            if not t then return end
+            if not current.available then return end
+            local class,map,difficulty=runInfo()
             if not b.help then
                 local panel=CreateFrame("Frame","AZSXCooperativeHelpPanel",b)
                 panel:SetFrameStrata("TOOLTIP");panel:EnableMouse(false);panel:SetWidth(292)
@@ -897,30 +924,58 @@ local function cooperativeRefresh()
                 local fill=panel:CreateTexture(nil,"BORDER")
                 fill:SetPoint("TOPLEFT",panel,"TOPLEFT",3,-3);fill:SetPoint("BOTTOMRIGHT",panel,"BOTTOMRIGHT",-3,3)
                 fill:SetTexture(.055,.05,.04,1)
-                local y=12
-                local function line(value,size,height,r,g,blue)
-                    local label=panel:CreateFontString(nil,"OVERLAY","GameFontNormal")
-                    label:SetFont("Fonts\\FRIZQT__.TTF",size,"")
-                    label:SetTextColor(r,g,blue);label:SetJustifyH("LEFT")
-                    label:SetPoint("TOPLEFT",panel,"TOPLEFT",13,-y);label:SetText(value)
-                    y=y+height
+                panel.labels={};b.help=panel
+            end
+            local panel=b.help
+            local y,used=12,0
+            local function line(value,size,height,r,g,blue)
+                used=used+1
+                local label=panel.labels[used]
+                if not label then label=panel:CreateFontString(nil,"OVERLAY","GameFontNormal");panel.labels[used]=label end
+                label:SetFont("Fonts\\FRIZQT__.TTF",size,"");label:SetTextColor(r,g,blue);label:SetJustifyH("LEFT")
+                label:ClearAllPoints();label:SetPoint("TOPLEFT",panel,"TOPLEFT",13,-y);label:SetText(value);label:Show()
+                y=y+height
+            end
+            line("Run information",17,23,1,.82,0)
+            line("Difficulty: "..(difficulty or "Unavailable"),14,23,1,1,1)
+            line("Missing set pieces",14,19,1,.84,.53)
+            local found=false
+            if map and class then
+                for _,boss in ipairs(map)do
+                    local heading=false
+                    for _,name in ipairs(boss[class] or {})do
+                        if not (collected[class] and collected[class][name]) then
+                            if not heading then line(boss.name,13,16,1,.82,0);heading=true end
+                            line("  "..name,13,16,.96,.96,.96);found=true
+                        end
+                    end
                 end
-                line(t.title,17,26,1,.82,0)
+            end
+            if not found then line(map and class and "Collection complete for this zone." or "Collection unavailable.",13,18,.85,.85,.85)end
+            if t then
+                y=y+6;line(t.title,15,21,1,.82,0)
                 for _,section in ipairs(coopHelpSections)do
                     line(section[1],14,18,1,.84,.53)
                     local _,breaks=string.gsub(section[2],"\n","")
-                    line(section[2],14,(breaks+1)*17+7,.96,.96,.96)
+                    line(section[2],14,(breaks+1)*17+5,.96,.96,.96)
                 end
-                panel:SetHeight(y+4);b.help=panel
             end
+            for i=used+1,table.getn(panel.labels)do panel.labels[i]:Hide()end
+            panel:SetHeight(y+6)
             b.help:ClearAllPoints()
             if cooperativeDock then b.help:SetPoint("TOPRIGHT",b,"BOTTOMRIGHT",0,-5)
             else b.help:SetPoint("TOPLEFT",b,"BOTTOMLEFT",0,-5)end
             b.help:Show()
+            b.lastMap=map;b.lastClass=class;b.lastDifficulty=difficulty;b.lastCoop=t~=nil;b.lastCollection=collectionRevision
         end
         b:SetScript("OnEnter",showRules);b:SetScript("OnClick",showRules)
         b:SetScript("OnLeave",function()if b.help then b.help:Hide()end end)
     end
+    local b=cooperativeButton
+    if b.help and b.help:IsShown() and (b.lastMap~=map or b.lastClass~=class or b.lastDifficulty~=difficulty or b.lastCoop~=(text~=nil) or b.lastCollection~=collectionRevision)then
+        b:GetScript("OnEnter")()
+    end
+    cooperativeButton.tier:SetText(difficulty and (h==0 and "N" or "H"..h) or "")
     if not cooperativeDock then
         local party=getglobal("PartyMemberFrame1")
         cooperativeButton:ClearAllPoints()

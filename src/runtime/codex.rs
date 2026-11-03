@@ -2,6 +2,20 @@
 use super::{Runtime, RUNTIME};
 use std::sync::atomic::AtomicUsize;
 
+static OWNED: std::sync::Mutex<Option<Vec<u32>>> = std::sync::Mutex::new(None);
+static SAVED: AtomicUsize = AtomicUsize::new(0);
+crate::context_stub_rw!(saving, 0, capture_save, SAVED);
+fn capture(r:&Runtime, collection:u64) {
+    let value=r.adapter.run_owned_items(&super::io::Access{local:&r.local,adapter:r.adapter},collection).ok();
+    if let Ok(mut current)=OWNED.lock(){*current=value;}
+}
+unsafe extern "system" fn capture_save(c:&mut crate::stub::Context){
+    if let Some(r)=RUNTIME.get(){capture(r,c.rcx)}
+}
+pub(super) fn drop_table(r:&Runtime)->Result<String,String>{
+    let owned=OWNED.lock().map_err(|_|"Collection unavailable")?.clone().ok_or("Collection not loaded")?;
+    unsafe {r.adapter.run_drop_lua(&super::io::Access{local:&r.local,adapter:r.adapter},r.local.base,&owned)}
+}
 static AUTHENTICATED: AtomicUsize = AtomicUsize::new(0);
 static LOADED: AtomicUsize = AtomicUsize::new(0);
 crate::context_stub_rw!(authenticated, 1, discover, AUTHENTICATED);
@@ -23,6 +37,7 @@ fn missing_native_profile() -> bool {
 
 unsafe extern "system" fn discover(context: &mut crate::stub::Context) {
     if let Some(r) = RUNTIME.get() {
+        capture(r,context.rsi);
         let count = r.adapter.discover_economy_trinkets(
             r.local.base,
             context.rsi as usize,
@@ -47,6 +62,12 @@ pub(super) fn install(r: &Runtime) -> Result<(), String> {
         }
     }
     crate::install::install(&[
+        crate::install::HookSpec {
+            name: "run-info-collection-save",
+            target: r.local.base+entries[3].rva as usize,
+            detour: saving as *const () as usize,
+            trampoline: &SAVED,
+        },
         crate::install::HookSpec {
             name: "codex-authenticated-profile",
             target: r.local.base + entries[0].rva as usize,

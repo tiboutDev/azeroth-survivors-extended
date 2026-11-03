@@ -248,7 +248,7 @@ impl Adapter {
     /// Extend the native WorldStateFrame API script using the native allocator.
     /// No addon file, Lua evaluator or arbitrary script/file interception.
     pub fn extend_addon_api(self, mem: &dyn crate::official::MutableMemory, output: u64, extension: &[u8]) -> crate::Result<()> {
-        if extension.is_empty() || extension.len()>65536 {return Err("Addon API extension exceeds limit".into());}
+        if extension.is_empty() || extension.len()>98304 {return Err("Addon API extension exceeds limit".into());}
         let header = mem.read(output,24)?;
         if header.len()!=24 { return Err("Truncated native API string".into()); }
         let capacity=u64::from_le_bytes(header[0..8].try_into().unwrap());
@@ -283,5 +283,84 @@ impl Adapter {
         let name=azsx_gameplay::lobby::name(text);
         if name!=text {self.replace_owned_text(mem,at,name.as_bytes())?;}
         Ok(())
+    }
+}
+
+// The Collection Log filters the u32 inventory at +0x30 and calls the same
+// class/map/boss drop builder for each of the five encounters (0x28de0e).
+impl Adapter {
+    pub fn run_owned_items(self, mem: &dyn crate::memory::Mem, collection: u64) -> crate::Result<Vec<u32>> {
+        let header = mem.read(collection + 0x30, 24)?;
+        let word = |i| u64::from_le_bytes(header[i..i+8].try_into().unwrap());
+        let count = word(16);
+        if count == 0 { return Ok(Vec::new()) }
+        if count > word(0) || count > 4096 || word(8) < 65536 { return Err("Invalid gear collection".into()) }
+        Ok(mem.read(word(8), count as usize * 4)?.chunks_exact(4)
+            .map(|v| u32::from_le_bytes(v.try_into().unwrap())).collect())
+    }
+
+    pub unsafe fn run_drop_lua(self, mem: &dyn crate::memory::Mem, base: usize, owned: &[u32]) -> crate::Result<String> {
+        use std::collections::BTreeMap;
+        use std::fmt::Write;
+        let map_table = base as u64 + 0x7118fc8;
+        // Validate the Armory call site because AZSX may detour the item resolver itself.
+        for offset in [0x5bfd310,0x3c1ccf,0x21d0,0x5c4d7a0] {
+            let bytes=self.expected(offset,&[]);
+            if bytes.is_empty() || mem.read(base as u64+offset,bytes.len())? != bytes {
+                return Err(format!("Run drop boundary changed at {offset:x}"));
+            }
+        }
+        let drops: unsafe extern "system" fn(*mut usize,u8,usize,usize) = std::mem::transmute(base+0x5bfd310);
+        let item: unsafe extern "system" fn(*mut usize,u32) = std::mem::transmute(base+0x5bffe00);
+        let free: unsafe extern "system" fn(usize,usize,usize) = std::mem::transmute(base+0x21d0);
+        let string = |ptr:u64,len:u64| -> crate::Result<String> {
+            if ptr<65536 || len==0 || len>180 {return Err("Invalid run drop name".into())}
+            let name=String::from_utf8(mem.read(ptr,len as usize)?).map_err(|_|"Invalid item name encoding")?;
+            if name.chars().any(char::is_control){return Err("Invalid run drop text".into())}
+            serde_json::to_string(&name).map_err(|e|e.to_string())
+        };
+        let slice = |at:u64| -> crate::Result<(u64,u64)> {
+            let b=mem.read(at,16)?;
+            Ok((u64::from_le_bytes(b[..8].try_into().unwrap()),u64::from_le_bytes(b[8..].try_into().unwrap())))
+        };
+        let mut names=BTreeMap::new();
+        let mut lua=String::from("{");
+        for zone in 0..12 {
+            let at=map_table+zone as u64*240;
+            let (key,len)=slice(at+8)?;
+            let (bosses,count)=slice(at+136)?;
+            if count!=5 || bosses<65536{return Err("Unknown run boss table".into())}
+            write!(lua,"[{}]={{",string(key,len)?).unwrap();
+            for index in 0..5 {
+                let (ptr,len)=slice(bosses+index as u64*104)?;
+                write!(lua,"{{name={},",string(ptr,len)?).unwrap();
+                for class in [1,2,3,4,5,7,8,9,11] {
+                    let mut v=[0usize;3];
+                    drops(v.as_mut_ptr(),class,zone,index);
+                    let entries=if v[2]<=v[0] && v[2]<=64 && v[2]>0 {mem.read(v[1] as u64,v[2]*8)}else if v[2]==0 {Ok(Vec::new())}else{Err("Invalid boss loot vector".into())};
+                    if v[0]>0 {free(v[1],v[0]*8,4)}
+                    write!(lua,"[{class}]={{").unwrap();
+                    for row in entries?.chunks_exact(8) {
+                        let id=u32::from_le_bytes(row[..4].try_into().unwrap());
+                        if owned.contains(&id){continue}
+                        if !names.contains_key(&id) {
+                            let mut v=[0usize;18];
+                            item(v.as_mut_ptr(),id);
+                            if v[0]==usize::MAX {return Err("Unknown generated set item".into())}
+                            let name=string(v[1] as u64,v[2] as u64);
+                            if v[0]>0 {free(v[1],v[0],1)}
+                            if v[3]>0 {free(v[4],v[3]*8,4)}
+                            names.insert(id,name?);
+                        }
+                        write!(lua,"{},",names[&id]).unwrap();
+                    }
+                    lua.push_str("},");
+                }
+                lua.push_str("},");
+            }
+            lua.push_str("},");
+        }
+        lua.push('}');
+        Ok(lua)
     }
 }

@@ -10,8 +10,9 @@ f:SetScript("OnUpdate",function()
  local age=now-started
  local nextStage=age>=50 and 4 or age>=42 and 3 or age>=38 and 2 or age>=30 and 1 or 0
  if nextStage<=stage then return end;stage=nextStage;AZSXCoopUIActions.stage=stage
- if stage<=2 then ToggleCharacter("PaperDollFrame")else
-  local b=AZSXUIHudStats;local click=b and b:GetScript("OnClick")
+ if stage<=3 then ToggleCharacter("PaperDollFrame")end
+ if stage==4 then
+  local b=AZSXUIHudStats;local click=b and b:IsVisible() and b:GetScript("OnClick")
   if click then local old=this;this=b;click();this=old end
  end
 end)

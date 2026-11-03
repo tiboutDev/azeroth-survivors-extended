@@ -217,7 +217,7 @@ This does not infer a nameplate GUID or introduce a new native memory contact.
 Bottom HUD order is equipment, statistics, native XP, then native gryphons.
 XP's complete casting-border artwork remains intact and draws over the stats
 panel joint. The owned XP level is restored on disable, preserving external
-changes. The player health capsule sits 252 UI units above the screen bottom, clear of a five-row statistics panel. Native comma-separated item effects occupy separate tooltip lines while retaining owner text and enchantment lines. The stats panel has three vertical column rules, no horizontal group
+changes. The player health capsule sits 216 UI units above the screen bottom, above the equipment row. Native comma-separated item effects occupy separate tooltip lines while retaining owner text and enchantment lines. The stats panel has three vertical column rules, no horizontal group
 separator, a thin native tooltip border and a clipped lower edge. Objectives use a compact closed ornamented native header, inset from the minimap
 anchor instead of touching the screen edge. Crystal Resonance has one total count on its icon; its full tooltip is
 unchanged.
@@ -225,7 +225,7 @@ unchanged.
 ## Current tracker presentation
 
 The counter ribbon is detached eight UI units from the top with a complete ornamented
-native border. The 30-unit Objectives header is inset eight units from its
+native border. The 40-unit Objectives header is inset eight units from its
 minimap anchor; one Guardians quest contains live names/counts and upcoming
 arrivals, alongside spawned bosses, Sayge and the chicken escort. Rows size to their text. All active
 lairs receive pins, with explicit retained-frame levels: Sayge, live guardians,
@@ -258,7 +258,7 @@ sequential display. The Supplies sale amount remains AZSX-owned and uses the nat
 small gold coin artwork, without converting whole AZSX gold into another currency.
 Quest titles and individual entries have larger gaps than an entry and its timer.
 
-Pins fade to 15% opacity at the player and recover full relative opacity at 20 UI units. Their positions and mouse targets stay available at every opacity. Overlapping projected pins of the same type, priority and rim status share one icon with a count.
+Pins fade to 15% opacity at the player and recover full relative opacity at 20 UI units. Their positions and mouse targets stay available at every opacity. Pins of the same type, priority and rim status share one icon with a count only when their projected centers are less than 10 UI units apart (half a portrait width).
 
 ### Encounter debuff parity
 

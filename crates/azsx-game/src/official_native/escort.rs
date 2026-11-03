@@ -717,7 +717,13 @@ impl Adapter {
                 }
             }
         }
-        Ok(match effect{Some(Costume::Pirate)=>if female{4619}else{4620},Some(Costume::Ninja)=>if female{4618}else{4617},_=>base})
+        // The original Deviate appearances reference baked textures missing from
+        // the supported client. Use its Deadmines pirate and masked rogue.
+        Ok(match effect {
+            Some(Costume::Pirate) => 2026, // Mr. Smite
+            Some(Costume::Ninja) => 2029, // Edwin VanCleef
+            _ => base,
+        })
     }
     pub unsafe fn supply_display_packet(self,m:&dyn Mem,base:u64,game:u64,owner:u64,display:u32)->Result<()>{
         self.event_broadcast(m,base,game,0xa9,&player_value_packet(owner,0x83,display))

@@ -24,6 +24,8 @@ for i=0,3 do local f=CreateFrame("Button","BuffButton"..i,UIParent);f.buffFilter
         self.lua.execute((ROOT/'addons/AZSXUI/Theme.lua').read_text())
         self.lua.execute((ROOT/'addons/AZSXUI/Frames.lua').read_text())
         self.lua.execute('arg1=.1;AZSXUIFramesController.scripts.OnUpdate();AZSXUI_DockAuras(view);arg1=.1;AZSXUIFramesController.scripts.OnUpdate()')
+    def test_player_health_percentage_uses_the_bar_fraction(self):
+        self.run_lua('for _,pair in ipairs({{125,"50%"},{250,"100%"},{0,"0%"},{83,"33%"}})do playerHP=pair[1];arg1=.25;AZSXUIFramesController.scripts.OnUpdate();local v=AZSXUI_FramesReadout();assert(v.health==tostring(playerHP) and v.healthPercent==pair[2])end')
     def test_first_playing_update_applies_the_whole_hud(self):
         self.run_lua('''phase="menu";arg1=.001;AZSXUIHudController.scripts.OnUpdate()
 assert(not AZSXUIHudVitals:IsShown() and PlayerFrame:GetAlpha()==1)
@@ -31,7 +33,7 @@ phase="playing";MainMenuBar:Hide();AZSXUIHudController.scripts.OnUpdate()
 assert(AZSXUI_HudReadout().enabled and AZSXUIHudRoot:GetParent()==MainMenuBar)
 MainMenuBar:Show();AZSXUIHudController.scripts.OnUpdate()
 assert(AZSXUI_HudReadout().enabled and AZSXUIHudVitals:IsShown() and PlayerFrame:GetAlpha()==0)
-assert(BuffButton0.anchor[2]==AZSXUIHudAuras and MainMenuExpBar:GetWidth()==437)
+assert(BuffButton0.anchor[2]==AZSXUIHudAuras and MainMenuExpBar:GetWidth()==393)
 AZSXUI_ConfigureHud("off");AZSXUIHudController.scripts.OnUpdate()
 assert(not AZSXUIHudVitals:IsShown() and PlayerFrame:GetAlpha()==1)''')
 
@@ -53,16 +55,9 @@ phase="ready";update();assert(not info:IsShown() and BuffButton0.anchor[2]==UIPa
     def test_auras_keep_native_ids_scripts_and_separate_harmful_row(self):
         self.run_lua('assert(BuffButton0.scripts.OnClick==BuffButton0.nativeClick);assert(BuffButton3.buffIndex==3 and BuffButton3.buffFilter=="HARMFUL");assert(BuffButton3.anchor[5]>BuffButton0.anchor[5]);AZSXUI_ConfigureHud("off");assert(not AZSXUI_DockAuras(view));assert(BuffButton0.anchor[2]==UIParent and BuffButton0Duration.anchor[1]=="TOP" and BuffButton0Duration.anchor[3]=="BOTTOM")')
     def test_compact_vitals_center_each_aura_row_without_shrinking_native_buttons(self):
-        self.run_lua('assert(AZSXUIHudVitals:GetWidth()==291 and AZSXUI_GetHudAnchors().width==437);assert(BuffButton0.anchor[3]=="BOTTOM" and BuffButton0.anchor[4]==59);assert(BuffButton2.anchor[4]==-27 and BuffButton3.anchor[4]==16);for i=4,10 do local f=CreateFrame("Button","BuffButton"..i,UIParent);f:SetWidth(32);f:SetHeight(32);f.buffFilter="HELPFUL"end;AZSXUI_DockAuras(view);assert(BuffButton9.anchor[4]==37.5 and BuffButton10.anchor[4]==-5.5 and BuffButton9.anchor[5]>BuffButton0.anchor[5]);assert(BuffButton0:GetWidth()==32 and BuffButton0.scripts.OnClick==BuffButton0.nativeClick);AZSXUI_ConfigureHud("off");AZSXUI_DockAuras(view);assert(BuffButton0.anchor[2]==UIParent and BuffButton0Duration.anchor[1]=="TOP" and BuffButton0Duration.anchor[3]=="BOTTOM")')
-    def test_fixed_health_and_drawer_between_equipment_and_native_gryphons(self):
-        self.run_lua('assert(AZSXUIHudVitals.anchor[2]==UIParent and AZSXUIHudVitals.anchor[5]==252);local before=AZSXUIHudVitals.anchor[5];hudCall("AZSXUIHudStats","OnClick");hudTick();arg1=.1;AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUIHudVitals.anchor[5]==before);assert(AZSXUIHudAuras.anchor[2]==AZSXUIHudVitals and AZSXUIHudAuras.anchor[3]=="TOP");assert(BuffButton0Duration.anchor[1]=="BOTTOM" and BuffButton0Duration.anchor[2]==BuffButton0 and BuffButton0Duration.anchor[3]=="TOP");assert(AZSXUIHudDrawer:GetFrameLevel()>AZSXUIHudEquipment1:GetFrameLevel() and AZSXUIHudDrawer:GetFrameLevel()<MainMenuBarArtFrame:GetFrameLevel());local anchor,y=AZSXUI_GetDrawerAnchor();assert(anchor==AZSXUIHudBase and y==0 and AZSXUIHudDrawerMask.anchor[2]==AZSXUIHudBase)')
-    def test_five_stats_rows_keep_the_raised_health_capsule_clear(self):
-        self.run_lua("""
-for _,key in ipairs({"dmg","cd","crit","cm","area","cnt","echo","bp","dots","doth","big","exe","cc","dotd","shd","auto","pet"})do AZS_STATS[key]=1.2 end
-AZS_STATS.cd=.8;AZS_STATS.cnt=2;AZS_STATS.dots=2
-hudCall("AZSXUIHudStats","OnClick");hudTick();arg1=.1;AZSXUIFramesController.scripts.OnUpdate()
-assert(AZSXUIHudDrawer.visibleHeight>=133 and AZSXUIHudVitals.anchor[5]==252)
-""")
+        self.run_lua('assert(AZSXUIHudVitals:GetWidth()==291 and AZSXUI_GetHudAnchors().width==393);assert(BuffButton0.anchor[3]=="BOTTOM" and BuffButton0.anchor[4]==59);assert(BuffButton2.anchor[4]==-27 and BuffButton3.anchor[4]==16);for i=4,10 do local f=CreateFrame("Button","BuffButton"..i,UIParent);f:SetWidth(32);f:SetHeight(32);f.buffFilter="HELPFUL"end;AZSXUI_DockAuras(view);assert(BuffButton9.anchor[4]==37.5 and BuffButton10.anchor[4]==-5.5 and BuffButton9.anchor[5]>BuffButton0.anchor[5]);assert(BuffButton0:GetWidth()==32 and BuffButton0.scripts.OnClick==BuffButton0.nativeClick);AZSXUI_ConfigureHud("off");AZSXUI_DockAuras(view);assert(BuffButton0.anchor[2]==UIParent and BuffButton0Duration.anchor[1]=="TOP" and BuffButton0Duration.anchor[3]=="BOTTOM")')
+    def test_character_stats_do_not_move_health_or_the_equipment_strip(self):
+        self.run_lua('ToggleCharacter("PaperDollFrame");hudCall("AZSXUIHudStats","OnClick");hudTick();assert(AZSXUIHudVitals.anchor[5]==216 and AZSXUIHudEquipment.anchor[2]==AZSXUIHudBase and AZSXUIHudDrawer.anchor[2]==PaperDollFrame)')
     def test_bosses_and_awake_guardians_follow_top_hud_and_fail_open(self):
         self.run_lua('hudPrefs.bosses=true;bosses={{id=1,name="Boss",hp=30,hpm=100}};function AZS_GetBosses()return bosses end;guardians={{id=2,name="Guardian",hp=50,hpm=200,awake=true},{id=3,name="Sleeping",hp=100,hpm=100,awake=false}};arg1=.2;AZSXUIFramesController.scripts.OnUpdate();assert(not hudPrefs.bosses and AZSXUIEncounters:IsShown() and AZSXUIEncounter1.title.text=="Boss" and AZSXUIEncounter1.bar.value==.3 and AZSXUIEncounter2.title.text=="Guardian" and AZSXUIEncounter2.bar.value==.25);assert(AZSXUIEncounters.anchor[5]==-132 and AZSXUI_GetEncounterOffset()==206);bosses[1].hpm=nil;AZSXUIFramesController.scripts.OnUpdate();assert(hudPrefs.bosses and not AZSXUIEncounters:IsShown() and AZSXUI_GetEncounterOffset()==137);bosses[1].hpm=100;AZSXUIFramesController.scripts.OnUpdate();AZSXUI_ConfigureHud("off");AZSXUIFramesController.scripts.OnUpdate();assert(hudPrefs.bosses and not AZSXUIEncounters:IsShown())')
     def test_native_goblin_health_joins_encounters_without_selecting_other_elites(self):
@@ -119,7 +114,7 @@ assert(AZSXUI_FramesReadout().objectives[1]=="Defeat First; Defeat Second")
 first.hp=0;AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUI_FramesReadout().objectives[1]=="Defeat Second")
 list={};AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUI_FramesReadout().objectives[1]=="No active objectives")""")
     def test_objectives_only_include_living_guardians_and_available_ritual(self):
-        self.run_lua('assert(AZSXUIObjectives:IsShown() and AZSXUIObjectives:GetHeight()==84);guardians={};view.data.sayge=nil;arg1=.1;AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUIObjectives:IsShown() and AZSXUI_FramesReadout().objectives[1]=="No active objectives")')
+        self.run_lua('assert(AZSXUIObjectives:IsShown() and AZSXUIObjectives:GetHeight()==94);guardians={};view.data.sayge=nil;arg1=.1;AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUIObjectives:IsShown() and AZSXUI_FramesReadout().objectives[1]=="No active objectives")')
     def test_objective_tracker_follows_minimap_without_moving_allies_across_screen(self):
         self.run_lua('assert(AZSXUIObjectives.anchor[1]=="TOPRIGHT" and AZSXUIObjectives.anchor[2]==Minimap and AZSXUIObjectives.anchor[3]=="BOTTOMRIGHT");assert(PartyMemberFrame1.anchor[2]==UIParent and PartyMemberFrame1.anchor[1]=="TOPLEFT");MinimapCluster=CreateFrame("Frame","MinimapCluster",UIParent);arg1=.1;AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUIObjectives.anchor[2]==MinimapCluster);MinimapCluster=nil;Minimap=nil;AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUIObjectives.anchor[2]==UIParent and AZSXUIObjectives.anchor[4]==-20)')
     def test_upcoming_guardians_use_native_lair_countdowns_and_retire_when_held(self):
@@ -131,9 +126,9 @@ list={};AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUI_FramesReadout().
     def test_arrival_timer_has_its_own_line_only_during_the_last_thirty_seconds(self):
         self.run_lua('view.data.sayge=nil;lair={state="empty",active=false,name="Next guardian",left=45};function AZS_GetLairs()return {lair}end;arg1=.1;AZSXUIFramesController.scripts.OnUpdate();local text=AZSXUI_FramesReadout().objectiveTexts[1];assert(string.find(text,"Await Next guardian",1,true) and not string.find(text,"45",1,true));lair.left=30;AZSXUIFramesController.scripts.OnUpdate();text=AZSXUI_FramesReadout().objectiveTexts[1];assert(string.find(text,"Await Next guardian (30 s)",1,true));lair.left=31;AZSXUIFramesController.scripts.OnUpdate();assert(not string.find(AZSXUI_FramesReadout().objectiveTexts[1],"Arrives in",1,true))')
     def test_guardians_group_names_but_deduplicate_native_entity_ids(self):
-        self.run_lua('guardians={{id=1,name="Guardian",hp=10},{id=2,name="Guardian",hp=20},{id=2,name="Guardian",hp=20}};view.data.sayge=nil;arg1=.1;AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUIObjectives:GetHeight()==59)')
+        self.run_lua('guardians={{id=1,name="Guardian",hp=10},{id=2,name="Guardian",hp=20},{id=2,name="Guardian",hp=20}};view.data.sayge=nil;arg1=.1;AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUIObjectives:GetHeight()==69)')
     def test_held_lairs_include_distant_guardians_without_requiring_the_minimap(self):
-        self.run_lua('function AZS_GetLairs()return {{active=true,id=99,name="Distant Guardian"},{active=false,id=0,name="Absent Guardian"}}end;guardians={};view.data.sayge=nil;Minimap:Hide();arg1=.1;AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUIObjectives:IsShown() and AZSXUIObjectives:GetHeight()==59 and AZSXUI_FramesReadout().objectives[1]=="Defeat Distant Guardian")')
+        self.run_lua('function AZS_GetLairs()return {{active=true,id=99,name="Distant Guardian"},{active=false,id=0,name="Absent Guardian"}}end;guardians={};view.data.sayge=nil;Minimap:Hide();arg1=.1;AZSXUIFramesController.scripts.OnUpdate();assert(AZSXUIObjectives:IsShown() and AZSXUIObjectives:GetHeight()==69 and AZSXUI_FramesReadout().objectives[1]=="Defeat Distant Guardian")')
     def test_allied_buffs_stay_outside_build_frame_with_native_identity_and_tooltips(self):
         self.run_lua('local spell=CreateFrame("Button","AZSXOfficialParty1Spell1",PartyMemberFrame1);spell.data={owner="22"};local handler=function()end;for i=1,9 do local b=CreateFrame("Button","AZSXOfficialParty1Buff"..i,PartyMemberFrame1);b.unit="party1";b.buffIndex=i;b:SetPoint("LEFT",PartyMemberFrame1,"RIGHT",i*18,0);b.scripts.OnEnter=handler end;arg1=.1;AZSXUIFramesController.scripts.OnUpdate();local panel=AZSXUIAllyBuild1;assert(panel:GetWidth()==100 and panel:GetHeight()==49);assert(spell.anchor[3]=="TOPLEFT");assert(AZSXOfficialParty1Buff1.anchor[2]==panel and AZSXOfficialParty1Buff1.anchor[3]=="TOPRIGHT" and AZSXOfficialParty1Buff1.anchor[4]==6);assert(AZSXOfficialParty1Buff9.anchor[4]==6 and AZSXOfficialParty1Buff9.anchor[5]<AZSXOfficialParty1Buff1.anchor[5]);assert(AZSXOfficialParty1Buff1.unit=="party1" and AZSXOfficialParty1Buff1.buffIndex==1 and AZSXOfficialParty1Buff1.scripts.OnEnter==handler);AZSXUI_ConfigureHud("off");AZSXUIFramesController.scripts.OnUpdate();assert(AZSXOfficialParty1Buff1.anchor[2]==PartyMemberFrame1 and AZSXOfficialParty1Buff1.anchor[3]=="RIGHT")')
     def test_allied_panels_retain_native_owner_tooltips_and_restore_anchors(self):

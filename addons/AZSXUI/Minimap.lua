@@ -141,7 +141,8 @@ local function groupPins()
             local other=eventPins[i]
             if not other.grouped and other.kind==pin.kind and other.priority==pin.priority and other.outside==pin.outside then
                 local dx,dy=pin.x-other.x,pin.y-other.y
-                if dx*dx+dy*dy<20*20 then
+                -- Require the centers of 20-unit portraits to be less than one radius apart.
+                if dx*dx+dy*dy<10*10 then
                     other.quantity=other.quantity+1;pin.grouped=true;break
                 end
             end

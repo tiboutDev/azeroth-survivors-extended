@@ -157,6 +157,9 @@ macro_rules! context_stub_rw {
     ($name:ident, $id:expr, $handler:path, $trampoline:path) => {
         $crate::context_stub_rw!(@emit $name, $id, $handler, $trampoline, []);
     };
+    ($name:ident, $id:expr, $handler:path, $trampoline:path, write_rdi) => {
+        $crate::context_stub_rw!(@emit $name, $id, $handler, $trampoline, ["mov rdi, [rsp + 32 + {rdi}]"]);
+    };
     ($name:ident, $id:expr, $handler:path, $trampoline:path, write_r14) => {
         $crate::context_stub_rw!(@emit $name, $id, $handler, $trampoline, ["mov r14, [rsp + 32 + {r14}]"]);
     };

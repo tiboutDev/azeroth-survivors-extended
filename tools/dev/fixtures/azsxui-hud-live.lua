@@ -22,15 +22,15 @@ f:SetScript("OnUpdate",function()
   f.stage=stage
   if stage==1 then ToggleCharacter("PaperDollFrame")
   elseif stage==2 then ToggleCharacter("PaperDollFrame")
-  elseif stage==3 then click("AZSXUIHudStats")
+  elseif stage==3 then ToggleCharacter("PaperDollFrame")
   elseif stage==4 and AZSXUI_ConfigureHud then AZSXUI_ConfigureHud("off")
-  elseif stage==5 and AZSXUI_ConfigureHud then AZSXUI_ConfigureHud("on");click("AZSXUIHudStats")end
+  elseif stage==5 and AZSXUI_ConfigureHud then AZSXUI_ConfigureHud("on")end
  end
  local s=AZSX_GetState and AZSX_GetState(1)
  local xp=MainMenuExpBar
  local frames=AZSXUI_FramesReadout and AZSXUI_FramesReadout()
  local out={pins=AZSXUI_MinimapReadout and AZSXUI_MinimapReadout(),nativeLairs=AZS_GetLairs and AZS_GetLairs(),nativeHP=UnitHealth("player"),nativeLevel=AZS_RUN and AZS_RUN.lvl,nativeStats=AZS_STATS,economy=s and s.data and s.data.economy,hudLevels={xp=MainMenuExpBar and MainMenuExpBar:GetFrameLevel(),panel=AZSXUIHudDrawer and AZSXUIHudDrawer:GetFrameLevel(),art=MainMenuBarArtFrame and MainMenuBarArtFrame:GetFrameLevel()},nativeSpecialUnits=AZS_UNITS,statsChecked=AZSXUIHudStats and AZSXUIHudStats:GetChecked(),statsWidth=AZSXUIHudDrawer and AZSXUIHudDrawer:GetWidth(),loot=s and s.data and s.data.loot,lootTexts=s and s.texts and s.texts.loot,plateLayout=GetCVar("nameplateLayout"),platesOn=NAMEPLATES_ON,plates=AZSXUI_Readout and AZSXUI_Readout(),locale=GetLocale and GetLocale(),crystals=s and s.data and s.data.crystals,fortune=s and s.data and s.data.fortune,chat=chat,reason=s and s.reason,apiPhase=s and s.phase,raw=(s and not s.available)and AZS_RUN and AZS_RUN.azsx or nil,rawUpdated=AZS_RUN_UPDATED,frames=frames,sample=count,time=now,age=age,phase=AZS_GetPhase and AZS_GetPhase(),api=s and s.api,available=s and s.available,equipment=s and s.data and s.data.equipment,equipmentTexts=s and s.texts and s.texts.equipment,hud=AZSXUI_HudReadout and AZSXUI_HudReadout(),xp={width=xp and xp:GetWidth(),height=xp and xp:GetHeight(),text=MainMenuBarExpText and MainMenuBarExpText:GetText()},shown={}}
- for _,name in ipairs({"AZSXUIHudRoot","AZSXUIHudDrawerMask","AZSXUIHudEquipment","AZSXUIHudStats"})do local o=getglobal(name);out.shown[name]=o and o:IsVisible()or false end
+ for _,name in ipairs({"AZSXUIHudRoot","AZSXUIHudDrawer","AZSXUIHudEquipment","AZSXUIHudStats"})do local o=getglobal(name);out.shown[name]=o and o:IsVisible()or false end
  out.counterCenters={};if AZSXUIHudCounters then for _,v in ipairs(AZSXUIHudCounters.values or{})do table.insert(out.counterCenters,((v.button:GetTop()+v.button:GetBottom())-(AZSXUIHudCounters:GetTop()+AZSXUIHudCounters:GetBottom()))/2)end end
  out.popups={}
  for _,name in ipairs({"AZSXSupplyDiscoveryToast","AZSXDarkmoonBlessingToast","AZSXCrystalDiscoveryToast","AZSXUINativeRewardToast"})do

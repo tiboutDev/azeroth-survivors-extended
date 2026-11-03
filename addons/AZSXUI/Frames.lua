@@ -1,6 +1,6 @@
 -- Native health/aura values and retained ally children, presented beside the HUD.
 local controller=CreateFrame("Frame","AZSXUIFramesController",UIParent)
-local vitals,health,healthText,levelText,auraRoot,objectives
+local vitals,health,healthText,healthPercent,levelText,auraRoot,objectives
 local hiddenRoots,auraOwned,timerOwned,allyOwned,allyPanels={},{},{},{},{}
 local rows={};local elapsed=0;local auraRows=0
 local function finite(n)return type(n)=="number"and n==n and math.abs(n)<1e12 end
@@ -37,7 +37,7 @@ local function font(parent,size)
  local t=parent:CreateFontString(nil,"OVERLAY","GameFontNormalSmall");t:SetFont("Fonts\\FRIZQT__.TTF",size,"");return t
 end
 local function createVitals(a)
- vitals=CreateFrame("Frame","AZSXUIHudVitals",a.root);vitals:SetWidth(math.floor(a.width*2/3));vitals:SetHeight(28)
+ vitals=CreateFrame("Frame","AZSXUIHudVitals",a.root);vitals:SetWidth(291);vitals:SetHeight(28)
  local outline=AZSXUI_CreatePill(vitals,"AZSXUIHudHealthOutline",vitals:GetWidth(),26,.36,.34,.29);outline:SetPoint("CENTER",vitals,"CENTER",0,0)
  local background=AZSXUI_CreatePill(outline,"AZSXUIHudHealthBackground",vitals:GetWidth()-4,22,.045,.045,.035);background:SetPoint("CENTER",outline,"CENTER",0,0)
  health=CreateFrame("ScrollFrame","AZSXUIHudHealth",background);health.fullWidth=background:GetWidth();health:SetWidth(health.fullWidth);health:SetHeight(22);health:SetPoint("LEFT",background,"LEFT",0,0)
@@ -45,7 +45,8 @@ local function createVitals(a)
  -- inside the rounded silhouette, and the filled width remains proportional.
  local fill=AZSXUI_CreatePill(health,"AZSXUIHudHealthFill",health.fullWidth,22,.12,.7,.22,"Interface\\TargetingFrame\\UI-StatusBar");health:SetScrollChild(fill)
  local label=CreateFrame("Frame","AZSXUIHudHealthLabel",vitals);label:SetAllPoints(background);label:SetFrameLevel(fill:GetFrameLevel()+1);label:EnableMouse(false)
- healthText=font(label,12);healthText:SetPoint("CENTER",background,"CENTER",0,0);healthText:SetTextColor(1,1,1)
+ healthText=font(label,12);healthText:SetPoint("LEFT",background,"LEFT",10,0);healthText:SetTextColor(1,1,1)
+ healthPercent=font(label,12);healthPercent:SetPoint("RIGHT",background,"RIGHT",-10,0);healthPercent:SetTextColor(1,1,1)
  levelText=MainMenuExpBar:CreateFontString("AZSXUIExperienceLevel","OVERLAY","GameFontNormalSmall")
  levelText:SetFont("Fonts\\FRIZQT__.TTF",12,"OUTLINE")
  levelText:SetPoint("CENTER",MainMenuExpBar,"CENTER",0,2);levelText:SetTextColor(1,1,1)
@@ -298,13 +299,13 @@ local function updateObjectives(active,state,bosses)
  if table.getn(goals)==0 then table.insert(goals,"No active objectives");table.insert(titles,"No active objectives");table.insert(details,"")end
  if not objectives then
   objectives=CreateFrame("Frame","AZSXUIObjectives",UIParent);objectives:SetWidth(216)
-  local band=CreateFrame("Frame",nil,objectives);band:SetWidth(216);band:SetHeight(30);band:SetPoint("TOP",objectives,"TOP",0,0);AZSXUI_StyleHeader(band)
+  local band=CreateFrame("Frame",nil,objectives);band:SetWidth(216);band:SetHeight(40);band:SetPoint("TOP",objectives,"TOP",0,0);AZSXUI_StyleHeader(band)
   objectives.title=font(band,12);objectives.title:SetPoint("LEFT",band,"LEFT",10,0);objectives.title:SetText("Objectives");objectives.title:SetTextColor(1,.82,0)
  end
  -- Reanchor after minimap replacement/resize; hidden maps still provide geometry.
  local map=MinimapCluster or Minimap
  objectives:ClearAllPoints();if map then objectives:SetPoint("TOPRIGHT",map,"BOTTOMRIGHT",-8,-12)else objectives:SetPoint("TOPRIGHT",UIParent,"TOPRIGHT",-20,-180)end
- local offset=34
+ local offset=44
  for i=1,13 do
   if goals[i]then
    if not rows[i]then rows[i]=font(objectives,11);rows[i]:SetWidth(200);rows[i]:SetJustifyH("LEFT")end
@@ -485,15 +486,15 @@ end
 local function refreshFrames(a)
  if a then
   if not vitals then createVitals(a)end
-  vitals:ClearAllPoints();vitals:SetPoint("BOTTOM",UIParent,"BOTTOM",0,252);vitals:Show()
+  vitals:ClearAllPoints();vitals:SetPoint("BOTTOM",UIParent,"BOTTOM",0,216);vitals:Show()
   updateExperience(AZS_RUN and AZS_RUN.lvl)
   local hp=UnitHealth and UnitHealth("player");local max=UnitHealthMax and UnitHealthMax("player")
   if finite(hp)and finite(max)and max>0 then
    local fraction=math.max(0,math.min(hp,max))/max
    health.fraction=fraction;health:SetWidth(math.max(.01,health.fullWidth*fraction))
    if fraction>0 then health:Show()else health:Hide()end
-   healthText:SetText(string.format("%.0f",hp))
-  else health.fraction=nil;health:Hide();healthText:SetText("—")end
+   healthText:SetText(string.format("%.0f",hp));healthPercent:SetText(string.format("%.0f%%",fraction*100))
+  else health.fraction=nil;health:Hide();healthText:SetText("—");healthPercent:SetText("—")end
   auraRoot:ClearAllPoints();auraRoot:SetPoint("BOTTOM",vitals,"TOP",0,8)
   rootVisibility(true)
  else
@@ -515,7 +516,7 @@ controller:SetScript("OnUpdate",function()
 end)
 
 function AZSXUI_FramesReadout()
- local result={level=levelText and levelText:GetText(),health=healthText and healthText:GetText(),vitalsShown=vitals and vitals:IsVisible(),playerAlpha=PlayerFrame and PlayerFrame:GetAlpha(),targetAlpha=TargetFrame and TargetFrame:GetAlpha(),objectives={},objectiveTexts={},allies=0,allyBuffsOutside=0}
+ local result={level=levelText and levelText:GetText(),health=healthText and healthText:GetText(),healthPercent=healthPercent and healthPercent:GetText(),vitalsShown=vitals and vitals:IsVisible(),playerAlpha=PlayerFrame and PlayerFrame:GetAlpha(),targetAlpha=TargetFrame and TargetFrame:GetAlpha(),objectives={},objectiveTexts={},allies=0,allyBuffsOutside=0}
  if objectives and objectives:IsVisible()then for _,row in ipairs(rows)do if row:IsShown()then table.insert(result.objectives,row.summary);table.insert(result.objectiveTexts,row:GetText())end end end
  for index,panel in pairs(allyPanels)do if panel:IsVisible()then
   result.allies=result.allies+1

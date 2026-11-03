@@ -202,28 +202,13 @@ consume consecutive personal snapshots, not a historical event feed.
 `/azsxui widget crystals position X Y`, `scale 0.5..2`, `opacity 0..1`,
 `show on|off` and `reset` use the same controls as other event widgets.
 
-## Native action-bar extension
+## Native action bar
 
-The HUD extension is enabled by default. `/azsxui hud off` restores the retained
-native artwork, anchors and previous build/tally visibility; `/azsxui hud on`
-enables it again. It does not change key bindings, action handlers, native XP
-textures, height, text or update scripts; only XP width/anchors expand with the bar and restore on disable. Existing native gryphons
-remain above the addon panels. Only named native action/art children are moved;
-unrelated frames and later anchor changes from another addon are preserved.
+The game owns the action bar artwork, buttons, gryphons and XP geometry.
 
-One statistics button on the right opens all statistics in a compact four-column
-panel. Hover previews it; click pins it, and another click closes it. Opening
-and closing are immediate, without a slide or fade. Equipment and health stay
-fixed; the panel deliberately covers the equipment row while open. Native XP,
-actions and the top counter strip stay stationary.
+Opening the in-run character sheet also opens Stats. Its 29 rows are grouped under Offense, Specialization, Survival and Utility. Click Stats to collapse or reopen it. Utility shows shared XP and Gold in AZSX co-op, plus personal Luck and Pickup. Within each section, nonzero values appear first, followed by zeros and then unavailable values (—).
 
-All 29 native character statistics are supported through `AZS_STATS`, using the
-same units and rounding as the native character pane. Displayed zero bonuses
-are omitted; multiplier 1 therefore hides a +0% bonus but critical damage 100%
-does not disappear. Missing values are unavailable, not fabricated zeros. Row
-membership and values refresh at the existing four-Hz cadence, so a newly
-relevant statistic appears while the panel is open. Cooperative XP/gold values
-use the optional effective award multipliers from AZSX API 1.7.
+
 
 Native kills, gold and the next cache cost come from `AZS_RUN.kills`, `gold` and
 `chest`. Native crossed-blade, coin and `INV_Box_02` icons replace the three
@@ -250,7 +235,7 @@ not a supported simultaneous layout; use `/azsxui hud off` before enabling it.
 ### Persistent health, auras and cooperative context
 
 The HUD places a health-only bar and separate native helpful/harmful aura rows
-at a screen-relative bottom offset of 252 UI units, independent of the action/XP
+at a screen-relative bottom offset of 216 UI units, independent of the action/XP
 and equipment stack. Helpful/harmful auras stay above health with their
 native durations above their icons. The statistics panel opens immediately above native XP, in front of equipment. Close it to inspect or cancel a buff. Encounter health bars match the top counter ribbon in width. Up to two bars share each centered line, with room beneath for the largest debuff list on that line. The experience bar centers the run level and native XP progress together, for example `Level 5 · 21 / 27`. Health reads native
 `UnitHealth`/`UnitHealthMax`. The portrait/resources are omitted and the original
@@ -274,10 +259,7 @@ Sayge comes from the current AZSX
 snapshot, without adding a new transport. Rewards use the same native panel
 theme while preserving AZSX text, quality colors, timing and widget preferences.
 
-The approved wide layout keeps native XP artwork/height/text/handlers but widens
-its geometry to match the action bar, reverting it on HUD disable. From bottom
-to top: actions, XP, equipment, health, then debuffs/buffs and the
-title-free statistics drawer while open. The counter strip has extra vertical
+The counter strip has extra vertical
 padding for its native icons. Panels use the verified native steel
 `UI-DialogBox-Border`; health uses a capsule silhouette with a 22-unit fill and a centered
 12-unit font, inset from all four edges. Objectives
@@ -376,17 +358,7 @@ the cooperative suspension rule.
 
 ### Bottom-bar refinement and encounter layout
 
-The action-bar extension is now 441 UI units wide, with native XP widened to
-437 (its original height, artwork and scripts are untouched). One stats button
-occupies the right-hand extension. The instant panel is 469 units wide (native XP plus 16 units per side), with
-four columns, short labels and complete native terms on hover. It stays behind
-the native gryphons and in front of equipment. Its bottom border is omitted and
-its bottom edge touches native XP. Three thin vertical separators divide the four columns; there is no horizontal
-section divider or group heading. The native XP frame draws above the panel and
-below the gryphons, preserving its original top border. Its original frame level
-is restored on disable unless another addon changed it.
-The stats button uses native `CheckButtonHilight` while pinned open, and clears
-on close/disable. Hover preview alone does not check it.
+
 
 The counter ribbon remains 300 units wide. The permanent in-run Objectives
 header is 40 units high, uses an ornamented native dialog cartouche and sits eight
@@ -438,13 +410,9 @@ the number of crystals of that color.
 
 ### Detached trackers and character shortcut
 
-The native character-sheet binding (`TOGGLECHARACTER0`, normally C) toggles the
-single AZSXUI stats panel while the HUD is active. Its key assignments are not
-rewritten; pets/other character tabs and the disabled HUD retain native behavior.
-The native character-sheet button shares the same Lua command. On disable,
-AZSXUI restores its owned wrapper without overwriting another addon's replacement.
+The Stats button belongs to the native in-run character sheet. The character binding and other tabs keep their native behavior.
 
-Player health text shows current HP only. Encounter health bars show centered
+The player health bar shows current HP on the left and percentage on the right. Encounter health bars show centered
 native names with no percentage text; their fill still uses native current/max
 health. The encounter stack moves down with the detached top ribbon/clock.
 All guardian names/counts and arrivals share one Guardians quest; Sayge remains
@@ -476,14 +444,14 @@ Supplies sold for gold show the exact AZSX amount with the native WoW tooltip
 gold coin. Quest titles, objective entries and arrival timers use distinct
 spacing; arrival timers remain limited to the final 30 seconds.
 
-The native map draws the player arrow. AZSX pins fade near the hero and remain hoverable. Overlapping pins of the same kind and status share one count badge until they separate.
+The native map draws the player arrow. AZSX pins fade near the hero and remain hoverable. Pins of the same kind and status with centers less than 10 UI units apart share one count badge until they separate.
 
 ### Live stats, level and reward receipts
 
 API 1.7 supplies optional cooperative effective XP/gold multipliers from AZSX's
 actual award policy. The HUD substitutes those values for personal AZS_STATS;
 other stats stay native, and zero/nonzero row membership refreshes while open.
-Character level uses native AZS_RUN.lvl beside current HP. Item tooltips retain
+Character level uses native AZS_RUN.lvl in the experience bar. Item tooltips retain
 native owner lines and rank, plus verified current ring enchantments. A stale or
 unmatched ring never inherits another player's enchantment.
 Fortune notifications consume stable award receipts; choices defer pending
@@ -493,4 +461,4 @@ native total, preserving decimals and unrelated item order.
 
 ## Cooperative Rules information
 
-Hover the kill counter to see current party members ranked by their personal run kills. Tied players share a rank. Hover or click the circular question mark to the right of the top counter ribbon for co-op rules on shared XP, party gold, personal chest choices and global area/range bonuses. Without the custom HUD, the help button sits beside the first ally frame.
+Hover the kill counter to see current party members ranked by their personal run kills. Tied players share a rank. The circular Run information button shows N for Normal or H1–H5 for Heroic. Hover or click to see your class’s missing set pieces from all five bosses in this zone. In co-op, the same panel also explains the shared rules.

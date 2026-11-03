@@ -15,6 +15,10 @@ unsafe extern "system" fn read(output:*mut u8,assets:usize,path:usize,length:usi
   if let Some(r)=RUNTIME.get().filter(|r|r.rules){
    if r.local.read(path,length).is_ok_and(|b|api_path(&b)){
     let extension=include_str!("../../native-ui/official-party.lua").replacen("local azsxNativeActive = 0","local azsxNativeActive = 1",1);
+    let extension=match super::codex::drop_table(r) {
+     Ok(table)=>extension.replacen("local runDropTable=nil",&format!("local runDropTable={table}"),1),
+     Err(e)=>{r.log.warn(&format!("Run drop list unavailable: {e}"));extension}
+    };
     match r.adapter.extend_addon_api(&io::Access{local:&r.local,adapter:r.adapter},output as u64,extension.as_bytes()){
      Ok(())=>r.log.info("AZSX addon API embedded in native initialization"),
      Err(e)=>r.log.warn(&format!("AZSX addon API initialization failed: {e}")),
