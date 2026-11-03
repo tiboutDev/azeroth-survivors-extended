@@ -72,7 +72,7 @@ function methods:GetStringWidth()return string.len(self.text or "")*6 end
 function methods:Hide()self.shown=false;visibilityWrites=visibilityWrites+1 end
 function methods:Show()self.shown=true;visibilityWrites=visibilityWrites+1 end
 function methods:IsVisible()return self.shown and (not self.parent or self.parent:IsVisible())end
-function methods:CreateFontString()return CreateFrame("Font",nil,self)end
+function methods:CreateFontString(name)return CreateFrame("Font",name,self)end
 function CreateFrame(kind,name,parent,template)
  allocations=allocations+1
  local f=setmetatable({name=name,parent=parent,scripts={},shown=true},{__index=methods})

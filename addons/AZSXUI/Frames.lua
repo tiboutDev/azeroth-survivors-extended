@@ -46,7 +46,9 @@ local function createVitals(a)
  local fill=AZSXUI_CreatePill(health,"AZSXUIHudHealthFill",health.fullWidth,22,.12,.7,.22,"Interface\\TargetingFrame\\UI-StatusBar");health:SetScrollChild(fill)
  local label=CreateFrame("Frame","AZSXUIHudHealthLabel",vitals);label:SetAllPoints(background);label:SetFrameLevel(fill:GetFrameLevel()+1);label:EnableMouse(false)
  healthText=font(label,12);healthText:SetPoint("CENTER",background,"CENTER",0,0);healthText:SetTextColor(1,1,1)
- levelText=font(label,10);levelText:SetPoint("LEFT",background,"LEFT",10,0);levelText:SetTextColor(1,.82,0)
+ levelText=MainMenuExpBar:CreateFontString("AZSXUIExperienceLevel","OVERLAY","GameFontNormalSmall")
+ levelText:SetFont("Fonts\\FRIZQT__.TTF",12,"OUTLINE")
+ levelText:SetPoint("CENTER",MainMenuExpBar,"CENTER",0,2);levelText:SetTextColor(1,1,1)
  auraRoot=CreateFrame("Frame","AZSXUIHudAuras",a.root);auraRoot:SetWidth(8*43);auraRoot:SetHeight(80);auraRoot:SetPoint("BOTTOM",vitals,"TOP",0,8)
 end
 local function auraKind(f,state)
@@ -393,6 +395,22 @@ local function updateEncounters(active)
  if encounterHeight>0 then encounters:Show()else encounters:Hide()end
 end
 function AZSXUI_GetEncounterOffset()return encounterHeight>0 and 132+encounterHeight+12 or 137 end
+local originalXPAlpha
+local function updateExperience(level)
+ local native=MainMenuBarExpText
+ local progress=native and native:GetText()
+ if finite(level)and level>=1 and level==math.floor(level)and progress and progress~="" and native:IsShown()then
+  if originalXPAlpha==nil then originalXPAlpha=native:GetAlpha();native:SetAlpha(0)end
+  levelText:SetText("|cffffd578Level "..level.."|r · "..progress)
+  levelText:SetAlpha(originalXPAlpha);levelText:Show()
+ else
+  if originalXPAlpha~=nil then
+   if native and native:GetAlpha()==0 then native:SetAlpha(originalXPAlpha)end
+   originalXPAlpha=nil
+  end
+  if levelText then levelText:SetText("");levelText:Hide()end
+ end
+end
 controller:SetScript("OnUpdate",function()
  local a=AZSXUI_GetHudAnchors and AZSXUI_GetHudAnchors()
  if a and vitals then vitals:ClearAllPoints();vitals:SetPoint("BOTTOM",UIParent,"BOTTOM",0,208)end
@@ -400,8 +418,7 @@ controller:SetScript("OnUpdate",function()
  if a then
   if not vitals then createVitals(a)end
   vitals:ClearAllPoints();vitals:SetPoint("BOTTOM",UIParent,"BOTTOM",0,208);vitals:Show()
-  local level=AZS_RUN and AZS_RUN.lvl
-  levelText:SetText(finite(level)and level>=1 and level==math.floor(level)and("Lv "..level)or"")
+  updateExperience(AZS_RUN and AZS_RUN.lvl)
   local hp=UnitHealth and UnitHealth("player");local max=UnitHealthMax and UnitHealthMax("player")
   if finite(hp)and finite(max)and max>0 then
    local fraction=math.max(0,math.min(hp,max))/max
@@ -412,7 +429,7 @@ controller:SetScript("OnUpdate",function()
   auraRoot:ClearAllPoints();auraRoot:SetPoint("BOTTOM",vitals,"TOP",0,8)
   rootVisibility(true)
  else
-  if vitals then vitals:Hide()end;restore(auraOwned);restore(timerOwned);updateMedallions(nil);if AZSX_SetCooperativeRulesDocked then AZSX_SetCooperativeRulesDocked("AZSXUI",false)end;rootVisibility(false)
+  if vitals then vitals:Hide();updateExperience(nil)end;restore(auraOwned);restore(timerOwned);updateMedallions(nil);if AZSX_SetCooperativeRulesDocked then AZSX_SetCooperativeRulesDocked("AZSXUI",false)end;rootVisibility(false)
  end
  local state=AZSX_GetState and AZSX_GetState(1)
  updateObjectives(a~=nil,state);updateAllies(a~=nil);updateEncounters(a~=nil)

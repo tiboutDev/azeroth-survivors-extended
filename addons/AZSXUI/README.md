@@ -273,7 +273,7 @@ not a supported simultaneous layout; use `/azsxui hud off` before enabling it.
 The HUD places a health-only bar and separate native helpful/harmful aura rows
 at a screen-relative bottom offset of 208 UI units, independent of the action/XP
 and equipment stack. Helpful/harmful auras stay above health with their
-native durations above their icons. The statistics panel opens immediately above native XP, in front of equipment. Close it to inspect or cancel a buff. Health reads native
+native durations above their icons. The statistics panel opens immediately above native XP, in front of equipment. Close it to inspect or cancel a buff. The experience bar centers the run level and native XP progress together, for example `Level 5 · 21 / 27`. Health reads native
 `UnitHealth`/`UnitHealthMax`. The portrait/resources are omitted and the original
 player and target roots are visually hidden with their updates retained.
 Disabling the HUD restores their alpha/mouse state. Native aura buttons retain
