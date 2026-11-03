@@ -90,7 +90,7 @@ assert(AZSXUIEncounter2.anchor[5]==-53 and AZSXUIEncounter3.anchor[5]==-106)
 this=AZSXUIEncounter1.debuffs[1];this.scripts.OnEnter();assert(GameTooltip.title=="Rend" and not GameTooltip.hidden)
 AZS_TARGET={id=1};function UnitDebuff(unit,index)assert(unit=="target");if index==2 then return "Interface/Icons/Ability_Gouge"end end
 this.scripts.OnEnter();assert(GameTooltip.title=="Native")
-function UnitDebuff()return "Interface/Icons/Ability_Gouge.blp"end
+function UnitDebuff()return "Interface/Icons/Ability_Gouge" .. ".blp"end
 this.scripts.OnEnter();assert(GameTooltip.title=="Rend")
 function UnitDebuff()error("unavailable")end
 this.scripts.OnEnter();assert(GameTooltip.title=="Rend")
