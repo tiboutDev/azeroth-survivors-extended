@@ -166,6 +166,76 @@ unsafe extern "system" fn preview(c: &mut crate::stub::Context) {
         r.log.warn(&format!("Weapon preview rejected: {e}"))
     }
 }
+// Bevy's entity handle includes its generation. Remember only cosmetic
+// main hands seen by this client's equipment resolver, including remote heroes.
+static GRIPS: std::sync::Mutex<Vec<(u64, bool)>> = std::sync::Mutex::new(Vec::new());
+static EQUIPMENT: AtomicUsize = AtomicUsize::new(0);
+static ACTION: AtomicUsize = AtomicUsize::new(0);
+crate::context_stub_rw!(equipment_entry, 0, equipment, EQUIPMENT);
+crate::context_stub_rw!(action_entry, 0, action, ACTION);
+pub(super) fn reset() {
+    GRIPS.lock().unwrap_or_else(|e| e.into_inner()).clear()
+}
+unsafe extern "system" fn equipment(c: &mut crate::stub::Context) {
+    if c.rbp as u8 != 15 {
+        return;
+    }
+    let Some(r) = RUNTIME.get() else { return };
+    let grip = if c.rax & 1 != 0 {
+        r.adapter.weapon_two_handed(c.rdx as u32)
+    } else {
+        None
+    };
+    let mut grips = GRIPS.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(index) = grips
+        .iter()
+        .position(|(entity, _)| *entity as u32 == c.r13 as u32)
+    {
+        if grip.is_some_and(|two| grips[index] == (c.r13, two)) {
+            return;
+        }
+        grips.remove(index);
+    }
+    if let Some(two) = grip {
+        if grips.len() >= azsx_game::official::NATIVE_PLAYERS {
+            grips.remove(0);
+        }
+        grips.push((c.r13, two));
+    }
+}
+unsafe extern "system" fn action(c: &mut crate::stub::Context) {
+    let before = c.rdi as u16;
+    if c.rdx as u8 != 1 || !matches!(before, 17..=19 | 57 | 58) {
+        return;
+    }
+    let Some(r) = RUNTIME.get() else { return };
+    let read = |p: u64| {
+        r.local
+            .read(p as usize, 8)
+            .ok()
+            .and_then(|v| v.try_into().ok())
+            .map(u64::from_le_bytes)
+    };
+    let Some(entity) = read(c.rbp + 0x10).and_then(read) else {
+        return;
+    };
+    let grip = GRIPS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .iter()
+        .find(|(key, _)| *key == entity)
+        .map(|(_, two)| *two);
+    let Some(two) = grip else { return };
+    let Some(after) = r.adapter.weapon_melee_animation(two, before) else {
+        return;
+    };
+    c.rdi = u64::from(after);
+    #[cfg(feature = "test-hooks")]
+    if std::env::var_os("AZSX_TEST_WEAPONS").is_some() {
+        r.log
+            .info(&format!("Weapon melee animation {before} -> {after}"))
+    }
+}
 pub(super) fn install(r: &Runtime) -> Result<(), String> {
     #[cfg(feature = "test-hooks")]
     if std::env::var_os("AZSX_TEST_WEAPONS").is_some() {
@@ -178,6 +248,18 @@ pub(super) fn install(r: &Runtime) -> Result<(), String> {
         }
     }
     crate::install::install(&[
+        crate::install::HookSpec {
+            name: "weapon-render-equipment",
+            target: r.local.base + entries[6].rva as usize,
+            detour: equipment_entry as *const () as usize,
+            trampoline: &EQUIPMENT,
+        },
+        crate::install::HookSpec {
+            name: "weapon-render-action",
+            target: r.local.base + entries[7].rva as usize,
+            detour: action_entry as *const () as usize,
+            trampoline: &ACTION,
+        },
         crate::install::HookSpec {
             name: "preview-visible-weapons",
             target: r.local.base + entries[5].rva as usize,

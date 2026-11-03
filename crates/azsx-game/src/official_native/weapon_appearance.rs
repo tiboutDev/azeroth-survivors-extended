@@ -414,9 +414,23 @@ fn id(b: &[u8], i: usize) -> u32 {
     u32::from_le_bytes(b[i..i + 4].try_into().unwrap())
 }
 impl Adapter {
-    pub fn weapon_entries(self) -> [Entry; 6] {
+    pub fn weapon_melee_animation(self, two_handed: bool, requested: u16) -> Option<u16> {
+        match (requested, two_handed) {
+            (17, true) => Some(18),
+            (18 | 19, false) => Some(17),
+            (57, true) => Some(58),
+            (58, false) => Some(57),
+            _ => None,
+        }
+    }
+    pub fn weapon_two_handed(self, entry: u32) -> Option<bool> {
+        model(entry)
+            .filter(|v| v.class == 2)
+            .map(|v| v.inventory == 17)
+    }
+    pub fn weapon_entries(self) -> [Entry; 8] {
         [
-            0x5ceedf2, 0x5bffe00, 0x3c18e0, 0x5c4b7f0, 0x5bff970, 0x2a2e7a,
+            0x5ceedf2, 0x5bffe00, 0x3c18e0, 0x5c4b7f0, 0x5bff970, 0x2a2e7a, 0x6d3893, 0xaf0050,
         ]
         .map(|a| Entry {
             rva: self.rva(a),
@@ -578,6 +592,23 @@ impl Adapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn explicit_melee_requests_follow_the_rendered_grip() {
+        let adapter = Adapter::select(crate::current::SHA256).unwrap();
+        for (two, request, expected) in [
+            (true, 17, Some(18)),
+            (true, 57, Some(58)),
+            (false, 18, Some(17)),
+            (false, 19, Some(17)),
+            (false, 58, Some(57)),
+            (true, 18, None),
+            (true, 53, None),
+            (true, 54, None),
+            (false, 87, None),
+        ] {
+            assert_eq!(adapter.weapon_melee_animation(two, request), expected);
+        }
+    }
     #[test]
     fn dominant_tree_and_equipped_set_define_the_two_hands() {
         for (class, points) in [(1, [0; 3]), (2, [5, 5, 0]), (1, [8, 5, 1]), (7, [0, 1, 3])] {

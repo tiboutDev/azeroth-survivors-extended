@@ -310,7 +310,7 @@
       "profiles": [
         "official"
       ],
-      "scope_note": "Table checks cover every specialization and set mapping. All 41 selected display IDs were found in the live native item display catalog. Diagnostic solo and party captures cover Earthshatter Enhancement and starter Protection Warrior. The Earthshatter Enhancement preview was captured in the Armory and on the main menu. The native Armory writes the explicit Worn piece choice to the profile. A separate solo run loaded this choice and displayed the native Earthshatter hands. The full visual set matrix has not been captured."
+      "scope_note": "Table checks cover every specialization and set mapping. All 41 selected display IDs were found in the live native item display catalog. Diagnostic solo and party captures cover Earthshatter Enhancement and starter Protection Warrior. The Earthshatter Enhancement preview was captured in the Armory and on the main menu. The native Armory writes the explicit Worn piece choice to the profile. A separate solo run loaded this choice and displayed the native Earthshatter hands. The host and guest both recorded two-handed special strikes for the Enhancement melee fixture. The native main-hand autoattack selector was replayed with the captured weapon descriptors. Individual spell attribution and the full visual set matrix were not captured."
     }
   }
 }

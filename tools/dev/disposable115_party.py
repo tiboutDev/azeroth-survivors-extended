@@ -25,7 +25,11 @@ def writer(executable):
   text=f"pick|{cls}|{race}|0|elwynn|{name}|0,0,0,0,0|100,100,100,100\nhero|{cls}|{race}|0|0,0,0,0,0\n"
   talents={}if class_override==11 else {"demonic_familiar":1}if cls==9 else fixture["classes"].get(str(cls),{})
   if weapon_trial and cls==7:
-   talents={"enh_thundering_strikes":5}
+   # Use the native melee starters so the visual trial also exercises swings.
+   talents={"enh_thundering_strikes":5,"enh_earthen_bulwark":5,"enh_resonant_shocks":3,
+            "enh_shattering_elements":3,"rockbiter_initiation":1,"enh_windfury_weapon":3,
+            "enh_flametongue_weapon":3,"enh_frostbrand_weapon":3,"enh_unleashed_weapons":1,
+            "enh_ancestral_fortitude":3,"enh_flurry":3,"enh_sweeping_storm":3,"enh_stormbound_echoes":1}
    known_items=[107840,107940]
    text+="equip|7|15:107840,16:107940"+chr(10)
    if manual_weapon:text+="look|7|15:1784217601"+chr(10)

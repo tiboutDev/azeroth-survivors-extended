@@ -603,6 +603,8 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
      checks["manual_worn"]=any("class=Ok([7," in line and "result=Ok(None)" in line for t in logs for line in t.splitlines())
     else:
      checks["projection"]=all(any("class=Ok(["+str(c)+"," in line and "result=Ok(Some(" in line for t in logs for line in t.splitlines()) for c in ([7,1] if players==2 else [7]))
+    if os.environ.get("AZSX_TEST_WEAPON_MELEE")=="1":
+     checks["melee_grip"]=all("Weapon melee animation 57 -> 58" in log for log in logs)
     checks["weapon_display_catalog"]=all("Weapon display catalog (41)" in t for t in logs)
    result=dict(observed_steps=os.environ.get("AZSX_TEST_OBSERVED_STEPS")=="1",scenario=scenario,diagnostic_probe=diagnostic_probe,support_only=support_only,all_events=all_events,owner_tooltip_readback=owner_tips,completion121=completion,players=players,normal=normal,game_version=version,compat121=compat121,enchantments=enchantments,gems=gems,goblins=goblins,immunity=immunity,diagnostic_inputs=not normal,dll_sha256=proof["dll_sha256"],game_sha256=sha,checks=checks,passed=all(checks.values()),grants=grants,ui=ui,desktop_input=False,screenshots=visual,visual_review_required=visual,ritual_ui_single=ritual_ui and seconds<150,visual_discovery_hold=visual and supplies and os.environ.get("AZSX_TEST_VISUAL_HOLD_DISCOVERY")=="1")
    return result

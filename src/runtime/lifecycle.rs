@@ -18,6 +18,7 @@ pub(super) fn end(runtime: &dyn Services) {
     super::raid_markers::reset();
     super::ui_context::reset();
     super::combat_text::reset();
+    super::weapon_appearance::reset();
     menu_pause::reset();
     duplicate_loot::reset();
     wallet::reset();

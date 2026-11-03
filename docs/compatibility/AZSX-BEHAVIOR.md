@@ -554,3 +554,4 @@ Candidate profile: `official`.
 | AZSX-34.01 | Start a run with Worn (spec) | Project the equipped weapon using its set and the unique highest talent tree. Preserve actual gear and stats. |
 | AZSX-34.02 | Select a native Look | Keep the explicit hand appearance. Use native appearance for tied or empty trees. |
 | AZSX-34.03 | Inspect the Armory character model or main-menu portrait | Resolve both visible hands from the selected class and saved ranks using the same set mapping and Look precedence as the run. |
+| AZSX-34.04 | A melee action requests a one- or two-handed strike while a specialization weapon is visible | Match the requested strike to the visible grip for the attacking entity. Preserve spell casts, off-hand hits and native equipment choices. |

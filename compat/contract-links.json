@@ -1660,6 +1660,12 @@
     ],
     "official_native.weapon_appearance.preview_weapons": [
       "AZSX-34"
+    ],
+    "official_native.weapon_appearance.weapon_two_handed": [
+      "AZSX-34"
+    ],
+    "official_native.weapon_appearance.weapon_melee_animation": [
+      "AZSX-34"
     ]
   },
   "evidence": {
@@ -5395,6 +5401,24 @@
     "official_native.weapon_appearance.preview_weapons": {
       "role": "native-operation",
       "reason": "The local preview and in-run model share the equipped set, dominant tree and manual Look precedence.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
+    },
+    "official_native.weapon_appearance.weapon_two_handed": {
+      "role": "native-operation",
+      "reason": "Classifies only AZSX cosmetic main-hand templates for the client melee animation resolver.",
+      "shared": false,
+      "references": [
+        "crates/azsx-game/src/official_native/weapon_appearance.rs",
+        "src/runtime/weapon_appearance.rs"
+      ]
+    },
+    "official_native.weapon_appearance.weapon_melee_animation": {
+      "role": "native-operation",
+      "reason": "Translate explicit melee strike requests for a recognized cosmetic grip at render time.",
       "shared": false,
       "references": [
         "crates/azsx-game/src/official_native/weapon_appearance.rs",
