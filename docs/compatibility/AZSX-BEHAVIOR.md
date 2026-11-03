@@ -152,8 +152,11 @@ Candidate profiles: `support`, `periodic`. [Scenario mappings and limits](../../
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
 | AZSX-07.01 | Direct heal/shield | Respect eligibility, range, missing health/pressure and native limits; do not duplicate an upstream delivery. |
-| AZSX-07.02 | Foreign periodic effect | Retain original caster coefficients, talents, counters, aura lifetime and remaining budget across recipient context changes. |
+| AZSX-07.02 | Foreign periodic effect | Retain original caster coefficients, talents, counters, aura lifetime and remaining budget across recipient context changes. Concurrent Rejuvenation producers keep separate ownership records; refreshing one must not evict another. Renew keeps its spell-level replacement rule. |
 | AZSX-07.03 | Source/recipient dies, departs or aura replaced | Retire appropriate identities/effects; no ticks reach reused slots or another run. |
+| AZSX-07.04 | Swiftmend / Tree of Life on allies | Swiftmend may select an eligible ally below 40% HP within support range; native producer cooldown remains 8 seconds. Tree of Life may heal allies; its overheal cap uses the producer maximum HP. |
+| AZSX-07.05 | Ancestral Fortitude | The native Stormstrike counter casts one free half-power Healing Wave using ordinary support targeting. |
+| AZSX-07.06 | Inspect an annotated talent during a cooperative run | Append the English Co-op note below the native current-rank text on host and guest. Fortified and Ardent Defender combine taunt and absorb-shield information under one Co-op label. Dire Bear Form identifies Shred as its taunt. Solo and armory display the original descriptions. |
 
 ### AZSX-08 — Hybrid support and retaliation
 
@@ -164,8 +167,10 @@ Candidate profiles: `support`, `periodic`. [Scenario mappings and limits](../../
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
 | AZSX-08.01 | Foreign Thorns/Lightning Shield | Retain producer, native modifiers and proc cooldown/budget; recipient outgoing talents cannot steal attribution. |
-| AZSX-08.02 | Holy Nova/Holy Shock and healing/shield talents | Supported allied branches keep caster ownership and native resource/cooldown semantics. |
+| AZSX-08.02 | Holy Nova/Holy Shock and healing/shield talents | Holy Nova and Holy Shock retain native casts, impacts and self-healing, without AZSX group heals or target routing. Reject retired synthetic hybrid deliveries. General Resurrection Sickness remains applicable. Other supported healing/shield talent branches preserve caster ownership and native cooldown semantics. |
 | AZSX-08.03 | Ice Barrier | Remains caster-only, never a group shield. |
+| AZSX-08.04 | Absorption breaks | Divine Aegis applies only to the producer's Power Word: Shield, including allies. Hammer of the Righteous applies only to self-produced, self-worn shields. Rapture restores the same PW:S recipient with its producer's native cooldown. Expiry/replacement is not a fabricated break. |
+| AZSX-08.05 | Conditional buffs and talent area | Lightning Shield is retaliation, never absorption; Stormguard requires that specific active effect. Shield-state talents require absorption. Tranquility and reviewed holy shield bursts use the producer's effective area factor exactly once. Allied Tranquility remains centred on the recipient. |
 
 ### AZSX-09 — Hunter's Mark
 
@@ -175,7 +180,7 @@ Candidate profiles: `combat`. [Scenario mappings and limits](../../compat/featur
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-09.01 | Multiple marks | Strongest valid shared vulnerability applies once, with native visuals and no multiplied duplicate damage. |
+| AZSX-09.01 | Multiple marks | Strongest valid shared vulnerability applies once, with native visuals and no multiplied duplicate damage. Weaker hunters cannot overwrite it; the selected native damage field is used without changing neighbouring state. |
 | AZSX-09.02 | Replacement/death/departure/reset | Reconcile effective mark and clear invalid owner associations. |
 
 ### AZSX-10 — Talent taunts
@@ -509,3 +514,33 @@ Candidate profiles: `rules`, `official`, `official-party-ui`, `azsxui`. [Scenari
 | AZSX-31.03 | Reward | A confirmed native death grants exactly one shared native Banish charge, consumed by native card choice. Missing enemy row, expiry, uncertain write and duplicate callback grant nothing extra. No ordinary XP, gold or boss reward from the event definition. |
 | AZSX-31.04 | Presentation | Detached API exposes the current recipient's structured event in solo and coop. Opening announcements do not reveal rewards. Optional AZSXUI shows an objective, native-icon marker and one terminal reward toast; unrelated UI state survives. |
 | AZSX-31.05 | Compatibility boundary | Guard exact 0.138.0 Banish, demon definition, native spawn, world scene and broadcast contacts. Changed contacts disable the encounter rather than guessing. |
+
+
+### AZSX-32 — Allied Polymorph rupture
+
+Mode: **Coop**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
+
+Candidate profiles: `combat`, `official`. [Scenario mappings and limits](../../compat/feature-validation.json).
+
+| Criterion | Trigger / case | Required outcome |
+| --- | --- | --- |
+| AZSX-32.01 | Ally hits another player's active sheep, including without a special ability |  Eligible hit ruptures it once; native explosion power, critical rolls, talents and meter attribution belong to the caster. Original hit remains the attacker's. |
+| AZSX-32.02 | Host/guest, guest/guest, nested burst | Restore the triggering actor before subsequent procs, including Faerie Fire. No synthetic hit or repeated burst. |
+| AZSX-32.03 | Expired sheep, dead/departed/replaced caster, ambiguous ownership | Do not borrow an invalid producer or revive expired control. Own sheep and solo retain native behavior. |
+| AZSX-32.04 | Native completion/flush failure | Attempt actor restoration before returning the failure; never replay uncertain native effects. |
+
+### AZSX-33 — Cooperative armor sets and legendary necklaces
+
+Mode: **Coop**. Disposition: **active**. Details: [Contract](../features/FEATURE-RULES.md).
+
+Candidate profiles: `combat`, `support`, `official`. [Scenario mappings and limits](../../compat/feature-validation.json).
+
+| Criterion | Trigger / case | Required outcome |
+| --- | --- | --- |
+| AZSX-33.01 | Ally kills a victim carrying Serpent Sting, Rupture, Flame Shock or Curse of Agony | Dispatch the wearer's matching native eight-piece bonus once with that producer's active effect. Preserve the producer of any propagated DoT. |
+| AZSX-33.02 | Execute, Holy Shock, Judgement, Eviscerate or Mind Flay kill | Only the native killing spell and its producer qualify. Keep personal counters, cooldowns and unrelated kill effects. |
+| AZSX-33.03 | Devout Power Word: Shield breaks on self or ally | The priest's set bursts around the recipient at 8 yards times the producer's area factor. Divine Aegis can trigger independently once. Both Devout tiers require an actual PW:S break. |
+| AZSX-33.04 | PvP set debuffs and controlled targets | Mortal Strike and Earth Shock benefit allied attackers and retain the strongest active vulnerability. An ally's control satisfies the seven other PvP set conditions for the wearer only. |
+| AZSX-33.05 | A teammate finishes an enemy carrying a legendary necklace DoT | Each eligible producer triggers the matching native explosion once. A qualifying set bonus can also trigger. |
+| AZSX-33.06 | A shield or healing necklace targets another player | The Power Word: Shield necklace bursts around the protected player with the caster's area bonus. Holy Light and Regrowth apply an absorb pool capped at 40% of caster maximum health on cast. |
+| AZSX-33.07 | Vampiric Renew or Rejuvenation heals another player | The recipient gains 5% leech on their own damage for 10 or 12 simulation seconds respectively. Recasting the same necklace on the same recipient refreshes its duration. |

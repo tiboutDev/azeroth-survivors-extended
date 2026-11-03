@@ -17,7 +17,7 @@ def assess(host,mode):
   checks["foreign_periodics_and_buffs"]=all(sp in byspell and str(byspell[sp][1])in byspell[sp][4]for sp in (139,774,17,467,324))
   deliveries=re.findall(r"official support delivered: caster=(\d+) target=(\d+) spell=(\d+) raw=([^ ]+) effective=([^\r\n]+)",host)
   checks["direct_healing_receipts_both_ways"]=all(any(int(sp)==spell and int(c)==caster and int(t)==1-caster and float(e)>0 for c,t,sp,raw,e in deliveries)for spell,caster in ((635,0),(331,1)))
-  checks["hybrid_receipts"]=all(any(int(sp)==spell and float(e)>0 for c,t,sp,raw,e in deliveries)for spell in (15237,25912))
+  checks["hybrid_casts_without_custom_receipts"]=all(sp in byspell and any(int(cast[1])==sp for cast in casts) for sp in (15237,25912)) and not any(int(sp) in (15237,25912) for c,t,sp,raw,e in deliveries)
   checks["actual_retaliation_damage"]=all(any(int(sp)==spell and float(e)>0 for sp,e in re.findall(r"official retaliation hit:.*?spell=(\d+).*?effective=([^\r\n]+)",host))for spell in (467,324))
   checks["ice_barrier_caster_only"]=11426 in byspell and byspell[11426][4]=="[0]"
   checks["shield_consumed"]="support121 shield break: Ok(true)"in host

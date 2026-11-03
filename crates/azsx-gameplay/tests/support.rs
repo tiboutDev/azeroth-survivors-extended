@@ -156,12 +156,18 @@ fn pressure_counts_live_nearby_enemies() {
     assert_eq!(pressure(&p, &e)[&1], 1);
 }
 #[test]
-fn hybrids_use_per_unit_amount_and_never_redirect_offensive_targets() {
+fn native_hybrids_have_no_custom_group_targets() {
     let mut p = party();
     p[1].position = [26., 0., 0.];
     p[2].hp = 100.;
-    assert_eq!(group_targets(&p, 1, Spell::HolyNova, 10.), vec![4]);
-    assert_eq!(group_targets(&p, 1, Spell::HolyShock, 10.), vec![2, 4]);
+    assert!(group_targets(&p, 1, Spell::HolyNova, 10.).is_empty());
+    assert!(group_targets(&p, 1, Spell::HolyShock, 10.).is_empty());
+    for spell in [Spell::HolyNova, Spell::HolyShock] {
+        assert_eq!(select(&p, &std::collections::BTreeMap::new(), 1, spell, 10.), None);
+        let mut port = Port::default();
+        assert!(!deliver(&mut port, request(spell), &p, 10.).unwrap());
+        assert!(port.commands.is_empty());
+    }
     assert_eq!(group_targets(&p, 1, Spell::BattleShout, 10.), vec![2, 3, 4]);
     assert_eq!(elementary_heal(0.1, 200.), 20.);
     assert!(!redirect_heal(1, 2, Spell::HolyShock, 20.));

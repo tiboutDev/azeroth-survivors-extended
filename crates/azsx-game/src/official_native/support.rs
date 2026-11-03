@@ -7,13 +7,14 @@ use crate::{
 };
 mod advanced;
 mod effects;
+mod talents;
 pub use advanced::{NativeEffect, RetaliationTick};
 pub use effects::{
     NativeHealCall, call_native_heal, NativeHurtCall, AuraState, BreakFrame, OwnedEffect, PeriodicTick, PerkLoan, SupportReceipt, SupportTalents,
 };
 pub const ROUTE: u32 = 0xac115000;
 // Internal descriptor padding only, not native protocol opcodes. Three target
-// bits cover native slot 4; area delivery has a separate bit and cannot collide.
+// bits cover native slot 4; bit 3 is reserved for retired group delivery and rejected.
 pub const ROUTE_GROUP: u32 = 8;
 const ROUTE_TARGET: u32 = 7;
 #[derive(Clone, Debug)]
@@ -149,8 +150,7 @@ impl Adapter {
             Some(0x6cc5c00) => Some(17),
             Some(0x6cc61a0) => Some(324),
             Some(0x6cc73e8) => Some(467),
-            Some(0x6cc5b88) => Some(15237),
-            Some(0x6cc4c10) => Some(25912),
+            // Holy Nova and Holy Shock retain native cast/impact behavior.
             Some(0x6cc4df0) => Some(635),
             Some(0x6cc6380) => Some(331),
             _ => None,
@@ -217,6 +217,7 @@ impl Adapter {
         {
             return Err("Invalid outgoing support talents".into());
         }
+        talents.nature_radius *= self.support_area_factor(mem, game)?;
         talents.maximum = maximum;
         Ok(SupportCaster {
             slot: slot as u32,
@@ -322,13 +323,9 @@ impl Adapter {
         }
         let caster = u64::from_le_bytes(row[..8].try_into().unwrap());
         let spell = at(28);
-        let target = if tag & ROUTE_GROUP != 0 {
-            self.support_caster(mem, game)?.slot
-        } else {
-            tag & ROUTE_TARGET
-        };
+        let target = tag & ROUTE_TARGET;
         if target as usize >= crate::official_native::NATIVE_PLAYERS
-            || (tag & ROUTE_GROUP != 0 && tag & ROUTE_TARGET != 0)
+            || tag & ROUTE_GROUP != 0
         {
             return Err("Invalid routed support recipient".into());
         }
@@ -336,7 +333,7 @@ impl Adapter {
         if caster as usize >= crate::official_native::NATIVE_PLAYERS
             || !matches!(
                 spell,
-                635 | 331 | 139 | 774 | 8936 | 17 | 11426 | 324 | 467 | 15237 | 25912
+                635 | 331 | 139 | 774 | 8936 | 17 | 11426 | 324 | 467
             )
             || !matches!(at(40), 13 | 14 | 15)
             || !f32::from_bits(at(36)).is_finite()
@@ -353,7 +350,6 @@ impl Adapter {
             _ => 14,
         };
         if at(40) != expected
-            || (tag & ROUTE_GROUP != 0) != matches!(spell, 15237 | 25912)
             || (at(40) == 13
                 && (!f32::from_bits(at(44)).is_finite()
                     || !(0.0..=1e12).contains(&f32::from_bits(at(44)))
@@ -363,23 +359,6 @@ impl Adapter {
         }
         let actor = self.support_caster(mem, game)?;
         let mut row = row;
-        let mut eligible = true;
-        if tag & ROUTE_GROUP != 0 {
-            let origin = std::array::from_fn::<_, 3, _>(|n| f32::from_bits(at(16 + n * 4)));
-            let radius = if spell == 15237 { 25.0f32 } else { 30.0 };
-            let distance = actor
-                .position
-                .iter()
-                .zip(origin)
-                .map(|(a, b)| (*a - b).powi(2))
-                .sum::<f32>();
-            if origin.iter().any(|v| !v.is_finite())
-                || caster as u32 == actor.slot
-                || distance > radius * radius
-            {
-                eligible = false;
-            }
-        }
         if actor.slot == target && at(40) != 13 {
             let fraction = amount / actor.maximum;
             if !fraction.is_finite() {
@@ -394,7 +373,7 @@ impl Adapter {
             spell,
             amount,
             duration: f32::from_bits(at(36)),
-            eligible,
+            eligible: true,
             shield: at(40) == 15,
             row,
         }))
@@ -563,4 +542,47 @@ impl Adapter {
  pub fn spell_modifiers_entry(self)->crate::official::Entry {
   crate::official::Entry{rva:self.contact117(crate::current::SPELL_MODIFIERS_RVA),bytes:self.extension_bytes117(0x5ab3360,crate::current::SPELL_MODIFIERS_BYTES)}
  }
+}
+
+#[cfg(test)]
+mod native_hybrid_retirement_tests {
+    use super::*;
+
+    struct Memory { address: u64, bytes: Vec<u8> }
+    impl Mem for Memory {
+        fn read(&self, address: u64, len: usize) -> Result<Vec<u8>> {
+            if address == self.address && len == self.bytes.len() {
+                Ok(self.bytes.clone())
+            } else {
+                Err("Unexpected native context read".into())
+            }
+        }
+    }
+
+    #[test]
+    fn native_hybrid_definitions_bypass_support_selection_but_direct_heals_remain() {
+        let adapter = Adapter::select(crate::current::SHA256).unwrap();
+        let base = 0x140000000;
+        for (definition, expected) in [(0x6cc5b88, None), (0x6cc4c10, None), (0x6cc4df0, Some(635))] {
+            let mem = Memory { address: 0x20000,
+                bytes: (base + adapter.rva(definition)).to_le_bytes().to_vec() };
+            assert_eq!(adapter.support_spell(&mem, base, mem.address).unwrap(), expected);
+        }
+    }
+
+    #[test]
+    fn retired_group_and_single_target_hybrid_receipts_fail_before_actor_reads() {
+        let adapter = Adapter::select(crate::current::SHA256).unwrap();
+        for spell in [15237u32, 25912] {
+            for route in [ROUTE | ROUTE_GROUP, ROUTE | 1] {
+                let mut bytes = vec![0u8; 56];
+                bytes[28..32].copy_from_slice(&spell.to_le_bytes());
+                bytes[40..44].copy_from_slice(&14u32.to_le_bytes());
+                bytes[52..56].copy_from_slice(&route.to_le_bytes());
+                let mem = Memory { address: 0x20000, bytes };
+                let error = adapter.support_delivery(&mem, 0x30000, mem.address).unwrap_err();
+                assert!(error == "Invalid routed support recipient" || error == "Invalid routed support event");
+            }
+        }
+    }
 }

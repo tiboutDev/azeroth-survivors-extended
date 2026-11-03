@@ -16,6 +16,18 @@ class Native138(unittest.TestCase):
   sha=re.search(r'SHA256\s*:\s*&str\s*=\s*"([0-9a-f]{64})"',source)[1]
   self.assertEqual(json.loads((ROOT/"azsx/supported-games.json").read_text())["games"]["0.138.0"]["sha256"],sha)
   self.assertIn("Revision::V138",(ROOT/"crates/azsx-game/src/official_native.rs").read_text())
+ def test_native_set_filter_skips_one_perk_and_preserves_indices(self):
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  if not path.exists():self.skipTest("Private pinned image unavailable")
+  import struct
+  from compare_official import Image
+  image=Image(path)
+  owner={x.address:x for x in image.ins(0x5d3f200)}
+  lea=owner[0x5d3f52a]
+  table=lea.address+lea.size+lea.operands[1].mem.disp
+  self.assertEqual(table+struct.unpack("<i",image.pe.get_data(table+13*4,4))[0],0x5d3f4a0)
+  self.assertEqual(owner[0x5d3f4a0].op_str,"rcx, qword ptr [rbp + 0x198]")
+  self.assertEqual(owner[0x5d3f4a7].op_str,"r9, qword ptr [rbp + 0x10]")
  def test_native_contacts_guards_and_interior_branches(self):
   path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private pinned 0.138.0 image unavailable")
@@ -42,7 +54,7 @@ class Native138(unittest.TestCase):
        self.assertFalse(rva<target<boundary and not(rva<=i.address<boundary),f"branch into contact {key:x}: {i.address:x}->{target:x}")
     count+=1
   # Nine unconsumed/retired seams were removed from the old 71-contact set.
-  self.assertEqual(count,70)  # Includes all nine retained pause UI guards.
+  self.assertEqual(count,81)  # Polymorph seams plus talent condition/area guards.
   for retired in (0x10d95b,0x10d9e0,0x5908da8,0x594bfd9,0x594e3de,0x595f6da,0x595f91d,0x595ff10,0x5983784):
    self.assertNotIn(retired,contacts)
 
@@ -392,3 +404,36 @@ class AddonAndLobbyNativeContracts(unittest.TestCase):
   self.assertEqual(constants['LOBBY_NAME'],0xd0)
   self.assertTrue(any('+ 0xd0]'in op for op in host))
   self.assertIn('0x20bab0',host)
+
+class CooperativeSpellBranches(unittest.TestCase):
+ def test_polymorph_scope_rejoins_before_other_procs_and_uses_native_owner_storage(self):
+  path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
+  if not path.exists():self.skipTest("Private pinned 0.138.0 image unavailable")
+  from compare_official import Image,MD,memory_budget
+  from capstone import CS_GRP_JUMP
+  if sys.platform.startswith("linux"):
+   import resource
+   limits=resource.getrlimit(resource.RLIMIT_AS)
+   self.addCleanup(resource.setrlimit,resource.RLIMIT_AS,limits)
+   memory_budget(2048)
+  image=Image(path)
+  self.assertEqual(image.sha,json.loads((ROOT/"azsx/supported-games.json").read_text())["games"]["0.138.0"]["sha256"])
+  ins={i.address:i for i in image.ins(0x5cfb530)}
+  pending=[0x5cfeb6c];seen=set()
+  while pending:
+   addr=pending.pop()
+   if addr==0x5cfed67 or addr in seen:continue
+   seen.add(addr);i=ins[addr]
+   self.assertNotIn(i.mnemonic,("ret","ud2"),"Polymorph scope escaped without restoring its actor")
+   if i.group(CS_GRP_JUMP):
+    self.assertEqual(i.operands[0].type,2)
+    pending.append(i.operands[0].imm)
+    if i.mnemonic=="jmp":continue
+   pending.append(addr+i.size)
+  self.assertIn(0x5cff84d,seen) # Native recursive burst damage.
+  self.assertNotIn(0x5cfefa9,seen) # Faerie Fire runs after restoration.
+  # Native swap: Game+ad8/ae0 <-> Actor+9d0/9d8 (one 16-byte move).
+  rows=list(MD.disasm(image.pe.get_data(0x5d193ec,28),0x5d193ec))
+  self.assertEqual([r.op_str for r in rows],[
+   'xmm0, xmmword ptr [rdx + 0x9d0]', 'xmm1, xmmword ptr [rcx + 0xad8]',
+   'xmmword ptr [rcx + 0xad8], xmm0', 'xmmword ptr [rdx + 0x9d0], xmm1'])

@@ -2,6 +2,10 @@
 //! custom-engine profile: doing so would enable a second simulation coordinator.
 use crate::{memory::Mem, Result};
 mod combat;
+mod polymorph;
+mod sets;
+pub use sets::SetDeath;
+pub use polymorph::PolymorphLoan;
 mod demon;
 mod difficulty;
 mod fatigue;
@@ -901,6 +905,7 @@ mod gems;
 pub use gems::AmuletChoice;
 
 mod bonus_tooltip;
+mod talent_panel;
 
 impl Adapter {
 

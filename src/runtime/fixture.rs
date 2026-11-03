@@ -1223,7 +1223,41 @@ fn completion121_tick(r:&Runtime,server:u64){
   if let Err(error)=r.adapter.fixture_event_pose(&io,game,0,p.actors[0].guid,p.actors[1].position){r.log.warn(&format!("Support121 fixture pose rejected: {error}"));return}
  }
  if p.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return}
+ if std::env::var("AZSX_TEST_NECKLACE_BLOCK").as_deref()==Ok("1"){
+  static CASE:AtomicUsize=AtomicUsize::new(18);
+  if p.clock<25.0+(CASE.load(Ordering::Acquire).saturating_sub(18) as f32)*2.0{return}
+  let Some(mut ability)=SUPPORT_PROTOTYPE.lock().ok().and_then(|p|p[0].clone()) else{return};
+  let Ok(case)=CASE.fetch_update(Ordering::AcqRel,Ordering::Acquire,|n|(n<=23).then_some(n+1))else{return};
+  let Ok(game)=r.adapter.game_address(server)else{return};let io=io::Access{local:&r.local,adapter:r.adapter};
+  let base=r.local.base as u64;
+  let result=if case<20{r.adapter.fixture_sets(&io,game,base,case as u32,||combat::sets::finish(r,game))}else{
+   let spell=[635,8936,139,774][case-20];
+   r.adapter.fixture_support_definition(spell).and_then(|def|{
+    ability[..8].copy_from_slice(&(base+def).to_le_bytes());
+    support::fixture_target(Some(1),||r.adapter.fixture_necklace_cast(&io,base,game,spell,ability.as_ptr() as u64))
+   })
+  };
+  r.log.info(&format!("necklace block result {case}: {result:?}"));
+  if case==23{r.log.info("necklace block complete");}
+  return;
+ }
+ if std::env::var("AZSX_TEST_SET_BLOCK").as_deref()==Ok("1"){
+  static CASE:AtomicUsize=AtomicUsize::new(0);
+  // Native melee witnesses must already be present in the spatial index.
+  if p.clock<25.0{return}
+  if let Ok(case)=CASE.fetch_update(Ordering::AcqRel,Ordering::Acquire,|n|(n<=17).then_some(n+1)){
+   let Ok(game)=r.adapter.game_address(server)else{return};
+   let io=io::Access{local:&r.local,adapter:r.adapter};
+   r.log.info(&format!("set block start {case}"));
+   let result=r.adapter.fixture_sets(&io,game,r.local.base as u64,case as u32,||combat::sets::finish(r,game));
+   r.log.info(&format!("set block result {case}: {result:?}"));
+   if case==17{r.log.info("set block complete");}
+  }
+  return;
+ }
  let (index,stage,began,before)=*STATE.lock().unwrap();if index>=if shield_only{6}else{CASES.len()}{
+  if std::env::var("AZSX_TEST_TALENT_BLOCK").as_deref()==Ok("1"){talent_block_tick(r,server);return;}
+  if std::env::var("AZSX_TEST_SPELL_BLOCK").as_deref()==Ok("1"){spell_block_tick(r,server);return;}
   if std::env::var("AZCOOP_TEST_SUPPORT121_FULL").as_deref()==Ok("1"){
    fatigue_tick(r,server);
    if FATIGUE_STAGE.load(Ordering::Acquire)>=8 && FATIGUE_STAGE.load(Ordering::Acquire)<20{
@@ -1321,4 +1355,84 @@ fn remaining_ui_tick(r:&Runtime,server:u64){
   if cast==Ok(true){*STATE.lock().unwrap()=(stage+1,party.clock,0);}
 
  }
+}
+
+
+fn spell_block_tick(r:&Runtime,server:u64){
+ static CASE:AtomicUsize=AtomicUsize::new(0);
+ let index=CASE.load(Ordering::Acquire);
+ if index>=3 {marks121_tick(r,server);return;}
+ if index==2 {
+  let prototypes=SUPPORT_PROTOTYPE.lock().ok().and_then(|p|Some(vec![p[0].clone()?,p[1].clone()?]));
+  let Some(prototypes)=prototypes else{return};CASE.store(3,Ordering::Release);
+  let Ok(game)=r.adapter.game_address(server)else{return};let io=io::Access{local:&r.local,adapter:r.adapter};
+  let result=unsafe{r.adapter.fixture_two_hunters(&io,r.local.base as u64,game,&prototypes)};
+  r.log.info(&format!("spell block native hunters: {result:?}"));return;
+ }
+ let Ok(Some(p))=r.adapter.party(&r.local,server)else{return};
+ if p.actors.len()!=2||p.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return}
+ let Some(prototype)=SUPPORT_PROTOTYPE.lock().ok().and_then(|v|v[index].clone())else{return};
+ CASE.store(index+1,Ordering::Release);
+ let Ok(game)=r.adapter.game_address(server)else{return};
+ let io=io::Access{local:&r.local,adapter:r.adapter};
+ let result=unsafe{r.adapter.fixture_polymorph_probe(&io,r.local.base as u64,game,index as u32,&prototype)};
+ r.log.info(&format!("spell block polymorph: caster={index} result={result:?}"));
+}
+
+fn talent_block_tick(r:&Runtime,server:u64){
+ use azsx_game::official::SupportCalls;
+ static CASE:AtomicUsize=AtomicUsize::new(0);
+ static PENDING:std::sync::Mutex<Option<(usize,u64,u64,f32)>>=std::sync::Mutex::new(None);
+ let index=CASE.load(Ordering::Acquire);if index>=7{return}
+ let Ok(Some(p))=r.adapter.party(&r.local,server)else{return};
+ if p.actors.len()!=2||p.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return}
+ let Ok(game)=r.adapter.game_address(server)else{return};let io=io::Access{local:&r.local,adapter:r.adapter};
+ if index==0{let result=r.adapter.fixture_support_wounds(&io,game,0,1);r.log.info(&format!("talent block prepare: {result:?}"));CASE.store(1,Ordering::Release);return}
+ let pending=PENDING.lock().ok().and_then(|mut p|p.take());
+ if let Some((case,source,target,hp))=pending{
+  if let Some(recipient)=p.actors.iter().find(|a|a.guid==target){
+   r.log.info(&format!("talent block native: case={case} source={source} target={target} hp_before={hp} hp_after={} shields={:?}",recipient.hp,r.adapter.support_buff_slots(&r.local,game,17)));
+  }
+  CASE.store(index+1,Ordering::Release);
+  if index==6{r.log.info("talent block complete");}
+  return;
+ }
+
+ let result=(||->Result<(f32,Option<f32>),String>{
+  let kind=match index{1=>2,2|3=>0,4|5=>1,6=>5,_=>unreachable!()};
+  let witness=r.adapter.fixture_combat_enemy(&io,game,5)?.ok_or("Missing talent witness")?;
+  let before=r.adapter.support_enemies(&r.local,game)?;
+  let witness=before.iter().find(|e|e.guid==witness).ok_or("Missing talent enemy")?;
+  let point=witness.position.map(|v|v as f32);
+  // Move only the owned actors, then restore both poses before returning.
+  // The existing enemy remains in its native spatial index.
+  if index!=1{for actor in &p.actors{r.adapter.fixture_event_pose(&io,game,actor.slot,actor.guid,point)?;}}
+  let outcome=(||->Result<(f32,Option<f32>),String>{
+  let loan=r.adapter.fixture_talent_loan(&io,game,r.local.base as u64,kind)?;
+  let source=r.adapter.support_caster(&r.local,game)?;
+  let mut event=[0u8;40];event[24..28].copy_from_slice(&100f32.to_le_bytes());event[29]=if index==1{5}else{6};
+  let target=if index==5{0}else{1};let recipient=&p.actors[target];
+  for(n,v)in recipient.position.into_iter().enumerate(){event[12+n*4..16+n*4].copy_from_slice(&v.to_le_bytes());}
+  let call_result=if index==1{
+   type Proc=unsafe extern "system" fn(u64,*const u8,u64);
+   let call:Proc=unsafe{std::mem::transmute(r.local.base+r.adapter.support_proc_entries()[1].rva as usize)};
+   unsafe{call(game,event.as_ptr(),0)};
+   // Same native event twice: the native cooldown must prevent a second free cast.
+   unsafe{call(game,event.as_ptr(),0)};
+   Ok(())
+  }else{io.shield_proc(game,&event,point,recipient.guid,if index==3{324}else{17})};
+  let call_result=call_result.and_then(|_|io.flush_actor(game));
+  let restored=r.adapter.fixture_restore_perks(&io,game,loan);
+  call_result?;let cooldown=restored?;
+  let after=r.adapter.support_enemies(&r.local,game)?;
+  let damage=before.iter().filter_map(|b|after.iter().find(|a|a.guid==b.guid).map(|a|(b.hp-a.hp).max(0.)as f32)).sum();
+  if let Ok(mut pending)=PENDING.lock(){*pending=Some((index,source.guid,recipient.guid,recipient.hp));}
+  Ok((damage,cooldown))
+  })();
+  let mut restore=Ok(());
+  if index!=1{for actor in &p.actors{if let Err(e)=r.adapter.fixture_event_pose(&io,game,actor.slot,actor.guid,actor.position){restore=Err(e);}}}
+  restore?;outcome
+ })();
+ r.log.info(&format!("talent block result: case={index} result={result:?}"));
+ if result.is_err(){CASE.store(7,Ordering::Release);r.log.info("talent block complete");}
 }

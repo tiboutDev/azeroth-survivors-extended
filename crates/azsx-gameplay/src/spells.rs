@@ -111,7 +111,7 @@ impl Events {
         Some(Completion {
             cast,
             clear_self_owner: cast.caster == cast.target,
-            group_heal: cast.spell.hybrid(),
+            group_heal: false, // Native hybrid casts do not generate AZSX group heals.
         })
     }
     /// A confirmed native false return, distinct from an unobserved outcome.

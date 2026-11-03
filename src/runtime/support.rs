@@ -15,6 +15,7 @@ static ACTIVE: std::sync::Mutex<Vec<(u64, Active)>> = std::sync::Mutex::new(vec!
 static TALENTS: std::sync::Mutex<Vec<(u64, u32, SupportTalents)>> = std::sync::Mutex::new(vec![]);
 static RECEIPTS: std::sync::Mutex<Vec<SupportReceipt>> = std::sync::Mutex::new(vec![]);
 static BREAKS: std::sync::Mutex<Vec<(OwnedEffect, [f32; 3], f32)>> = std::sync::Mutex::new(vec![]);
+static CONDITION_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 static QUERY_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 static BREAK_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 thread_local! {static ORIGIN:std::cell::Cell<Option<[f32;3]>>=const{std::cell::Cell::new(None)};static QUERY_POSITION:std::cell::UnsafeCell<[f32;3]>=const{std::cell::UnsafeCell::new([0.0;3])};}
@@ -33,6 +34,7 @@ static APPLY_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 static CREDITS: std::sync::Mutex<Vec<(u32, u32, f32)>> = std::sync::Mutex::new(vec![]);
 type Cast = unsafe extern "system" fn(u64, u64) -> bool;
 pub(super) unsafe extern "system" fn cast(game: u64, ability: u64) -> bool {
+    NEXT_NECKLACE_CAST.with(|v| v.set(None));
     let original: Cast = std::mem::transmute(CAST_ORIGINAL.load(Ordering::Acquire));
     let Some(runtime) = RUNTIME.get().filter(|r| r.rules) else {
         return original(game, ability);
@@ -122,7 +124,7 @@ pub(super) unsafe extern "system" fn cast(game: u64, ability: u64) -> bool {
                 return None;
             }
             actor.slot + 1
-        } else if matches!(spell, 15237 | 25912 | 11426) {
+        } else if spell == 11426 {
             caster.slot + 1
         } else {
             policy::select(
@@ -269,25 +271,6 @@ pub(super) unsafe extern "system" fn cast(game: u64, ability: u64) -> bool {
                 }
             }
         }
-        if matches!(spell, 15237 | 25912) {
-            // Keep every offensive target and the native self-heal. Add one
-            // per-unit heal for each eligible allied player after a real heal.
-            if (spell == 25912 || completed.is_some_and(|s| s.suppressed)) && success {
-                if let Err(e) = runtime.adapter.emit_hybrid(
-                    &io,
-                    game,
-                    runtime.local.base as u64,
-                    spell,
-                    before,
-                    caster.maximum,
-                ) {
-                    runtime
-                        .log
-                        .warn(&format!("Official hybrid emit rejected: {e}"));
-                }
-            }
-            return success;
-        }
         if let Err(error) =
             runtime
                 .adapter
@@ -297,12 +280,21 @@ pub(super) unsafe extern "system" fn cast(game: u64, ability: u64) -> bool {
                 .log
                 .warn(&format!("Official support route rejected: {error}"));
         }
+        #[cfg(feature="test-hooks")]
+        if std::env::var("AZSX_TEST_SPELL_BLOCK").as_deref()==Ok("1") && matches!(spell,324|467) {
+            runtime.log.info(&format!("spell block retaliation queue: spell={spell} caster={} target={target:?} before={before} after={:?}",caster.slot,runtime.adapter.support_queue_count(&runtime.local,game)));
+        }
         if let Some(target) = target {
             let guid = runtime.party.lock().ok().and_then(|p| {
                 p.as_ref()
                     .and_then(|p| p.actors.iter().find(|a| a.slot == target).map(|a| a.guid))
             });
             if let Some(guid) = guid {
+                if target != caster.slot && matches!(spell, 635|8936|139|774) {
+                    if let Ok(clock)=runtime.adapter.set_clock(&runtime.local,game) {
+                        NEXT_NECKLACE_CAST.with(|v| v.set(Some(NecklaceCast {game,spell,caster:(caster.slot,caster.guid),target:(target,guid),clock})));
+                    }
+                }
                 if let Ok(mut active) = ACTIVE.lock() {
                     if let Some((_, a)) = active.iter_mut().find(|(g, _)| *g == guid) {
                         match spell {
@@ -342,22 +334,13 @@ unsafe fn select_heal(c: &mut crate::stub::Context) {
     let Some(scope) = CAST.with(|v| v.get()).filter(|s| {
         s.game == c.rcx
             && s.spell == c.r8 as u32
-            && (s.target != s.caster || matches!(s.spell, 15237 | 25912))
+            && s.target != s.caster
     }) else {
         return;
     };
     let Some(runtime) = RUNTIME.get().filter(|r| r.rules) else {
         return;
     };
-    if matches!(scope.spell, 15237 | 25912) {
-        CAST.with(|v| {
-            v.set(Some(Selection {
-                suppressed: true,
-                ..scope
-            }))
-        });
-        return;
-    }
     // The reviewed direct cast sites pass the non-owning native metadata sentinel.
     // Never skip a call that transfers an owned label/string to the native meter.
     if runtime
@@ -433,9 +416,7 @@ unsafe extern "system" fn apply(game: u64, descriptor: u64) {
                 ) {
                     Ok(owner) => {
                         if let Ok(mut owners) = OWNERS.lock() {
-                            owners.retain(|o| {
-                                o.target_guid != owner.target_guid || o.spell != owner.spell
-                            });
+                            owners.retain(|o| !owner.replaces(o));
                             if owners.len() < 64 {
                                 owners.push(owner)
                             }
@@ -568,6 +549,8 @@ pub fn finish(runtime: &Runtime, game: u64) {
 }
 pub fn hooks(adapter: Adapter) -> Vec<crate::install::HookSpec> {
     let mut hooks = vec![
+        crate::install::HookSpec{name:"official-necklace-leech",target:local_base()+adapter.necklace_leech_entry().rva as usize,detour:necklace_leech as *const () as usize,trampoline:&LEECH_ORIGINAL},
+        crate::install::HookSpec{name:"official-support-talent-condition",target:local_base()+adapter.talent_condition_entry().rva as usize,detour:talent_condition as *const () as usize,trampoline:&CONDITION_ORIGINAL},
  crate::install::HookSpec{name:"official-support-hit-effect",target:local_base()+adapter.native_hit_effect_entry().rva as usize,detour:effect_hit as *const ()as usize,trampoline:&EFFECT_HIT},
         crate::install::HookSpec {
             name: "official-support-retaliation",
@@ -624,6 +607,8 @@ pub fn hooks(adapter: Adapter) -> Vec<crate::install::HookSpec> {
 #[cfg(feature="test-hooks")]
 static METER_TRACE:AtomicUsize=AtomicUsize::new(0);
 pub fn reset() {
+    NEXT_NECKLACE_CAST.with(|v|v.set(None));
+    if let Ok(mut windows) = LEECH_WINDOWS.lock() { windows.clear(); }
     #[cfg(feature="test-hooks")]
     METER_TRACE.store(0,Ordering::Release);
     if let Ok(mut r) = RETALIATION.lock() {
@@ -814,6 +799,19 @@ pub(super) fn with_origin<T>(origin: [f32; 3], f: impl FnOnce() -> T) -> T {
 }
 crate::context_stub_rw!(query_entry, 0, query_origin, QUERY_ORIGINAL);
 unsafe extern "system" fn query_origin(c: &mut crate::stub::Context) {
+    if let Some(r)=RUNTIME.get().filter(|r|r.rules){
+        let radius=f32::from_bits(c.xmm[3] as u32);
+        match r.adapter.talent_query_radius(&r.local,c.rdx,c.return_address().wrapping_sub(r.local.base as u64),radius){
+            Ok(adjusted)=>{
+                #[cfg(feature="test-hooks")]
+                if ORIGIN.with(|v|v.get()).is_some() && std::env::var("AZSX_TEST_SET_BLOCK").as_deref()==Ok("1"){
+                    r.log.info(&format!("set shield radius: base={radius} effective={adjusted}"));
+                }
+                c.xmm[3]=(c.xmm[3]&!(u32::MAX as u128))|u128::from(adjusted.to_bits());
+            },
+            Err(e)=>r.log.warn(&format!("Official talent radius rejected: {e}")),
+        }
+    }
     // The query reads synchronously. The owned TLS copy lives until native proc returns.
     if let Some(origin) = ORIGIN.with(|o| o.get()) {
         if let Some(r) = RUNTIME.get() {
@@ -862,21 +860,17 @@ unsafe extern "system" fn shield_break(c: &mut crate::stub::Context) {
     let Ok(actor) = runtime.adapter.support_caster(&runtime.local, frame.game) else {
         return;
     };
-    let owner = OWNERS.lock().ok().and_then(|mut owners| {
-        let i = owners.iter().position(|o| {
-            o.shield
-                && o.target_guid == actor.guid
-                && o.spell == frame.spell
-                && o.caster != actor.slot
-        })?;
-        Some(owners.remove(i))
-    });
-    let Some(owner) = owner else { return };
-    if let Ok(mut pending) = BREAKS.lock() {
-        if pending.len() < 64 {
-            pending.push((owner, actor.position, frame.amount));
-        }
-    }
+    // No native calls occur while these bounded queues are locked. Retire the
+    // owner only after accepting the break; overflow must retain attribution.
+    let Ok(mut pending)=BREAKS.lock()else{return};
+    if pending.len()>=64{return}
+    let Ok(mut owners)=OWNERS.lock()else{return};
+    let owner = owners.iter().position(|o|o.shield && o.target_guid==actor.guid && o.spell==frame.spell && o.caster!=actor.slot)
+        .map(|i|owners.remove(i))
+        .unwrap_or(OwnedEffect{caster:actor.slot,caster_guid:actor.guid,target_guid:actor.guid,spell:frame.spell,expires:0.,shield:true});
+    pending.push((owner,actor.position,frame.amount));
+    drop(owners);
+    drop(pending);
     // Continue the native hurt function: zero only its outgoing proc amount.
     c.xmm[0] &= !(u32::MAX as u128);
     c.xmm[1] &= !(u32::MAX as u128);
@@ -1037,7 +1031,7 @@ unsafe extern "system" fn effect_hit(game:u64,enemy:u64,effect:u64,damage:f32,sp
  unsafe extern "system" fn native(g:u64,e:u64,p:u64,d:f32,s:u32){*ARGS.lock().unwrap()=Some((g,e,p,d,s));}
  #[test]fn borrowed_effect_wrapper_preserves_five_arguments_and_xmm3_damage(){
  EFFECT_HIT.store(native as *const () as usize,Ordering::SeqCst);let a=0x1122334455667788;let b=0x8877665544332211;
- for spell in [25912,635,845]{unsafe{effect_hit(a,b,0x123456789abcdef0,1.25,spell)};assert_eq!(*ARGS.lock().unwrap(),Some((a,b,0x123456789abcdef0,1.25,spell)));}
+ for spell in [15237,25912,635,845]{unsafe{effect_hit(a,b,0x123456789abcdef0,1.25,spell)};assert_eq!(*ARGS.lock().unwrap(),Some((a,b,0x123456789abcdef0,1.25,spell)));}
  }
 }
 
@@ -1049,5 +1043,94 @@ unsafe extern "system" fn effect_hit(game:u64,enemy:u64,effect:u64,damage:f32,sp
   let previous=HURT_ORIGINAL.swap(native as *const ()as usize,Ordering::SeqCst);
   struct Restore(usize);impl Drop for Restore{fn drop(&mut self){HURT_ORIGINAL.store(self.0,Ordering::SeqCst);}}let _restore=Restore(previous);
   for melee in [false,true]{let args=(0x123456789abcdef0,1.25,0xf130000012345678,melee,0x11223344,0x55667788);unsafe{hurt(args.0,args.1,args.2,args.3,args.4,args.5)}assert_eq!(*ARGS.lock().unwrap(),Some(args));}
+ }
+}
+
+thread_local! {static SHIELD_CONTEXT:std::cell::Cell<Option<(u64,u32,u64)>>=const{std::cell::Cell::new(None)};}
+pub(super) fn with_shield<T>(game:u64,spell:u32,recipient:u64,f:impl FnOnce()->T)->T{
+    let previous=SHIELD_CONTEXT.with(|v|v.replace(Some((game,spell,recipient))));
+    let result=f();SHIELD_CONTEXT.with(|v|v.set(previous));result
+}
+#[derive(Clone, Copy)]
+struct NecklaceCast {game:u64,spell:u32,caster:(u32,u64),target:(u32,u64),clock:f32}
+thread_local! {
+    static NEXT_NECKLACE_CAST:std::cell::Cell<Option<NecklaceCast>>=const{std::cell::Cell::new(None)};
+    static NECKLACE_EVENT:std::cell::Cell<Option<NecklaceCast>>=const{std::cell::Cell::new(None)};
+}
+// The native ability driver emits event 3 immediately after a successful cast.
+pub(in crate::runtime) fn with_necklace_event(game:u64,event:u64,run:impl FnOnce()){
+    let cast=NEXT_NECKLACE_CAST.with(|v|v.get()).filter(|c|{
+        let Some(r)=RUNTIME.get() else{return false};
+        c.game==game && r.adapter.necklace_cast_event(&r.local,event,c.spell).unwrap_or(false)
+            && r.adapter.set_clock(&r.local,game)==Ok(c.clock)
+            && r.adapter.effect_source(&r.local,game)==Ok(Some(c.caster))
+    });
+    if cast.is_some(){NEXT_NECKLACE_CAST.with(|v|v.set(None));}
+    let previous=NECKLACE_EVENT.with(|v|v.replace(cast));
+    run();
+    NECKLACE_EVENT.with(|v|v.set(previous));
+}
+static LEECH_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
+#[derive(Clone, Copy)]
+struct LeechWindow {
+    game: u64, caster: (u32, u64), target: (u32, u64), spell: u32, end: f32,
+}
+static LEECH_WINDOWS: std::sync::Mutex<Vec<LeechWindow>> = std::sync::Mutex::new(Vec::new());
+unsafe extern "system" fn necklace_leech(game: u64) -> f32 {
+    let original: unsafe extern "system" fn(u64) -> f32 = std::mem::transmute(LEECH_ORIGINAL.load(Ordering::Acquire));
+    let base = original(game);
+    let Some(r) = RUNTIME.get().filter(|r| r.rules) else { return base };
+    if !LEECH_WINDOWS.lock().is_ok_and(|w| !w.is_empty()) { return base; }
+    let Ok(Some(target)) = r.adapter.effect_source(&r.local, game) else { return base };
+    let Ok(now) = r.adapter.set_clock(&r.local, game) else { return base };
+    let Some(party) = r.party.lock().ok().and_then(|p| p.clone()) else { return base };
+    let present = |id: (u32,u64)| party.actors.iter().any(|a| (a.slot,a.guid)==id);
+    let Ok(mut windows) = LEECH_WINDOWS.lock() else { return base };
+    windows.retain(|w| w.game == game && w.end > now && present(w.caster) && present(w.target));
+    base + 0.05 * windows.iter().filter(|w| w.target == target).count() as f32
+}
+type TalentCondition=unsafe extern "system" fn(u64,u64,u64)->bool;
+unsafe extern "system" fn talent_condition(game:u64,condition:u64,event:u64)->bool{
+    let original:TalentCondition=std::mem::transmute(CONDITION_ORIGINAL.load(Ordering::Acquire));
+    let native=original(game,condition,event);
+    let Some(r)=RUNTIME.get().filter(|r|r.rules)else{return native};
+    let players=r.party.lock().ok().and_then(|p|p.clone()).map(|p|p.actors.iter().filter(|a|a.phase==azsx_gameplay::Phase::Playing).map(|a|(a.slot,a.guid)).collect::<Vec<_>>()).unwrap_or_default();
+    if let Some(s)=NECKLACE_EVENT.with(|v|v.get()).filter(|s| native && s.game==game && players.contains(&s.caster) && players.contains(&s.target)) {
+        if let Ok(Some((now,end)))=r.adapter.necklace_leech_window(&r.local,game,s.spell) {
+            if let Ok(mut windows)=LEECH_WINDOWS.lock() {
+                windows.retain(|w| w.game==game && w.end>now && !(w.caster==s.caster && w.target==s.target && w.spell==s.spell));
+                if windows.len()<50 {
+                    windows.push(LeechWindow{game,caster:s.caster,target:s.target,spell:s.spell,end});
+                    return false;
+                }
+            }
+        }
+        let io=io::Access{local:&r.local,adapter:r.adapter};
+        match r.adapter.route_necklace_absorb(&io,game,s.spell,s.caster,s.target){
+            Ok(true)=>return false,Ok(false)=>{},
+            Err(e)=>r.log.warn(&format!("Necklace absorb routing rejected: {e}")),
+        }
+    }
+    let shield=SHIELD_CONTEXT.with(|v|v.get()).filter(|(g,_,_)|*g==game).map(|(_,s,g)|(s,g));
+    match r.adapter.talent_condition_override(&r.local,game,condition,event,shield,&players){
+        Ok(Some(allowed))=>allowed,
+        Ok(None)=>native,
+        Err(e)=>{r.log.warn(&format!("Official talent condition rejected: {e}"));native}
+    }
+}
+
+#[cfg(test)]
+mod talent_abi_tests{
+ use super::*;
+ unsafe extern "system" fn native(game:u64,condition:u64,event:u64)->bool{assert_eq!((game,condition,event),(11,22,33));true}
+ #[test]fn inactive_talent_condition_forwards_native_abi(){
+  let old=CONDITION_ORIGINAL.swap(native as *const ()as usize,Ordering::SeqCst);
+  let result=unsafe{talent_condition(11,22,33)};
+  CONDITION_ORIGINAL.store(old,Ordering::SeqCst);assert!(result);
+ }
+ #[test]fn nested_shield_context_restores_the_outer_producer(){
+  assert_eq!(SHIELD_CONTEXT.with(|v|v.get()),None);
+  with_shield(1,17,100,||{assert_eq!(SHIELD_CONTEXT.with(|v|v.get()),Some((1,17,100)));with_shield(1,0,200,||assert_eq!(SHIELD_CONTEXT.with(|v|v.get()),Some((1,0,200))));assert_eq!(SHIELD_CONTEXT.with(|v|v.get()),Some((1,17,100)));});
+  assert_eq!(SHIELD_CONTEXT.with(|v|v.get()),None);
  }
 }

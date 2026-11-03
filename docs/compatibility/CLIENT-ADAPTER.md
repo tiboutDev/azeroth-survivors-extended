@@ -98,7 +98,10 @@ before appending kind 14. The nearby kind-15 shield emitter retains a similar AB
 and shorter body; matching that prolog would silently produce the wrong effect.
 An exact-image semantic test checks kind 14, fraction/duration stores and a real
 native cast call edge, independently of the selected entry guard. Cooperative
-qualification still requires effective Holy Nova and Holy Shock heal receipts.
+qualification must not require synthetic Holy Nova or Holy Shock ally receipts: those
+spells now retain native cast/impact behavior. The retired group-delivery tag is
+rejected. The native healing emitter remains a reviewed native cast dependency,
+not an AZSX hybrid-emission API.
 
 ## Compatibility review
 
@@ -135,3 +138,17 @@ native actor was dead. Their guarded continuations preserve just the native
 level counter addition; item, gold and other reward eligibility is not widened.
 The adapter validates the bounded host stack or remote receipt payload before
 rejoining, without writing phase/HP, inventing XP or retrying uncertain awards.
+
+
+The exact 0.138.0 Polymorph rupture scope begins after the triggering damage
+has committed and ends at the common join before subsequent on-hit procs.
+Both interior seams are guarded. A separately guarded entry bypasses the native
+attacker ability-kind scan only for a unique active foreign sheep; the native
+hit-eligibility checks still run before borrowing the producer. This allows an
+ally without a special ability to rupture the sheep. The native ownership GUID list is read from
+Game+ad8/ae0 or Actor+9d0/9d8, independently verified against the native swap.
+The adapter normalizes guest-to-guest transitions through the host, rebinds
+slot/GUID, and restores the attacker after native burst completion. The runtime
+keys outstanding loans by native frame to preserve nested callback ownership;
+no state borrow spans a native call. The native explosion itself is not replaced.
+Selected-memory and exact-image checks do not establish live gameplay parity.

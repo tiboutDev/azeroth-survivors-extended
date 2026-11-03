@@ -45,7 +45,10 @@
       "crates/azsx-game/src/enemies.rs",
       "crates/azsx-game/src/official_native/difficulty.rs",
       "crates/azsx-game/src/official_native/escort.rs",
-      "crates/azsx-game/src/official_native/demon.rs"
+      "crates/azsx-game/src/official_native/demon.rs",
+      "crates/azsx-game/src/official_native/polymorph.rs",
+      "crates/azsx-game/src/official_native/sets.rs",
+      "src/runtime/combat/sets.rs"
     ],
     "auras": [
       "crates/azsx-game/src/official_native/fatigue.rs",
@@ -69,6 +72,7 @@
     ],
     "spells": [],
     "ui": [
+      "crates/azsx-game/src/official_native/talent_panel.rs",
       "crates/azsx-game/src/official_native/*ui*.rs",
       "crates/azsx-game/src/official_native/*tooltip*.rs",
       "crates/azsx-game/src/official_native/*icons*.rs",

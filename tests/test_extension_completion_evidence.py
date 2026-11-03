@@ -20,3 +20,15 @@ class FocusedShieldEvidence(unittest.TestCase):
   self.assertTrue(all(assess(host,"shield")["checks"].values()))
   for before,after in (("slots=Ok([1])","slots=Ok([0])"),("spell=17","spell=774"),("shield break: Ok(true)","shield break: Ok(false)"),("result=Ok(true)","result=Ok(false)")):
    with self.subTest(before=before):self.assertFalse(all(assess(host.replace(before,after),"shield")["checks"].values()))
+
+class NativeHybridEvidence(unittest.TestCase):
+ def test_requires_observed_casts_and_rejects_synthetic_hybrid_healing(self):
+  key="hybrid_casts_without_custom_receipts"
+  host="\n".join(
+   f"support121 cast: index={i} spell={sp} caster=0 target=1 before=20 result=Ok(true)\n"
+   f"support121 observed: index={i} spell={sp} caster=0 target=1 before=20 after=20 slots=Ok([])"
+   for i,sp in enumerate((15237,25912)))
+  self.assertTrue(assess(host,"support")["checks"][key])
+  self.assertFalse(assess(host.replace("result=Ok(true)","result=Ok(false)"),"support")["checks"][key])
+  for sp in (15237,25912):
+   self.assertFalse(assess(host+f"\nofficial support delivered: caster=0 target=1 spell={sp} raw=3 effective=0", "support")["checks"][key])

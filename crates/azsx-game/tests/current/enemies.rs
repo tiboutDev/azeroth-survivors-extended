@@ -150,9 +150,11 @@ fn shared_mark_preserves_other_native_amplifiers_and_enemy_state() {
         let at = 0x120 + index * 4;
         fixture.records[at..at + 4].copy_from_slice(&value.to_le_bytes());
     }
+    // Adjacent native state must never be mistaken for mark strength.
+    fixture.records[0x1c4..0x1c8].copy_from_slice(&123.5f32.to_le_bytes());
     let original_game = fixture.game.clone();
     let mut expected_records = fixture.records.clone();
-    expected_records[0x1c4..0x1c8].copy_from_slice(&0.3f32.to_le_bytes());
+    expected_records[0x1c8..0x1cc].copy_from_slice(&0.3f32.to_le_bytes());
     let writable = Writable(std::cell::RefCell::new(fixture));
     let adapter = SelectedAdapter::select(current::SHA256).unwrap();
     adapter
@@ -160,9 +162,10 @@ fn shared_mark_preserves_other_native_amplifiers_and_enemy_state() {
         .unwrap();
     assert_eq!(writable.0.borrow().records, expected_records);
     assert_eq!(writable.0.borrow().game, original_game);
+    assert_eq!(adapter.combat_enemies(&writable, GAME).unwrap()[0].vulnerability, 0.3);
     adapter
         .write_combat_mark(&writable, GAME, 123456, 0.)
         .unwrap();
-    expected_records[0x1c4..0x1c8].fill(0);
+    expected_records[0x1c8..0x1cc].fill(0);
     assert_eq!(writable.0.borrow().records, expected_records);
 }

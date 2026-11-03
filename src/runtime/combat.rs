@@ -1,5 +1,6 @@
 //! Shared marks and semantic taunt ownership over the official simulation.
 use super::*;
+pub(super) mod sets;
 use azsx_gameplay::{
     marks::Marks,
     taunts::{Hit, Taunts},
@@ -45,6 +46,7 @@ static BASIC_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 static BASIC_DISPATCH: AtomicUsize = AtomicUsize::new(0);
 thread_local! {static ORIGIN:Cell<Option<(u64,[f32;3])>>=const{Cell::new(None)};static CHANGED:Cell<bool>=const{Cell::new(false)};}
 pub fn reset() {
+    sets::reset();
     if let Ok(mut s) = STATE.lock() {
         *s = State::default();
     }
@@ -177,6 +179,7 @@ unsafe extern "system" fn damage(
     let Some(r) = RUNTIME.get().filter(|r| r.rules) else {
         return original(game, enemy, amount, spell, school, flag, extra);
     };
+    sets::before_damage(r,game,enemy);
     let scaled = amount * fatigue::multiplier(r, game);
     #[cfg(feature="test-hooks")]
     fatigue::fixture_trace(r,game,0,amount,scaled);
@@ -224,7 +227,16 @@ unsafe extern "system" fn damage(
     } else {
         None
     };
+    #[cfg(feature="test-hooks")]
+    let poly_probe=if spell==118 && std::env::var("AZSX_TEST_SPELL_BLOCK").as_deref()==Ok("1") {
+        r.adapter.support_caster(&r.local,game).ok().zip(r.adapter.combat_hp(&r.local,game,enemy).ok().flatten())
+    } else {None};
     original(game, enemy, amount, spell, school, flag, extra);
+    #[cfg(feature="test-hooks")]
+    if let Some((a,before))=poly_probe {
+        let after=r.adapter.combat_hp(&r.local,game,enemy).ok().flatten();
+        r.log.info(&format!("spell block explosion: caster={} guid={} enemy={enemy} raw={amount} effective={:?}",a.slot,a.guid,after.map(|h|(before-h).max(0.))));
+    }
     if goblin {super::treasure_goblins::hit_complete(r,game,enemy,spell);}
     super::demon::hit_complete(r,game,enemy);
     let after = before.and_then(|_| r.adapter.combat_hp(&r.local, game, enemy).ok().flatten());
@@ -389,6 +401,7 @@ pub fn redirect_melee(r: &Runtime, game: u64, amount: f32, enemy: u64, melee: bo
     false
 }
 pub fn finish(r: &Runtime, game: u64) {
+    sets::finish(r, game);
     let pending = STATE
         .lock()
         .map(|mut s| std::mem::take(&mut s.pending))
@@ -428,25 +441,30 @@ pub fn finish(r: &Runtime, game: u64) {
     }
     reconcile(r, game);
 }
-pub fn install_descriptions(r: &Runtime) -> Result<(), String> {
-    for (address, text) in r
-        .adapter
-        .combat_descriptions(&r.local, r.local.base as u64)?
-    {
-        let pointer = r.local.alloc(text.len())?;
-        r.local.write(pointer, text.as_bytes())?;
-        let mut header = (pointer as u64).to_le_bytes().to_vec();
-        header.extend((text.len() as u64).to_le_bytes());
-        r.local.patch_at(address as usize, &header)?;
-    }
-    r.log
-        .info("official taunt descriptions: three English native talent annotations installed");
-    Ok(())
-}
 pub fn hooks(adapter: Adapter) -> Vec<crate::install::HookSpec> {
+    POLYMORPH_GATE_DISPATCH.store(polymorph_gate_resume as *const () as usize,Ordering::Release);
+    POLYMORPH_GATE_RESUME.store(local_base()+adapter.polymorph_entries()[3].rva as usize,Ordering::Release);
     let (resume,original)=adapter.basic_resume_entry();
     BASIC_DISPATCH.store(resume, Ordering::Release);
-    vec![
+    let mut hooks=vec![
+        crate::install::HookSpec {
+            name: "official-polymorph-special-gate",
+            target: local_base() + adapter.polymorph_entries()[2].rva as usize,
+            detour: polymorph_gate_entry as *const () as usize,
+            trampoline: &POLYMORPH_GATE_ORIGINAL,
+        },
+        crate::install::HookSpec {
+            name: "official-polymorph-owner",
+            target: local_base() + adapter.polymorph_entries()[0].rva as usize,
+            detour: polymorph_begin_entry as *const () as usize,
+            trampoline: &POLYMORPH_BEGIN,
+        },
+        crate::install::HookSpec {
+            name: "official-polymorph-restore",
+            target: local_base() + adapter.polymorph_entries()[1].rva as usize,
+            detour: polymorph_end_entry as *const () as usize,
+            trampoline: &POLYMORPH_END,
+        },
         crate::install::HookSpec {
             name: "official-combat-player",
             target: local_base() + adapter.combat_entries()[0].rva as usize,
@@ -477,7 +495,9 @@ pub fn hooks(adapter: Adapter) -> Vec<crate::install::HookSpec> {
             detour: basic_entry as *const () as usize,
             trampoline: original,
         },
-    ]
+    ];
+    hooks.extend(sets::hooks(adapter));
+    hooks
 }
 #[cfg(feature = "test-hooks")]
 pub fn fixture_mark(slot: u32, mark: Mark) {
@@ -615,4 +635,102 @@ pub fn fixture_goblin_taunt(r:&Runtime,game:u64,goblin:u64){
  let _=io.support_hit(game,goblin,1.,23922);
  let check=STATE.lock().ok().map(|s|(normal.is_some_and(|id|s.taunts.bindings.contains_key(&id)),s.taunts.bindings.contains_key(&goblin)));
  r.log.info(&format!("treasure goblin taunt control: normal={} goblin={}",check.is_some_and(|v|v.0),check.is_some_and(|v|v.1)));
+}
+
+static POLYMORPH_BEGIN: AtomicUsize = AtomicUsize::new(0);
+static POLYMORPH_END: AtomicUsize = AtomicUsize::new(0);
+thread_local! {
+    static POLYMORPH_LOANS: std::cell::RefCell<BTreeMap<u64, azsx_game::official::PolymorphLoan>> = const { std::cell::RefCell::new(BTreeMap::new()) };
+}
+crate::context_stub_rw!(polymorph_begin_entry, 0, polymorph_begin, POLYMORPH_BEGIN);
+crate::context_stub_rw!(polymorph_end_entry, 0, polymorph_end, POLYMORPH_END);
+unsafe extern "system" fn polymorph_begin(c: &mut crate::stub::Context) {
+    // The exact branch uses AL and DIL for its native rupture eligibility.
+    // R14 has already captured the original hit's subsequent proc eligibility.
+    if c.rax as u8 == 0 || c.rdi as u8 >= 2 { return; }
+    let Some(r) = RUNTIME.get().filter(|r| r.rules) else { return; };
+    let game = c.rsi;
+    let players = STATE.lock().ok().filter(|s| s.game == game).map(|s|
+        s.players.iter().filter(|p| p.phase == azsx_gameplay::Phase::Playing)
+            .map(|p| (p.id - 1, p.life)).collect::<Vec<_>>()
+    ).unwrap_or_default();
+    if players.len() < 2 || POLYMORPH_LOANS.with(|l| l.borrow().contains_key(&c.rbp)) { return; }
+    let io = io::Access { local: &r.local, adapter: r.adapter };
+    match r.adapter.polymorph_begin(&io, game, c.r12, &players) {
+        Ok(Some(loan)) => { POLYMORPH_LOANS.with(|l| l.borrow_mut().insert(c.rbp, loan)); }
+        Ok(None) => {},
+        Err(e) => r.log.warn(&format!("Official Polymorph owner rejected: {e}")),
+    }
+}
+unsafe extern "system" fn polymorph_end(c: &mut crate::stub::Context) {
+    let loan = POLYMORPH_LOANS.with(|l| l.borrow_mut().remove(&c.rbp));
+    let Some(loan) = loan else { return; };
+    let Some(r) = RUNTIME.get() else { return; };
+    let io = io::Access { local: &r.local, adapter: r.adapter };
+    if let Err(e) = r.adapter.polymorph_end(&io, loan) {
+        r.log.warn(&format!("Official Polymorph restore rejected: {e}"));
+    }
+}
+
+#[cfg(test)]
+mod polymorph_abi_tests {
+    use super::*;
+    unsafe extern "system" fn native(a:u64,b:u64,c:u64,d:u64)->u64 {
+        assert_eq!((a,b,c,d),(0x1234,0x5678,0x9abc,0xdef0));
+        0xabcdef
+    }
+    #[unsafe(naked)]
+    unsafe extern "system" fn alternate(a:u64,b:u64,c:u64,d:u64)->u64 {
+        core::arch::naked_asm!("mov rax, 0x123abc", "ret");
+    }
+    #[unsafe(naked)]
+    unsafe extern "system" fn choose_alternate(a:u64,b:u64,c:u64,d:u64)->u64 {
+        core::arch::naked_asm!("mov rax, 1", "jmp {resume}", resume=sym polymorph_gate_resume);
+    }
+    #[test]
+    fn polymorph_gate_preserves_inactive_forwarding_and_selects_alternate() {
+        let old_original=POLYMORPH_GATE_ORIGINAL.swap(native as *const () as usize,Ordering::SeqCst);
+        let old_resume=POLYMORPH_GATE_RESUME.swap(alternate as *const () as usize,Ordering::SeqCst);
+        let old_dispatch=POLYMORPH_GATE_DISPATCH.swap(polymorph_gate_resume as *const () as usize,Ordering::SeqCst);
+        type Call=unsafe extern "system" fn(u64,u64,u64,u64)->u64;
+        let call:Call=unsafe{std::mem::transmute(polymorph_gate_entry as *const ())};
+        let normal=unsafe{call(0x1234,0x5678,0x9abc,0xdef0)};
+        let selected=unsafe{choose_alternate(0x1234,0x5678,0x9abc,0xdef0)};
+        POLYMORPH_GATE_ORIGINAL.store(old_original,Ordering::SeqCst);
+        POLYMORPH_GATE_RESUME.store(old_resume,Ordering::SeqCst);
+        POLYMORPH_GATE_DISPATCH.store(old_dispatch,Ordering::SeqCst);
+        assert_eq!(normal,0xabcdef);
+        assert_eq!(selected,0x123abc);
+    }
+    #[test]
+    fn inactive_polymorph_seams_preserve_native_arguments_and_continuation() {
+        type Call=unsafe extern "system" fn(u64,u64,u64,u64)->u64;
+        for (entry, trampoline) in [(polymorph_begin_entry as *const (), &POLYMORPH_BEGIN), (polymorph_end_entry as *const (), &POLYMORPH_END)] {
+            let old=trampoline.swap(native as *const () as usize,Ordering::SeqCst);
+            let call:Call=unsafe{std::mem::transmute(entry)};
+            let result=unsafe{call(0x1234,0x5678,0x9abc,0xdef0)};
+            trampoline.store(old,Ordering::SeqCst);
+            assert_eq!(result,0xabcdef);
+        }
+    }
+}
+
+
+static POLYMORPH_GATE_ORIGINAL:AtomicUsize=AtomicUsize::new(0);
+static POLYMORPH_GATE_DISPATCH:AtomicUsize=AtomicUsize::new(0);
+static POLYMORPH_GATE_RESUME:AtomicUsize=AtomicUsize::new(0);
+crate::context_stub_rw!(polymorph_gate_entry,0,polymorph_gate,POLYMORPH_GATE_DISPATCH);
+#[unsafe(naked)]
+unsafe extern "C" fn polymorph_gate_resume(){
+    core::arch::naked_asm!("test rax,rax","jnz 2f","jmp qword ptr [rip+{original}]","2:","jmp qword ptr [rip+{resume}]",original=sym POLYMORPH_GATE_ORIGINAL,resume=sym POLYMORPH_GATE_RESUME);
+}
+unsafe extern "system" fn polymorph_gate(c:&mut crate::stub::Context){
+    // Native continuation overwrites RAX. Only bypass the ability-kind scan;
+    // the attacker's native hit eligibility is still evaluated at the resume.
+    c.rax=0;
+    let Some(r)=RUNTIME.get().filter(|r|r.rules)else{return};
+    let game=c.r13;
+    let players=STATE.lock().ok().filter(|s|s.game==game).map(|s|s.players.iter().filter(|p|p.phase==azsx_gameplay::Phase::Playing).map(|p|(p.id-1,p.life)).collect::<Vec<_>>()).unwrap_or_default();
+    if players.len()<2{return}
+    c.rax=u64::from(r.adapter.polymorph_candidate(&r.local,game,c.r12,&players).is_ok_and(|o|o.is_some()));
 }

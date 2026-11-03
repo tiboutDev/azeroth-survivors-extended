@@ -1,10 +1,10 @@
 use azsx_gameplay::{spells::*, support::Spell};
 #[test]
-fn successful_completion_is_once_and_drives_existing_hybrid_rules() {
+fn successful_native_hybrid_completion_is_once_without_custom_group_healing() {
     let mut e = Events::default();
     let id = e.begin(1, 2, Spell::HolyNova).unwrap();
     let c = e.finish(id).unwrap();
-    assert!(c.group_heal);
+    assert!(!c.group_heal);
     assert!(!c.clear_self_owner);
     assert_eq!(e.finish(id), None);
     assert_eq!(e.completed, 1);

@@ -83,6 +83,11 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
  if normal and b"AZCOOP_TEST_"in dll.read_bytes()or not normal and b"AZCOOP_TEST_EXTENSIONS"not in dll.read_bytes():raise ValueError("Wrong normal/diagnostic binary")
  completion=os.environ.get("AZSX_TEST_COMPLETION121","")
  if completion not in ("","support","fatigue","fatigue-self","tooltip","pause"):raise ValueError("Unknown completion mode")
+ spell_block=os.environ.get("AZSX_TEST_SPELL_BLOCK")=="1"
+ necklace_block=os.environ.get("AZSX_TEST_NECKLACE_BLOCK")=="1"
+ set_block=os.environ.get("AZSX_TEST_SET_BLOCK")=="1"
+ talent_block=os.environ.get("AZSX_TEST_TALENT_BLOCK")=="1"
+ if spell_block and (completion!="support" or players!=2):raise ValueError("Spell block requires two-player support mode")
  support_only=completion=="support" and os.environ.get("AZSX_TEST_SUPPORT_ONLY")=="1"
  shield_only=completion in("support","pause") and os.environ.get("AZSX_TEST_SUPPORT_SHIELD_ONLY")=="1"
  if completion and normal:raise ValueError("Completion requires a diagnostic binary")
@@ -163,6 +168,10 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     if slot==1:
      env["AZCOOP_TEST_SUPPORT121"if completion=="support"else"AZCOOP_TEST_OFFICIAL_FATIGUE"]="1"
      if shield_only:env["AZSX_TEST_SUPPORT_SHIELD_ONLY"]="1"
+     if necklace_block:env["AZSX_TEST_NECKLACE_BLOCK"]="1"
+     if set_block:env["AZSX_TEST_SET_BLOCK"]="1"
+     if talent_block:env["AZSX_TEST_TALENT_BLOCK"]="1"
+     if spell_block:env.update(AZSX_TEST_SPELL_BLOCK="1",AZCOOP_TEST_MARKS121="1")
      if completion=="support" and not support_only:env.update(AZCOOP_TEST_SUPPORT121_FULL="1",AZCOOP_TEST_OFFICIAL_FATIGUE="1")
     (addon/"AZSXAudit.toc").write_text("## Interface: 11200\n## Title: AZSX\n")
    if os.environ.get("AZSX_TEST_COVERAGE")=="1":env["AZSX_TEST_COVERAGE"]="1"
@@ -265,6 +274,13 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     if os.environ.get("AZSX_TEST_WORLD_UI")=="1":env["WOW_ROGUE_SHOTS_EVERY"]="12"
     env["WOW_ROGUE_SHOTS"]=str(folder/"shots")
     if env.get("AZSX_TEST_ESCORT_PREVIEW")=="1" or demon_preview:env["WOW_ROGUE_SHOTS_EVERY"]="8"
+   if os.environ.get("AZSX_TEST_TALENT_PANEL")=="1":
+    if not visual:raise ValueError("Talent panel review requires native captures")
+    env={k:v for k,v in env.items() if not k.startswith("AZCOOP_TEST_")}
+    (addon/"AZSXAudit.toc").write_text(chr(10).join(("## Interface: 11200","## Title: AZSX","")))
+    env["AZSX_TEST_TALENT_PANEL"]="1"
+    env["WOW_ROGUE_KEY"]="n@18"
+    env["WOW_ROGUE_SHOTS_EVERY"]="8"
    handle=(folder/"native-output.log").open("wb");handles.append(handle);children.append(subprocess.Popen([str(exe)],cwd=runtime,env=env,stdout=handle,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW));time.sleep(4 if slot==1 else 2)
   def evaluate():
    logs=[((out/f"player-{i}/azeroth-coop-native.log").read_text(encoding="utf-8",errors="replace") if (out/f"player-{i}/azeroth-coop-native.log").exists() else "")for i in range(1,players+1)]
@@ -323,6 +339,18 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     from extension_completion_evidence import assess as assess_completion
     evidence=assess_completion(host,completion)
     if shield_only:evidence=assess_completion(host,"shield")
+    if spell_block:
+     from spell_block_evidence import assess as assess_spells
+     evidence["checks"].update(assess_spells(host))
+    if necklace_block:
+     rows={int(n):(float(a),float(b)) for n,a,b in re.findall(r"necklace block result (\d+): Ok\(\(([^,]+), ([^)]+)\)\)",host)}
+     evidence={"checks":{f"necklace_{n}": n in rows and (rows[n][0]>0 if n<20 else abs(rows[n][0])<0.0001 and abs(rows[n][1]-(0.4 if n<22 else 0.05))<0.0001) for n in range(18,24)}}
+    if set_block:
+     from spell_block_evidence import assess_sets
+     evidence={"checks":assess_sets(host)}
+    if talent_block:
+     from spell_block_evidence import assess_talents
+     evidence["checks"].update(assess_talents(host))
     if completion=="support" and not support_only:
      from immunity_aggro_evidence import assess as assess_immunity
      evidence["checks"].update(assess_completion(host,"fatigue")["checks"])
@@ -390,6 +418,8 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     economy=assess_fixture_party(host);checks.update(economy["checks"])
     (out/"fixture-party-evidence.json").write_text(json.dumps(economy,indent=2)+"\n")
    if completion in ("support","fatigue","fatigue-self"):
+    if set_block or necklace_block:
+     (out/"sets-wallet-observation.json").write_text(json.dumps({"sampled":checks.pop("shared_wallet",None),"scope":"Incidental gold drops are outside the armor set scenario."})+"\n")
     (out/"known-death-xp-observation.json").write_text(json.dumps(dict(equal_progression=checks.pop("equal_progression",None),scope="Known death/revival XP issue remains open; separate from support and fatigue acceptance."),indent=2)+"\n")
    if enchantments and players==2:
     from enchantment_evidence import assess_fixture_party
@@ -550,6 +580,8 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
                   demon_group_pause_resume=any(sequence[i:i+3]==["true","false","true"] for i in range(len(sequence)-2)),
                   demon_reward_once=host.count("Banished Demon Banish granted once:")==1,
                   demon_guest_api=all(any(row.get("available") is True and isinstance(row.get("event"),dict) and row["event"].get("kind")=="banished_demon" for row in rows) for rows in demon_rows))
+   if os.environ.get("AZSX_TEST_TALENT_PANEL")=="1":
+    checks={k:checks[k] for k in ("clients_alive","started","clean_scripts","clean_adapter","ui_captures_available","startup_ack","coop_joined") if k in checks}
    result=dict(observed_steps=os.environ.get("AZSX_TEST_OBSERVED_STEPS")=="1",scenario=scenario,diagnostic_probe=diagnostic_probe,support_only=support_only,all_events=all_events,owner_tooltip_readback=owner_tips,completion121=completion,players=players,normal=normal,game_version=version,compat121=compat121,enchantments=enchantments,gems=gems,goblins=goblins,immunity=immunity,diagnostic_inputs=not normal,dll_sha256=proof["dll_sha256"],game_sha256=sha,checks=checks,passed=all(checks.values()),grants=grants,ui=ui,desktop_input=False,screenshots=visual,visual_review_required=visual,ritual_ui_single=ritual_ui and seconds<150,visual_discovery_hold=visual and supplies and os.environ.get("AZSX_TEST_VISUAL_HOLD_DISCOVERY")=="1")
    return result
   until=time.monotonic()+min(seconds,260 if supplies or ritual else 280 if completion in ("support","fatigue","fatigue-self") else 210 if goblins else 180 if enchantments else 150)
@@ -570,7 +602,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
     if path.exists() and "support121 observed: index=4 "in path.read_text(errors="replace") and evaluate()["passed"]:break
    if readiness is None and support_only:
     live_path=out/"player-1/azeroth-coop-native.log"
-    if live_path.exists() and("support121 observed: index=5 "if shield_only else"support121 observed: index=11 ")in live_path.read_text(encoding="utf-8",errors="replace"):break
+    if live_path.exists() and("necklace block complete" if necklace_block else "set block complete" if set_block else "talent block complete" if talent_block else "marks121 taunt: spell=5221 " if spell_block else "support121 observed: index=5 "if shield_only else"support121 observed: index=11 ")in live_path.read_text(encoding="utf-8",errors="replace"):break
    if readiness is None and completion=="pause":
     local_logs=[out/f"player-{i}/azeroth-coop-native.log"for i in range(1,players+1)]
     closed=all(p.exists() and"open=false"in p.read_text(encoding="utf-8",errors="replace").split("native menu fixture:")[-1]for p in local_logs)

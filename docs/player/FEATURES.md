@@ -20,6 +20,9 @@ available features and exact game compatibility.
 
 These labels describe feature maturity. They do not certify every class, build, interaction or client version. Check release notes for compatibility and known limitations.
 
+Holy Nova and Holy Shock keep the native game's effects; AZSX adds no cooperative
+healing to either spell. Resurrection Sickness still applies normally.
+
 ## Build choices
 
 These features are available in **solo and co-op**.
@@ -476,3 +479,24 @@ shows its location and objective. An appearance is possible, not guaranteed.
 
 See [the encounter details](../features/BANISHED-DEMON.md). Check the release
 notes before expecting this source feature in an installed build.
+
+
+Allies can trigger your Polymorph explosions; their damage remains yours.
+Hunter's Mark shares the strongest active bonus without stacking. Faerie Fire
+keeps each player's marks and damage triggers independent.
+
+
+Cooperative healing talents retain their owner. Swiftmend can rescue a nearby
+ally below 40% health; Tree of Life can benefit allies using the healer's stats
+and overheal cap. Divine Aegis can burst from an ally wearing your Power Word:
+Shield. Hammer of the Righteous requires your own shield on yourself.
+Tranquility and these holy shield bursts benefit from the producer's area bonus.
+Lightning Shield remains a retaliation effect, not an absorption shield.
+
+Ancestral Fortitude's free Healing Wave uses normal cooperative target selection at half effectiveness and can heal a wounded ally.
+
+Your armor set can trigger when a teammate finishes an enemy carrying your Serpent Sting, Curse of Agony, Rupture or Flame Shock. Bonuses for killing with a specific spell require your own killing blow. A Devout shield explodes around the player you protected and uses your area bonus. Mortal Strike and Earth Shock set vulnerabilities help the party. Crowd-control damage bonuses apply to the wearer even when an ally controlled the enemy.
+
+A legendary necklace can trigger its explosion when a teammate finishes an enemy carrying your matching damage-over-time spell. The Power Word: Shield necklace bursts around the player you protected using your area bonus. Holy Light and Regrowth necklaces shield the player you heal for up to 40% of your maximum health. Vampiric Renew and Vampiric Rejuvenation grant the healed player 5% leech on their own damage for 10 and 12 seconds respectively.
+
+During a cooperative run, the Talents panel adds a short Co-op note below selected talent descriptions to explain ally targeting, shield ownership and control effects.

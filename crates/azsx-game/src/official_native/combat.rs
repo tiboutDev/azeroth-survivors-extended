@@ -37,44 +37,6 @@ fn f(b: &[u8], i: usize) -> f32 {
     f32::from_bits(d(b, i))
 }
 impl Adapter {
-    pub fn combat_descriptions(self, mem: &dyn Mem, base: u64) -> Result<Vec<(u64, String)>> {
-        let mut out = vec![];
-        for (slot, key, spell) in [
-            (0x7010bc0, "fortified", "Shield Slam"),
-            (0x7013210, "ardent_defender", "Hammer of Justice"),
-            (0x7029000, "leader_of_pack", "Shred"),
-        ] {
-            let h = mem.read(base + self.rva(slot), 80)?;
-            if h.len() != 80 || q(&h, 8) != key.len() as u64 {
-                return Err("Native tank talent changed".into());
-            }
-            let ptr = q(&h, 0);
-            let desc = q(&h, 64);
-            let len = q(&h, 72);
-            if [ptr, desc]
-                .iter()
-                .any(|p| *p < base || *p >= base + 0x8000000)
-                || len > 2048
-                || desc
-                    .checked_add(len)
-                    .is_none_or(|end| end > base + 0x8000000)
-            {
-                return Err("Invalid native talent description".into());
-            }
-            if mem.read(ptr, key.len())? != key.as_bytes() {
-                return Err("Native tank talent key mismatch".into());
-            }
-            let old = String::from_utf8(mem.read(desc, len as usize)?)
-                .map_err(|_| "Invalid native talent text")?;
-            let end = if self.supports_immunity_aggro() {
-                "die, leave, gain immunity, or another player taunts them. You can taunt again while immune"
-            } else {
-                "die, leave, or another player taunts them"
-            };
-            out.push((base+self.rva(slot)+64,format!("{old}\n\nCoop: {spell} hits taunt enemies, making them pursue you and direct basic melee attacks at you until you {end}. Special abilities keep their normal targeting.")));
-        }
-        Ok(out)
-    }
     pub fn combat_entries(self) -> [Entry; 5] {
         [
             Entry {

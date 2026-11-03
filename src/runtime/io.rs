@@ -144,16 +144,6 @@ impl azsx_game::official::SupportCalls for Access<'_> {
         unsafe { call(game, spell, data.as_ptr(), duration) };
         Ok(())
     }
-    fn emit_support_heal(&self, game: u64, spell: u32, fraction: f32) -> Result<(), String> {
-        type Emit = unsafe extern "system" fn(u64, u32, f32, f32);
-        let call: Emit = unsafe {
-            std::mem::transmute(
-                self.local.base + self.adapter.support_emit_entries()[1].rva as usize,
-            )
-        };
-        unsafe { call(game, spell, fraction, 0.0) };
-        Ok(())
-    }
     fn refresh_support(&self, game: u64) -> Result<(), String> {
         type Refresh = unsafe extern "system" fn(u64);
         for entry in &self.adapter.support_emit_entries()[2..] {
@@ -194,6 +184,7 @@ impl azsx_game::official::SupportCalls for Access<'_> {
         event: &[u8; 40],
         origin: [f32; 3],
         recipient: u64,
+        shield_spell: u32,
     ) -> Result<(), String> {
         type Proc = unsafe extern "system" fn(u64, *const u8, u64);
         let call: Proc = unsafe {
@@ -222,7 +213,7 @@ impl azsx_game::official::SupportCalls for Access<'_> {
             None
         };
         super::support::with_recipient(game, recipient, || {
-            super::support::with_origin(origin, || unsafe { call(game, event.as_ptr(), 0) })
+            super::support::with_shield(game, shield_spell, recipient, || super::support::with_origin(origin, || unsafe { call(game, event.as_ptr(), 0) }))
         });
         #[cfg(feature = "test-hooks")]
         if let Some(loan) = loan {

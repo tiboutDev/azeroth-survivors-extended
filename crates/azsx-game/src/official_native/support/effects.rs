@@ -67,6 +67,16 @@ pub struct OwnedEffect {
     pub expires: f32,
     pub shield: bool,
 }
+impl OwnedEffect {
+    /// Match the selected native aura replacement rule. Rejuvenation keeps
+    /// independent producers; the other routed families replace by spell.
+    pub fn replaces(&self, previous: &Self) -> bool {
+        self.target_guid == previous.target_guid
+            && self.spell == previous.spell
+            && (self.spell != 774 || self.caster_guid == previous.caster_guid)
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct PeriodicTick {
     pub owner: OwnedEffect,
@@ -174,6 +184,23 @@ impl Adapter {
             original_cooldowns: clen as usize,
             rapture_index,
         })
+    }
+    #[cfg(feature="test-hooks")]
+    pub fn fixture_talent_loan(self,mem:&dyn MutableMemory,game:u64,base:u64,kind:u32)->Result<PerkLoan>{
+        let (rva,count)=match kind{0=>(0x7136740,1),1=>(0x712e628,1),2=>(0x7146510,1),3=>(0x7146900,2),4=>(0x71466b0,1),5=>(0x71368b0,1),_=>return Err("Unknown talent fixture".into())};
+        let native=mem.read(base+rva,count*64)?;
+        let mut loan=self.fixture_perk_loan(mem,game,base,false,0.)?;
+        let original=loan.storage.len()/64-1;
+        loan.storage.truncate(original*64);loan.storage.extend_from_slice(&native);
+        let count=loan.storage.len()/64;
+        loan.cooldowns.resize(loan.cooldowns.len().max(count),0.);
+        loan.rapture_index=Some(original);
+        let header=[(count as u64).to_le_bytes(),(loan.storage.as_ptr()as u64).to_le_bytes(),(count as u64).to_le_bytes()].concat();
+        let len=loan.cooldowns.len()as u64;
+        let cooldown=[len.to_le_bytes(),(loan.cooldowns.as_ptr()as u64).to_le_bytes(),len.to_le_bytes()].concat();
+        mem.write(game+self.game_field(0x68),&cooldown)?;
+        mem.write(game+self.game_field(0x830),&header)?;
+        Ok(loan)
     }
     pub fn fixture_restore_perks(
         self,
@@ -571,7 +598,7 @@ impl Adapter {
         event[24..28].copy_from_slice(&amount.to_le_bytes());
         event[28..32].copy_from_slice(&0x600u32.to_le_bytes());
         let result = io
-            .shield_proc(game, &event, origin, owner.target_guid)
+            .shield_proc(game, &event, origin, owner.target_guid, owner.spell)
             .and_then(|_| io.flush_actor(game));
         if owner.caster != 0 {
             let row = self.support_row(io, game, 0)?;
@@ -1064,5 +1091,46 @@ mod native_heal_call_tests {
         let game = 0x123456789abcdef0;
         unsafe { call_native_heal(native, game, 1.25, 0x11223344, metadata.as_ptr()); }
         assert_eq!(*ARGS.lock().unwrap(), Some((game, 1.25, 0x11223344, metadata, [u64::from(u32::MAX), 0])));
+    }
+}
+
+#[cfg(test)]
+mod effect_ownership_tests {
+    use super::OwnedEffect;
+
+    fn effect(caster: u32, caster_guid: u64, target_guid: u64, spell: u32) -> OwnedEffect {
+        OwnedEffect { caster, caster_guid, target_guid, spell, expires: 12.0, shield: false }
+    }
+
+    #[test]
+    fn rejuvenation_refresh_preserves_personal_and_other_foreign_producers() {
+        let personal = effect(0, 100, 100, 774);
+        let first = effect(1, 200, 100, 774);
+        let second = effect(2, 300, 100, 774);
+        let mut owners = vec![personal, first, second];
+        let mut refresh = effect(1, 200, 100, 774);
+        refresh.expires = 24.0;
+        owners.retain(|old| !refresh.replaces(old));
+        owners.push(refresh);
+        assert_eq!(owners.len(), 3);
+        assert_eq!(owners.iter().map(|o| (o.caster_guid, o.expires)).collect::<Vec<_>>(),
+            vec![(100, 12.0), (300, 12.0), (200, 24.0)]);
+    }
+
+    #[test]
+    fn rejuvenation_identity_does_not_follow_a_reused_slot_or_another_recipient() {
+        let old = effect(1, 200, 100, 774);
+        assert!(!effect(1, 201, 100, 774).replaces(&old));
+        assert!(!effect(1, 200, 101, 774).replaces(&old));
+        assert!(!effect(1, 200, 100, 139).replaces(&old));
+    }
+
+    #[test]
+    fn other_routed_families_keep_their_single_owner_replacement() {
+        for spell in [139, 8936, 17, 11426, 324, 467] {
+            let old = effect(1, 200, 100, spell);
+            assert!(effect(2, 300, 100, spell).replaces(&old));
+            assert!(!effect(2, 300, 101, spell).replaces(&old));
+        }
     }
 }

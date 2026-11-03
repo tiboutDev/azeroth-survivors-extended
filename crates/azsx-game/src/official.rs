@@ -43,7 +43,6 @@ pub trait SupportCalls: CurrencyMemory {
         data: &[u8; 12],
         duration: f32,
     ) -> Result<()>;
-    fn emit_support_heal(&self, game: u64, spell: u32, fraction: f32) -> Result<()>;
     fn refresh_support(&self, game: u64) -> Result<()>;
     fn support_hit(&self, game: u64, guid: u64, amount: f32, spell: u32) -> Result<()>;
     fn support_hurt(&self, game: u64, amount: f32, enemy: u64, melee: bool) -> Result<()> {
@@ -58,6 +57,7 @@ pub trait SupportCalls: CurrencyMemory {
         event: &[u8; 40],
         origin: [f32; 3],
         recipient: u64,
+        shield_spell: u32,
     ) -> Result<()>;
     fn cast_actor(&self, game: u64, ability: u64) -> Result<bool>;
     fn swap_actor(&self, game: u64, row: u64) -> Result<()>;
@@ -218,6 +218,8 @@ impl SelectedAdapter {
     pub fn support_buff_slots(self, mem: &dyn Mem, game: u64, spell: u32) -> Result<Vec<u32>> {
         self.native.support_buff_slots(mem, game, spell)
     }
+    #[cfg(feature="test-hooks")]
+    pub fn fixture_talent_loan(self,mem:&dyn MutableMemory,game:u64,base:u64,kind:u32)->Result<PerkLoan>{self.native.fixture_talent_loan(mem,game,base,kind)}
     pub fn fixture_perk_loan(
         self,
         mem: &dyn MutableMemory,
@@ -292,18 +294,6 @@ impl SelectedAdapter {
     }
     pub fn native_effect(self, mem: &dyn Mem, game: u64, spell: u32) -> Result<NativeEffect> {
         self.native.native_effect(mem, game, spell)
-    }
-    pub fn emit_hybrid(
-        self,
-        io: &dyn SupportCalls,
-        game: u64,
-        base: u64,
-        spell: u32,
-        before: u64,
-        maximum: f32,
-    ) -> Result<()> {
-        self.native
-            .emit_hybrid(io, game, base, spell, before, maximum)
     }
     pub fn hide_retaliation(
         self,
@@ -399,9 +389,6 @@ impl SelectedAdapter {
         self.native.downed_xp_continuation(mem, kind, registers)
     }
 
-    pub fn combat_descriptions(self, m: &dyn Mem, b: u64) -> Result<Vec<(u64, String)>> {
-        self.native.combat_descriptions(m, b)
-    }
     pub fn combat_entries(self) -> [Entry; 5] {
         self.native.combat_entries()
     }
@@ -571,6 +558,18 @@ impl SelectedAdapter {
     pub fn support_spell(self, mem: &dyn Mem, base: u64, ability: u64) -> Result<Option<u32>> {
         self.native.support_spell(mem, base, ability)
     }
+    pub fn necklace_cast_event(self,mem:&dyn Mem,event:u64,spell:u32)->Result<bool>{self.native.necklace_cast_event(mem,event,spell)}
+    pub fn necklace_leech_entry(self) -> Entry { self.native.necklace_leech_entry() }
+    pub fn necklace_leech_window(self, mem:&dyn Mem, game:u64, spell:u32)->Result<Option<(f32,f32)>> {
+        self.native.necklace_leech_window(mem, game, spell)
+    }
+    pub fn talent_area_entry(self)->Entry{self.native.talent_area_entry()}
+    pub fn talent_condition_entry(self)->Entry{self.native.talent_condition_entry()}
+    pub fn talent_query_radius(self,mem:&dyn Mem,game:u64,caller:u64,radius:f32)->Result<f32>{self.native.talent_query_radius(mem,game,caller,radius)}
+    pub fn route_necklace_absorb(self,mem:&dyn MutableMemory,game:u64,spell:u32,caster:(u32,u64),recipient:(u32,u64))->Result<bool>{
+        self.native.route_necklace_absorb(mem,game,spell,caster,recipient)
+    }
+    pub fn talent_condition_override(self,mem:&dyn Mem,game:u64,condition:u64,event:u64,shield:Option<(u32,u64)>,players:&[(u32,u64)])->Result<Option<bool>>{self.native.talent_condition_override(mem,game,condition,event,shield,players)}
     pub fn support_caster(self, mem: &dyn Mem, game: u64) -> Result<SupportCaster> {
         self.native.support_caster(mem, game)
     }
@@ -834,6 +833,10 @@ impl SelectedAdapter {
             }
         }
         for entry in [
+            self.polymorph_entries()[0],
+            self.polymorph_entries()[1],
+            self.polymorph_entries()[2],
+            self.polymorph_entries()[3],
             self.combat_entries()[0],
             self.combat_entries()[1],
             self.combat_entries()[2],
@@ -865,6 +868,12 @@ impl SelectedAdapter {
             self.support_proc_entries()[1],
             self.support_proc_entries()[2],
             self.support_proc_entries()[3],
+            self.talent_condition_entry(),
+            self.talent_area_entry(),
+            self.necklace_leech_entry(),
+            self.set_entries()[0],
+            self.set_entries()[1],
+            self.set_entries()[2],
             self.ui_hud(),
             self.ui_event(),
             self.heap()[0],
@@ -1906,6 +1915,10 @@ impl SelectedAdapter {
 }
 
 impl SelectedAdapter {
+    pub fn talent_panel_entry(self) -> Entry { self.native.talent_panel_entry() }
+    pub fn enrich_talent_panel(self, m: &dyn MutableMemory, base: u64, frame: u64, talent: u64) -> Result<()> {
+        self.native.enrich_talent_panel(m, base, frame, talent)
+    }
     pub fn ui_context_entry(self) -> Entry {
         self.native.ui_context_entry()
     }
@@ -2073,4 +2086,43 @@ impl SelectedAdapter {
         point: [f32; 3], variant: usize) -> Result<Vec<EventObject>> {
         self.native.demon_scene(m, base, game, point, variant)
     }
+}
+
+
+pub use crate::official_native::PolymorphLoan;
+impl SelectedAdapter {
+    pub fn polymorph_entries(self) -> [Entry; 4] { self.native.polymorph_entries() }
+    pub fn polymorph_candidate(self,m:&dyn Mem,g:u64,e:u64,p:&[(u32,u64)])->Result<Option<(u32,u64)>>{self.native.polymorph_candidate(m,g,e,p)}
+    pub fn polymorph_begin(self, io: &dyn SupportCalls, game: u64, enemy: u64, players: &[(u32,u64)]) -> Result<Option<PolymorphLoan>> { self.native.polymorph_begin(io, game, enemy, players) }
+    pub fn polymorph_end(self, io: &dyn SupportCalls, loan: PolymorphLoan) -> Result<()> { self.native.polymorph_end(io, loan) }
+}
+
+#[cfg(feature="test-hooks")]
+impl SelectedAdapter {
+    pub unsafe fn fixture_polymorph_probe(self, io:&dyn SupportCalls, base:u64, game:u64, caster:u32, prototype:&[u8])->Result<(u64,bool,bool)> {
+        self.native.fixture_polymorph_probe(io,base,game,caster,prototype)
+    }
+}
+
+#[cfg(feature="test-hooks")]
+impl SelectedAdapter {
+    pub unsafe fn fixture_two_hunters(self,io:&dyn SupportCalls,base:u64,game:u64,prototypes:&[Vec<u8>])->Result<Vec<(u64,f32)>> {
+        self.native.fixture_two_hunters(io,base,game,prototypes)
+    }
+}
+
+pub use crate::official_native::SetDeath;
+impl SelectedAdapter {
+    #[cfg(feature="test-hooks")]
+    pub fn fixture_necklace_cast(self,io:&dyn SupportCalls,base:u64,game:u64,spell:u32,ability:u64)->Result<(f32,f32)>{self.native.fixture_necklace_cast(io,base,game,spell,ability)}
+    #[cfg(feature="test-hooks")]
+    pub fn fixture_sets(self,io:&dyn SupportCalls,game:u64,base:u64,case:u32,drain:impl Fn())->Result<(f32,f32)>{self.native.fixture_sets(io,game,base,case,drain)}
+    pub fn set_entries(self)->[Entry;3]{self.native.set_entries()}
+    pub fn set_stamp_dot(self,m:&dyn MutableMemory,stack:u64,base:u64,ptr:u64,offset:u64,spell:u32)->Result<()>{self.native.set_stamp_dot(m,stack,base,ptr,offset,spell)}
+    pub fn set_deaths(self,m:&dyn Mem,event:u64,corpse:u64,killer:u32)->Result<(u16,Vec<(u32,SetDeath)>)>{self.native.set_deaths(m,event,corpse,killer)}
+    pub fn set_filter_clone(self,m:&dyn MutableMemory,ptr:u64,count:u64,mask:u16,only:bool)->Result<()>{self.native.set_filter_clone(m,ptr,count,mask,only)}
+    pub fn set_actor<T>(self,io:&dyn SupportCalls,game:u64,slot:u32,guid:u64,f:impl FnOnce()->Result<T>)->Result<Option<T>>{self.native.set_actor(io,game,slot,guid,f)}
+    pub fn set_clock(self,m:&dyn Mem,game:u64)->Result<f32>{self.native.set_clock(m,game)}
+    pub fn set_vulnerability(self,m:&dyn Mem,frame:u64,field:u64)->Result<(u64,u64,u32,f32,[f32;2])>{self.native.set_vulnerability(m,frame,field)}
+    pub fn set_vulnerability_write(self,m:&dyn MutableMemory,game:u64,enemy:u64,expected:[f32;2],next:[f32;2])->Result<bool>{self.native.set_vulnerability_write(m,game,enemy,expected,next)}
 }

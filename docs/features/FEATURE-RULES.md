@@ -254,13 +254,38 @@ original APIs. Cooperative personal claims and visibility follow the identity-bo
 
 ## Support and targeting
 
-Allied direct/periodic healing, shields, retaliation and hybrid effects retain
+Allied direct/periodic healing, shields and retaliation retain
 the original producer's native modifiers, counters and proc/cooldown ownership.
+Rejuvenation retains independent producer identities on the same recipient;
+a refresh replaces only that producer's ownership record. Renew retains its
+native spell-level replacement rule and AZSX active-effect targeting exclusion.
+Base Regrowth in 0.138.0 is direct healing, not a direct-plus-periodic spell.
+This ownership correction does not change healing coefficients, targeting,
+native self/ally duration differences or death/departure policies.
 Caster-only Ice Barrier remains personal. Copy source/recipient identities and
 aura budgets before native context swaps; no gameplay lock spans a native call.
-Do not duplicate effects already delivered by upstream.
+Do not duplicate effects already delivered by upstream. Holy Nova and Holy Shock
+use native cast/impact behavior without AZSX allied-heal emission or routing.
+The general Resurrection Sickness modifier remains applicable; native behavior
+does not exempt these spells from that shared rule.
 
-Hunter's Mark uses the strongest valid shared vulnerability. Eligible Shield
+Hunter's Mark uses the strongest valid shared vulnerability, without stacking.
+Its selected 0.138.0 projection writes the same enemy field consumed by native
+damage; neighbouring native state is preserved.
+
+Allied eligible hits can rupture an active Polymorph belonging to another
+living participant. The native explosion executes once under the original
+caster's context: damage, critical rolls, talents and meter attribution stay
+with that caster. The triggering hit and subsequent on-hit effects remain with
+the attacker. Native eligibility, area, damage limits and visual emission remain
+unchanged. Expired sheep, departed/replaced owners and ambiguous ownership do
+not acquire a foreign producer. Context restoration precedes other procs and
+also applies to nested explosions.
+
+Faerie Fire retains native personal marks and trigger budgets: another player's
+hit does not consume a producer's reserve or trigger that producer's damage.
+
+ Eligible Shield
 Slam, Hammer of Justice and Shred hits establish persistent ordinary pursuit/
 attack ownership under their talent and successful-hit checks. Special targeting
 and already-cast projectiles retain native ownership. Enemy/player life changes,
@@ -447,3 +472,28 @@ height checks. This deliberately also rejects mapped liquid beneath elevated
 ground; no scene is relocated after an uncertain native creation.
 Opening escort, demon and Sayge announcements describe the challenge without
 revealing its reward; success receipts retain the actual reward text.
+
+
+Cooperative talent conditions distinguish Lightning Shield retaliation from
+absorption: Stormguard requires Lightning Shield; Fortified, Ardent Defender
+and Sacred Duty require absorption. Shatter and Dirty Deeds can use another
+player's control while retaining the attacker's own talent values.
+
+Swiftmend may rescue an eligible ally below 40% health within support range;
+its native producer cooldown is retained. Tree of Life may benefit allies,
+with healing coefficients and overheal limits based on the producer.
+Divine Aegis follows the producer's Power Word: Shield, including allied
+recipients. Hammer of the Righteous requires a self-produced, self-worn
+absorption. Rapture restores the original PW:S recipient and retains the
+producer's native cooldown. Expiration and replacement do not fabricate a break.
+Tranquility remains centred on an allied healed recipient, credited to the
+producer. Its radius and reviewed holy shield bursts apply the producer's
+effective area factor once; unrelated native queries remain unchanged.
+
+Ancestral Fortitude's free Healing Wave uses normal cooperative target selection at half effectiveness and can heal a wounded ally.
+
+Cooperative eight-piece armor effects use the wearer's equipment. An allied killing blow can spread the wearer's Serpent Sting or Curse of Agony, or trigger the wearer's Rupture or Flame Shock explosion. A reward that names the killing spell still requires the wearer's own spell kill. Devout and Divine Aegis each burst at the protected player when the priest's Power Word: Shield breaks. Devout uses an eight-yard base radius and the priest's area multiplier at both set tiers. PvP Mortal Strike and Earth Shock vulnerabilities apply to allied hits at the strongest active value. Damage bonuses against controlled enemies apply to the wearer when any player supplies the control.
+
+A legendary necklace can trigger its explosion when a teammate finishes an enemy carrying your matching damage-over-time spell. The Power Word: Shield necklace bursts around the player you protected using your area bonus. Holy Light and Regrowth necklaces shield the player you heal for up to 40% of your maximum health. Vampiric Renew and Vampiric Rejuvenation grant the healed player 5% leech on their own damage for 10 and 12 seconds respectively.
+
+During a cooperative run, the Talents panel adds a short Co-op note below selected talent descriptions to explain ally targeting, shield ownership and control effects. Fortified and Ardent Defender combine their taunt trigger and allied shield condition in one note. Dire Bear Form identifies Shred as its taunt.

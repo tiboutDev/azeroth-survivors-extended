@@ -276,9 +276,6 @@
       "AZSX-11",
       "AZSX-26"
     ],
-    "official_native.combat.combat_descriptions": [
-      "AZSX-10"
-    ],
     "official_native.combat.combat_enemies": [
       "AZSX-09",
       "AZSX-10",
@@ -938,11 +935,6 @@
       "AZSX-22",
       "AZSX-27"
     ],
-    "official_native.support.advanced.emit_hybrid": [
-      "AZSX-07",
-      "AZSX-08",
-      "AZSX-12"
-    ],
     "official_native.support.advanced.fixture_retaliation_hit": [
       "AZSX-07",
       "AZSX-08",
@@ -1544,6 +1536,94 @@
     ],
     "official_native.escort.solo_grenade_stun": [
       "AZSX-30"
+    ],
+    "official_native.polymorph.polymorph_entries": [
+      "AZSX-32"
+    ],
+    "official_native.polymorph.polymorph_begin": [
+      "AZSX-32"
+    ],
+    "official_native.polymorph.polymorph_end": [
+      "AZSX-32"
+    ],
+    "official_native.polymorph.polymorph_owned": [
+      "AZSX-32"
+    ],
+    "official_native.polymorph.polymorph_select": [
+      "AZSX-32"
+    ],
+    "official_native.polymorph.fixture_polymorph_probe": [
+      "AZSX-32"
+    ],
+    "official_native.polymorph.fixture_two_hunters": [
+      "AZSX-09"
+    ],
+    "official_native.polymorph.polymorph_candidate": [
+      "AZSX-32"
+    ],
+    "official_native.support.talents.talent_condition_entry": [
+      "AZSX-07",
+      "AZSX-08"
+    ],
+    "official_native.support.talents.talent_area_entry": [
+      "AZSX-07",
+      "AZSX-08"
+    ],
+    "official_native.support.talents.support_area_factor": [
+      "AZSX-07",
+      "AZSX-08"
+    ],
+    "official_native.support.talents.talent_query_radius": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-33"
+    ],
+    "official_native.support.talents.talent_condition_override": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-33"
+    ],
+    "official_native.support.effects.fixture_talent_loan": [
+      "AZSX-07",
+      "AZSX-08"
+    ],
+    "official_native.sets.invoke": [
+      "AZSX-33"
+    ],
+    "official_native.sets.set_entries": [
+      "AZSX-33"
+    ],
+    "official_native.sets.set_deaths": [
+      "AZSX-33"
+    ],
+    "official_native.sets.set_filter_clone": [
+      "AZSX-33"
+    ],
+    "official_native.sets.set_actor": [
+      "AZSX-33"
+    ],
+    "official_native.sets.set_stamp_dot": [
+      "AZSX-33"
+    ],
+    "official_native.sets.set_clock": [
+      "AZSX-33"
+    ],
+    "official_native.sets.set_vulnerability": [
+      "AZSX-33"
+    ],
+    "official_native.sets.set_vulnerability_write": [
+      "AZSX-33"
+    ],
+    "official_native.sets.fixture_sets": [
+      "AZSX-33"
+    ],
+    "official_native.talent_panel.talent_panel_entry": [
+      "AZSX-07",
+      "AZSX-10"
+    ],
+    "official_native.talent_panel.enrich_talent_panel": [
+      "AZSX-07",
+      "AZSX-10"
     ]
   },
   "evidence": {
@@ -2098,15 +2178,6 @@
       ],
       "role": "native-operation",
       "shared": true
-    },
-    "official_native.combat.combat_descriptions": {
-      "reason": "Native basic-action target ownership, origin restoration and taunt descriptions.",
-      "references": [
-        "crates/azsx-game/src/official_native/combat.rs",
-        "src/runtime/combat.rs"
-      ],
-      "role": "native-operation",
-      "shared": false
     },
     "official_native.combat.combat_enemies": {
       "reason": "Shared enemy/actor combat seams support marks, pursuit, immunity and goblin kill/taunt exclusion.",
@@ -3546,16 +3617,6 @@
       "role": "native-operation",
       "shared": true
     },
-    "official_native.support.advanced.emit_hybrid": {
-      "reason": "Hybrid allied delivery and retaliation share native effect budgets, caster attribution and retained outgoing modifiers.",
-      "references": [
-        "crates/azsx-game/src/official_native/support/advanced.rs",
-        "src/runtime/support.rs",
-        "src/runtime/fatigue.rs"
-      ],
-      "role": "native-operation",
-      "shared": true
-    },
     "official_native.support.advanced.fixture_retaliation_hit": {
       "reason": "Hybrid allied delivery and retaliation share native effect budgets, caster attribution and retained outgoing modifiers.",
       "references": [
@@ -4960,6 +5021,241 @@
       ],
       "role": "native-operation",
       "shared": false
+    },
+    "official_native.polymorph.polymorph_entries": {
+      "reason": "Exact native Polymorph branch ownership loan, preserving producer damage and restoring the triggering actor before other procs.",
+      "references": [
+        "crates/azsx-game/src/official_native/polymorph.rs",
+        "src/runtime/combat.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.polymorph.polymorph_begin": {
+      "reason": "Exact native Polymorph branch ownership loan, preserving producer damage and restoring the triggering actor before other procs.",
+      "references": [
+        "crates/azsx-game/src/official_native/polymorph.rs",
+        "src/runtime/combat.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.polymorph.polymorph_end": {
+      "reason": "Exact native Polymorph branch ownership loan, preserving producer damage and restoring the triggering actor before other procs.",
+      "references": [
+        "crates/azsx-game/src/official_native/polymorph.rs",
+        "src/runtime/combat.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.polymorph.polymorph_owned": {
+      "reason": "Exact native Polymorph branch ownership loan, preserving producer damage and restoring the triggering actor before other procs.",
+      "references": [
+        "crates/azsx-game/src/official_native/polymorph.rs",
+        "src/runtime/combat.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.polymorph.polymorph_select": {
+      "reason": "Exact native Polymorph branch ownership loan, preserving producer damage and restoring the triggering actor before other procs.",
+      "references": [
+        "crates/azsx-game/src/official_native/polymorph.rs",
+        "src/runtime/combat.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.polymorph.fixture_polymorph_probe": {
+      "reason": "Opt-in two-player native sheep application and allied hit with producer ownership observations.",
+      "references": [
+        "crates/azsx-game/src/official_native/polymorph.rs",
+        "src/runtime/fixture.rs"
+      ],
+      "role": "diagnostic",
+      "shared": false
+    },
+    "official_native.polymorph.fixture_two_hunters": {
+      "reason": "Diagnostic temporary native Hunter Mark ability rows exercise both producers, weaker last-writer and removal through the native tick.",
+      "references": [
+        "crates/azsx-game/src/official_native/polymorph.rs",
+        "src/runtime/fixture.rs"
+      ],
+      "role": "diagnostic",
+      "shared": false
+    },
+    "official_native.polymorph.polymorph_candidate": {
+      "reason": "Exact native Polymorph branch ownership loan, preserving producer damage and restoring the triggering actor before other procs.",
+      "references": [
+        "crates/azsx-game/src/official_native/polymorph.rs",
+        "src/runtime/combat.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.support.talents.talent_condition_entry": {
+      "reason": "Reviewed native talent conditions and producer-owned area scaling preserve native proc budgets and distinguish absorption ownership from retaliation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/talents.rs",
+        "src/runtime/support.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
+    "official_native.support.talents.talent_area_entry": {
+      "reason": "Reviewed native talent conditions and producer-owned area scaling preserve native proc budgets and distinguish absorption ownership from retaliation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/talents.rs",
+        "src/runtime/support.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
+    "official_native.support.talents.support_area_factor": {
+      "reason": "Reviewed native talent conditions and producer-owned area scaling preserve native proc budgets and distinguish absorption ownership from retaliation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/talents.rs",
+        "src/runtime/support.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
+    "official_native.support.talents.talent_query_radius": {
+      "reason": "Reviewed native talent conditions and producer-owned area scaling preserve native proc budgets and distinguish absorption ownership from retaliation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/talents.rs",
+        "src/runtime/support.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
+    "official_native.support.talents.talent_condition_override": {
+      "reason": "Reviewed native talent conditions and producer-owned area scaling preserve native proc budgets and distinguish absorption ownership from retaliation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/talents.rs",
+        "src/runtime/support.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
+    "official_native.support.effects.fixture_talent_loan": {
+      "reason": "Shared support/aura bookkeeping preserves producer ownership, native procs, fatigue and retained spell modifier paths.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/support.rs",
+        "src/runtime/fatigue.rs"
+      ],
+      "role": "diagnostic",
+      "shared": true
+    },
+    "official_native.sets.invoke": {
+      "reason": "Exact native producer identity, death event, set proc filter, or shared vulnerability boundary.",
+      "references": [
+        "crates/azsx-game/src/official_native/sets.rs",
+        "src/runtime/combat/sets.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.sets.set_entries": {
+      "reason": "Exact native producer identity, death event, set proc filter, or shared vulnerability boundary.",
+      "references": [
+        "crates/azsx-game/src/official_native/sets.rs",
+        "src/runtime/combat/sets.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.sets.set_deaths": {
+      "reason": "Exact native producer identity, death event, set proc filter, or shared vulnerability boundary.",
+      "references": [
+        "crates/azsx-game/src/official_native/sets.rs",
+        "src/runtime/combat/sets.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.sets.set_filter_clone": {
+      "reason": "Exact native producer identity, death event, set proc filter, or shared vulnerability boundary.",
+      "references": [
+        "crates/azsx-game/src/official_native/sets.rs",
+        "src/runtime/combat/sets.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.sets.set_actor": {
+      "reason": "Exact native producer identity, death event, set proc filter, or shared vulnerability boundary.",
+      "references": [
+        "crates/azsx-game/src/official_native/sets.rs",
+        "src/runtime/combat/sets.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.sets.set_stamp_dot": {
+      "reason": "Exact native producer identity, death event, set proc filter, or shared vulnerability boundary.",
+      "references": [
+        "crates/azsx-game/src/official_native/sets.rs",
+        "src/runtime/combat/sets.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.sets.set_clock": {
+      "reason": "Exact native producer identity, death event, set proc filter, or shared vulnerability boundary.",
+      "references": [
+        "crates/azsx-game/src/official_native/sets.rs",
+        "src/runtime/combat/sets.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.sets.set_vulnerability": {
+      "reason": "Exact native producer identity, death event, set proc filter, or shared vulnerability boundary.",
+      "references": [
+        "crates/azsx-game/src/official_native/sets.rs",
+        "src/runtime/combat/sets.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.sets.set_vulnerability_write": {
+      "reason": "Exact native producer identity, death event, set proc filter, or shared vulnerability boundary.",
+      "references": [
+        "crates/azsx-game/src/official_native/sets.rs",
+        "src/runtime/combat/sets.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.sets.fixture_sets": {
+      "reason": "Exact native producer identity, death event, set proc filter, or shared vulnerability boundary.",
+      "references": [
+        "crates/azsx-game/src/official_native/sets.rs",
+        "src/runtime/combat/sets.rs"
+      ],
+      "role": "diagnostic",
+      "shared": false
+    },
+    "official_native.talent_panel.talent_panel_entry": {
+      "reason": "Inspect-panel current-rank text gains a cooperative note only for the pinned talent definitions and the in-run caller.",
+      "references": [
+        "crates/azsx-game/src/official_native/talent_panel.rs",
+        "src/runtime/ui_context.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
+    "official_native.talent_panel.enrich_talent_panel": {
+      "reason": "Inspect-panel current-rank text gains a cooperative note only for the pinned talent definitions and the in-run caller.",
+      "references": [
+        "crates/azsx-game/src/official_native/talent_panel.rs",
+        "src/runtime/ui_context.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
     }
   },
   "conservative_notes": {

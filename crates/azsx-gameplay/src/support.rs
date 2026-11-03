@@ -109,6 +109,7 @@ pub fn select(
     spell: Spell,
     now: f64,
 ) -> Option<PlayerId> {
+    if spell.hybrid() { return None; }
     let origin = party.iter().find(|v| v.id == caster)?;
     let mut candidates: Vec<_> = party
         .iter()
@@ -141,13 +142,13 @@ pub fn select(
         })
         .map(|v| v.id)
 }
-/// Battle Shout affects every in-range player. Hybrids heal once per allied
-/// unit using the native per-unit value; they never consume offensive targets.
+/// Battle Shout retains native group semantics; hybrids have no AZSX recipients.
 pub fn group_targets(party: &[Member], caster: PlayerId, spell: Spell, now: f64) -> Vec<PlayerId> {
     let Some(origin) = party.iter().find(|v| v.id == caster) else {
         return vec![];
     };
-    let radius = if spell == Spell::HolyNova { 25. } else { RANGE };
+    if spell.hybrid() { return vec![]; }
+    let radius = RANGE;
     party
         .iter()
         .filter(|v| {
@@ -239,6 +240,7 @@ pub fn deliver(
     party: &[Member],
     now: f64,
 ) -> Result<bool> {
+    if request.spell.hybrid() { return Ok(false); }
     let Some(me) = party.iter().find(|v| v.id == request.recipient) else {
         return Ok(false);
     };

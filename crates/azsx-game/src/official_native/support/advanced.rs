@@ -1,4 +1,4 @@
-//! Retaliation and hybrid native translations. All ABI/layout facts stay here.
+//! Retaliation native translations. All ABI/layout facts stay here.
 use super::effects::{f32at, u32at};
 use super::*;
 #[derive(Clone, Debug)]
@@ -45,31 +45,19 @@ impl Adapter {
         if io.read(game + self.game_field(0xb40), 8)? != 0u64.to_le_bytes() {
             return Err("Fixture retaliation requires restored host".into());
         }
+        // A bounded durable native witness prevents an unrelated attack from
+        // killing the queued retaliation target before the next server tick.
+        let enemy=self.fixture_combat_enemy(io,game,crate::official_native::NATIVE_PLAYERS as u32)?;
         let row = self.support_row(io, game, slot)?;
         if slot != 0 {
             io.swap_actor(game, row)?;
             io.write(game + self.game_field(0xb40), &u64::from(slot).to_le_bytes())?;
         }
         let result = (|| {
-            let actor = self.support_caster(io, game)?;
-            let enemy = self
-                .support_enemies(io, game)?
-                .into_iter()
-                .filter(|e| e.hp > 0.0)
-                .min_by(|a, b| {
-                    let distance = |e: &crate::enemies::EnemyExact| {
-                        e.position
-                            .iter()
-                            .zip(actor.position)
-                            .map(|(a, b)| (*a - f64::from(b)).powi(2))
-                            .sum::<f64>()
-                    };
-                    distance(a).total_cmp(&distance(b))
-                });
-            let Some(enemy) = enemy else { return Ok(None) };
-            io.support_hurt(game, 2.0, enemy.guid, true)?;
+            let Some(enemy)=enemy else{return Ok(None)};
+            io.support_hurt(game, 2.0, enemy, true)?;
             io.flush_actor(game)?;
-            Ok(Some(enemy.guid))
+            Ok(Some(enemy))
         })();
         if slot != 0 {
             let row = self.support_row(io, game, 0)?;
@@ -95,46 +83,6 @@ impl Adapter {
             data: row[..12].try_into().unwrap(),
             duration,
         })
-    }
-    pub fn emit_hybrid(
-        self,
-        io: &dyn SupportCalls,
-        game: u64,
-        base: u64,
-        spell: u32,
-        before: u64,
-        maximum: f32,
-    ) -> Result<()> {
-        if !matches!(spell, 15237 | 25912) {
-            return Err("Not a native hybrid".into());
-        }
-        let definition = base + self.fixture_support_definition(spell)?;
-        let bytes = io.read(definition + 0x6c, 4)?;
-        let fraction = f32at(&bytes, 0);
-        let amount = fraction * maximum;
-        if !fraction.is_finite() || !(0.0..=1.0).contains(&fraction) || !amount.is_finite() {
-            return Err("Invalid native hybrid per-unit healing".into());
-        }
-        io.emit_support_heal(game, spell, fraction)?;
-        let count = self.support_queue_count(io, game)?;
-        let p = io.read(game + self.game_field(0xa28), 8)?;
-        let p = u64::from_le_bytes(p.try_into().map_err(|_| "Truncated hybrid queue")?);
-        if count < before || count - before > 64 {
-            return Err("Invalid hybrid queue append".into());
-        }
-        for i in before..count {
-            let address = p + i * 56;
-            let r = io.read(address, 56)?;
-            if r.len() != 56 {
-                return Err("Truncated hybrid descriptor".into());
-            }
-            io.write(address + 52, &0u32.to_le_bytes())?;
-            if u32at(&r, 28) == spell && u32at(&r, 40) == 14 {
-                io.write(address + 32, &amount.to_le_bytes())?;
-                io.write(address + 52, &(ROUTE | ROUTE_GROUP).to_le_bytes())?;
-            }
-        }
-        Ok(())
     }
     pub fn hide_retaliation(
         self,

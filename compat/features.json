@@ -68,7 +68,7 @@
     },
     {
       "id": "AZSX-07",
-      "contract": "Allied direct heals, periodic heals and shields use player eligibility, range, missing-health/pressure rules and original-caster native coefficients/counters. Foreign periodic effects retain their producer and aura lifetime.",
+      "contract": "Allied direct heals, periodic heals and shields use player eligibility, range, missing-health/pressure rules and original-caster native coefficients/counters. Foreign periodic effects retain their producer and aura lifetime. Rejuvenation tracks concurrent producers independently and refreshes only the matching producer; Renew retains spell-level replacement. Swiftmend can rescue an eligible ally under the native health threshold and producer cooldown. Tree of Life retains producer coefficients and caps on allied healing. Ancestral Fortitude uses ordinary Healing Wave targeting at native half effectiveness. The in-run cooperative talent panel appends a short note to selected talent descriptions.",
       "mode": "Coop",
       "reference": "[Contract](../features/FEATURE-RULES.md)",
       "native_domains": [
@@ -79,7 +79,7 @@
     },
     {
       "id": "AZSX-08",
-      "contract": "Foreign Thorns/Lightning Shield retaliation, Holy Nova/Holy Shock allied heals and shield/healing talent interactions preserve caster attribution, native proc cooldowns and current modifiers. Ice Barrier remains caster-only.",
+      "contract": "Foreign Thorns/Lightning Shield retaliation and shield/healing talent interactions preserve caster attribution, native proc cooldowns and current modifiers. Holy Nova and Holy Shock retain native cast/impact behavior with no AZSX allied healing or routing. General Resurrection Sickness still applies. Ice Barrier remains caster-only. Divine Aegis follows the producer of Power Word: Shield, including allied recipients; Hammer of the Righteous requires a self-produced, self-worn absorption. Reviewed talent bursts use the producer area factor.",
       "mode": "Coop",
       "reference": "[Contract](../features/FEATURE-RULES.md)",
       "native_domains": [
@@ -100,7 +100,7 @@
     },
     {
       "id": "AZSX-10",
-      "contract": "Eligible Shield Slam, Hammer of Justice and Shred hits establish persistent pursuit/basic-melee ownership. Required talents, hit success, enemy life and player GUID are checked. Special abilities retain native targeting policy.",
+      "contract": "Eligible Shield Slam, Hammer of Justice and Shred hits establish persistent pursuit/basic-melee ownership. Required talents, hit success, enemy life and player GUID are checked. Special abilities retain native targeting policy. Taunting talents describe their triggers in a single cooperative inspection note.",
       "mode": "Coop",
       "reference": "[Contract](../features/FEATURE-RULES.md)",
       "native_domains": [
@@ -300,7 +300,7 @@
     },
     {
       "id": "AZSX-28",
-      "contract": "Optional Sayge\u2019s Trial: native encounter trigger only between bosses, native ground rune, decorative Classic Sayge and candles, map-wide placement with flatness preference, interior navigation clearance and walkable fallback/AZSXUI minimap pin, persistent unfinished scene with stable identity and encounter-upgraded reward, cumulative presence that suspends until every active participant returns, explicit collective-wait presentation, bounded randomized power, automatic Fortune replacement and AZSXUI progress UI with configurable position, scale, opacity and visibility, shown only during native circle presence. Host-owned cooperative scene and shared progress require every active participant inside; personal Fortunes replace cooperative boss grants, with strongest XP/gold contributions preserved.",
+      "contract": "Optional Sayge’s Trial: native encounter trigger only between bosses, native ground rune, decorative Classic Sayge and candles, map-wide placement with flatness preference, interior navigation clearance and walkable fallback/AZSXUI minimap pin, persistent unfinished scene with stable identity and encounter-upgraded reward, cumulative presence that suspends until every active participant returns, explicit collective-wait presentation, bounded randomized power, automatic Fortune replacement and AZSXUI progress UI with configurable position, scale, opacity and visibility, shown only during native circle presence. Host-owned cooperative scene and shared progress require every active participant inside; personal Fortunes replace cooperative boss grants, with strongest XP/gold contributions preserved.",
       "mode": "Solo / Coop",
       "reference": "[Contract](../features/FEATURE-RULES.md)",
       "native_domains": [
@@ -338,13 +338,34 @@
     },
     {
       "id": "AZSX-31",
-      "contract": "Host-owned solo and cooperative Banished Demon. Random opportunities begin at 90\u2013150 simulation seconds and recur 180\u2013300 seconds apart; dry ground placement may retry and never overlaps an active escort. Every active participant prepares within four yards for two cumulative seconds; leaving pauses progress. Native rune, captive, warlock, hostile demon combat and one confirmed-kill shared native Banish charge, once only. Three coherent native demon kits, no ordinary enemy reward or external assets. Detached API and optional AZSXUI objective, marker and toast. Exact 0.138.0 native contacts are guarded.",
+      "contract": "Host-owned solo and cooperative Banished Demon. Random opportunities begin at 90–150 simulation seconds and recur 180–300 seconds apart; dry ground placement may retry and never overlaps an active escort. Every active participant prepares within four yards for two cumulative seconds; leaving pauses progress. Native rune, captive, warlock, hostile demon combat and one confirmed-kill shared native Banish charge, once only. Three coherent native demon kits, no ordinary enemy reward or external assets. Detached API and optional AZSXUI objective, marker and toast. Exact 0.138.0 native contacts are guarded.",
       "mode": "Solo, Coop",
       "reference": "[Contract](../features/BANISHED-DEMON.md)",
       "native_domains": [
         "events",
         "combat",
         "ui"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "AZSX-32",
+      "contract": "Allied eligible hits can rupture an active Polymorph. Native explosion damage, coefficients, critical rolls, talents and attribution remain with its living original caster. The triggering hit and subsequent effects remain with the attacker. No replayed hit, duplicate explosion or shared Faerie Fire proc.",
+      "mode": "Coop",
+      "reference": "[Contract](../features/FEATURE-RULES.md)",
+      "native_domains": [
+        "combat"
+      ],
+      "disposition": "active"
+    },
+    {
+      "id": "AZSX-33",
+      "contract": "Native armor sets retain personal piece counts, spell-kill triggers and crowd-control damage modifiers. An ally can finish an enemy carrying the wearer's active Serpent Sting, Rupture, Flame Shock or Curse of Agony. Devout bursts at the shield recipient using the producer's area. Mortal Strike and Earth Shock retain the strongest active set vulnerability. Legendary necklace death bursts belong to the debuff producer. Shield bursts use the protected player as their center. Healing necklaces grant their absorb or leech to the healed player.",
+      "mode": "Coop",
+      "reference": "[Contract](../features/FEATURE-RULES.md)",
+      "native_domains": [
+        "combat",
+        "support"
       ],
       "disposition": "active"
     }

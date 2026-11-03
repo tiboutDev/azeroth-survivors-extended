@@ -59,14 +59,14 @@
         "support",
         "periodic"
       ],
-      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage. The opt-in AZSX_TEST_TALENT_BLOCK combined support campaign checks native Swiftmend and Rapture cooldowns plus permitted/forbidden shield bursts; unit and exact-image checks cover area and conditional ownership. Receipts must state live coverage limits. A two-player diagnostic exercised the native Ancestral Fortitude Stormstrike counter with a shaman in each role. The free Healing Wave selected the wounded ally and delivered half the ordinary wave amount. The talent panel visual scenario compares the same selected Warrior talent in solo and cooperative inspection. Native frame captures require visual review."
     },
     "AZSX-08": {
       "profiles": [
         "support",
         "periodic"
       ],
-      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage."
+      "scope_note": "Candidate feature-level checks; attribution does not establish execution or complete per-contract coverage. The opt-in AZSX_TEST_TALENT_BLOCK combined support campaign checks native Swiftmend and Rapture cooldowns plus permitted/forbidden shield bursts; unit and exact-image checks cover area and conditional ownership. Receipts must state live coverage limits."
     },
     "AZSX-09": {
       "profiles": [
@@ -290,6 +290,21 @@
         "limit": "A bounded diagnostic uses an accelerated first opportunity and participant positioning. Normal random cadence and all three kits require separate scope; the static binding scene has no unreviewed channel animation.",
         "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
       }
+    },
+    "AZSX-32": {
+      "profiles": [
+        "combat",
+        "official"
+      ],
+      "scope_note": "Selected-memory ownership/restoration tests and exact-image branch checks. Cooperative gameplay and damage-meter attribution require the complete spell-block live trial."
+    },
+    "AZSX-33": {
+      "profiles": [
+        "combat",
+        "support",
+        "official"
+      ],
+      "scope_note": "The two-player diagnostic uses native standard and empowered set definitions, controlled native events, and real enemy HP, DoT and vulnerability readbacks. Exact-image code checks cover personal spell-kill bindings and the seven controlled-target modifiers. This does not certify complete gear acquisition or every class pairing. The necklace scenario uses generated native perks with a two-player corpse event, a shield break and four real support casts followed by the native cast event. Readbacks cover witness HP, both absorb pools and both leech factors. The full necklace acquisition path and damage-meter UI are outside this fixture."
     }
   }
 }

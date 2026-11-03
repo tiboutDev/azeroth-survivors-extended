@@ -204,9 +204,6 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         crate::install::install(&[presentation::hook(adapter)])?;
     }
     crate::install::install(&experience::hooks(adapter))?;
-    if let Some(runtime) = RUNTIME.get().filter(|r| r.rules) {
-        combat::install_descriptions(runtime)?;
-    }
     if adapter.needs_guardian_item_supplement() {
         crate::install::install(&[elites::hook(adapter)])?;
     }
