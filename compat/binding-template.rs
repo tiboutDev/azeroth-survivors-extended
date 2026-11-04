@@ -131,23 +131,10 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 {{TEXT_RESERVE}}
 {{HEAL_TEXT_COLOR}}
 
-// Native vplates slices and layout application, before their first rendered frame.
-{{PLATE_UPDATE}}
-{{PLATE_STYLE}}
-{{PLATE_STYLE_CALLERS}}
-{{PLATE_ROW_SIZE}}
-{{PLATE_CACHE_PTR}}
-{{PLATE_CACHE_LEN}}
-{{PLATE_CACHE_ROW}}
 
-{{UI_UNIT_HASH}}
-{{UI_UNIT_MAP}}
-{{UI_UNIT_STRIDE}}
-{{UI_UNIT_RANK}}
 {{UI_ALIASES}}
 {{UI_SELF_GUID}}
 {{UI_PARTY_GUIDS}}
-{{NAMEPLATE_SCALE}}
 
 // Shared reward bonus: native icon-row title spawn and Node/ChildOf container.
 {{BONUS_TITLE_SPAWN}}
@@ -224,6 +211,7 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 // Versioned optional event ABI/data: never infer these from another client.
 {{GOBLIN_OUTFIT_ATLAS}}
 {{GOBLIN_OUTFIT_APPEARANCE}}
+// Frame offset of the full entity handle, or None when both callbacks retain it in R12.
 {{GOBLIN_OUTFIT_ENTITY}}
 {{GOBLIN_OUTFIT_ARMOR_KEY}}
 {{GOBLIN_OUTFIT_SKIN_CALLER}}
@@ -344,9 +332,20 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 
 // Selected world-number register, resolver composition, event tags and run difficulty.
 {{DAMAGE_TEXT_XMM}}
+{{DAMAGE_TEXT_ROW_REGISTER}}
 {{HEAL_TEXT_RESOLVER_ABI}}
 {{TEXT_QUERY}}
 {{HEAL_TEXT_TAG}}
+// x86 register numbers for the slot and full entity handle at the visible-item return.
+{{WEAPON_EQUIPMENT_REGISTERS}}
+// Warrior, Paladin and Shaman talent tree bases and lengths in specialization order.
+{{WEAPON_CATALOG_PROBE}}
+{{WEAPON_CATALOG_FRAME}}
+{{WEAPON_TALENT_TREES}}
+{{COOP_TALENT_KEYS}}
+{{SET_DOT_OWNER_CALLERS}}
+{{WEAPON_PREVIEW_COLLECTION_SLOT}}
+{{HEAL_TEXT_DISCRIMINANTS}}
 {{HEROIC_LEVEL}}
 
 // Native sink console logging, independent of the Game autostart flag.

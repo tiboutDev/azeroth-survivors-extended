@@ -84,10 +84,6 @@ pub(crate) fn install(log: &'static Log, sha: &str) -> Result<(), String> {
         {
             return Err("Native owner spell formatter changed".into());
         }
-        let entry=adapter.menu_entries()[4];
-        if r.local.read(local_base()+entry.rva as usize,entry.bytes.len())?!=entry.bytes{
-            return Err("Native reward-header entry changed".into());
-        }
         let title = adapter.menu_title_result_entry();
         if r.local.read(local_base()+title.rva as usize,title.bytes.len())? != title.bytes {
             return Err("Native menu title result changed".into());

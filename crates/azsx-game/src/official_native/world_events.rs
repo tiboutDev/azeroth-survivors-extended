@@ -164,10 +164,10 @@ impl Adapter {
         // native participant sender, so decorative objects exist for everyone.
         let queued = q(m, game + self.game_field(0x640))?;
         let guid = create(game, descriptor.as_ptr(), position.as_ptr(), 5, 0);
-        if ((guid >> 24) & 0xffffff) != u64::from(entry) {
+        if guid >> 48 != 0xf110 || ((guid >> 24) & 0xffffff) != u64::from(entry) {
             return Err("Native event GUID identity rejected".into());
         }
-        let packet = self.take_created_event_packet(m, game, queued)?;
+        let packet = self.take_created_event_packet(m, game, queued, guid)?;
         self.event_broadcast(m, base, game, 0xa9, &packet)?;
         Ok(EventObject { guid, position })
     }
@@ -176,6 +176,7 @@ impl Adapter {
         m: &dyn MutableMemory,
         game: u64,
         before: u64,
+        guid: u64,
     ) -> Result<Vec<u8>> {
         let cap = q(m, game + self.game_field(0x630))?;
         let ptr = q(m, game + self.game_field(0x638))?;
@@ -201,6 +202,19 @@ impl Adapter {
             return Err("Invalid created event packet".into());
         }
         let body = m.read(bytes, size as usize)?;
+        // One update, no transport, CREATE_OBJECT, packed GUID, GameObject.
+        // Other update packets use the same opcode. Leave their ownership intact.
+        let mut prefix = vec![1, 0, 0, 0, 0, 2, 0];
+        for (index, byte) in guid.to_le_bytes().into_iter().enumerate() {
+            if byte != 0 {
+                prefix[6] |= 1 << index;
+                prefix.push(byte);
+            }
+        }
+        prefix.push(5);
+        if !body.starts_with(&prefix) {
+            return Err("Created event packet does not identify the returned GameObject".into());
+        }
         m.write(game + self.game_field(0x640), &before.to_le_bytes())?;
         m.free_native(bytes, allocation as usize)?;
         Ok(body)
@@ -645,6 +659,8 @@ mod event_packet_tests {
             Ok(())
         }
     }
+    const GUID: u64 = 0xf110_a500_0100_0008;
+    const BODY: &[u8] = &[1, 0, 0, 0, 0, 2, 0xe9, 8, 1, 0xa5, 0x10, 0xf1, 5];
     fn queue() -> Memory {
         let m = Memory {
             bytes: RefCell::new(vec![0; 0x3000]),
@@ -654,14 +670,14 @@ mod event_packet_tests {
             (0x10700, 4u64),
             (0x10708, 0x11000),
             (0x10710, 2),
-            (0x11020, 4),
+            (0x11020, BODY.len() as u64),
             (0x11028, 0x12000),
-            (0x11030, 4),
+            (0x11030, BODY.len() as u64),
             (0x11038, 0xdeadbeef000000a9),
         ] {
             m.write(at, &v.to_le_bytes()).unwrap();
         }
-        m.write(0x12000, b"body").unwrap();
+        m.write(0x12000, BODY).unwrap();
         m
     }
     #[test]
@@ -669,20 +685,28 @@ mod event_packet_tests {
         let m = queue();
         let a = Adapter::select(crate::current::SHA256).unwrap();
         assert_eq!(
-            a.take_created_event_packet(&m, 0x10000, 1).unwrap(),
-            b"body"
+            a.take_created_event_packet(&m, 0x10000, 1, GUID).unwrap(),
+            BODY
         );
         assert_eq!(q(&m, 0x10710).unwrap(), 1);
-        assert_eq!(*m.freed.borrow(), vec![(0x12000, 4)]);
-        assert!(a.take_created_event_packet(&m, 0x10000, 1).is_err());
+        assert_eq!(*m.freed.borrow(), vec![(0x12000, BODY.len())]);
+        assert!(a.take_created_event_packet(&m, 0x10000, 1, GUID).is_err());
         assert_eq!(m.freed.borrow().len(), 1);
+    }
+    #[test]
+    fn another_object_in_the_same_queue_is_not_taken() {
+        let m = queue();
+        let a = Adapter::select(crate::current::SHA256).unwrap();
+        assert!(a.take_created_event_packet(&m, 0x10000, 1, GUID + 1).is_err());
+        assert_eq!(q(&m, 0x10710).unwrap(), 2);
+        assert!(m.freed.borrow().is_empty());
     }
     #[test]
     fn changed_queue_is_never_truncated_or_freed() {
         let m = queue();
         m.write(0x10710, &3u64.to_le_bytes()).unwrap();
         let a = Adapter::select(crate::current::SHA256).unwrap();
-        assert!(a.take_created_event_packet(&m, 0x10000, 1).is_err());
+        assert!(a.take_created_event_packet(&m, 0x10000, 1, GUID).is_err());
         assert_eq!(q(&m, 0x10710).unwrap(), 3);
         assert!(m.freed.borrow().is_empty());
     }

@@ -12,13 +12,13 @@ unsafe extern "system" fn project(c: &mut crate::stub::Context) {
     };
     let result = r
         .adapter
-        .weapon_projection(&io, r.local.base as u64, c.rdi, c.rbp + 0x12b0);
+        .weapon_projection(&io, r.local.base as u64, c.rdi, c.rax);
     #[cfg(feature = "test-hooks")]
     if std::env::var("AZSX_TEST_WEAPONS").is_ok() {
         r.log.info(&format!(
             "weapon look: class={:?} hands={:?} result={result:?}",
             r.local.read((c.rdi + 0x1a4) as usize, 2),
-            r.local.read((c.rbp + 0x12b0 + 60) as usize, 8)
+            r.local.read((c.rax + 60) as usize, 8)
         ));
     }
     if let Err(e) = result {
@@ -174,8 +174,9 @@ unsafe extern "system" fn button(c: &mut crate::stub::Context) {
     // Borrow the same button parent, theme and action type as the Worn button.
     // Native action None is the default automatic look. Explicit Worn is the
     // manual Worn sentinel; selected spec pieces carry their native item ID.
+    let [add_button, owned_item] = r.adapter.weapon_button_entries();
     let add: unsafe extern "system" fn(u64, u64, *const u8, usize, f32, bool, *const u8, bool) =
-        std::mem::transmute(r.local.base + 0x296900);
+        std::mem::transmute(r.local.base + add_button.rva as usize);
     let label = b"Worn piece (spec)";
     add(
         c.rbp + 0x2a8,
@@ -199,7 +200,7 @@ unsafe extern "system" fn button(c: &mut crate::stub::Context) {
             {
                 if let Some(encoded) = piece_look(class[0], slot as usize, item) {
                     let owned: unsafe extern "system" fn(u64, u32) -> bool =
-                        std::mem::transmute(r.local.base + 0x5c4d7a0);
+                        std::mem::transmute(r.local.base + owned_item.rva as usize);
                     if owned(collection, item) {
                         let choice = (u64::from(encoded) << 32) | 1;
                         action[..8].copy_from_slice(&choice.to_le_bytes());
@@ -238,9 +239,10 @@ unsafe extern "system" fn preview(c: &mut crate::stub::Context) {
         &access,
         r.local.base as u64,
         c.rdi,
+        c.rsp_entry,
         c.rbp,
         c.rbx,
-        c.rsp_entry + 0xa4,
+        c.rax,
     );
     #[cfg(feature = "test-hooks")]
     if std::env::var_os("AZSX_TEST_WEAPONS").is_some() {
@@ -261,7 +263,14 @@ pub(super) fn reset() {
     GRIPS.lock().unwrap_or_else(|e| e.into_inner()).clear()
 }
 unsafe extern "system" fn equipment(c: &mut crate::stub::Context) {
-    if c.rbp as u8 != 15 {
+    use azsx_game::current::WEAPON_EQUIPMENT_REGISTERS;
+    const { assert!(matches!(WEAPON_EQUIPMENT_REGISTERS, [5, 13] | [12, 3])) };
+    let (slot, entity) = match WEAPON_EQUIPMENT_REGISTERS {
+        [5, 13] => (c.rbp as u8, c.r13),
+        [12, 3] => (c.r12 as u8, c.rbx),
+        _ => unreachable!(),
+    };
+    if slot != 15 {
         return;
     }
     let Some(r) = RUNTIME.get() else { return };
@@ -273,9 +282,9 @@ unsafe extern "system" fn equipment(c: &mut crate::stub::Context) {
     let mut grips = GRIPS.lock().unwrap_or_else(|e| e.into_inner());
     if let Some(index) = grips
         .iter()
-        .position(|(entity, _)| *entity as u32 == c.r13 as u32)
+        .position(|(cached, _)| *cached as u32 == entity as u32)
     {
-        if grip.is_some_and(|two| grips[index] == (c.r13, two)) {
+        if grip.is_some_and(|two| grips[index] == (entity, two)) {
             return;
         }
         grips.remove(index);
@@ -284,7 +293,7 @@ unsafe extern "system" fn equipment(c: &mut crate::stub::Context) {
         if grips.len() >= azsx_game::official::NATIVE_PLAYERS {
             grips.remove(0);
         }
-        grips.push((c.r13, two));
+        grips.push((entity, two));
     }
 }
 unsafe extern "system" fn action(c: &mut crate::stub::Context) {
@@ -326,7 +335,7 @@ pub(super) fn install(r: &Runtime) -> Result<(), String> {
         catalog_probe::install(r)?;
     }
     let entries = r.adapter.weapon_entries();
-    for e in &entries {
+    for e in entries.iter().chain(r.adapter.weapon_button_entries().iter()) {
         if r.local.read(r.local.base + e.rva as usize, e.bytes.len())? != e.bytes {
             return Err("Native weapon boundary changed".into());
         }
@@ -405,7 +414,7 @@ mod catalog_probe {
     // control bytes and the 360-byte buckets belong to the live game catalog.
     unsafe extern "system" fn inspect(c: &mut crate::stub::Context) {
         let Some(r) = RUNTIME.get() else { return };
-        let Ok(h) = r.local.read((c.rbp + 0xc50) as usize, 32) else {
+        let Ok(h) = r.local.read((c.rbp + r.adapter.weapon_catalog_probe().1) as usize, 32) else {
             return;
         };
         let value = |i| usize::from_le_bytes(h[i..i + 8].try_into().unwrap());
@@ -441,8 +450,9 @@ mod catalog_probe {
         ));
     }
     pub(super) fn install(r: &Runtime) -> Result<(), String> {
-        let target = r.local.base + 0x8c50bc;
-        if r.local.read(target, 8)? != [0xf3, 0x0f, 0x6f, 0x85, 0x50, 0x0c, 0, 0] {
+        let (entry, _) = r.adapter.weapon_catalog_probe();
+        let target = r.local.base + entry.rva as usize;
+        if r.local.read(target, entry.bytes.len())? != entry.bytes {
             return Err("Weapon catalog probe boundary changed".into());
         }
         crate::install::install(&[crate::install::HookSpec {

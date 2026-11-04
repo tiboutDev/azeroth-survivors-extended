@@ -45,7 +45,8 @@ sh tools/dev/build-chest-fixture.sh
 python3 tools/dev/azsx_dev.py stage --receiver "$RECEIVER" --dll target/test-hooks/x86_64-pc-windows-msvc/release/avrt.dll
 ```
 
-Staging requires an existing reviewed private import and an owned unchanged DLL.
+Staging requires a reviewed private import. On first installation the DLL and
+its ownership receipt must both be absent. On replacement they must match.
 It verifies the artifact against current source before copying source/tools and
 DLL. It does not import native assets, delete unknown files or launch a game.
 Do not stage while clients are running. Staging is an explicit test-receiver
@@ -58,6 +59,8 @@ In the staged receiver, with Windows Python:
 ```text
 python -I -B tools/dev/azsx_dev.py validate solo-events
 python -I -B tools/dev/azsx_dev.py validate coop-events
+python -I -B tools/dev/azsx_dev.py validate solo-core
+python -I -B tools/dev/azsx_dev.py validate coop-revive-marker
 ```
 
 Suites in `compat/suites.json` declare player count, artifact kind, maximum time,

@@ -43,7 +43,7 @@ fn memory() -> Memory {
     for (at, value) in [(0x640, 2u64), (0x648, RECORDS), (0x650, 2)] {
         game[at..at + 8].copy_from_slice(&value.to_le_bytes());
     }
-    game[0xe88..0xe8c].copy_from_slice(&11f32.to_le_bytes());
+    game[0xea0..0xea4].copy_from_slice(&11f32.to_le_bytes());
     let stride = 0x208;
     let mut records = vec![0; stride * 2];
     records[0xf0..0xf0 + 8].copy_from_slice(&123456u64.to_le_bytes());

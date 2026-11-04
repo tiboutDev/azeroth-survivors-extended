@@ -116,7 +116,7 @@ and AZSX-authored text using native-style Lua globals/getters/handlers.
 
 See the [documentation index](docs/README.md) for player, development, compatibility, release and feature references.
 
-Source currently targets official **0.138.0**. Normal-artifact and in-game
+Source currently targets official **0.139.2**. Normal-artifact and in-game
 validation of this port remain separate from source checks; published kits
 declare their own supported game version. See
 [client compatibility](docs/compatibility/CLIENT-COMPATIBILITY.md).

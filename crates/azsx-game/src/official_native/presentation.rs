@@ -114,7 +114,7 @@ impl Adapter {
         if wire.len() > 32768 || wire.is_empty() || !wire.bytes().all(|b| b.is_ascii_hexdigit()) {
             return Err("Invalid party presentation envelope".into());
         }
-        // Native fixed array: 20 (&str, String) rows of 40 bytes. Only extend AZSRUN.
+        // AZSRUN is the second 40-byte (&str, String) row in the native output.
         let row = mem.read(output.checked_add(40).ok_or("Addon output overflow")?, 16)?;
         if row.len() != 16 {
             return Err("Truncated addon prefix".into());
@@ -302,17 +302,17 @@ impl Adapter {
     pub unsafe fn run_drop_lua(self, mem: &dyn crate::memory::Mem, base: usize, owned: &[u32]) -> crate::Result<String> {
         use std::collections::BTreeMap;
         use std::fmt::Write;
-        let map_table = base as u64 + 0x7118fc8;
+        let map_table = base as u64 + crate::current::GOBLIN_MAP_TABLE;
         // Validate the Armory call site because AZSX may detour the item resolver itself.
         for offset in [0x5bfd310,0x3c1ccf,0x21d0,0x5c4d7a0] {
             let bytes=self.expected(offset,&[]);
-            if bytes.is_empty() || mem.read(base as u64+offset,bytes.len())? != bytes {
+            if bytes.is_empty() || mem.read(base as u64+self.rva(offset),bytes.len())? != bytes {
                 return Err(format!("Run drop boundary changed at {offset:x}"));
             }
         }
-        let drops: unsafe extern "system" fn(*mut usize,u8,usize,usize) = std::mem::transmute(base+0x5bfd310);
-        let item: unsafe extern "system" fn(*mut usize,u32) = std::mem::transmute(base+0x5bffe00);
-        let free: unsafe extern "system" fn(usize,usize,usize) = std::mem::transmute(base+0x21d0);
+        let drops: unsafe extern "system" fn(*mut usize,u8,usize,usize) = std::mem::transmute(base+self.rva(0x5bfd310) as usize);
+        let item: unsafe extern "system" fn(*mut usize,u32) = std::mem::transmute(base+self.rva(0x5bffe00) as usize);
+        let free: unsafe extern "system" fn(usize,usize,usize) = std::mem::transmute(base+self.rva(0x21d0) as usize);
         let string = |ptr:u64,len:u64| -> crate::Result<String> {
             if ptr<65536 || len==0 || len>180 {return Err("Invalid run drop name".into())}
             let name=String::from_utf8(mem.read(ptr,len as usize)?).map_err(|_|"Invalid item name encoding")?;

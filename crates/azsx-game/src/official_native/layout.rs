@@ -1,4 +1,4 @@
-//! Native field translation for the sole supported official client, 0.135.1.
+//! Native field translation and bounded snapshots for the selected official client.
 use super::Adapter;
 use crate::{memory::Mem, Result};
 
@@ -25,8 +25,11 @@ impl Adapter {
 
     pub(super) fn read_context(self, mem: &dyn Mem, address: u64, host: bool) -> Result<Vec<u8>> {
         let size = if host { 0xc48 } else { 0x980 };
+        // The final host field is the phase byte. The normalized buffer's
+        // following padding has no native field contract.
+        const HOST_PHASE: usize = 0xc46;
         let native_size = if host {
-            self.game_field((size - 1) as u64) as usize + 1
+            self.game_field(HOST_PHASE as u64) as usize + 1
         } else {
             crate::current::CONTEXT_SIZE as usize
         };
@@ -52,7 +55,7 @@ impl Adapter {
             (0xb40, 0xb48),
             (0xb9c, 0xba0),
             (0xc41, 0xc42),
-            (0xc46, 0xc47),
+            (HOST_PHASE, HOST_PHASE + 1),
         ];
         const PRIVATE_FIELDS: &[(usize, usize)] = &[(0x97c, 0x97d)];
         let spans = if host { HOST_FIELDS } else { PRIVATE_FIELDS };
@@ -120,7 +123,8 @@ mod tests {
             (0xc46, 0xc47),
         ];
 
-        let mut native = vec![0xa5; 0x1000];
+        let last_byte = usize::try_from(adapter.row_field(true, 0xc46)).unwrap();
+        let mut native = vec![0xa5; last_byte + 1];
         for &(start, end) in &spans {
             let offset = usize::try_from(adapter.row_field(true, start as u64)).unwrap();
             for byte in offset..offset + end - start {

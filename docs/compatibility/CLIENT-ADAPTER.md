@@ -1,6 +1,6 @@
 # Selected native client boundary
 
-AZSX source supports only official **0.138.0**. `SelectedAdapter::select` accepts
+AZSX source supports only official **0.139.2**. `SelectedAdapter::select` accepts
 only the reviewed executable SHA-256. A version label or a similar instruction
 sequence cannot enable another client. Selection does not bypass entry-byte,
 image-bound or native-layout verification.
@@ -12,17 +12,17 @@ image-bound or native-layout verification.
 | `crates/azsx-gameplay/src/` | Portable rules, identities and copied semantic values |
 | `crates/azsx-game/src/official.rs` | Selected native facade used by the DLL |
 | `crates/azsx-game/src/official_native/` | Native translation, memory validation, call shapes and hook contracts |
-| `crates/azsx-game/src/bindings/official138.rs` | Exact current-image identity and descriptor choices |
+| `crates/azsx-game/src/bindings/official1392.rs` | Exact current-image identity and descriptor choices |
 | `crates/azsx-game/src/memory.rs`, `enemies.rs` | Neutral memory interface and exact enemy parsing used by current support |
 | `src/runtime/` | Feature coordination and bounded production service bindings |
 
 Active native consumers resolve descriptor data through the `azsx_game::current`
-re-export. The alias currently points to `official138`; it does not select or
+re-export. The alias currently points to `official1392`; it does not select or
 authorize an executable. Exact hash selection remains explicit in the adapter.
 Event appearance stack slots and native marks tables also belong to that
 descriptor, rather than to feature coordination.
 
-The selected descriptor is generated from `compat/clients/0.138.0.json` and
+The selected descriptor is generated from `compat/clients/0.139.2.json` and
 `compat/binding-template.rs`. Its field translations are resolved, including
 explicit invalid gaps; they do not invoke older descriptors. Historical modules
 are test-only comparison references. Reviewed canonical keys are retained where
@@ -140,7 +140,7 @@ The adapter validates the bounded host stack or remote receipt payload before
 rejoining, without writing phase/HP, inventing XP or retrying uncertain awards.
 
 
-The exact 0.138.0 Polymorph rupture scope begins after the triggering damage
+The selected Polymorph rupture scope begins after the triggering damage
 has committed and ends at the common join before subsequent on-hit procs.
 Both interior seams are guarded. A separately guarded entry bypasses the native
 attacker ability-kind scan only for a unique active foreign sheep; the native

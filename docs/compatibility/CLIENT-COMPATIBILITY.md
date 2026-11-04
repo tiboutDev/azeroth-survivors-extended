@@ -1,21 +1,175 @@
-# Official 0.138.0 client boundary
+# Official 0.139.2 client boundary
 
 The sole source target is the exact Windows x86-64 executable with SHA-256:
 
 ```text
-eb5fd1c1b96e6180fcf5f3d685d90a61471af28d22e5f060c02b7b7663fbf79e
+0bb6c557c5f6cfeea212761a33554f9a5647ce7cb7e03b8a163b95489496e908
 ```
 
-`bindings/official138.rs` owns current native contacts, complete instruction
+`bindings/official1392.rs` owns current native contacts, complete instruction
 guards, field translations and register/frame choices. Version labels and
 similar instruction sequences cannot select another executable. The launcher
 registry and private importer use this same exact identity. Direct native launch
 remains inert; the retired custom engine is not a fallback.
 
+## 0.139.2 qualification
+
+The normal DLL passed solo play and a two-player host/join run on this executable.
+The diagnostic DLL passed solo and co-op core, support, pause, revival marker,
+and both event suites. Private trials used normal priority and all available CPUs.
+Both players claimed supplies, completed the ritual and received their goblin
+rewards. The guest observed the escaped and killed goblins leave the scene.
+The revival marker showed the downed ally's name and distance and disappeared
+after native revival. These results are scoped to the tested source and binaries.
+
+The candidate executable embeds build stamp `v0.2.0-1039-g5cb6deb36`
+and SHA `5cb6deb3643ec2c7f3922bd4fd68eb26020a20ff`. Benilla's public
+`v0.3.0` sources help identify engine UI and presentation code. The stamp
+identifies the game build. Its upstream merge base remains unconfirmed.
+[Benilla v0.3.0 source](https://github.com/samwhosung/benilla/tree/68734926a981301ead72b204f13e2be083845067)
+
+- The run-info missing-drops tooltip uses the native Armory boss-loot and item
+  lookups. Candidate checks cover the collection's owned-ID vector, the returned
+  names, row bounds and native deallocation contract for three classes and zones.
+- Retained pause callbacks still reach the native pause checks, label and button
+  builders. The visibility byte remains at frame +0x2fe and the title font
+  value at +0x470. Both recovery-button call sites resolve to their selected
+  constructors.
+- Shared award classification uses the return address of the native award
+  call. The 0.139.2 local skip and automatic gold conversion return at
+  0x5ec3549 and 0x5f76e19. Anchoring on a nearby instruction misclassifies
+  their gold as a world drop. The XP callers preserve the raw-amount registers
+  consumed by AZSX.
+- The specialization look maps learned talent pointers through nine
+  build-specific tables. Compare the ordered keys of every tree when
+  updating the descriptor. Both projections use the visible-item resolver's
+  returned pointer. The candidate preview borrows the collection from stack
+  +0x48. The run and preview buffers moved independently.
+- Party enrichments still append to the second addon line, AZSRUN, and read
+  native spell names, ranks and descriptions from the actual ability formatter.
+
+- Peer rows expanded from 0x858 to 0x870. Review each field against its owning
+  structure. Some Game fields moved by 0x18 while adjacent groups kept their offsets.
+- The host's peer pointer and count are at Server +0xfb0 and +0xfb8. Outgoing
+  packets look up the assigned slot at peer +8 and require an active row and
+  the stream flag at +0x86d. Incoming commands identify a row by vector index.
+  In an isolated native run, closing the guest reduced the host's count from
+  one to zero. Its private actor still had the same GUID and entered phase 4.
+  Keep network delivery and downed actor state separate.
+- Check all 13 co-op talent notes against native talent key headers. Retained
+  reward widgets must keep their native row allocations and constructor arguments.
+- Check Polymorph eligibility at the actor-mode load and the ownership scan.
+  The actor mode moved from DIL to R10B. The set DoT builder has five supported
+  return sites with three caller layouts. Verify all five before attributing damage.
+- Trace the fatigue row pointer from the 48-row allocation to the harmful aura
+  slots. On this image the pointer is at RBP+0x10. Trace the fractional healing
+  packet from construction through insertion into the 32-byte-row queue at
+  Game+0x700. Verify that a grenade appends exactly one projectile carrying the
+  AZSX token, native spell ID and additional flight delay.
+- The 0.139.2 binding manifest records the reviewed addresses and field
+  ranges. The complete native swap exchanges 2,901 bytes of the 0xb58-byte
+  private context in both versions. Its last three bytes stay untouched.
+  Cross-image tests check the mapped host fields against the bytes actually
+  moved. Both native Game constructors now cover the previous host field table.
+  The object grows from 0xf50 to 0xf68 with a 24-byte insertion at +0xcf0.
+  Three conditional float payloads require checking their active load/store
+  instructions because the constructors leave those bytes unwritten.
+  The host table covers all 3,060 previous bytes. The two historical lookup tables also cover
+  their previous 3,128 and 3,152 bytes. Distinct settings bytes passed into
+  both constructors and a native append to the relocated 40-byte-row vector
+  distinguish the last fields from adjacent storage. The descriptor generator refuses a partial manifest.
+- Native heal-text lookup returns the complete entity handle. Its eligibility
+  query rejects an absent GUID, a recycled entity generation and ineligible
+  components. The native Hunter's Mark visual helper updates one living enemy
+  and queues a change only when its aura is added or removed.
+- The goblin compositor carries the entity in R12 at both the metadata and
+  armor-key callbacks. Its atlas, appearance and armor key begin at frame
+  +0xc40, +0xc58 and +0x680. Check the individual operands before installing
+  these hooks. A two-player trial confirmed the native armor compositor and
+  the visible equipped model beside its projected Treasurer anchor.
+- The UI event sink copies its borrowed text and length into an owned string
+  in the native ring. The native reward callbacks have now been exercised through a paid reroll,
+  three goblin amulet offers, acceptance by index and cache conversion. The
+  amulet pool hook receives the active Game at frame +0x198, the weighted vector
+  at +0x1a0 and its length in R15. The exclusion callback borrows 24-byte
+  string headers. Once a card is accepted, its key becomes the active amulet.
+- The goblin spawn hook substitutes the creature definition in R15 only for the
+  requested Game in RSI. The following ordinary spawn retains its own entry.
+  The final movement callback still observes XY in XMM13 and Z in XMM14.
+  The source altitude moved from frame +0x26c to +0x24c. The native recycling
+  iterator returns a list of distant enemy GUIDs for AZSX to filter.
+- Both nameplate style callers use the vector at +0x4778 (previously +0x4b18).
+  The main-hand rendering loop keeps the slot in R12B and the entity handle,
+  including its generation, in RBX. Both entity-loading paths reach the item
+  resolver with the same handle.
+- The direct and periodic UI handlers use tags 0x97 and 0x96. Their callees
+  emit HEAL_CRIT and PERIODIC_HEAL respectively. The periodic handler reads
+  20-byte rows. Trace UI events to their logger before choosing a hook because
+  unrelated wrappers share the same epilogue and wire tags belong to another layer.
+- Native coinage still uses field 0x498. The generic single-field setter remains
+  callable. The native gold-award path now updates existing keys inline, so a
+  detour on the generic setter alone cannot observe every balance change.
+  Chest purchase and reroll already reconcile the balance after the native call.
+  The two-player wallet scenario verified single debits for cache purchases and
+  paid rerolls, unchanged balances on free rerolls, single skip credits, and
+  matching native balances on both clients.
+- The retained UI payload begins at Rc +0x18. Its unit aliases now begin at
+  payload +0x3290 (previously +0x2f10). Self is the u64 at aliases +0x60.
+  Four party GUIDs start at +0x88 and four pet GUIDs at +0xa8. The native
+  formatter distinguishes all eight slots. In a two-client native run on the
+  map, both clients reported `UnitIsUnit("player","party1")` as false even when
+  the displayed names matched. Empty party slots did not resolve.
+- Event creation takes Game, an entry/display/scale descriptor, XYZ, object
+  type and flags. The native constructor increments Game +0xed4, returns its
+  0xf110 object GUID, and appends one 32-byte 0xa9 packet to the Game vector at
+  +0x700 (capacity), +0x708 (pointer), +0x710 (length). The 0x5f metadata must
+  precede creation. An offline execution test inspects both the serialized
+  local packet and the connected peer's queued message. A second emulated
+  server executes the guest dispatcher through its local transport boundary. The destroy packet carries the full created GUID to the guest alone
+  for a personal hide, or to both transports for a scene removal. Two-client trials
+  cover independent crate claims, ritual completion and scene cleanup.
+- Execution of the scene-unit builder, field-map destructor and update packer
+  confirms the borrowed field map, consumed update block and owned packet on
+  the candidate. The notice, creature metadata, escort spline and Sayge fixture
+  produce the same bytes as 0.138.0. Terrain sampling distinguishes half-yard
+  cells and rejects out-of-bounds coordinates. The navigation clip stops at a
+  blocked cell and preserves an unobstructed goal.
+- The allocation thunks use the Windows process heap. The native free path
+  recovers the original allocation for alignments above 16 bytes. Offline tests
+  execute both sides with the imported heap functions isolated.
+- Both bootstrap detours have standalone address and guard constants. Include
+  these in offline inventories. The initialized virtual reader returns an owned
+  copy of the cached script. The real lobby writer queues a hero message and a
+  separate host-room message with the supplied name. These tests use a private
+  cache and local queue. The isolated clients initialized the addon and joined a real AZSX party.
+- The twelve map names, five bosses per map, event bounds and marks factors match
+  the reviewed image. Seven downed-XP branch and resume pairs are recorded.
+  Native direct and periodic heal consumers preserve the event, object map,
+  query and writer slots used by the adapter. Text buffer growth preserves
+  56-byte rows, and packet queue growth preserves 32-byte rows.
+- Executing the native keyboard enqueue and apply paths on a constructed Game
+  changes the phase from playing to paused and back. The guest filter consumes
+  the pause action only for its active stream. Sending the AZSX pause opcode
+  queues the epoch and state in the native reliable envelope.
+- The damage renderer reads the category and color from R14, with fresh size in
+  XMM8. The 0.138.0 hook used RBX. Select the row register independently of the
+  size register. Windows stand-ins exercise both row registers with a decoy row.
+- Codex insertion retains an existing higher rarity when adding the three
+  excluded economy trinkets. The native save entry and collection argument
+  were identified offline. Normal solo launches on new and existing disposable
+  profiles verified persistence, preserved higher rarities and left the second
+  save byte-identical.
+- Native world-anchor projection returned current on-screen coordinates in the
+  isolated client. A real two-player knockdown showed the ally name, distance and revive
+  icon. The icon disappeared after the native revival.
+
+Point `AZSX_REVIEW_IMAGE_1392` at the private executable to include candidate
+image checks during portable testing. Those checks inspect the binary offline.
+
 ## Selected layouts
 
 Host Game and private actor fields have independent translations. Private actor
-stride is `0xb58`; native peers use stride `0x858`. Native capacity remains five.
+stride is `0xb58`; native peers use stride `0x870`. Native capacity remains five.
 Snapshots copy only the identity, resources, phase and bounded headers consumed
 by party/support observations. Unused owned native context data is not cloned.
 Gold moves independently from adjacent vitals and native earned-gold counters;
@@ -29,18 +183,18 @@ crowd-control budgets, spawn rules or target policy for special abilities.
 The NPC continuation uses XMM15 for distance. Temporary actor XY is at frame
 `+0x70`; frame `+0x80` belongs to the native iterator and must not be overwritten.
 Encounter handling reads the unique boss definition from R15 and cross-checks
-Game in R13 against the selected `+0x928` frame slot. The old definition slot
+Game in R13 against the selected `+0x958` frame slot. The old definition slot
 now holds an unrelated log-queue reference and must not be read as a boss.
-The basic-action Game pointer is at `+0x3b0`, with origin Z at `+0x26c`.
+The basic-action Game pointer is at `+0x3b0`, with origin Z at `+0x24c`.
 Shield-break callbacks read Game from RBX and the spell from R15. The aura-row
-pointer is at RBP+0x38 at the projection seam; periodic-heal UI payloads start at
+pointer is at RBP+0x10 at the projection seam; periodic-heal UI payloads start at
 RBP+0x2d8. These are callback-local lifetimes, not general stack translations.
 
 The native compositor uses a 64-byte tagged armor key. The selected adapter
 preserves its four-byte prefix and race byte. Metadata, appearance, entity and
 armor-key frame locations are selected independently.
 
-Fresh damage-number size now uses XMM8; RBX owns the message. Direct and
+Fresh damage-number size uses XMM8 and R14 owns the message. Direct and
 periodic heal wrappers have separate reviewed frames and event discriminators.
 The native entity resolver is now a query predicate plus a map lookup borrowing
 a pointer to the map reference. Healing/meter calls additionally require a fifth

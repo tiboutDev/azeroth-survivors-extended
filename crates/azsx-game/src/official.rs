@@ -1603,11 +1603,11 @@ impl SelectedAdapter {
     pub fn goblin_outfit_entries(self) -> [Entry; 2] {
         self.native.goblin_outfit_entries()
     }
-    pub fn goblin_outfit_metadata(self, m: &dyn MutableMemory, f: u64) -> Result<Option<u64>> {
-        self.native.goblin_outfit_metadata(m, f)
+    pub fn goblin_outfit_metadata(self, m: &dyn MutableMemory, f: u64, r12: u64) -> Result<Option<u64>> {
+        self.native.goblin_outfit_metadata(m, f, r12)
     }
-    pub fn goblin_outfit_key(self, m: &dyn MutableMemory, f: u64, e: u64) -> Result<()> {
-        self.native.goblin_outfit_key(m, f, e)
+    pub fn goblin_outfit_key(self, m: &dyn MutableMemory, f: u64, r12: u64, e: u64) -> Result<()> {
+        self.native.goblin_outfit_key(m, f, r12, e)
     }
     pub fn goblin_entries(self) -> Vec<Entry> {
         self.native.goblin_entries()
@@ -1928,9 +1928,12 @@ impl SelectedAdapter {
 }
 
 impl SelectedAdapter {
-    pub fn preview_weapons(self,m:&dyn MutableMemory,base:u64,collection:u64,picker:u64,looks:u64,visible:u64)->Result<Option<[u32;2]>>{self.native.preview_weapons(m,base,collection,picker,looks,visible)}
+    #[cfg(feature = "test-hooks")]
+    pub fn weapon_catalog_probe(self) -> (Entry, u64) { self.native.weapon_catalog_probe() }
+    pub fn preview_weapons(self,m:&dyn MutableMemory,base:u64,rdi:u64,stack:u64,picker:u64,looks:u64,visible:u64)->Result<Option<[u32;2]>>{self.native.preview_weapons(m,base,rdi,stack,picker,looks,visible)}
     pub fn weapon_melee_animation(self,two_handed:bool,requested:u16)->Option<u16>{self.native.weapon_melee_animation(two_handed,requested)}
     pub fn weapon_two_handed(self,entry:u32)->Option<bool>{self.native.weapon_two_handed(entry)}
+    pub fn weapon_button_entries(self)->[Entry;2]{self.native.weapon_button_entries()}
     pub fn weapon_entries(self)->[Entry;10]{self.native.weapon_entries()}
     pub fn weapon_projection(self,m:&dyn MutableMemory,base:u64,profile:u64,visible:u64)->Result<Option<[u32;2]>>{self.native.weapon_projection(m,base,profile,visible)}
     pub fn weapon_template(self,entry:u32)->Option<u32>{self.native.weapon_template(entry)}

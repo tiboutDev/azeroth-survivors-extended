@@ -137,6 +137,11 @@ impl Adapter {
         enemy: u64,
         players: &[(u32, u64)],
     ) -> Result<Option<PolymorphLoan>> {
+        // Both clients load the mode from the active actor before this branch,
+        // but keep it in different registers until the ownership scan.
+        if !matches!(io.read(game + 0x236, 1)?.as_slice(), [0 | 1]) {
+            return Ok(None);
+        }
         let original = self.support_caster(io, game)?;
         let Some(owner) = self.polymorph_candidate(io, game, enemy, players)? else {return Ok(None)};
         let loan = PolymorphLoan {
@@ -294,7 +299,7 @@ mod tests {
             m.write(GAME + at, &v.to_le_bytes()).unwrap();
         }
         m.write(GAME + a.game_field(0xc41), &[1]).unwrap();
-        m.write(GAME + 0xe88, &10f32.to_le_bytes()).unwrap();
+        m.write(GAME + 0xea0, &10f32.to_le_bytes()).unwrap();
         for slot in 0..3 {
             let row = if slot == 0 {
                 GAME
@@ -398,12 +403,12 @@ impl Adapter {
     /// The production burst is neither invoked directly nor synthesized.
     pub unsafe fn fixture_polymorph_probe(&self, io: &dyn SupportCalls, base: u64, game: u64, caster: u32, prototype: &[u8]) -> Result<(u64, bool, bool)> {
         if prototype.len()<88 || caster>1 || self.support_caster(io,game)?.slot!=0 { return Err("Invalid Polymorph probe context".into()); }
-        let entry=base+0x5d4c0e0;
-        let expected=[0x41,0x57,0x41,0x56,0x41,0x55,0x41,0x54,0x56,0x57,0x55,0x53,0x48,0x81,0xec,0x08,0x01,0x00,0x00];
-        if io.read(entry,expected.len())?!=expected || io.read(base+0x711edb0+0x40,4)?!=118u32.to_le_bytes() { return Err("Polymorph probe native guard mismatch".into()); }
+        let entry=base+self.rva(0x5d4c0e0);
+        let expected=self.expected(0x5d4c0e0,&[]);
+        if io.read(entry,expected.len())?!=expected || io.read(base+self.rva(0x711edb0)+0x40,4)?!=118u32.to_le_bytes() { return Err("Polymorph probe native guard mismatch".into()); }
         let enemy=self.fixture_combat_enemy(io,game,5)?.ok_or("No Polymorph probe target")?;
         self.polymorph_select(io,game,caster)?;
-        let mut ability=prototype[..88].to_vec();ability[..8].copy_from_slice(&(base+0x711edb0).to_le_bytes());
+        let mut ability=prototype[..88].to_vec();ability[..8].copy_from_slice(&(base+self.rva(0x711edb0)).to_le_bytes());
         let header=io.read(game+0x3f8,24)?;
         let storage=io.allocate_native(&ability)?;
         let mut loan=1u64.to_le_bytes().to_vec();loan.extend(storage.to_le_bytes());loan.extend(1u64.to_le_bytes());
@@ -436,14 +441,14 @@ impl Adapter {
 impl Adapter {
     pub unsafe fn fixture_two_hunters(&self,io:&dyn SupportCalls,base:u64,game:u64,prototypes:&[Vec<u8>])->Result<Vec<(u64,f32)>> {
         if prototypes.len()!=2 || prototypes.iter().any(|p|p.len()<88) || self.support_caster(io,game)?.slot!=0 {return Err("Invalid two-hunter probe".into());}
-        if io.read(base+0x711d7a8+0x40,4)?!=1130u32.to_le_bytes(){return Err("Hunter definition mismatch".into());}
+        if io.read(base+self.rva(0x711d7a8)+0x40,4)?!=1130u32.to_le_bytes(){return Err("Hunter definition mismatch".into());}
         let tick:unsafe extern "system" fn(u64,f32)=std::mem::transmute((base+self.combat_entries()[0].rva)as usize);
         let mut loans=Vec::new();
         let result=(|| {
             for slot in 0..2u32 {
                 self.polymorph_select(io,game,slot)?;
                 let header=io.read(game+0x3f8,24)?;let target=io.read(game+0xae8,8)?;
-                let mut row=prototypes[slot as usize][..88].to_vec();row[..8].copy_from_slice(&(base+0x711d7a8).to_le_bytes());
+                let mut row=prototypes[slot as usize][..88].to_vec();row[..8].copy_from_slice(&(base+self.rva(0x711d7a8)).to_le_bytes());
                 row[16..20].copy_from_slice(&1f32.to_le_bytes());
                 row[56..60].copy_from_slice(&(if slot==0{1f32}else{3.0625}).to_le_bytes());
                 let storage=io.allocate_native(&row)?;

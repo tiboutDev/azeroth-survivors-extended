@@ -31,6 +31,12 @@ class OfflineComparison(unittest.TestCase):
             path.write_text("const ADDRESSES: &[(u64,u64)] = &[(0x1000, 0x2100,), (0x2000, 0x3100,), (0x3000, 0x4100)];")
             self.assertEqual(set(comparison.descriptor_inventory(path)), {0x2100, 0x3100, 0x4100})
 
+    def test_inventory_includes_standalone_bootstrap_detours(self):
+        root = Path(__file__).resolve().parents[1]
+        rows = comparison.descriptor_inventory(root / "crates/azsx-game/src/bindings/official138.rs")
+        for address, role in ((0x6020f50, "ADDON_API_READER"), (0xbad40, "LOBBY_SUBMIT")):
+            self.assertTrue(any(label.endswith(role) for label in rows[address]))
+
     def images(self):
         class Image:
             def __init__(self, sha, starts):

@@ -69,7 +69,7 @@ pub struct Adapter {
 impl Adapter {
     pub fn select(hash: &str) -> Result<Self> {
         let revision = match hash {
-            crate::current::SHA256 => Revision::V138,
+            crate::current::SHA256 => Revision::V1392,
             _ => return Err("No reviewed official-engine adapter for this executable".into()),
         };
         Ok(Self { revision })
@@ -775,9 +775,9 @@ mod tests {
                 0xc58 => self.role.to_le_bytes().to_vec(),
                 0xc98 => self.count.to_le_bytes().to_vec(),
                 0xf49 => vec![self.connected],
-                0xf60 => self.role.to_le_bytes().to_vec(),
-                0xfa0 => self.count.to_le_bytes().to_vec(),
-                0x139d => vec![self.connected],
+                0xf78 => self.role.to_le_bytes().to_vec(),
+                0xfb8 => self.count.to_le_bytes().to_vec(),
+                0x13b5 => vec![self.connected],
                 _ => return Err("Unexpected union read".into()),
             };
             if bytes.len() != n {
@@ -849,17 +849,17 @@ mod tests {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Revision {
-    V138,
+    V1392,
 }
 impl Adapter {
     pub fn name(self) -> &'static str {
         match self.revision {
-            Revision::V138 => "official-coop-0.138.0",
+            Revision::V1392 => "official-coop-0.139.2",
         }
     }
     pub fn version(self) -> &'static str {
         match self.revision {
-            Revision::V138 => "0.138.0",
+            Revision::V1392 => "0.139.2",
         }
     }
     fn rva(self, baseline: u64) -> u64 {

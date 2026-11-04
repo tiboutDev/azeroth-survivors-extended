@@ -20,6 +20,14 @@ class BundleTests(unittest.TestCase):
   self.record=dict(schema=2,version=azsx_dev.VERSION,native_sha256=sha,kind='diagnostic',dll_sha256=artifact_record.digest(self.dll),source_fingerprint=fp,compilation_fingerprint=fp,inputs=inputs)
   azsx_dev.atomic(self.dll.with_suffix('.artifact.json'),self.record)
  def stage(self):return azsx_dev.stage(self.root,self.dll)
+ def test_first_dll_install_requires_an_empty_owned_slot(self):
+  for name in ('AZSX-DEV.json','ASX-DEV.json'):
+   (self.target/name).unlink(missing_ok=True)
+  with self.assertRaisesRegex(ValueError, 'ownership'):
+   self.stage()
+  (self.target/'avrt.dll').unlink()
+  self.stage()
+  azsx_dev.verify_staged(self.root,kind='diagnostic')
  def test_pristine_receiver_needs_no_sources_tests_or_build_tools(self):
   (self.root/'unknown.txt').write_text('preserve')
   self.stage();azsx_dev.verify_staged(self.root,kind='diagnostic')

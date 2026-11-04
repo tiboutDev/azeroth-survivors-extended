@@ -19,6 +19,17 @@ extension_spec.loader.exec_module(extensions)
 
 
 class BackgroundTrials(unittest.TestCase):
+    def test_private_pause_movement_pairs_each_key_with_its_release(self):
+        import private_trial_focus as focus
+        with mock.patch.object(focus, "_post_owned_windows", return_value=2) as post:
+            for tick in range(8):
+                self.assertEqual(focus.step_owned_windows([101, 202], tick), 2)
+        keys = []
+        for args, _ in post.call_args_list:
+            self.assertEqual(args[0], [101, 202])
+            keys.extend(row[:2] for row in args[1] if row[0] in (0x100, 0x101))
+        self.assertEqual(keys, [(0x100, 0x57), (0x101, 0x57), (0x100, 0x53), (0x101, 0x53)])
+
     def test_ritual_evidence_only_satisfies_the_ritual(self):
         host = "scenario step: ritual action=0\nscenario step: ritual action=1"
         assess = extensions.observed_event_steps
@@ -95,7 +106,7 @@ class BackgroundTrials(unittest.TestCase):
         mocked = mock.Mock(run=lambda *a, **kw: called.append((a, kw)))
         with mock.patch.dict('sys.modules', {'azsx_install_trial': mocked}):
             background.run_child(args, Path('/tmp/test-results/trial/start'))
-        self.assertEqual(called, [((45,), {'game_version': '0.138.0', 'package_path': Path('prepared.zip'), 'legacy_package': None})])
+        self.assertEqual(called, [((45,), {'game_version': '0.139.2', 'package_path': Path('prepared.zip'), 'legacy_package': None})])
 
     def test_archive_preflight_distinguishes_pending_owned_dll_replacement(self):
         from azsx_install_trial import initial_check_passed

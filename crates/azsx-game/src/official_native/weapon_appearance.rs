@@ -426,6 +426,12 @@ fn id(b: &[u8], i: usize) -> u32 {
     u32::from_le_bytes(b[i..i + 4].try_into().unwrap())
 }
 impl Adapter {
+    #[cfg(feature = "test-hooks")]
+    pub fn weapon_catalog_probe(self) -> (crate::official::Entry, u64) {
+        let (rva, bytes) = crate::current::WEAPON_CATALOG_PROBE;
+        (crate::official::Entry { rva, bytes }, crate::current::WEAPON_CATALOG_FRAME)
+    }
+
     pub fn weapon_melee_animation(self, two_handed: bool, requested: u16) -> Option<u16> {
         match (requested, two_handed) {
             (17, true) => Some(18),
@@ -440,6 +446,12 @@ impl Adapter {
             .filter(|v| v.class == 2)
             .map(|v| v.inventory == 17)
     }
+    pub fn weapon_button_entries(self) -> [Entry; 2] {
+        [0x296900, 0x5c4d7a0].map(|address| Entry {
+            rva: self.rva(address),
+            bytes: self.expected(address, &[]),
+        })
+    }
     pub fn weapon_entries(self) -> [Entry; 10] {
         [
             0x5ceedf2, 0x5bffe00, 0x3c18e0, 0x5c4b7f0, 0x5bff970, 0x2a2e7a, 0x6d3893, 0xaf0050, 0x2828c0, 0x3c1caf,
@@ -453,9 +465,9 @@ impl Adapter {
     /// rank belongs to exactly one contiguous class-tree definition table.
     fn weapon_trees(self, m: &dyn Mem, base: u64, ranks: u64, class: u8) -> Result<[u16; 3]> {
         let trees = match class {
-            1 => [(0x7129738, 13), (0x712a9d8, 13), (0x712bfb8, 14)],
-            2 => [(0x712d158, 13), (0x712e7a8, 14), (0x712f9a8, 13)],
-            7 => [(0x7139fe8, 13), (0x713b430, 13), (0x713c428, 13)],
+            1 => &crate::current::WEAPON_TALENT_TREES[0],
+            2 => &crate::current::WEAPON_TALENT_TREES[1],
+            7 => &crate::current::WEAPON_TALENT_TREES[2],
             _ => return Ok([0; 3]),
         };
         let h = m.read(ranks, 24)?;
@@ -507,7 +519,8 @@ impl Adapter {
         self,
         m: &dyn MutableMemory,
         base: u64,
-        collection: u64,
+        rdi: u64,
+        stack: u64,
         picker: u64,
         looks: u64,
         visible: u64,
@@ -516,6 +529,10 @@ impl Adapter {
         if !matches!(class, 1 | 2 | 7) {
             return Ok(None);
         }
+        let collection = match crate::current::WEAPON_PREVIEW_COLLECTION_SLOT {
+            Some(offset) => word(&m.read(stack + offset, 8)?, 0),
+            None => rdi,
+        };
         let records = m.read(collection + 0x60, 24)?;
         let count = word(&records, 16);
         if count == 0 || count > 16 || count > word(&records, 0) {

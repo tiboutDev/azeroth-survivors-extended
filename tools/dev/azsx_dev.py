@@ -29,8 +29,10 @@ def stage(receiver,dll):
  if receipt.get("version")!=VERSION or receipt.get("files",{}).get("AzerothSurvivors.exe")!=SHA256 or artifact_record.digest(target/"AzerothSurvivors.exe")!=SHA256:raise ValueError("Reviewed private import required")
  receipt_path=target/"AZSX-DEV.json"
  if not receipt_path.exists():receipt_path=safe(receiver,(target/"ASX-DEV.json").relative_to(receiver))
- old=json.loads(receipt_path.read_text())
- if artifact_record.digest(target/"avrt.dll")!=old.get("dll_sha256"):raise ValueError("Unowned/modified receiver DLL; preserving it")
+ if receipt_path.exists() or (target/"avrt.dll").exists():
+  if not receipt_path.is_file() or not (target/"avrt.dll").is_file():raise ValueError("Incomplete receiver DLL ownership; preserving it")
+  old=json.loads(receipt_path.read_text())
+  if artifact_record.digest(target/"avrt.dll")!=old.get("dll_sha256"):raise ValueError("Unowned/modified receiver DLL; preserving it")
  files=execution_inputs()
  # Resolve every destination before any writes; never remove unknown receiver files.
  metadata=[target.relative_to(receiver)/name for name in ('avrt.dll','AZSX-DEV.json','avrt.artifact.json')]
@@ -46,7 +48,7 @@ def stage(receiver,dll):
   if artifact_record.digest(dest)!=sha:raise ValueError('Staging copy identity mismatch')
  # Recheck provenance after copying tools, before replacing the owned DLL.
  artifact_record.verify(record,dll)
- if artifact_record.digest(target/"avrt.dll")!=record["dll_sha256"]:shutil.copy2(dll,target/"avrt.dll")
+ if not (target/"avrt.dll").exists() or artifact_record.digest(target/"avrt.dll")!=record["dll_sha256"]:shutil.copy2(dll,target/"avrt.dll")
  atomic(target/"AZSX-DEV.json",dict(dll_sha256=record["dll_sha256"],test_hooks=record["kind"]=="diagnostic"))
  atomic(target/"avrt.artifact.json",record)
  atomic(receiver/".azsx-stage.json",dict(schema=2,version=VERSION,native_sha256=SHA256,kind=record["kind"],dll_sha256=record["dll_sha256"],source_fingerprint=record["source_fingerprint"],compilation_fingerprint=record.get("compilation_fingerprint",record["source_fingerprint"]),ui_fingerprint=artifact_record.ui_fingerprint(),artifact_fingerprint=artifact_record.fingerprint(record),files=files))
@@ -58,7 +60,7 @@ def execution_inputs(root=ROOT):
  files=dict(artifact_record.ui_inputs(root));python_files=python_inputs(root)
  for name in scenario_suites.load_suites(root)['suites']:
   files.update({k:v for k,v in validation_inputs(name,root,python_files).items()if k!='scenario'})
- for relative in ('azsx/supported-games.json','compat/suites.json','tools/dev/fixtures/azsx-pin-hover-audit.lua','tools/dev/fixtures/azsx-ritual-ui-audit.lua','tools/dev/azsxui_probe_trial.py','tools/dev/fixtures/azsxui-hud-probe.lua','tools/dev/fixtures/azsxui-api-probe.lua','tools/dev/codex_trial.py'):
+ for relative in ('azsx/supported-games.json','compat/suites.json','tools/dev/fixtures/azsx-coop-events-audit.lua','tools/dev/fixtures/azsx-pin-hover-audit.lua','tools/dev/fixtures/azsx-ritual-ui-audit.lua','tools/dev/azsxui_probe_trial.py','tools/dev/fixtures/azsxui-hud-probe.lua','tools/dev/fixtures/azsxui-api-probe.lua','tools/dev/codex_trial.py'):
   files[relative]=artifact_record.digest(safe(root,relative))
  return files
 

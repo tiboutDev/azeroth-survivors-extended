@@ -50,7 +50,7 @@
         "AZSX-27",
         "AZSX-28"
       ],
-      "seconds": 160,
+      "seconds": 250,
       "settle_seconds": 2,
       "readiness": [
         {
@@ -100,7 +100,7 @@
         "AZSX-27",
         "AZSX-28"
       ],
-      "seconds": 160,
+      "seconds": 210,
       "settle_seconds": 2,
       "readiness": [
         {
@@ -734,6 +734,32 @@
         }
       ],
       "solo_prerequisite": "solo-addon-api"
+    },
+    "coop-revive-marker": {
+      "phase": "coop",
+      "kind": "diagnostic",
+      "players": 2,
+      "args": [
+        "--extensions-trial",
+        "2"
+      ],
+      "environment": {
+        "AZSX_TEST_COMPLETION121": "fatigue",
+        "AZSX_TEST_LUA_DIAGNOSTICS": "1"
+      },
+      "features": [
+        "AZSX-23"
+      ],
+      "seconds": 130,
+      "settle_seconds": 2,
+      "readiness": [
+        {
+          "source": "player-1/azeroth-coop-native.log",
+          "contains": "fatigue fixture native revival:",
+          "minimum": 1
+        }
+      ],
+      "solo_prerequisite": "solo-core"
     }
   },
   "plans": {
@@ -743,6 +769,7 @@
       "solo-normal",
       "coop-core",
       "coop-events",
+      "coop-revive-marker",
       "coop-support",
       "coop-pause",
       "coop-normal"

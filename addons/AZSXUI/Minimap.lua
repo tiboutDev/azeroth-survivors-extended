@@ -16,6 +16,22 @@ end
 local function finite(value)
     return type(value)=="number" and value==value and math.abs(value)<1e8
 end
+-- Read a single consistent cache page. The HUD supports at most 128 cache pins.
+local function cacheRows()
+    if type(AZS_GetWorldAnchors)~="function" then return AZS_CHESTS or {} end
+    local page=AZS_GetWorldAnchors({kinds={"cache"},states={"present"}},nil,128)
+    local player=AZS_GetPlayerPosition and AZS_GetPlayerPosition()
+    if not page or not player or not player.runId or not player.spaceId or player.mapId==nil
+        or page.runId~=player.runId or page.mapId~=player.mapId then return {} end
+    local caches={}
+    for _,anchor in ipairs(page.entries or {})do
+        if anchor.kind=="cache" and anchor.positionAvailable and anchor.spaceId==player.spaceId then
+            table.insert(caches,{id=anchor.cacheId,x=anchor.x,y=anchor.y})
+        end
+    end
+    return caches
+end
+
 local function source(includeMarkers)
     local phase=AZS_GetPhase and AZS_GetPhase()
     if phase~="playing" and phase~="choosing" and phase~="paused" then return nil end
@@ -35,8 +51,9 @@ local function source(includeMarkers)
         table.insert(markers,{event=escort.event,kind=escort.kind=="banished_demon" and 5 or 4,x=escort.x,y=escort.y,left=0,
             name=text and text.title or "Mechanical Chicken",note=text and text.note or "Escort to extraction"})
     end
-    for i=1,math.min(table.getn(AZS_CHESTS or {}),128)do
-        local cache=AZS_CHESTS[i]
+    local caches=cacheRows()
+    for i=1,math.min(table.getn(caches),128)do
+        local cache=caches[i]
         if type(cache)=="table" and finite(cache.x) and finite(cache.y) and type(cache.id)=="number" and cache.id>0 and cache.id<=9007199254740991 and cache.id==math.floor(cache.id) then
             table.insert(markers,{event=cache.id,kind=2,x=cache.x,y=cache.y,left=0})
         end
@@ -226,10 +243,63 @@ controller:SetScript("OnEvent",function()
     pendingNativePing=true
 end)
 
+-- Downed party members have native, run-scoped world anchors even in instances.
+-- Refresh membership at minimap cadence; project only while someone needs help.
+local reviveRequests,reviveNames,revivePins={},{},{}
+local projecting=false
+local function hideRevivePins()
+    for _,pin in ipairs(revivePins)do setShown(pin,false)end
+end
+local function projectRevives()
+    local page=AZS_ProjectWorldAnchors(reviveRequests)
+    local visible=0
+    if page and page.frameCurrent then
+        for _,entry in ipairs(page.entries or {})do
+            local name=reviveNames[entry.anchorId]
+            if name and entry.state=="onScreen" and finite(entry.x) and finite(entry.y) then
+                visible=visible+1
+                local pin=revivePins[visible]
+                if not pin then
+                    pin=CreateFrame("Frame","AZSXUIReviveAnchor"..visible,WorldFrame);pin:SetWidth(24);pin:SetHeight(24);pin:EnableMouse(false)
+                    local icon=pin:CreateTexture(nil,"ARTWORK");icon:SetAllPoints(pin)
+                    icon:SetTexture("Interface\\Icons\\Spell_Holy_Resurrection")
+                    pin.label=pin:CreateFontString(nil,"OVERLAY","GameFontNormalSmall")
+                    pin.label:SetPoint("BOTTOM",pin,"TOP",0,1);revivePins[visible]=pin
+                end
+                pin:ClearAllPoints();pin:SetPoint("CENTER",WorldFrame,"BOTTOMLEFT",entry.x,entry.y)
+                local distance=entry.playerDistance
+                pin.label:SetText(finite(distance) and distance>=0 and string.format("%s · %.0f yd",name,distance) or name)
+                setShown(pin,true)
+            end
+        end
+    end
+    for i=visible+1,table.getn(revivePins)do setShown(revivePins[i],false)end
+end
+local function refreshRevives()
+    if not WorldFrame or type(AZS_GetDownedPartyMembers)~="function" or type(AZS_ProjectWorldAnchors)~="function"
+        or type(AZS_RegisterWorldAnchorFrameHandler)~="function" or type(AZS_UnregisterWorldAnchorFrameHandler)~="function" then return end
+    local phase=AZS_GetPhase and AZS_GetPhase()
+    local friends=phase=="playing" and (not AZSXUIDB or AZSXUIDB.pins~=false) and AZS_GetDownedPartyMembers()
+    if not projecting and (not friends or table.getn(friends)==0)then return end
+    reviveRequests,reviveNames={},{}
+    for _,friend in ipairs(friends or {})do
+        if table.getn(reviveRequests)>=4 then break end
+        if friend.positionAvailable and friend.anchorStatus=="ready" and type(friend.anchorId)=="string" and not reviveNames[friend.anchorId] then
+            table.insert(reviveRequests,{anchorId=friend.anchorId,attachment="position",offset={x=0,y=0,z=2}})
+            reviveNames[friend.anchorId]=friend.name
+        end
+    end
+    if table.getn(reviveRequests)>0 then
+        if not projecting then projecting=AZS_RegisterWorldAnchorFrameHandler(projectRevives)end
+    elseif projecting then
+        AZS_UnregisterWorldAnchorFrameHandler(projectRevives);projecting=false;hideRevivePins()
+    end
+end
+
 local last=-1
 controller:SetScript("OnUpdate",function()
     local now=GetTime()
-    if now-last>=0.1 then last=now;refreshEventPins()end
+    if now-last>=0.1 then last=now;refreshEventPins();refreshRevives()end
     layoutEventPins()
 end)
 -- Retained diagnostic name used by existing explicit UI probes.

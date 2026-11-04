@@ -18,7 +18,7 @@ unsafe extern "system" fn metadata(c: &mut crate::stub::Context) {
         local: &r.local,
         adapter: r.adapter,
     };
-    match r.adapter.goblin_outfit_metadata(&memory, c.rbp) {
+    match r.adapter.goblin_outfit_metadata(&memory, c.rbp, c.r12) {
         Ok(Some(entity)) => {
             PENDING.with(|p| {
                 let mut rows = p.get();
@@ -46,7 +46,7 @@ unsafe extern "system" fn key(c: &mut crate::stub::Context) {
             local: &r.local,
             adapter: r.adapter,
         };
-        if let Err(e) = r.adapter.goblin_outfit_key(&memory, c.rbp, entity) {
+        if let Err(e) = r.adapter.goblin_outfit_key(&memory, c.rbp, c.r12, entity) {
             warn(r, &e);
             return;
         }

@@ -1133,9 +1133,10 @@ fn pause_tick(r:&Runtime,server:u64){
  let mut movement:crate::stub::Context=unsafe{std::mem::zeroed()};movement.rcx=server;movement.r9=0xb5;unsafe{session::command(&mut movement)};
  let mut choice:crate::stub::Context=unsafe{std::mem::zeroed()};choice.rcx=server;choice.r9=0x100;unsafe{session::command(&mut choice)};
  r.log.info(&format!("pause fixture gate: paused={} blocked={} nonmovement={} windows={windows:?}",pause::active(),movement.skip,choice.skip));
- r.log.info(&format!("pause fixture local: paused={} position={:?}",pause::active(),r.adapter.fixture_pause_position(&r.local,server)));
-
  let Ok(Some(party))=r.adapter.party(&r.local,server)else{return};
+ if party.actors.iter().any(|actor| actor.slot == 0 && actor.phase != azsx_gameplay::Phase::Inactive) {
+ r.log.info(&format!("pause fixture local: paused={} position={:?}",pause::active(),r.adapter.fixture_pause_position(&r.local,server)));
+ }
  r.log.info(&format!("pause fixture snapshot: clock={} actors={:?}",party.clock,party.actors.iter().map(|a|(a.slot,a.phase,a.position)).collect::<Vec<_>>()));
  if party.actors.len()!=2||party.clock<8.||party.actors.iter().any(|a|a.phase!=azsx_gameplay::Phase::Playing){return}
  let open={let Ok(mut s)=PAUSE_TRIAL.lock()else{return};if s.cache{false}else{s.cache=true;true}};
@@ -1196,13 +1197,11 @@ fn xp_death_tick(r:&Runtime,server:u64){
 }
 
 pub fn compat121()->bool{std::env::var("AZCOOP_TEST_COMPAT121").as_deref()==Ok("1")}
-pub fn compat121_pick(r:&Runtime,game:u64)->Option<u64>{
- let(slot,guid)=r.adapter.run_source(&r.local,game).ok().flatten()?;
- static PICKS:std::sync::Mutex<std::collections::BTreeMap<(u32,u64),u32>>=std::sync::Mutex::new(std::collections::BTreeMap::new());
- let n={let mut p=PICKS.lock().ok()?;let n=p.entry((slot,guid)).or_default();*n+=1;*n};
- let gem=r.adapter.amulet_fixture_pick(&r.local,r.local.base as u64,game).ok().flatten();
- let ring=r.adapter.ring_fixture_pick(&r.local,r.local.base as u64,game).ok().flatten();
- if !gems::fixture_has_gem(slot,guid)||n%3==0{gem.or(ring)}else{ring.or(gem)}
+pub fn compat121_pick(r: &Runtime, game: u64) -> Option<u64> {
+    // Crystal Resonance is verified through pickups. Reserve cache selections
+    // for the actual ring acquisition and upgrade exercised by this scenario.
+    r.adapter.ring_fixture_pick(&r.local, r.local.base as u64, game).ok().flatten()
+
 }
 
 fn completion121_enabled()->bool{std::env::var("AZCOOP_TEST_SUPPORT121").as_deref()==Ok("1")}

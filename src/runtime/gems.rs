@@ -87,5 +87,3 @@ pub fn fixture_tick(r:&Runtime,game:u64){
  PENDING.with(|p|{p.borrow_mut().pop();});assert_eq!(offer(next),Some((e.0,false)));assert_eq!(annotation(&e.0.note(true)),Some((e.0,0)));reset();
  }
 }
-
-#[cfg(feature="test-hooks")]pub fn fixture_has_gem(slot:u32,guid:u64)->bool{STATE.lock().ok().is_some_and(|s|s.as_ref().is_some_and(|s|s.rules.get(slot,guid).is_some()))}

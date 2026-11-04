@@ -205,10 +205,16 @@ impl Adapter {
     pub fn goblin_outfit_entries(self) -> [Entry; 2] {
         [v::GOBLIN_OUTFIT_METADATA, v::GOBLIN_OUTFIT_KEY].map(|(rva, bytes)| Entry { rva, bytes })
     }
+    fn goblin_outfit_entity(self, m: &dyn Mem, frame: u64, r12: u64) -> Result<u64> {
+        match v::GOBLIN_OUTFIT_ENTITY {
+            Some(offset) => q(m, frame + offset),
+            None => Ok(r12),
+        }
+    }
     /// The native metadata helper returns an owned baked atlas string. Convert
     /// just this NPC to its valid None(face=0) representation, retaining its
     /// native race/gender/skin metadata. Ownership is committed before freeing.
-    pub fn goblin_outfit_metadata(self, m: &dyn MutableMemory, frame: u64) -> Result<Option<u64>> {
+    pub fn goblin_outfit_metadata(self, m: &dyn MutableMemory, frame: u64, r12: u64) -> Result<Option<u64>> {
         let out = frame + v::GOBLIN_OUTFIT_ATLAS;
         let cap = q(m, out)?;
         if cap == u64::MAX || cap == u64::MAX - 1 {
@@ -226,7 +232,7 @@ impl Adapter {
         if m.read(out + 24, 6)? != [9, 0, 0, 0, 0, 0] {
             return Err("Unexpected native Goblin appearance metadata".into());
         }
-        let entity = q(m, frame + v::GOBLIN_OUTFIT_ENTITY)?;
+        let entity = self.goblin_outfit_entity(m, frame, r12)?;
         let header = [u64::MAX, 0, 0]
             .into_iter()
             .flat_map(u64::to_le_bytes)
@@ -238,8 +244,8 @@ impl Adapter {
     /// Populate the selected native armor block. Some compositor revisions
     /// keep the tag/appearance inline; others carry them in live registers.
     /// These display IDs reference reviewed native Nightslayer texture parts.
-    pub fn goblin_outfit_key(self, m: &dyn MutableMemory, frame: u64, entity: u64) -> Result<()> {
-        if q(m, frame + v::GOBLIN_OUTFIT_ENTITY)? != entity
+    pub fn goblin_outfit_key(self, m: &dyn MutableMemory, frame: u64, r12: u64, entity: u64) -> Result<()> {
+        if self.goblin_outfit_entity(m, frame, r12)? != entity
             || m.read(frame + v::GOBLIN_OUTFIT_APPEARANCE, 6)? != [9, 0, 0, 0, 0, 0]
         {
             return Err("Goblin outfit owner changed".into());
@@ -695,21 +701,20 @@ pub(super) mod tests {
         let frame = 0x10000;
         let hash = b"3ef7f3eb90fa64d85635bc771b647bee.blp";
         let cap = hash.len() as u64;
-        m.write(frame + 0xc78, &cap.to_le_bytes()).unwrap();
-        m.write(frame + 0xc80, &0x30000u64.to_le_bytes()).unwrap();
-        m.write(frame + 0xc88, &cap.to_le_bytes()).unwrap();
+        m.write(frame + 0xc40, &cap.to_le_bytes()).unwrap();
+        m.write(frame + 0xc48, &0x30000u64.to_le_bytes()).unwrap();
+        m.write(frame + 0xc50, &cap.to_le_bytes()).unwrap();
         m.write(0x30000, hash).unwrap();
-        m.write(frame + 0xc90, &[9, 0, 0, 0, 0, 0]).unwrap();
-        m.write(frame + 0xde0, &71u64.to_le_bytes()).unwrap();
-        assert_eq!(a.goblin_outfit_metadata(&m, frame).unwrap(), Some(71));
-        assert_eq!(q(&m, frame + 0xc78).unwrap(), u64::MAX);
-        assert_eq!(a.goblin_outfit_metadata(&m, frame).unwrap(), None);
-        assert!(a.goblin_outfit_key(&m, frame, 72).is_err());
-        m.write(frame + 0x950, &[0xa5; 12]).unwrap();
-        a.goblin_outfit_key(&m, frame, 71).unwrap();
-        assert_eq!(m.read(frame + 0x950, 12).unwrap(), [0xa5; 12]);
-        let key = m.read(frame + 0x910, 64).unwrap();
-        assert_eq!(m.read(frame + 0xc90, 6).unwrap(), [9, 0, 0, 0, 0, 0]);
+        m.write(frame + 0xc58, &[9, 0, 0, 0, 0, 0]).unwrap();
+        assert_eq!(a.goblin_outfit_metadata(&m, frame, 71).unwrap(), Some(71));
+        assert_eq!(q(&m, frame + 0xc40).unwrap(), u64::MAX);
+        assert_eq!(a.goblin_outfit_metadata(&m, frame, 71).unwrap(), None);
+        assert!(a.goblin_outfit_key(&m, frame, 71, 72).is_err());
+        m.write(frame + 0x6c0, &[0xa5; 12]).unwrap();
+        a.goblin_outfit_key(&m, frame, 71, 71).unwrap();
+        assert_eq!(m.read(frame + 0x6c0, 12).unwrap(), [0xa5; 12]);
+        let key = m.read(frame + 0x680, 64).unwrap();
+        assert_eq!(m.read(frame + 0xc58, 6).unwrap(), [9, 0, 0, 0, 0, 0]);
         assert_eq!(
             u32::from_le_bytes(key[0x1c..0x20].try_into().unwrap()),
             31105

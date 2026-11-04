@@ -95,6 +95,10 @@ def descriptor_inventory(path):
    baseline,native=pair.groups();add(native,f"{path.name}:{n} baseline={baseline}")
   named=re.search(r"pub const ([A-Z0-9_]+(?:_RVA|_TABLE|_NATIVE_PAUSE|_CALLER|_RETURN))\s*:\s*u64\s*=\s*0x([0-9a-f]+)",line)
   if named:add(format(contacts.get(int(named[2],16),int(named[2],16)),"x"),f"{path.name}:{n} {named[1]}")
+ # Standalone detour RVAs have a same-name byte guard and are already physical.
+ for name in re.findall(r"\bconst ([A-Z0-9_]+)_BYTES\s*:",source):
+  direct=re.search(r"\bconst "+name+r"\s*:\s*u64\s*=\s*0x([0-9a-f]+)",source)
+  if direct:add(direct[1],f"{path.name} {name}")
  for match in re.finditer(r"pub const ([A-Z0-9_]+)\s*:\s*\(u64,\s*&\[u8\]\)\s*=\s*\(\s*0x([0-9a-f]+)",source):
   add(match[2],f"{path.name} {match[1]}")
  for match in re.finditer(r'pub const ([A-Z0-9_]+_CALLERS)\s*:\s*\[u64;\s*\d+\]\s*=\s*\[([^\]]+)\]',source):

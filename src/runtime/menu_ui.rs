@@ -28,7 +28,7 @@ pub fn hooks(adapter: Adapter, base: usize) -> Vec<crate::install::HookSpec> {
         },
         crate::install::HookSpec {
             name: "official-reward-header-size",
-            target: base + adapter.menu_entries()[4].rva as usize,
+            target: base + adapter.bonus_column_entries()[1].rva as usize,
             detour: group_entry as *const () as usize,
             trampoline: &GROUP,
         },
@@ -55,6 +55,6 @@ pub fn hooks(adapter: Adapter, base: usize) -> Vec<crate::install::HookSpec> {
         assert_eq!(entries[0].name,"official-menu-extended-title");
         assert_eq!(entries[0].target,base+adapter.menu_title_result_entry().rva as usize);
         assert_eq!(entries[1].name,"official-reward-header-size");
-        assert_eq!(entries[1].target,base+adapter.menu_entries()[4].rva as usize);
+        assert_eq!(entries[1].target,base+adapter.bonus_column_entries()[1].rva as usize);
     }
 }

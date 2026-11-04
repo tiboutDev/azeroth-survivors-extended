@@ -645,9 +645,8 @@ thread_local! {
 crate::context_stub_rw!(polymorph_begin_entry, 0, polymorph_begin, POLYMORPH_BEGIN);
 crate::context_stub_rw!(polymorph_end_entry, 0, polymorph_end, POLYMORPH_END);
 unsafe extern "system" fn polymorph_begin(c: &mut crate::stub::Context) {
-    // The exact branch uses AL and DIL for its native rupture eligibility.
-    // R14 has already captured the original hit's subsequent proc eligibility.
-    if c.rax as u8 == 0 || c.rdi as u8 >= 2 { return; }
+    // AL contains native rupture eligibility. The actor mode is read by the adapter.
+    if c.rax as u8 == 0 { return; }
     let Some(r) = RUNTIME.get().filter(|r| r.rules) else { return; };
     let game = c.rsi;
     let players = STATE.lock().ok().filter(|s| s.game == game).map(|s|

@@ -34,7 +34,8 @@ ASSET_NAME_RULE = re.compile(r'\b\w+\.(?:mpq|blp|m2|wmo|adt|wdt|wdl|dbc)\b', re.
 
 # Exact source-line hashes scope exceptions to reviewed textual references.
 # A new line/name or stale exception makes this gate fail pending review.
-REVIEWED_ASSET_REFERENCE_LINES = {'azsx/supported-games.json': {'3c577b33d4e6a040579477b864c361fb18a82d336044d16cf2be837876c3b8c0': 1,
+REVIEWED_ASSET_REFERENCE_LINES = {'tests/test_1392_native_review.py': {'5e3d0aaf3dbdd62b420dcfb5e91574423c7af9b43ad74656fa3ffb48971c413e': 1},
+ 'azsx/supported-games.json': {'3c577b33d4e6a040579477b864c361fb18a82d336044d16cf2be837876c3b8c0': 1,
                               '454e059a30b1343fb25703d6d885f1f652a405e0959699a39af829d74c62b623': 1,
                               '4f60db51367fc1da51fba1b0268f7e7d34cbbdbdd9bd238a44158e90d2e90bdb': 1,
                               '56c6a3d1f018fed53effe0a56880d695add8d68f274ce9770d312c7ea26254ab': 1,
@@ -97,7 +98,8 @@ REVIEWED_ASSET_REFERENCE_LINES = {'azsx/supported-games.json': {'3c577b33d4e6a04
  'tests/test_ui_archive.py': {'fba092889029c54141f1a6d61a8cf04bba46659ffcc37e7cd4202773c94952a3': 1},
  'tools/build/azsx_package.py': {'5fc49340d2f478585efbd9ed817f7e47ba2ae6124de7560e07604884c4282d09': 1},
  'tools/dev/native_runtime_import.py': {}}
-ASSET_REFERENCE_REASONS = {'azsx/supported-games.json': 'Supported archive names consumed by the native-folder importer; this manifest '
+ASSET_REFERENCE_REASONS = {'tests/test_1392_native_review.py': 'Native goblin skin identifier exercises the reviewed lookup ABI; no texture bytes are included.',
+ 'azsx/supported-games.json': 'Supported archive names consumed by the native-folder importer; this manifest '
                              'contains paths only, not archives.',
  'crates/azsx-game/src/official_native/treasure_goblins.rs': 'Exact game-provided goblin skin identifiers and '
                                                             'synthetic lookup tests; no skin bytes are '

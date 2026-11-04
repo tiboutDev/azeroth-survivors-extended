@@ -44,26 +44,28 @@ impl Adapter {
         }
     }
     pub fn menu_peer(self, m: &dyn Mem, server: u64, peer: u64) -> Result<u32> {
-        if self.observe(m, server)?.role != Role::Host {
+        let server_state = self.observe(m, server)?;
+        if server_state.role != Role::Host {
             return Err("Missing menu authority".into());
         }
-        let q = |a| -> Result<u64> {
-            Ok(u64::from_le_bytes(
-                m.read(a, 8)?
-                    .try_into()
-                    .map_err(|_| "Truncated menu peer")?,
-            ))
-        };
-        if peer >= q(server + crate::current::SERVER_PEERS)? {
+        if peer >= u64::from(server_state.remote_connections) {
             return Err("Menu peer departed".into());
         }
-        let row = q(server + crate::current::SERVER_PEER_PTR)?
-            + peer * crate::current::SERVER_PEER_STRIDE;
-        if m.read(row, 4)? != 1u32.to_le_bytes() {
+        let pointer_field = server.checked_add(crate::current::SERVER_PEER_PTR)
+            .ok_or("Menu peer table overflow")?;
+        let pointer = u64::from_le_bytes(m.read(pointer_field, 8)?.try_into()
+            .map_err(|_| "Truncated menu peer table")?);
+        // peer is the command's vector index. Only the native row supplies its slot.
+        let row = pointer.checked_add(peer * crate::current::SERVER_PEER_STRIDE)
+            .filter(|p| pointer >= 0x10000 && p.checked_add(16).is_some())
+            .ok_or("Invalid menu peer table")?;
+        let header: [u8; 16] = m.read(row, 16)?.try_into()
+            .map_err(|_| "Truncated menu peer")?;
+        if header[..4] != 1u32.to_le_bytes() {
             return Err("Inactive menu peer".into());
         }
-        let slot = q(row + 8)?;
-        if !(1..5).contains(&slot) {
+        let slot = u64::from_le_bytes(header[8..].try_into().unwrap());
+        if !(1..NATIVE_PLAYERS as u64).contains(&slot) {
             return Err("Invalid menu peer slot".into());
         }
         Ok(slot as u32)

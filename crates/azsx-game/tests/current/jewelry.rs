@@ -10,7 +10,7 @@ impl MutableMemory for Memory{
  fn free_native(&self,p:u64,n:usize)->Result<(),String>{let b=self.data.borrow_mut().remove(&p).ok_or("Not owned")?;assert_eq!(b.len(),n);self.frees.set(self.frees.get()+1);Ok(())}
 }
 fn memory()->Memory{
- let mut root=vec![0;0x2000];root[0x538..0x540].copy_from_slice(&111u64.to_le_bytes());root[0xf4b]=2;
+ let mut root=vec![0;0x2000];root[0x538..0x540].copy_from_slice(&111u64.to_le_bytes());root[0xf63]=2;
  root[RING_INVENTORY_PTR as usize..RING_INVENTORY_PTR as usize+8].copy_from_slice(&0x30000u64.to_le_bytes());root[RING_INVENTORY_LEN as usize..RING_INVENTORY_LEN as usize+8].copy_from_slice(&1u64.to_le_bytes());
  root[OFFER_PTR as usize..OFFER_PTR as usize+8].copy_from_slice(&0x40000u64.to_le_bytes());root[OFFER_LEN as usize..OFFER_LEN as usize+8].copy_from_slice(&1u64.to_le_bytes());
  root[0x9e0..0x9e8].copy_from_slice(&1u64.to_le_bytes());root[0x9e8..0x9f0].copy_from_slice(&0x50000u64.to_le_bytes());root[0x9f0..0x9f8].copy_from_slice(&1u64.to_le_bytes());
@@ -22,7 +22,7 @@ fn memory()->Memory{
 fn adapter()->SelectedAdapter{SelectedAdapter::select(azsx_game::current::SHA256).unwrap()}
 // Native field positions after the reviewed native 0.135.1 layout. Production reads
 // in these tests go through SelectedAdapter; the constants only seed the fixture.
-const RING_INVENTORY_PTR:u64=0x418;const RING_INVENTORY_LEN:u64=0x420;const OFFER_PTR:u64=0x738;const OFFER_LEN:u64=0x740;const STATS_HEADER:u64=0x9e0;const RUN_MODE:u64=0xf46;const RUN_PHASE:u64=0xf4b;const RUN_ACTOR:u64=0xe40;const RUN_GUID:u64=0x538;
+const RING_INVENTORY_PTR:u64=0x418;const RING_INVENTORY_LEN:u64=0x420;const OFFER_PTR:u64=0x738;const OFFER_LEN:u64=0x740;const STATS_HEADER:u64=0x9e0;const RUN_MODE:u64=0xf5e;const RUN_PHASE:u64=0xf63;const RUN_ACTOR:u64=0xe58;const RUN_GUID:u64=0x538;
 #[test]fn acquisition_is_native_and_only_existing_ring_upgrades_are_enchantable(){let m=memory();let a=adapter();let c=a.ring_selected(&m,BASE,GAME,0).unwrap().unwrap();assert_eq!((c.slot,c.guid,c.ring,c.rank),(0,111,0,1));m.write(GAME+RING_INVENTORY_LEN,&0u64.to_le_bytes()).unwrap();assert!(a.ring_selected(&m,BASE,GAME,0).unwrap().is_none());}
 #[test]fn trinkets_spell_cards_unreviewed_builds_and_changed_definitions_are_rejected(){let m=memory();let a=adapter();m.write(0x40080,&(BASE+azsx_game::current::RING_TABLE+9*72).to_le_bytes()).unwrap();assert!(a.ring_selected(&m,BASE,GAME,0).unwrap().is_none());m.write(0x40080,&(BASE+azsx_game::current::RING_TABLE).to_le_bytes()).unwrap();m.write(0x40078,&1u64.to_le_bytes()).unwrap();assert!(a.ring_selected(&m,BASE,GAME,0).unwrap().is_none());m.write(0x40078,&0x8000000000000002u64.to_le_bytes()).unwrap();m.write(BASE+azsx_game::current::RING_TABLE+0x45,&[1]).unwrap();assert!(a.ring_selected(&m,BASE,GAME,0).is_err());assert!(a.supports_enchantments());}
 #[test]fn native_stats_are_borrowed_once_and_original_permanent_inputs_are_restored(){let m=memory();let a=adapter();let old=m.read(GAME+STATS_HEADER,24).unwrap();let permanent=m.read(0x50000,8).unwrap();for kind in Enchantment::ALL{for rank in Rank::ALL{let e=RankedEnchantment{kind,rank};let loan=a.ring_stats(&m,GAME,&[e]).unwrap().unwrap();let h=m.read(GAME+STATS_HEADER,24).unwrap();let ptr=u64::from_le_bytes(h[8..16].try_into().unwrap());let rows=m.read(ptr,16).unwrap();assert_eq!(&rows[..8],permanent);assert_eq!(u32::from_le_bytes(rows[8..12].try_into().unwrap()),v::RING_STAT_KINDS[e.kind as usize]);assert_eq!(f32::from_le_bytes(rows[12..].try_into().unwrap()),e.value());a.restore_ring_stats(&m,loan).unwrap();assert_eq!(m.read(GAME+STATS_HEADER,24).unwrap(),old);assert_eq!(m.read(0x50000,8).unwrap(),permanent);}}assert_eq!(m.allocs.get(),m.frees.get());}
@@ -125,7 +125,7 @@ fn defense_consumables_borrow_only_reduction_and_restore_existing_inputs(){
  m.write(at,&2f32.to_le_bytes()).unwrap();a.apply_coop_area(&m,GAME).unwrap();assert_eq!(m.read(at,4).unwrap(),2f32.to_le_bytes());
  m.write(GAME+RUN_MODE,&[1]).unwrap();
  for slot in 0..5u64{
-  m.write(GAME+0xe40,&slot.to_le_bytes()).unwrap();
+  m.write(GAME+0xe58,&slot.to_le_bytes()).unwrap();
   for native in [0.8f32,1.,1.4,2.]{
    for _ in 0..3{m.write(at,&native.to_le_bytes()).unwrap();let before=m.read(GAME,0x2000).unwrap();a.apply_coop_area(&m,GAME).unwrap();
     let expected=if native>1.{1.+(native-1.)*0.5}else{native};assert_eq!(m.read(at,4).unwrap(),expected.to_le_bytes());

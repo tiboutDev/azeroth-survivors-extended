@@ -64,6 +64,16 @@ observer:SetScript('OnUpdate',function()
  local now=GetTime()
  if now-started>=duration or sequence>=maximum-1 then emit('observer.stopped',{reason=sequence>=maximum-1 and'budget'or'duration'});observer:SetScript('OnUpdate',nil);return end
  if now-last<0.5 then return end;last=now
+ if type(AZS_GetDownedPartyMembers)=='function' and AZS_GetPhase and AZS_GetPhase()=='playing' then
+  local friends=AZS_GetDownedPartyMembers() or {}
+  local pin=getglobal('AZSXUIReviveAnchor1')
+  if table.getn(friends)>0 or pin or previous['ui.revive_anchor'] then
+   local friend=friends[1]
+   sample('ui.revive_anchor',{count=table.getn(friends),name=friend and friend.name,
+       anchor=friend and friend.anchorId,status=friend and friend.anchorStatus,
+       visible=pin and flag(pin,'IsVisible') or false,label=pin and call(pin.label,'GetText')})
+  end
+ end
  local api=AZSX_GetState and AZSX_GetState(1)
  local major,minor=nil,nil
  if AZSX_GetAPIVersion then major,minor=AZSX_GetAPIVersion()end

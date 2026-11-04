@@ -5,7 +5,7 @@ Ordered procedures: [compatibility checklist](../compatibility/COMPATIBILITY-CHE
 Use the [expected-behavior acceptance reference](../compatibility/AZSX-BEHAVIOR.md) to plan and
 record feature-level verification; update affected criteria with semantic changes.
 
-The supported source target is official 0.138.0. Review the
+The supported source target is official 0.139.2. Review the
 [feature inventory](../compatibility/AZSX-FEATURES.md) and [adapter boundary](../compatibility/CLIENT-ADAPTER.md)
 when changing native integration. Validation must cover the changed risk and
 state its limits; test counts alone are not a completion criterion.
@@ -435,6 +435,13 @@ pause-only model for two real players' focused clients: only visible windows of
 the two known child PIDs receive focus notifications on the verified private
 desktop. It injects no OS keyboard/mouse events and changes no game coordinates,
 phase or movement state. Samples record how many owned windows were notified.
+
+For `coop-pause` the private runner sends alternating W/S key messages directly
+to each verified child window. It records the sample count and compares the
+host's authoritative positions during and after the pause. All input stays on
+the named trial desktop. For `coop-revive-marker`, the host must observe the
+ally's native anchor and matching visible label, followed by a native revival
+and a hidden marker. The guest diagnostic stream must also remain valid.
 
 The opt-in HUD follow-up trial (`azsxui_hud_trial.py --hud-trial 2
 --hud-followups --seconds 130`) adds read-only checks for native character level,

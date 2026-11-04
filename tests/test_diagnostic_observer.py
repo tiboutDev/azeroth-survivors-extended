@@ -18,6 +18,21 @@ AZSXDiagnosticConfig={enabled="""+str(enabled).lower()+",session='unit',slot=0,m
   lua.execute((ROOT/'tools/dev/diagnostics/observer.lua').read_text())
   return lua,records
  def decoded(self,records):return [json.loads(row.split('AZSX_DIAG ',1)[1])for row in records]
+ def test_visible_downed_ally_and_subsequent_hidden_marker(self):
+  import sys
+  sys.path.insert(0,str(ROOT/"tools/dev"))
+  from diagnostic_records import revive_marker_cycle
+  lua, records = self.setup_observer()
+  lua.execute("""function AZS_GetPhase() return 'playing' end
+function AZS_GetDownedPartyMembers() return friends end
+friends={{name='Ally',anchorId='world-1',anchorStatus='ready'}}
+widgets.AZSXUIReviveAnchor1={IsVisible=function()return true end,label={GetText=function()return 'Ally · 3 yd' end}}
+now=1;tick()""")
+  events=lambda: [json.loads(line.split("AZSX_DIAG ",1)[1]) for line in records]
+  self.assertFalse(revive_marker_cycle(events()))
+  lua.execute("friends={};widgets.AZSXUIReviveAnchor1.IsVisible=function() return false end;now=2;tick()")
+  self.assertTrue(revive_marker_cycle(events()))
+
  def test_disabled_does_nothing(self):
   lua,records=self.setup_observer(False);self.assertEqual(records,[]);self.assertIsNone(lua.globals().tick)
  def test_change_only_sampling_and_real_widget_values(self):

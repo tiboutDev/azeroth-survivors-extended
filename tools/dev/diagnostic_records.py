@@ -1,6 +1,6 @@
 """Strict, passive Lua evidence collection. Model records never prove rendered UI."""
 import json,math
-KINDS={"api.contract","observer.started","observer.stopped","ui.coop_hud","ui.progression","ui.supply_toast","ui.sayge_progress","ui.buffs","ui.tooltip","azsx.ritual_model","azsx.escort","azsx.demon"}
+KINDS={"ui.revive_anchor","api.contract","observer.started","observer.stopped","ui.coop_hud","ui.progression","ui.supply_toast","ui.sayge_progress","ui.buffs","ui.tooltip","azsx.ritual_model","azsx.escort","azsx.demon"}
 def collect(text,session,slot):
  records=[];errors=[];last_clock=-1
  for line in text.splitlines():
@@ -29,3 +29,15 @@ def assess_events(stream):
   native_buff_observed=any(r.get("available")and any(v.get("texture")and isinstance(v.get("remaining"),(int,float))and v["remaining"]>0 for v in r.get("slots",{}).values())for r in buffs))
  # Passive observation deliberately does not claim hovered tooltip coverage or pixel aesthetics.
  return dict(checks=checks,passed=all(checks.values()),limits=["No pixel layout or hover tooltip claim", "Ritual model is separate from widget observations"])
+
+def revive_marker_cycle(records):
+ visible = None
+ for row in records:
+  if row["kind"] != "ui.revive_anchor":continue
+  data = row["data"]
+  if data.get("count", 0) and data.get("visible") and data.get("status") == "ready":
+   name = data.get("name")
+   if name and data.get("anchor") and name in (data.get("label") or ""):visible = row
+  elif visible and data.get("count") == 0 and data.get("visible") is False:
+   return True
+ return False

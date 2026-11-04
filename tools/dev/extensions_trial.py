@@ -329,12 +329,10 @@ end)
      with (addon/"AZSXAudit.toc").open("a")as toc:toc.write("ProgressionAudit.lua\n")
    if players==2:env.update(WOW_ROGUE_COOP_PASSWORD=password);env["WOW_ROGUE_COOP_HOST"if slot==1 else"WOW_ROGUE_COOP_JOIN"]=str(port)if slot==1 else f"127.0.0.1:{port}"
    if players==2:
-    # Native 0.133 AUTOSTART restarts ready checks even after all answers arrive.
-    # Use native UI taps in the fixed 800x600 disposable window instead. Modal
-    # input ownership prevents the host's Enter tap from restarting a check.
-    env.pop("WOW_ROGUE_AUTOSTART",None)
+    # Keep native AUTOSTART enabled through the ready check. In 0.139.2
+    # both clients can enter the world while its simulation still waits to begin.
     env["WOW_ROGUE_TAPS"]=";".join(["410,485"if slot==1 else"306,525"]*32)
-    # Keep the original native event stream without enabling native autostart.
+    # Keep the native event stream for party and ready-check observations.
     env["AZSX_LOG_NATIVE_UI"]="1"
     env["WOW_ROGUE_ROAM"]="1" # Native Move to begin; fixture scenes account for ordinary roaming.
 
@@ -736,10 +734,19 @@ end)
     checks.update(assess_core(host,players)["checks"])
    if os.environ.get("AZSX_TEST_KILL_RANKS")=="1":
     checks={k:v for k,v in checks.items() if k in ("started","startup_ack","clean_scripts","clean_adapter","coop_joined","clients_alive")}
+   if scenario=="coop-revive-marker":
+    from diagnostic_records import revive_marker_cycle
+    checks={k:checks[k] for k in ("clients_alive","started","clean_scripts","clean_adapter","startup_ack") }
+    checks.update(diagnostic_streams=all(stream["passed"] for stream in streams),
+                  rendered_and_hidden=revive_marker_cycle(streams[0]["records"]),
+                  native_revival="fatigue fixture native revival:" in host)
    result=dict(observed_steps=os.environ.get("AZSX_TEST_OBSERVED_STEPS")=="1",scenario=scenario,diagnostic_probe=diagnostic_probe,support_only=support_only,all_events=all_events,owner_tooltip_readback=owner_tips,completion121=completion,players=players,normal=normal,game_version=version,compat121=compat121,enchantments=enchantments,gems=gems,goblins=goblins,immunity=immunity,diagnostic_inputs=not normal,dll_sha256=proof["dll_sha256"],game_sha256=sha,checks=checks,passed=all(checks.values()),grants=grants,ui=ui,desktop_input=False,screenshots=visual,visual_review_required=visual,ritual_ui_single=ritual_ui and seconds<150,visual_discovery_hold=visual and supplies and os.environ.get("AZSX_TEST_VISUAL_HOLD_DISCOVERY")=="1")
    return result
   until=time.monotonic()+min(seconds,260 if supplies or ritual else 280 if completion in ("support","fatigue","fatigue-self") else 210 if goblins else 180 if enchantments else 150)
   completed_at=None
+  movement_tick=0
+  next_movement=0.
+  test_movement=players==2 and completion=="pause" and scenario=="coop-pause"
   while time.monotonic()<until and all(p.poll()is None for p in children):
    if (ROOT/"test-results/extensions-trial-stop").exists():break
    if readiness is not None and readiness.complete(out) and evaluate()["passed"]:break
@@ -770,11 +777,18 @@ end)
    if diagnostic_probe and os.environ.get("AZSX_TEST_COOP_UI")!="1" and os.environ.get("AZSX_TEST_PROGRESSION")!="1":
     native_path=out/"player-1/azeroth-coop-native.log"
     if native_path.exists() and native_path.read_text(encoding="utf-8",errors="replace").count("AZSX_DIAG ")>=5:break
+   if test_movement and time.monotonic()>=next_movement:
+    from private_trial_focus import step_owned_windows
+    if step_owned_windows([p.pid for p in children],movement_tick)==2:movement_tick+=1
+    next_movement=time.monotonic()+0.6
    if private_focus and time.monotonic()-last_focus>=2:
     from private_trial_focus import notify_owned_windows
     focus_samples.append(notify_owned_windows([child.pid for child in children if child.poll()is None]));last_focus=time.monotonic()
    time.sleep(1 if all_events or support_only or diagnostic_probe else .25)
   result=evaluate()
+  if test_movement:
+   result["private_movement_samples"]=movement_tick
+   result["desktop_input"]=movement_tick>0
   result["private_focus_notifications"]={"enabled":private_focus,"windows_per_sample":focus_samples,"keyboard_mouse_injected":False}
   if private_focus:
    result["checks"]["private_focus_two_owned_windows"]=2 in focus_samples

@@ -12,7 +12,7 @@ fn validate(line:&str,session:&str,slot:u64)->Result<(usize,serde_json::Value),S
  let sequence=value["sequence"].as_u64().filter(|n|(1..=512).contains(n)).ok_or("Invalid diagnostic sequence")? as usize;
  if value["schema"]!=1 || value["session"]!=session || value["slot"]!=slot || !value["data"].is_object(){return Err("Diagnostic identity/schema mismatch".into())}
  let kind=value["kind"].as_str().ok_or("Missing diagnostic kind")?;
- if !["api.contract","observer.started","observer.stopped","ui.coop_hud","ui.progression","ui.supply_toast","ui.sayge_progress","ui.buffs","ui.tooltip","azsx.ritual_model","azsx.escort","azsx.demon"].contains(&kind){return Err("Unknown diagnostic observation".into())}
+ if !["ui.revive_anchor","api.contract","observer.started","observer.stopped","ui.coop_hud","ui.progression","ui.supply_toast","ui.sayge_progress","ui.buffs","ui.tooltip","azsx.ritual_model","azsx.escort","azsx.demon"].contains(&kind){return Err("Unknown diagnostic observation".into())}
  let time=value["clock"].as_f64().filter(|n|n.is_finite()&&*n>=0.).ok_or("Invalid diagnostic time")?;let _=time;
  Ok((sequence,value))
 }

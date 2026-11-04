@@ -462,3 +462,10 @@ native total, preserving decimals and unrelated item order.
 ## Cooperative Rules information
 
 Hover the kill counter to see current party members ranked by their personal run kills. Tied players share a rank. The circular Run information button shows N for Normal or H1–H5 for Heroic. Hover or click to see your class’s missing set pieces from all five bosses in this zone. In co-op, the same panel also explains the shared rules.
+
+
+### Native world anchors
+
+On clients providing the 0.139.2 anchor API, cache pins use position-bearing catalog entries from the player's current run, map and coordinate space. Minimap placement still requires the AZSX minimap projection. Older clients retain the native cache snapshot path.
+
+With pins enabled, a downed ally with a ready native anchor gets a resurrection icon above the revival spot. The label shows the ally's name and distance in yards when available. The native camera projects these markers each world frame, including in instances; expired, offscreen and stale projections are hidden. This world marker can run with the standalone addon. DLL compatibility is tracked separately.

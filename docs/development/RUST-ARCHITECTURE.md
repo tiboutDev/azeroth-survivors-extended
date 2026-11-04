@@ -1,6 +1,6 @@
 # Rust architecture and cleanup decisions
 
-The supported target is official 0.138.0. This document describes source ownership,
+The supported target is official 0.139.2. This document describes source ownership,
 not a promise that every feature is independent of native layouts or that the
 repository is ready to publish.
 
@@ -56,7 +56,7 @@ native-free contract.
 
 ## Current native data
 
-`compat/clients/0.138.0.json` and `compat/binding-template.rs` now own the
+`compat/clients/0.139.2.json` and `compat/binding-template.rs` now own the
 resolved current descriptor. Historical modules are test-only references, not
 production dependencies or selectable clients. Canonical keys remain explicit;
 changing a generated literal still requires native review.

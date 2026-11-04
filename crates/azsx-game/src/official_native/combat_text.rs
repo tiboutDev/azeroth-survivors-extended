@@ -7,16 +7,25 @@ pub static DAMAGE_NEXT: AtomicUsize = AtomicUsize::new(0);
 static THIRD: f32 = 1.0 / 3.0;
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 static HALF: f32 = 0.5;
-/// The selected renderer keeps the current entry in RBX and its fresh size in
-/// the descriptor-selected XMM7/XMM8. Preserve every other register and flags.
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+pub const DAMAGE_ENTRY: unsafe extern "C" fn() =
+    damage_entry::<{ crate::current::DAMAGE_TEXT_ROW_REGISTER }>;
+
+/// Only the selected scalar size may change. Preserve the row register and flags.
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 #[unsafe(naked)]
-pub unsafe extern "C" fn damage_entry() {
+unsafe extern "C" fn damage_entry<const ROW: usize>() {
     core::arch::naked_asm!(
  "pushfq",
+ ".if {row} == 3",
  "cmp dword ptr [rbx + 0x34], {green}", "je 3f",
  "cmp byte ptr [rbx + 0x38], 0", "je 2f",
  "cmp byte ptr [rbx + 0x38], 2", "jne 3f",
+ ".elseif {row} == 14",
+ "cmp dword ptr [r14 + 0x34], {green}", "je 3f",
+ "cmp byte ptr [r14 + 0x38], 0", "je 2f",
+ "cmp byte ptr [r14 + 0x38], 2", "jne 3f",
+ ".else", ".error \"Unsupported combat-text row register\"", ".endif",
  ".if {fresh} == 8", "mulss xmm8, dword ptr [rip + {half}]",
  ".elseif {fresh} == 7", "mulss xmm7, dword ptr [rip + {half}]", ".endif",
  "jmp 3f",
@@ -25,7 +34,7 @@ pub unsafe extern "C" fn damage_entry() {
  ".elseif {fresh} == 7", "mulss xmm7, dword ptr [rip + {third}]",
  ".else", ".error \"Unsupported combat-text size register\"", ".endif",
  "3:", "popfq", "jmp qword ptr [rip + {next}]",
- green=const crate::current::HEAL_TEXT_COLOR,fresh=const crate::current::DAMAGE_TEXT_XMM,third=sym THIRD,half=sym HALF,next=sym DAMAGE_NEXT);
+ row=const ROW,green=const crate::current::HEAL_TEXT_COLOR,fresh=const crate::current::DAMAGE_TEXT_XMM,third=sym THIRD,half=sym HALF,next=sym DAMAGE_NEXT);
 }
 type NativeEntityQuery = unsafe extern "system" fn(u64, u64, *const u8) -> u8;
 type NativeEntityLookup = unsafe extern "system" fn(*const u64, u64) -> u64;
@@ -82,7 +91,7 @@ impl Adapter {
             ))
         };
         let tag = u64_at(bp + crate::current::HEAL_TEXT_TAG[usize::from(periodic)])?;
-        let expected = if periodic { 0x8000_0000_0000_008d } else { 0x8000_0000_0000_008e };
+        let expected = crate::current::HEAL_TEXT_DISCRIMINANTS[usize::from(periodic)];
         if tag != expected { return Ok(vec![]); }
         let payload = bp + crate::current::HEAL_TEXT_PAYLOAD[usize::from(periodic)];
         let (target, caster) = if periodic {
@@ -239,23 +248,23 @@ mod tests {
         #[unsafe(naked)]
         unsafe extern "C" fn end() {
             core::arch::naked_asm!(
-                "pushfq", "pop rax", "mov [rbx + 0x20], rax",
-                "movups [rbx + 0x50], xmm7", "movups [rbx + 0x60], xmm8", "ret"
+                "pushfq", "pop rax", "mov [rcx + 0x20], rax",
+                "movups [rcx + 0x50], xmm7", "movups [rcx + 0x60], xmm8", "ret"
             );
         }
         #[unsafe(naked)]
-        unsafe extern "system" fn invoke(_row: *mut u8, _size: f32) {
+        unsafe extern "system" fn invoke(_row: *mut u8, _size: f32, _stub: unsafe extern "C" fn(), _row_register: usize) {
             core::arch::naked_asm!(
-                "push rbx", "sub rsp, 64", "movaps [rsp + 32], xmm7", "movaps [rsp + 48], xmm8",
-                "mov rbx, rcx", "movups xmm7, [rcx + 0x50]", "movups xmm8, [rcx + 0x60]",
-                "movss xmm7, xmm1", "movss xmm8, xmm1", "cmp rsp, rsp", "call {entry}",
-                "movaps xmm7, [rsp + 32]", "movaps xmm8, [rsp + 48]", "add rsp, 64", "pop rbx", "ret",
-                entry=sym damage_entry
+                "push rbx", "push r14", "sub rsp, 72", "movaps [rsp + 32], xmm7", "movaps [rsp + 48], xmm8",
+                "lea rbx, [rcx + 128]", "mov r14, rbx", "cmp r9, 14", "cmove r14, rcx", "cmovne rbx, rcx",
+                "movups xmm7, [rcx + 0x50]", "movups xmm8, [rcx + 0x60]",
+                "movss xmm7, xmm1", "movss xmm8, xmm1", "cmp rsp, rsp", "call r8",
+                "movaps xmm7, [rsp + 32]", "movaps xmm8, [rsp + 48]", "add rsp, 72", "pop r14", "pop rbx", "ret"
             );
         }
         let expected_register = match crate::current::VERSION {
             "0.131.0" => 7,
-            "0.133.0" | "0.135.1" | "0.138.0" => 8,
+            "0.133.0" | "0.135.1" | "0.138.0" | "0.139.2" => 8,
             _ => panic!("Fresh-size fixture requires native register review"),
         };
         assert_eq!(crate::current::DAMAGE_TEXT_XMM, expected_register);
@@ -265,13 +274,15 @@ mod tests {
         let _restore = Restore(previous);
         for cat in 0..6 {
             for green in [false, true] {
-                let mut row = [0u8; 128];
+                let mut row = [0u8; 256];
+                row[128 + 0x38] = 5;
                 row[0x38] = cat;
                 row[0x50..0x60].fill(0x77);
                 row[0x60..0x70].fill(0x88);
                 if green { row[0x34..0x38].copy_from_slice(&crate::current::HEAL_TEXT_COLOR.to_le_bytes()); }
-                for _ in 0..3 {
-                    unsafe { invoke(row.as_mut_ptr(), 0.0275); }
+                for (register, stub) in [(3, damage_entry::<3> as unsafe extern "C" fn()),
+                                         (14, damage_entry::<14>), (crate::current::DAMAGE_TEXT_ROW_REGISTER, DAMAGE_ENTRY)] {
+                    unsafe { invoke(row.as_mut_ptr(), 0.0275, stub, register); }
                     let expected = match (green, cat) { (false, 0) => 0.0275 / 3.0, (false, 2) => 0.0275 / 2.0, _ => 0.0275 };
                     let (fresh, other) = if expected_register == 8 { (0x60, 0x50) } else { (0x50, 0x60) };
                     let read = |at| f32::from_le_bytes(row[at..at + 4].try_into().unwrap());
@@ -330,7 +341,7 @@ mod tests {
         let mut m = Bytes {
             data: vec![0; 0x1000],
         };
-        put(&mut m, 0xc8, 0x8000_0000_0000_008e);
+        put(&mut m, 0xc8, 0x8000_0000_0000_0097);
         put(&mut m, 0xd0, 11);
         put(&mut m, 0xd8, 22);
         m.data[0xe4..0xe8].copy_from_slice(&37u32.to_le_bytes());
@@ -354,7 +365,7 @@ mod tests {
             .native_heal_texts(&m, 0, false, &[22])
             .unwrap()
             .is_empty());
-        put(&mut m, 0xc8, 0x8000_0000_0000_008d);
+        put(&mut m, 0xc8, 0x8000_0000_0000_0096);
         assert!(adapter().native_heal_texts(&m, 0, false, &[11, 22]).unwrap().is_empty());
     }
     #[test]
@@ -362,7 +373,7 @@ mod tests {
         let mut m = Bytes {
             data: vec![0; 0x1000],
         };
-        put(&mut m, 0x2d0, 0x8000_0000_0000_008d);
+        put(&mut m, 0x2d0, 0x8000_0000_0000_0096);
         put(&mut m, 0x2d8, 3);
         put(&mut m, 0x2e0, 0x700);
         put(&mut m, 0x2e8, 3);

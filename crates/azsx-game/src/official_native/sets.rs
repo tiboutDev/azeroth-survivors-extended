@@ -235,16 +235,13 @@ impl Adapter {
             return Ok(());
         }
         let caller = word(&m.read(stack + 0xe8, 8)?, 0).wrapping_sub(base);
-        let game = match caller {
-            0x5cbb43e => word(&m.read(stack + 0xc0, 8)?, 0),
-            0x5d33b06 | 0x5d33db1 | 0x5d41372 | 0x5d41c6f => {
-                let frame = word(&m.read(stack + 0xb0, 8)?, 0);
-                word(
-                    &m.read(frame + if caller < 0x5d40000 { 0x1a0 } else { 0x1b8 }, 8)?,
-                    0,
-                )
-            }
-            _ => return Ok(()),
+        let Some((_, frame_slot)) = crate::current::SET_DOT_OWNER_CALLERS
+            .iter().find(|(address, _)| *address == caller) else { return Ok(()) };
+        let game = if *frame_slot == 0 {
+            word(&m.read(stack + 0xc0, 8)?, 0) // saved RSI
+        } else {
+            let frame = word(&m.read(stack + 0xb0, 8)?, 0); // saved RBP
+            word(&m.read(frame + frame_slot, 8)?, 0)
         };
         let Some((slot, _)) = self.effect_source(m, game)? else {
             return Ok(());
@@ -258,7 +255,7 @@ impl Adapter {
         Ok(())
     }
     pub fn set_clock(self, m: &dyn Mem, game: u64) -> Result<f32> {
-        Ok(scalar(&m.read(game + 0xe88, 4)?, 0))
+        Ok(scalar(&m.read(game + self.game_field(0xb9c), 4)?, 0))
     }
     pub fn set_vulnerability(
         self,
@@ -274,7 +271,7 @@ impl Adapter {
             game,
             enemy,
             spell,
-            scalar(&m.read(game + 0xe88, 4)?, 0),
+            self.set_clock(m, game)?,
             [scalar(&values, 0), scalar(&values, 4)],
         ))
     }
@@ -308,8 +305,11 @@ impl Adapter {
     fn fixture_necklace_rows(self, m: &dyn Mem, base:u64, definition:u64) -> Result<Vec<u8>> {
         type Build = unsafe extern "system" fn(*mut u64,u64);
         type Free = unsafe extern "system" fn(u64,usize,usize);
-        let build:Build=unsafe{std::mem::transmute((base+0x5c83520) as usize)};
-        let free:Free=unsafe{std::mem::transmute((base+0x21d0) as usize)};
+        let entry = self.rva(0x5c83520);
+        let expected = self.expected(0x5c83520, &[]);
+        if m.read(base + entry, expected.len())? != expected { return Err("Native necklace fixture constructor changed".into()); }
+        let build:Build=unsafe{std::mem::transmute((base+entry) as usize)};
+        let free:Free=unsafe{std::mem::transmute((base+self.rva(0x21d0)) as usize)};
         let mut output=[0u64;16];
         unsafe{build(output.as_mut_ptr(),base+definition)};
         let n=output[8];
@@ -359,8 +359,11 @@ impl Adapter {
     ) -> Result<Vec<u8>> {
         type Build = unsafe extern "system" fn(*mut u64, u8, usize, f32);
         type Free = unsafe extern "system" fn(u64, usize, usize);
-        let build: Build = unsafe { std::mem::transmute((base + 0x5c88f50) as usize) };
-        let free: Free = unsafe { std::mem::transmute((base + 0x21d0) as usize) };
+        let entry = self.rva(0x5c88f50);
+        let expected = self.expected(0x5c88f50, &[]);
+        if m.read(base + entry, expected.len())? != expected { return Err("Native set fixture constructor changed".into()); }
+        let build: Build = unsafe { std::mem::transmute((base + entry) as usize) };
+        let free: Free = unsafe { std::mem::transmute((base + self.rva(0x21d0)) as usize) };
         let mut output = [0u64; 16];
         unsafe { build(output.as_mut_ptr(), class, tier, scale) };
         let [cap, p, n, ..] = output;
@@ -411,10 +414,10 @@ impl Adapter {
         };
         for rva in [
             0x711ca10, 0x711d460, 0x711d988, 0x711e360, 0x711e3d8, 0x711ef90,
-            0x711d118, 0x711dfa0, 0x711f698, 0x711f710,
+            0x6cc4df0, 0x6cc5c78, 0x6cc72f8, 0x6cc7370,
         ] {
             let mut instance = [0u8; 96];
-            instance[..8].copy_from_slice(&(base + rva).to_le_bytes());
+            instance[..8].copy_from_slice(&(base + self.rva(rva)).to_le_bytes());
             definitions.extend(instance);
         }
         let len = definitions.len() as u64 / 96;
@@ -484,7 +487,7 @@ impl Adapter {
                 18 => (4, 1, 1943),
                 _ => (2, 3, 1943),
             };
-            let rows = if case == 18 {self.fixture_necklace_rows(io, base, 0x711d988)?} else {self.fixture_set_rows(io, base, class, tier, 1.)?};
+            let rows = if case == 18 {self.fixture_necklace_rows(io, base, self.rva(0x711d988))?} else {self.fixture_set_rows(io, base, class, tier, 1.)?};
             event[29] = 2;
             event[8..12].copy_from_slice(&(if matches!(case,9|10) { 20271u32 } else { 845 }).to_le_bytes());
             let mut effect = [0u8; 56];
@@ -568,7 +571,7 @@ impl Adapter {
                 self.fixture_set_rows(io, base, 5, 1, if case == 6 { 1.5 } else { 1. })?;
             if case == 19 { rows=self.fixture_necklace_rows(io,base,self.fixture_support_definition(17)?)?; }
             if case == 4 {
-                rows.extend(io.read(base + 0x7136740, 64)?);
+                rows.extend(io.read(base + self.rva(0x7136740), 64)?);
             }
             let mut origin = pos;
             origin[0] += if case == 6 { 10.0 } else { 0.0 };
@@ -665,7 +668,7 @@ impl Adapter {
                 return Err("Ally stun has expired on the witness".into());
             }
             let before = hp()?;
-            let rng = io.read(game + 0xde8, 32)?;
+            let rng = io.read(game + self.game_field(0xae8), 32)?;
             io.support_hit(game, id, 100., 845)?;
             let after = hp()?;
             let h = io.read(game + 0x9e0, 24)?;
@@ -686,7 +689,7 @@ impl Adapter {
                     .map(u64::to_le_bytes)
                     .concat(),
             )?;
-            io.write(game + 0xde8, &rng)?;
+            io.write(game + self.game_field(0xae8), &rng)?;
             let hit = io.support_hit(game, id, 100., 845);
             io.write(game + 0x9e0, &h)?;
             hit?;

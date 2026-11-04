@@ -21,6 +21,7 @@ def parse_literal(value):
 def load_binding():
  version,client=selected_client();path=owned_path(client["binding_manifest"]);data=json.loads(path.read_text())
  if data.get("schema")!=1 or data.get("version")!=version:raise ValueError("Binding/client identity mismatch")
+ if data.get("review_status")=="partial":raise ValueError("Partial native bindings cannot generate a runtime descriptor")
  seen=set()
  for c in data["constants"]:
   name=c["name"]

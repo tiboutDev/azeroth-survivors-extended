@@ -33,7 +33,7 @@ unsafe extern "system" fn heal(c:&mut crate::stub::Context){
 pub(super)fn hooks(adapter:Adapter)->Vec<crate::install::HookSpec>{
  let entries=adapter.combat_text_entries();
  let size=adapter.damage_text_size_entry();
- vec![crate::install::HookSpec{name:"native-damage-text-size",target:local_base()+size.rva as usize,detour:azsx_game::official_native::combat_text::damage_entry as *const()as usize,trampoline:&azsx_game::official_native::combat_text::DAMAGE_NEXT},
+ vec![crate::install::HookSpec{name:"native-damage-text-size",target:local_base()+size.rva as usize,detour:azsx_game::official_native::combat_text::DAMAGE_ENTRY as *const()as usize,trampoline:&azsx_game::official_native::combat_text::DAMAGE_NEXT},
  crate::install::HookSpec{name:"native-inline-periodic-text",target:local_base()+entries[7].rva as usize,detour:inline_periodic_entry as *const()as usize,trampoline:&INLINE_PERIODIC},
  crate::install::HookSpec{name:"native-fractional-heal-text",target:local_base()+entries[4].rva as usize,detour:fractional_entry as *const()as usize,trampoline:&FRACTIONAL},
  crate::install::HookSpec{name:"native-direct-heal-text",target:local_base()+entries[0].rva as usize,detour:direct_entry as *const() as usize,trampoline:&DIRECT},

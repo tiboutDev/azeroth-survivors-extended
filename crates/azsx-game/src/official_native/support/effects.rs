@@ -187,8 +187,8 @@ impl Adapter {
     }
     #[cfg(feature="test-hooks")]
     pub fn fixture_talent_loan(self,mem:&dyn MutableMemory,game:u64,base:u64,kind:u32)->Result<PerkLoan>{
-        let (rva,count)=match kind{0=>(0x7136740,1),1=>(0x712e628,1),2=>(0x7146510,1),3=>(0x7146900,2),4=>(0x71466b0,1),5=>(0x71368b0,1),_=>return Err("Unknown talent fixture".into())};
-        let native=mem.read(base+rva,count*64)?;
+        let (rva,count)=match kind{0=>(0x7136740,1),1=>(0x712e628,1),2=>(0x7146510,1),3=>(0x7146900,2),4=>(0x71466b0,1),5=>(0x701a618,1),_=>return Err("Unknown talent fixture".into())};
+        let native=mem.read(base+self.rva(rva),count*64)?;
         let mut loan=self.fixture_perk_loan(mem,game,base,false,0.)?;
         let original=loan.storage.len()/64-1;
         loan.storage.truncate(original*64);loan.storage.extend_from_slice(&native);

@@ -12,6 +12,29 @@ class MinimapTests(unittest.TestCase):
         self.lua.execute('Minimap=CreateFrame("Frame","Minimap",UIParent);Minimap:SetWidth(200);Minimap:SetHeight(200);function Minimap:GetZoom()return 0 end;map={identity="1:11",x=10,y=20,radii={100,80,60,40,20,10},pingX=0,pingY=0};custom={};solo=nil;soloText=nil;function AZSX_GetAPIVersion()return 1,0 end;function AZSX_GetState()return {available=true,data={minimap=map,markers=custom,soloEvent=solo},texts={soloEvent=soloText}}end;AZS_RUN={chest=250};AZS_CHESTS={};function tick()now=now+.2;objects.AZSXUIMinimapController.scripts.OnUpdate()end')
         self.lua.execute((ROOT/'addons/AZSXUI/Minimap.lua').read_text())
     def run_lua(self,source): self.lua.execute(source)
+    def test_native_cache_anchors_are_scoped_to_local_space(self):
+        self.run_lua('''AZS_CHESTS={{id=1,x=10,y=20}}
+function AZS_GetPlayerPosition()return {runId="R",mapId=2,spaceId="S",x=10,y=20,facing=0}end
+local page={runId="R",mapId=2,entries={{cacheId=4,kind="cache",x=17,y=30,positionAvailable=true,spaceId="S"},{cacheId=5,kind="cache",x=20,y=40,positionAvailable=true,spaceId="old"}}}
+function AZS_GetWorldAnchors(query,cursor,limit)assert(query.kinds[1]=="cache" and limit==128);return page end
+tick();local pins=AZSXUI_MinimapReadout();assert(table.getn(pins)==1 and pins[1].event==4)
+page.runId="old";tick();assert(table.getn(AZSXUI_MinimapReadout())==0)
+page.runId=nil;function AZS_GetPlayerPosition()return {mapId=2,spaceId="S",x=10,y=20,facing=0} end
+tick();assert(table.getn(AZSXUI_MinimapReadout())==0)''')
+
+    def test_project_only_current_visible_revive_targets_and_unregister(self):
+        self.run_lua('''WorldFrame=CreateFrame("Frame","WorldFrame",UIParent)
+local friends={{name="Ally",positionAvailable=true,anchorStatus="ready",anchorId="A"}}
+function AZS_GetDownedPartyMembers()return friends end
+local draw
+function AZS_RegisterWorldAnchorFrameHandler(fn) draw=fn;return true end
+function AZS_UnregisterWorldAnchorFrameHandler(fn)assert(draw==fn);draw=nil end
+local page={frameCurrent=true,entries={{anchorId="A",state="onScreen",x=20,y=30,playerDistance=12.3}}}
+function AZS_ProjectWorldAnchors(requests)assert(requests[1].anchorId=="A" and requests[1].attachment=="position");return page end
+tick();assert(draw);draw();local pin=objects.AZSXUIReviveAnchor1;assert(pin:IsShown() and pin.label:GetText()=="Ally · 12 yd")
+page.frameCurrent=false;draw();assert(not pin:IsShown())
+page.frameCurrent=true;draw();friends={};tick();assert(not pin:IsShown() and not draw)''')
+
     def test_escort_native_icon_pin_tracks_position_and_retires(self):
         self.run_lua('solo={event=7,kind="chicken_escort",stage=0,x=10,y=20};soloText={title="Mechanical Chicken Escort",note="Find the chicken"};tick();local p=AZSXUI_MinimapReadout();assert(table.getn(p)==1 and p[1].kind==4 and p[1].priority==4 and string.find(objects.AZSXEventPin1Icon.texture,"INV_Misc_EngGizmos_06",1,true));GameTooltip.lines={};GameTooltip.AddLine=function(self,text)table.insert(self.lines,text)end;enter("AZSXEventPin1");assert(GameTooltip.lines[1]=="Mechanical Chicken Escort" and GameTooltip.lines[2]=="Find the chicken");solo.x=20;solo.stage=2;tick();assert(AZSXUI_MinimapReadout()[1].y==10);solo.stage=3;tick();assert(table.getn(AZSXUI_MinimapReadout())==0);solo.stage=0;solo.x=0/0;tick();assert(table.getn(AZSXUI_MinimapReadout())==0)')
 

@@ -3,6 +3,9 @@ import hashlib,json,os,re,sys,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"tools/dev"))
+def historical_manifest():
+ return json.loads((ROOT/"compat/clients/0.138.0.json").read_text())
+
 def descriptor_source():
  # Formatting does not alter the selected native contracts. Keep comments and
  # identifiers intact, but normalize punctuation spacing before extracting tables.
@@ -14,8 +17,8 @@ class Native138(unittest.TestCase):
  def test_registry_pins_distinct_exact_adapter(self):
   source=descriptor_source()
   sha=re.search(r'SHA256\s*:\s*&str\s*=\s*"([0-9a-f]{64})"',source)[1]
-  self.assertEqual(json.loads((ROOT/"azsx/supported-games.json").read_text())["games"]["0.138.0"]["sha256"],sha)
-  self.assertIn("Revision::V138",(ROOT/"crates/azsx-game/src/official_native.rs").read_text())
+  self.assertEqual(historical_manifest()["sha256"],sha)
+  self.assertNotIn("Revision::V138",(ROOT/"crates/azsx-game/src/official_native.rs").read_text())
  def test_native_set_filter_skips_one_perk_and_preserves_indices(self):
   path=Path(os.environ.get("AZSX_REVIEWED_IMAGE_138",ROOT/"runtime-official-0138/AzerothSurvivors.exe"))
   if not path.exists():self.skipTest("Private pinned image unavailable")
@@ -53,8 +56,10 @@ class Native138(unittest.TestCase):
        target=i.operands[0].imm
        self.assertFalse(rva<target<boundary and not(rva<=i.address<boundary),f"branch into contact {key:x}: {i.address:x}->{target:x}")
     count+=1
-  # Nine unconsumed/retired seams were removed from the old 71-contact set.
-  self.assertEqual(count,89)  # Polymorph seams plus talent condition/area guards.
+  from binding_registry import load_binding,parse_literal
+  manifest=historical_manifest()["constants"]
+  self.assertEqual(count,sum(len(parse_literal(item["value"])) for item in manifest
+                             if item["name"] in ("ENTRIES","EXTENSION_ENTRIES")))
   for retired in (0x10d95b,0x10d9e0,0x5908da8,0x594bfd9,0x594e3de,0x595f6da,0x595f91d,0x595ff10,0x5983784):
    self.assertNotIn(retired,contacts)
 
@@ -65,7 +70,7 @@ class Native138(unittest.TestCase):
   from capstone.x86 import X86_OP_MEM,X86_OP_IMM,X86_REG_R13,X86_REG_R9
   from binding_registry import load_binding,parse_literal
   image=Image(path)
-  guards=parse_literal(next(c["value"]for c in load_binding()[2]["constants"]if c["name"]=="DOWNED_XP_GUARDS"))
+  guards=parse_literal(next(c["value"]for c in historical_manifest()["constants"]if c["name"]=="DOWNED_XP_GUARDS"))
   for (entry,resume,expected,resume_bytes),register,award,end in zip(guards,[X86_REG_R13,X86_REG_R9],[0x5cc5e66,0x5ca2a7a],[0x5cc5e6c,0x5ca2a7f]):
    self.assertEqual(image.pe.get_data(entry,len(expected)),bytes(expected))
    self.assertEqual(image.pe.get_data(resume,len(resume_bytes)),bytes(resume_bytes))
@@ -168,7 +173,7 @@ class Native138(unittest.TestCase):
   if not path.exists():self.skipTest("Private exact image unavailable")
   from compare_official import Image
   from binding_registry import load_binding,parse_literal
-  image=Image(path);c={x["name"]:parse_literal(x["value"])for x in load_binding()[2]["constants"]}
+  image=Image(path);c={x["name"]:parse_literal(x["value"])for x in historical_manifest()["constants"]}
   self.assertEqual(c["HEAL_TEXT_TAG"],[0xc8,0x2d0]);self.assertEqual(c["HEAL_TEXT_PAYLOAD"],[0xd0,0x2d8])
   self.assertEqual(c["HEAL_TEXT_OBJECTS"],[0x228,0x120]);self.assertEqual(c["HEAL_TEXT_QUERY"],[0x368,0x260]);self.assertEqual(c["HEAL_TEXT_PARAMS"],[0x348,0x240])
   direct={i.address:i for i in image.ins(0xb53fd0)};periodic={i.address:i for i in image.ins(0xb54aa0)}
@@ -271,7 +276,7 @@ class Native138(unittest.TestCase):
   import struct
   from compare_official import Image
   from binding_registry import load_binding,parse_literal
-  _,_,manifest=load_binding();constants={x["name"]:parse_literal(x["value"])for x in manifest["constants"]}
+  manifest=historical_manifest();constants={x["name"]:parse_literal(x["value"])for x in manifest["constants"]}
   image=Image(path);contacts=dict(constants["EXTENSION_ADDRESSES"]);at=contacts[constants["BLESSING_POOL_RVA"]]
   rows={i.address:i for i in image.ins(image.owner(at))}
   self.assertEqual(rows[0x5d5f59c].op_str,"rbx, rdx")
@@ -290,7 +295,7 @@ class Native138(unittest.TestCase):
   if not path.exists():self.skipTest("Private exact 0.138.0 image unavailable")
   from compare_official import Image
   from binding_registry import load_binding,parse_literal
-  _,_,manifest=load_binding();constants={x["name"]:parse_literal(x["value"])for x in manifest["constants"]}
+  manifest=historical_manifest();constants={x["name"]:parse_literal(x["value"])for x in manifest["constants"]}
   image=Image(path);hook,guard=constants["MENU_TITLE_RESULT"]
   self.assertEqual(hook,0x3d8e89)
   self.assertEqual(image.pe.get_data(hook,len(guard)),bytes(guard))
@@ -309,7 +314,7 @@ class Native138(unittest.TestCase):
   import struct
   from compare_official import Image
   from binding_registry import load_binding,parse_literal
-  _,_,manifest=load_binding();constants={x["name"]:parse_literal(x["value"])for x in manifest["constants"]}
+  manifest=historical_manifest();constants={x["name"]:parse_literal(x["value"])for x in manifest["constants"]}
   image=Image(path);hook,guard=constants["MENU_INPUT"];apply,apply_guard=constants["MENU_INPUT_APPLY"]
   self.assertEqual((hook,apply),(0x5c40a40,0x5c35b70))
   self.assertEqual(image.pe.get_data(hook,len(guard)),bytes(guard))
@@ -356,11 +361,11 @@ class Native138(unittest.TestCase):
 import unittest,re,sys,os
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools/dev'))
-class Official138(unittest.TestCase):
+class SelectedImport(unittest.TestCase):
  def test_exact_import_inventory(self):
   from import_official import NAMES,SHA256
   self.assertEqual(len(NAMES),12);self.assertEqual(NAMES[-1],'Data/patch-B.MPQ')
-  self.assertEqual(SHA256,'eb5fd1c1b96e6180fcf5f3d685d90a61471af28d22e5f060c02b7b7663fbf79e')
+  self.assertEqual(SHA256,'0bb6c557c5f6cfeea212761a33554f9a5647ce7cb7e03b8a163b95489496e908')
 class ContactInventory130(unittest.TestCase):
  def test_previous_descriptor_includes_tables_and_shared_tooltip_seams(self):
   try:
@@ -389,7 +394,7 @@ class AddonAndLobbyNativeContracts(unittest.TestCase):
   if not path.exists():self.skipTest("Private 0.138.0 image unavailable")
   from compare_official import Image
   from binding_registry import load_binding,parse_literal
-  _,_,manifest=load_binding();constants={c['name']:parse_literal(c['value'])for c in manifest['constants']}
+  manifest=historical_manifest();constants={c['name']:parse_literal(c['value'])for c in manifest['constants']}
   image=Image(path)
   for name in ('ADDON_API_READER','LOBBY_SUBMIT'):
    at=constants[name];guard=bytes(constants[name+'_BYTES'])
@@ -417,7 +422,7 @@ class CooperativeSpellBranches(unittest.TestCase):
    self.addCleanup(resource.setrlimit,resource.RLIMIT_AS,limits)
    memory_budget(2048)
   image=Image(path)
-  self.assertEqual(image.sha,json.loads((ROOT/"azsx/supported-games.json").read_text())["games"]["0.138.0"]["sha256"])
+  self.assertEqual(image.sha,historical_manifest()["sha256"])
   ins={i.address:i for i in image.ins(0x5cfb530)}
   pending=[0x5cfeb6c];seen=set()
   while pending:
