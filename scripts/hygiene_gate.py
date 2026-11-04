@@ -62,7 +62,7 @@ REVIEWED_ASSET_REFERENCE_LINES = {'tests/test_1392_native_review.py': {'5e3d0aaf
                        '987eee303b7ed4d5db512611753c407296f197734eff0a8433989202196cf048': 1,
                        'ae6d4e51b48b613f1d08bb978435e977ccce5999cbea929822e4c1ebd1db6e43': 2,
                        'bc00817d9234576cce10abdd3ff150417114a0215eb6c52a2032d9e519f8008f': 1,
-                       '70c4fdec91b7100ffbf5b00b03f2889dcf481611bd1fbc7b726232c8a7a0e405': 1,
+                       '340904cf9fa242fae54c93d1c7327ff96aec87c59bc650b226433b4846818c18': 1,
                        'c6e58abcf8e62bd45abf1cc0ee7fc007ddbac56db902cc520cf73d87f7db069a': 1,
                        'a9216aeedd11b76b3741c7b5839d14290efa242d21716b89a3b436001a429852': 1,
                        'cada535360ad0ff6273d08bd35e003aff192a4759e360e5433a02e02a6a0c0c2': 1,
