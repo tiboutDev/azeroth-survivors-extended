@@ -2,7 +2,7 @@
 
 Follow the [release preparation checklist](RELEASE-CHECKLIST.md) for ordered commands, evidence and blocking conditions.
 
-AZSX targets only the reviewed official **0.138.0** client. The native selector,
+AZSX targets only the reviewed official **0.139.2** client. The native selector,
 supported-game registry and manifest validator reject other builds. Player steps
 are in [Installation](../player/INSTALLATION.md); this page defines ownership and
 release boundaries.
@@ -39,7 +39,7 @@ failed check by modifying official game assets.
 
 AZSXUI preferences use the native addon's SavedVariables mechanism. They are not
 launcher preferences. AZSX installs and updates AZSXUI automatically. Its Lua addon remains independent
-of the native DLL, but its packaged code/font/license files are owned by AZSX.
+of the native DLL, but its packaged code and license files are owned by AZSX.
 Existing matching files can be adopted; differing pre-existing code requires
 explicit consent and a backup. Unknown files and native SavedVariables are never
 owned or removed. The bundled AZSXUI source and its projected addon files are distinct. The AZSX provider requires no internal addon.
