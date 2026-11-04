@@ -126,7 +126,7 @@ class BackgroundTrials(unittest.TestCase):
         self.assertEqual(host["WOW_ROGUE_TAPS"].split(";"), ["410,485"] * 32)
         self.assertEqual(guest["WOW_ROGUE_TAPS"].split(";"), ["306,525"] * 32)
         for controls in (host, guest):
-            self.assertNotIn("WOW_ROGUE_AUTOSTART", controls)
+            self.assertEqual(controls["WOW_ROGUE_AUTOSTART"], "1")
             self.assertEqual(controls["WOW_ROGUE_ROAM"], "1")
             self.assertEqual(controls["AZSX_LOG_NATIVE_UI"], "1")
         for slot in (0, 3, True, 1.0):
