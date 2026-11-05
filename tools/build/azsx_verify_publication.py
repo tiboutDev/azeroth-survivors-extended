@@ -1,6 +1,8 @@
 """Verify prepared AZSX assets locally or after manual GitHub publication; never uploads."""
-import argparse,base64,hashlib,json,urllib.request,urllib.parse
+import argparse,base64,hashlib,json,urllib.request,urllib.parse,sys
 from pathlib import Path
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from azsx_release_record import identity,check_existing,NAME
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 def digest(data):return hashlib.sha256(data).hexdigest()
@@ -35,6 +37,7 @@ def verify(root,local=False,evidence=None):
             spec=meta["assets"][name];raw=download(base+"latest/download/"+urllib.parse.quote(name),spec["size"])
             if digest(raw)!=spec["sha256"]:raise ValueError("Latest-release link differs: "+name)
             print("OK latest/download/"+name,flush=True)
+    if (evidence/NAME).exists():check_existing(evidence,identity(root,evidence,meta))
     result={"passed":True,"published_checked":not local,"tag":meta["tag"],"signed_feeds":1+int(legacy <= data.keys()),"assets":len(data),"game_launched":False}
     (evidence/("LOCAL-VERIFICATION.json"if local else"PUBLIC-VERIFICATION.json")).write_text(json.dumps(result,indent=2)+"\n")
     print("Verified release signatures and archive alias",flush=True)

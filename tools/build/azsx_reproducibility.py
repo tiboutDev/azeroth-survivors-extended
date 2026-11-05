@@ -1,7 +1,7 @@
-"""Prepare a pending-review reproducibility candidate from two normal AZSX builds.
+"""Record two identical independent normal AZSX builds, without manual approval.
 
-This tool writes only to an explicit path under ignored test-results/. It does not
-approve a baseline or create validation/azsx-reproducible-build.json.
+Writes an explicit ignored test-results report; never publishes or replaces
+historical references. Artifact identity and behavioral qualification are separate.
 """
 import argparse
 import hashlib
@@ -179,9 +179,7 @@ def candidate_path(root: Path, requested: Path) -> Path:
     if not is_within(path, results):
         raise ValueError("Candidate output must be under ignored test-results/")
     if is_within(path, (root / "validation").resolve()):
-        raise ValueError("A pending candidate cannot be written under validation/")
-    if path.name == "azsx-reproducible-build.json":
-        raise ValueError("A pending candidate cannot create the approved reproducibility reference")
+        raise ValueError("Build reports must not replace historical validation records")
     if path.exists():
         raise FileExistsError("Refusing to replace an existing candidate report")
     return path
@@ -202,6 +200,29 @@ def assert_machine_free(candidate: dict, root: Path) -> None:
             raise ValueError("Candidate source inventory must use repository-relative paths")
 
 
+def source_revision(root: Path) -> dict:
+    commit=subprocess.check_output(["git","rev-parse","HEAD"],cwd=root,text=True).strip()
+    dirty=bool(subprocess.check_output(["git","status","--porcelain","--untracked-files=normal"],cwd=root,text=True).strip())
+    return {"commit":commit,"dirty":dirty}
+
+
+def verify_artifact(report: dict, raw: bytes, game_version: str) -> None:
+    """Bind the qualified two-build result to the exact distributed DLL."""
+    if report.get("status")not in("verified","pending-review")or report.get("builder")!="xwin-msvc":
+        raise ValueError("Expected a verified xwin two-build report")
+    gates=report.get("verification",{})
+    if type(gates.get("independent_fresh_builds"))is not int or gates["independent_fresh_builds"]!=2 or any(gates.get(k)is not True for k in(
+        "target_directories_distinct","artifacts_byte_identical","source_unchanged_before_between_after"
+    )):
+        raise ValueError("Report does not establish two unchanged independent builds")
+    expected={"file":ARTIFACT,"game_version":game_version,"target":TARGET,
+              "sha256":hashlib.sha256(raw).hexdigest(),"size_bytes":len(raw)}
+    if report.get("artifact")!=expected:
+        raise ValueError("Distributed DLL differs from the reproducibility report")
+    if not raw.startswith(b"MZ")or b"AZCOOP_TEST_"in raw:
+        raise ValueError("A normal Windows DLL without test hooks is required")
+
+
 def create_candidate(root: Path, requested: Path, builder=None, versions_provider=None) -> dict:
     root = root.resolve()
     report_path = candidate_path(root, requested)
@@ -210,6 +231,7 @@ def create_candidate(root: Path, requested: Path, builder=None, versions_provide
     versions_provider = versions_provider or tool_versions
     versions = versions_provider()
     environment = external_environment()
+    revision = source_revision(root)
     before = source_snapshot(root)
     lock = root / "Cargo.lock"
     if not lock.is_file():
@@ -234,6 +256,8 @@ def create_candidate(root: Path, requested: Path, builder=None, versions_provide
         builder(target_dir, receipt_path)
         results.append(read_verified_build(target_dir, receipt_path, game_version))
         observed = source_snapshot(root)
+        if source_revision(root)!=revision:
+            raise RuntimeError("Git source identity changed during builds; no candidate was written")
         if observed != before:
             point = "between builds" if index == 0 else "after builds"
             raise RuntimeError(f"Source fingerprint changed {point}; no candidate was written")
@@ -255,9 +279,8 @@ def create_candidate(root: Path, requested: Path, builder=None, versions_provide
     ).hexdigest()
     report = {
         "schema_version": 1,
-        "status": "pending-review",
-        "approved": False,
-        "requires_human_approval": True,
+        "status": "verified",
+        "source": revision,
         "builder": "xwin-msvc",
         "builder_script": BUILD_SCRIPT,
         "artifact": {
@@ -291,11 +314,11 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--candidate", type=Path, required=True,
-        help="explicit ignored test-results/ path for the pending-review JSON candidate",
+        help="explicit ignored test-results/ path for the verified two-build JSON report",
     )
     args = parser.parse_args(argv)
     report = create_candidate(ROOT, args.candidate)
-    print("Two independent normal builds matched; candidate remains pending review.", flush=True)
+    print("Two independent normal builds matched; reproducibility recorded.", flush=True)
     print(f"Artifact SHA-256: {report['artifact']['sha256']}", flush=True)
     print(f"Candidate: {args.candidate}", flush=True)
 

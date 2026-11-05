@@ -24,8 +24,9 @@ silently disappear while address tables are migrated.
 
 Portable gates, Windows stand-ins and live trials have separate artifact-scoped
 receipts. Source selection is not an approved release artifact or proof of a
-rendered frame. Keep the existing approved normal-DLL reference unchanged until
-a new artifact is explicitly approved; see [reproducibility](../release/REPRODUCIBILITY.md).
+rendered frame. Preserve historical DLL records. Each new release records its own verified
+artifact automatically, without manual hash approval or comparison with an older
+release; see [reproducibility](../release/REPRODUCIBILITY.md).
 Compatibility updates require diagnostic solo and two-player scenarios followed
 by a separate normal-artifact trial, as described in the [checklist](COMPATIBILITY-CHECKLIST.md).
 

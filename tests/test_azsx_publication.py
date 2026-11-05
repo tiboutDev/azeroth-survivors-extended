@@ -1,5 +1,5 @@
 """Static publication integrity for minimal and historical release inventories."""
-import base64,hashlib,importlib.util,json,tempfile,unittest
+import base64,hashlib,importlib.util,json,tempfile,unittest,io,zipfile
 from pathlib import Path
 from unittest.mock import patch
 from cryptography.hazmat.primitives import serialization
@@ -11,8 +11,13 @@ publication=importlib.util.module_from_spec(spec);spec.loader.exec_module(public
 class PublicationTests(unittest.TestCase):
  def prepare(self,legacy=False,version="0.125.0-azsx.2"):
   temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup);root=Path(temp.name);(root/"UPLOAD").mkdir()
-  key=Ed25519PrivateKey.generate();archive=b"static hash fixture, not an executable archive"
-  feed=json.dumps(dict(product="azeroth-survivors-extended",sequence=12,manifest=dict(version=version),package=dict(asset="azsx-"+version+".zip",sha256=publication.digest(archive)))).encode()
+  key=Ed25519PrivateKey.generate();dll=b"MZ normal release DLL fixture"
+  game={"version":version.split("-")[0],"sha256":"a"*64}
+  manifest={"version":version,"game":game,"files":{"AZSX/App/Bin/avrt.dll":{"size":len(dll),"sha256":publication.digest(dll)}}}
+  stream=io.BytesIO()
+  with zipfile.ZipFile(stream,"w")as z:z.writestr("AZSX/App/Bin/avrt.dll",dll)
+  archive=stream.getvalue()
+  feed=json.dumps(dict(product="azeroth-survivors-extended",sequence=12,manifest=manifest,package=dict(asset="azsx-"+version+".zip",sha256=publication.digest(archive)))).encode()
   data={"AZSX.zip":archive,"azsx-"+version+".zip":archive,"azsx-latest.json":feed,"azsx-latest.json.sig":key.sign(feed)}
   if legacy:data.update({"latest.json":b"legacy feed","latest.json.sig":key.sign(b"legacy feed"),"coop-old.zip":b"legacy archive"})
   meta=dict(repository="example/azsx",tag="v"+version,version=version,sequence=12,public_key=base64.b64encode(key.public_key().public_bytes(serialization.Encoding.Raw,serialization.PublicFormat.Raw)).decode(),assets={n:dict(size=len(b),sha256=publication.digest(b))for n,b in data.items()})
@@ -44,7 +49,14 @@ class ReleaseLayoutTests(PublicationTests):
  def release(self,version="0.125.0-azsx.2"):
   root,meta=self.prepare(version=version)
   for name in ('README-PREPARATION.md','RELEASE-NOTES.md','PUBLISH-ON-GITHUB.md'):(root/name).write_text(name)
-  (root/'VALIDATION.json').write_text('{"technical_validation_passed":true,"reference_approved":true}')
+  (root/'VALIDATION.json').write_text('{"technical_validation_passed":true,"scope":"static fixture only"}')
+  (root/'SOURCE-COMMIT.json').write_text(json.dumps({"release_source_commit":"1"*40,"payload_source_commit":"1"*40}))
+  feed=json.loads((root/'UPLOAD/azsx-latest.json').read_bytes());spec=feed["manifest"]["files"]["AZSX/App/Bin/avrt.dll"]
+  report={"status":"verified","builder":"xwin-msvc","source":{"commit":"1"*40,"dirty":False},
+          "artifact":{"file":"avrt.dll","target":"x86_64-pc-windows-msvc","game_version":feed["manifest"]["game"]["version"],"sha256":spec["sha256"],"size_bytes":spec["size"]},
+          "verification":{"independent_fresh_builds":2,"target_directories_distinct":True,"artifacts_byte_identical":True,"source_unchanged_before_between_after":True},
+          "source_fingerprint":{"sha256":"b"*64},"build_recipe_sha256":"c"*64}
+  (root/'REPRODUCIBILITY.json').write_text(json.dumps(report))
   (root/'test.log').write_bytes(b'complete preserved evidence')
   return root,meta
  def test_finalize_preserves_assets_evidence_and_verification_stays_outside(self):
@@ -89,3 +101,32 @@ class ReleaseLayoutTests(PublicationTests):
   evidence=root.parent/(root.name+'-evidence')
   with self.assertRaisesRegex(ValueError,'checksum'):self.layout().finalize(root,evidence)
   self.assertTrue((root/'test.log').exists());self.assertFalse(evidence.exists())
+
+ def test_new_release_identity_is_automatic_frozen_and_bound_to_archive(self):
+  root,meta=self.release("0.141.0-r1");evidence=root.parent/(root.name+'-evidence')
+  self.addCleanup(__import__('shutil').rmtree,evidence,True)
+  self.layout().finalize(root,evidence)
+  record=json.loads((evidence/'RELEASE-IDENTITY.json').read_text())
+  self.assertEqual(record["version"],"0.141.0-r1")
+  self.assertEqual(record["source"]["payload_source_commit"],"1"*40)
+  with zipfile.ZipFile(root/'UPLOAD/azsx-0.141.0-r1.zip')as z:dll=z.read("AZSX/App/Bin/avrt.dll")
+  self.assertEqual(record["artifact"]["sha256"],publication.digest(dll))
+  self.assertEqual(record["validation"]["results"]["scope"],"static fixture only")
+  self.assertNotIn("approval",(root/'README-PREPARATION.md').read_text().lower())
+  before=(evidence/'RELEASE-IDENTITY.json').read_bytes()
+  publication.verify(root,True,evidence);self.layout().finalize(root,evidence)
+  self.assertEqual(before,(evidence/'RELEASE-IDENTITY.json').read_bytes())
+  source=json.loads((evidence/'SOURCE-COMMIT.json').read_text());source["payload_source_commit"]="2"*40
+  (evidence/'SOURCE-COMMIT.json').write_text(json.dumps(source))
+  with self.assertRaisesRegex(ValueError,"identity differs"):publication.verify(root,True,evidence)
+ def test_wrong_reproducibility_artifact_preserves_preparation_and_old_evidence(self):
+  root,_=self.release("0.141.0-r1");evidence=root.parent/(root.name+'-evidence')
+  report=json.loads((root/'REPRODUCIBILITY.json').read_text());report["artifact"]["sha256"]="0"*64
+  (root/'REPRODUCIBILITY.json').write_text(json.dumps(report))
+  with self.assertRaisesRegex(ValueError,"DLL differs"):self.layout().finalize(root,evidence)
+  self.assertFalse(evidence.exists());self.assertTrue((root/'test.log').exists())
+ def test_missing_identity_inputs_do_not_turn_into_an_approval_prompt(self):
+  root,_=self.release("0.141.0-r1");(root/'REPRODUCIBILITY.json').unlink()
+  evidence=root.parent/(root.name+'-evidence')
+  with self.assertRaises(FileNotFoundError):self.layout().finalize(root,evidence)
+  self.assertTrue((root/'test.log').exists())

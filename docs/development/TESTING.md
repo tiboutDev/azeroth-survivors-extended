@@ -172,5 +172,6 @@ Publication work uses `scripts/hygiene_gate.py` and
 `scripts/audit_local_information.py --history`. Current-tree and historical-Git
 review have different scopes. Exact source references to native filenames do not
 permit distributing native payloads. See the [release checklist](../release/RELEASE-CHECKLIST.md)
-for signing, archive validation, reproducibility and approval. These checks are
+for signing, archive validation, reproducibility and per-release artifact records.
+Publication still requires an explicit request. These checks are
 not part of routine documentation or gameplay maintenance.

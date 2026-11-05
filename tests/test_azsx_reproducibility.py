@@ -94,14 +94,12 @@ class CandidateWorkflowTests(unittest.TestCase):
         return calls, initially_empty, build
 
     def create(self, builder):
-        return repro.create_candidate(
-            self.root,
-            self.candidate,
-            builder=builder,
-            versions_provider=self.versions,
-        )
+        with patch.object(repro,"source_revision",return_value={"commit":"1"*40,"dirty":False}):
+            return repro.create_candidate(
+                self.root,self.candidate,builder=builder,versions_provider=self.versions,
+            )
 
-    def test_matching_builds_use_distinct_fresh_dirs_and_only_write_pending_candidate(self):
+    def test_matching_builds_use_distinct_fresh_dirs_and_record_without_approval(self):
         calls, initially_empty, builder = self.fake_builder([b"normal verified fixture dll", b"normal verified fixture dll"])
         report = self.create(builder)
 
@@ -109,9 +107,10 @@ class CandidateWorkflowTests(unittest.TestCase):
         self.assertNotEqual(calls[0], calls[1])
         self.assertTrue(all(path.is_dir() for path in calls))
         self.assertEqual(initially_empty, [True, True])
-        self.assertEqual(report["status"], "pending-review")
-        self.assertFalse(report["approved"])
-        self.assertTrue(report["requires_human_approval"])
+        self.assertEqual(report["status"], "verified")
+        self.assertNotIn("approved",report)
+        self.assertNotIn("requires_human_approval",report)
+        self.assertEqual(report["source"],{"commit":"1"*40,"dirty":False})
         self.assertTrue(report["verification"]["artifacts_byte_identical"])
         self.assertEqual(report["builder"], "xwin-msvc")
         self.assertEqual(report["builder_script"], "tools/build/azsx_release_binary.py")
@@ -125,6 +124,19 @@ class CandidateWorkflowTests(unittest.TestCase):
             report["cargo_lock_sha256"],
             hashlib.sha256((self.root / "Cargo.lock").read_bytes()).hexdigest(),
         )
+
+    def test_git_commit_change_during_build_is_rejected_without_report(self):
+        _,_,builder=self.fake_builder([b"same",b"same"])
+        with patch.object(repro,"source_revision",side_effect=[
+            {"commit":"1"*40,"dirty":False},{"commit":"2"*40,"dirty":False}
+        ]),self.assertRaisesRegex(RuntimeError,"Git source identity changed"):
+            repro.create_candidate(self.root,self.candidate,builder=builder,versions_provider=self.versions)
+        self.assertFalse(self.candidate.exists())
+
+    def test_actual_checkout_source_identity_is_recordable_without_changes(self):
+        revision=repro.source_revision(ROOT)
+        self.assertRegex(revision["commit"],r"^[0-9a-f]{40}$")
+        self.assertIsInstance(revision["dirty"],bool)
 
     def test_next_client_version_comes_from_registry_instead_of_a_fixed_label(self):
         registry = self.root / "azsx/supported-games.json"
@@ -182,7 +194,6 @@ class CandidateWorkflowTests(unittest.TestCase):
         for path in (
             self.root / "validation/candidate.json",
             self.root / "validation/azsx-reproducible-build.json",
-            self.root / "test-results/azsx-reproducible-build.json",
         ):
             with self.subTest(path=path), self.assertRaises(ValueError):
                 repro.create_candidate(self.root, path, builder=builder, versions_provider=self.versions)

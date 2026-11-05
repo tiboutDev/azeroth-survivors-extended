@@ -74,11 +74,11 @@ the changed boundaries. Compiler checks and synthetic/native stand-ins do not
 establish live gameplay or rendered UI evidence. See [testing](TESTING.md).
 
 Current-tree local-information scans and reachable-history scans are distinct.
-History findings are not removed by sanitizing a working file. Reproducibility
-references identify a builder, toolchain, input fingerprint and exact artifact;
-a candidate remains pending review until explicitly approved. Do not substitute
-Windows and WSL builder hashes for each other or weaken publication gates to
-make an unfinished audit pass.
+History findings are not removed by sanitizing a working file. Reproducibility reports identify a builder, toolchain, input fingerprint and
+exact artifact. Two unchanged independent builds must match; each release records
+its distributed DLL automatically without manual hash approval. Do not substitute
+Windows and WSL builder hashes for each other or treat build identity as gameplay
+validation. Publication requires an explicit request.
 
 ## Source naming
 

@@ -98,9 +98,10 @@ python3 tools/build/azsx_reproducibility.py --candidate "$CANDIDATE"
 The producer makes two independent fresh normal builds. Select the emitted DLL
 whose hash matches the candidate, retain both receipts, and verify source/recipe
 fingerprints stayed unchanged. Review absence of diagnostic hooks/developer paths,
-PE timestamp and debug directory. Do not overwrite the approved reference yet.
+PE timestamp and debug directory. The resulting report is technically verified;
+no manual hash approval or older-release comparison is required.
 
-For a launcher/docs-only release, an existing approved DLL may be reused only with
+For a launcher/docs-only release, an existing qualified DLL may be reused only with
 verified unchanged compilation inputs and explicit artifact-scoped evidence.
 Record the reuse rationale; do not claim fresh builds or fresh runtime tests.
 A changed native target or compiled source requires a new qualified artifact.
@@ -108,7 +109,7 @@ A changed native target or compiled source requires a new qualified artifact.
 - **Expected:** identical independent bytes, complete provenance, normal build.
 - **Keep:** candidate JSON, both build/compilation receipts, build logs and DLL hash.
 - **Block:** differing builds, missing receipts, changed inputs, test hooks or
-  substituting an old/unapproved reference by assumption.
+  substituting an old/unqualified artifact by assumption.
 
 ## 4. Qualify that exact normal DLL in isolation
 
@@ -202,33 +203,26 @@ new DLL, preserve preferences and complete actual native coop gameplay.
   data or migration conflict. Fix source/runner according to the actual cause;
   rebuild/re-sign and revalidate if payload changes. Never waive a product failure.
 
-## 7. Obtain explicit reproducibility approval when required
-
-Only after the candidate, normal trials and signed-archive results are reviewable,
-request approval of the exact DLL SHA-256, explaining the previous reference,
-two-build result, runtime scope and preserved publication boundaries.
-
-If approval is pending or declined, keep the candidate separate and mark preparation
-incomplete. The producer never approves its own candidate. After explicit approval,
-preserve the superseded reference in private evidence, update
-`validation/azsx-reproducible-build-xwin.json` and [REPRODUCIBILITY.md](REPRODUCIBILITY.md)
-with the decision/date/scope, then run:
+## 7. Retain per-release artifact provenance
 
 ```sh
-python3 scripts/check_xwin_reference.py --candidate "$CANDIDATE"
-git diff --check
+python3 scripts/check_release_artifact.py --candidate "$CANDIDATE" --dll "$DLL"
+cp "$CANDIDATE" "$OUTPUT/REPRODUCIBILITY.json"
 ```
 
-A candidate differing from the old reference is expected to fail this comparison
-before approval; that does not authorize changing it. Commit reference/docs only
-if authorized, with tiboutDev. Reference approval alone does not authorize Git
-push, tagging or publication. An unchanged already-approved reference needs no
-invented replacement approval.
+This compares the actual DLL to its own two-build report, not a global reference.
+A candidate from a prior release can be carried only for verified unchanged
+compilation inputs/native target, with its original source and reuse rationale.
+Preserve the report and build receipts; no manual approval is requested.
 
-- **Keep:** approval text/date/hash, old and new references, comparison result,
-  commit identity or an explicit uncommitted-source record.
-- **Block:** missing approval for a new reference, mismatched hash/recipe/source,
-  or historical approval reused for a different binary.
+The finalizer in step 8 automatically records the DLL from the signed archive,
+source commits, native target, reproducibility provenance and validation results
+in `RELEASE-IDENTITY.json` under `EVIDENCE`. Existing records and historical
+`validation/` references are preserved.
+
+- **Keep:** build report, exact DLL hash, source identities and scoped results.
+- **Block:** differing independent builds, a mismatched artifact/native target,
+  missing provenance or a conflicting existing release record.
 
 ## 8. Finalize the minimal preparation folder
 
@@ -236,8 +230,8 @@ Write RELEASE-NOTES.md, README-PREPARATION.md and PUBLISH-ON-GITHUB.md in Englis
 Use the GitHub release title as the release-notes heading.
 Include required native version, AZSXUI inclusion and applicable migration/repair
 instructions. Write VALIDATION.json with honest `technical_validation_passed`,
-`reference_approved`, actual hashes, scenario scope and limitations. Update
-SOURCE-COMMIT/PREPARATION metadata to the actual final source/approval state.
+actual hashes, scenario scope and limitations. No `reference_approved` field is
+needed. Update SOURCE-COMMIT/PREPARATION metadata to the actual final source state.
 
 ```sh
 python3 tools/build/azsx_release_layout.py --folder "$OUTPUT" --evidence-dir "$EVIDENCE"
@@ -248,12 +242,12 @@ git status --short --branch
 - **Expected:** root contains exactly `UPLOAD/`, `README-PREPARATION.md`,
   `RELEASE-NOTES.md`, `PUBLISH-ON-GITHUB.md`; UPLOAD contains exactly four assets.
   Technical evidence is retained under `.local/releases/<version>/`.
-- **Keep:** final layout inventory, verification, source identity, approval and
+- **Keep:** final layout inventory, verification, per-release artifact identity and
   complete scoped test evidence, including failures. Verify protected old assets
   and native source hashes remain unchanged. Any final metadata edits require
   another local verification; documentation-only edits need no game relaunch.
 - **Block:** conflicting evidence, extra upload files, invalid signatures, missing
-  required approval, changed protected releases or misleading validation claims.
+  artifact provenance, changed protected releases or misleading validation claims.
 - **Handoff:** report commits/uncommitted changes, folder, four assets, tests and
   limits. State explicitly whether any push/tag/publication occurred. Preparation
   stops here unless publication is separately authorized; after actual publication,

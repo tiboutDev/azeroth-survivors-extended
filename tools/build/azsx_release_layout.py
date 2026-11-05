@@ -9,6 +9,7 @@ ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from azsx_verify_publication import verify
 from azsx_release_identity import release_title
+from azsx_release_record import identity,check_existing,NAME
 KEEP={'UPLOAD','README-PREPARATION.md','RELEASE-NOTES.md','PUBLISH-ON-GITHUB.md'}
 
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
@@ -35,6 +36,8 @@ def finalize(folder,evidence):
         raise ValueError('Expected exactly four regular publication assets')
     # Verify signatures and payload hashes before any file is relocated.
     verify(folder,True,evidence if not (folder/'PUBLICATION.json').exists()else None)
+    record=identity(folder,evidence,meta)
+    check_existing(evidence,record)
     pending=[p for p in folder.iterdir()if p.name not in KEEP]
     evidence.mkdir(parents=True,exist_ok=True)
     inventory=json.loads((evidence/'layout-inventory.json').read_text())if(evidence/'layout-inventory.json').exists()else []
@@ -50,6 +53,7 @@ def finalize(folder,evidence):
         target=evidence/('original-'+name)
         if not target.exists():shutil.copy2(folder/name,target)
     (evidence/'layout-inventory.json').write_text(json.dumps(inventory,indent=2)+'\n')
+    if record is not None:(evidence/NAME).write_text(json.dumps(record,indent=2)+'\n',encoding='utf-8')
     for p in pending:p.unlink()
     meta=json.loads((evidence/'PUBLICATION.json').read_text())
     source=json.loads((evidence/'SOURCE-COMMIT.json').read_text())if(evidence/'SOURCE-COMMIT.json').exists()else{}
@@ -60,7 +64,7 @@ def finalize(folder,evidence):
 AZSX version: `{meta['version']}`.
 Sequence **{meta['sequence']}**. Release source: `{commit}`.
 Validation: {'passed' if validation.get('technical_validation_passed') else 'see project evidence'}.
-Reproducibility approval: {'approved' if validation.get('reference_approved') else 'pending'}.
+Reproducibility: {'two matching builds recorded in RELEASE-IDENTITY.json' if record else 'see historical project evidence'}.
 
 - `UPLOAD/`: the four files to attach to GitHub.
 - `RELEASE-NOTES.md`: player-facing release notes.

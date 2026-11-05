@@ -34,7 +34,7 @@ Release preparation has its own [checklist](../release/RELEASE-CHECKLIST.md).
 | Distribution | `azsx/`, `tools/build/` | Launcher, packaging and transactional updates |
 | Development tools | `tools/dev/`, `tests/` | Check selection, native review, fixtures and evidence assessors |
 | Windows resources | `resources/windows/`, `build.rs` | Version resource and avrt export forwarding |
-| Build references | `validation/` | Approved artifact identities and reproducibility inputs |
+| Build history | `validation/` | Historical artifact references and legacy reproducibility inputs |
 
 Keep one Cargo workspace with the root DLL, `azsx-gameplay`, `azsx-game` and the
 independent `avrt-probe`. See [Rust architecture](RUST-ARCHITECTURE.md) for dependency

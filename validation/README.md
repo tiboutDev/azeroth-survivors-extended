@@ -1,20 +1,17 @@
-# Controlled build references
+# Historical build references
 
-This directory contains versioned artifact references consumed by build checks.
-It is separate from Cargo output and generated test reports. It is not a Rust
-source directory or a declaration that publication gates have passed.
+This directory preserves recorded artifact references and legacy reproducibility
+inputs. It is separate from Cargo output and per-release evidence.
 
-`azsx-reproducible-build-xwin.json` identifies a technically reviewed pair of local
-builds for its recorded input fingerprint. It is a technical local-builder
-reference, not deployment/publication approval or Windows-native proof. Source
-changes require a new candidate and review. Preserve superseded references in
-private evidence. See [reproducibility](../docs/release/REPRODUCIBILITY.md).
+`azsx-reproducible-build-xwin.json` describes the historical 0.139.2 local WSL
+build/reference. Preserve it unchanged. New releases do not update or compare
+against that file and do not require manual reference approval.
 
-The Windows-native reproducer requires its own approved
-`azsx-reproducible-build.json`. That reference is absent; the gate must remain
-unsatisfied until a real reference is established. A local xwin hash is not a
-substitute.
+Current production releases automatically record their own DLL hash, source,
+client identity and validation under ignored `.local/releases/<version>/`.
+See [artifact identity and reproducibility](../docs/release/REPRODUCIBILITY.md).
+Build outputs, raw logs and session reports also stay in ignored local storage.
 
-Pending candidates, raw logs, trial outputs, cleanup status and session reports
-belong in ignored local evidence. Do not accumulate them here or automatically
-replace reviewed references after a mismatch.
+The separate legacy Windows-native reproducer expects its own reference
+`azsx-reproducible-build.json`, which is absent. It is not part of the production
+WSL release workflow, and an xwin result is not Windows-native evidence.

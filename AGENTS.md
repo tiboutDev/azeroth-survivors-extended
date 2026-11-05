@@ -97,7 +97,9 @@ recorded native-data provenance are not automatically obsolete.
 
 Release signing, ownership, reproducibility and archive validation belong to the
 [release checklist](docs/release/RELEASE-CHECKLIST.md), not routine development.
-No implicit credential discovery, approved-reference replacement or publication.
+No implicit credential discovery or publication. Record each release artifact
+automatically; no manual hash approval or comparison with an older release.
+Preserve historical records.
 Final preparation uses `azsx_release_layout.py`: upload assets and three compact
 guides stay in the preparation folder; technical evidence stays in ignored local
 release storage. Native saves/settings and existing ownership/migration behavior
