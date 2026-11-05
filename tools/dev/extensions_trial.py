@@ -631,7 +631,7 @@ end)
      persisted=[];expected=[]
      for index in range(players):
       saved=sum(int(v)for v in re.findall(r"^marks\|\d+\|(\d+)$",prepare.read(out/f"player-{index+1}/appdata/wenilla-rogue"),re.M))
-      expected.append(sum(round(float(v)*10)for v in re.findall(rf"treasure goblin amulets: event=\d+ slot={index} guid=\d+ count=\d+ marks=([\d.]+)",host)))
+      expected.append(0)  # Goblins never grant class marks; native bosses remain separate.
       persisted.append(saved-goblin_mark_baselines[index])
      native_boss_marks=[sum(round(float(amount)*10)for amount in re.findall(r"You earn ([\d.]+) marks",text))for text in native]if all_events else[0]*players
      expected=[goblin+boss for goblin,boss in zip(expected,native_boss_marks)]

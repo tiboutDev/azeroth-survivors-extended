@@ -194,8 +194,7 @@ impl Adapter {
         game: u64,
         slot: u32,
         guid: u64,
-        amount: f32,
-    ) -> Result<(Vec<String>, f32)> {
+    ) -> Result<Vec<String>> {
         if !self.goblin_reward_ready(io, game, slot, guid)? {
             return Err("Goblin reward actor is not ready".into());
         }
@@ -229,7 +228,7 @@ impl Adapter {
                 keys.push(key);
             }
             io.flush_actor(game)?;
-            Ok((keys, amount))
+            Ok(keys)
         })();
         if slot != 0 {
             let row = self.support_row(io, game, 0)?;

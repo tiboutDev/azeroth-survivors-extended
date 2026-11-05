@@ -1,7 +1,7 @@
 //! One host-owned Mechanical Chicken escort per run, shared in cooperative play.
 use super::{event_services::Services, io, Runtime, RUNTIME};
 use azsx_game::official::EventObject;
-use azsx_gameplay::{Phase, solo_events::{Identity, Kind, Observation, Proofs, RunOpportunities, Scene, Stage}};
+use azsx_gameplay::{Phase, solo_events::{Identity, Kind, Observation, Proofs, RunOpportunities, Scene, Stage, escort_spawn_delay}};
 use std::sync::{Mutex, atomic::{AtomicBool, Ordering}};
 
 static ENABLED: AtomicBool = AtomicBool::new(false);
@@ -54,7 +54,7 @@ pub fn encounter(r:&Runtime,g:u64) {
     if !ENABLED.load(Ordering::Acquire){return}
     let Ok(Some(p))=r.adapter.event_party(&r.local,g)else{return};
     let Some(a)=p.actors.iter().find(|a|a.slot==0)else{return};
-    if a.hp<=0.||a.phase==Phase::Inactive{return}
+    if a.phase==Phase::Inactive{return}
     if let Ok(mut budget)=OPPORTUNITIES.lock(){budget.encounter(g,a.guid,p.clock);}
 }
 pub fn reset() {
@@ -114,14 +114,16 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
         let expected=std::env::var("AZSX_TEST_ESCORT_PLAYERS").ok().and_then(|v|v.parse::<usize>().ok()).unwrap_or(1);
         if participants.len()!=expected { return Ok(()); }
     }
-    let first_boss_at={
+    let second_boss_at={
         let mut budget=OPPORTUNITIES.lock().map_err(|_|"Escort budget unavailable")?;
         #[cfg(feature="test-hooks")]
-        if preview&&now>=25.&&budget.encounter(g,a.guid,now){
-            r.log.info(&format!("Escort preview gate: now={now:.2}"));
+        if preview&&now>=25.&&budget.second_boss_at(g,a.guid).is_none(){
+            // Scene previews simulate both receipts; production uses native completions.
+            budget.encounter(g,a.guid,now);
+            if budget.encounter(g,a.guid,now){r.log.info(&format!("Escort preview gate: now={now:.2}"));}
         }
         if !budget.observe(g,a.guid,now){return Err("Invalid escort clock".into())}
-        budget.first_boss_at(g,a.guid)
+        budget.second_boss_at(g,a.guid)
     };
     let old={
         let mut lock=STATE.lock().map_err(|_|"Escort state unavailable")?;
@@ -153,7 +155,7 @@ fn tick(r:&Runtime,g:u64)->Result<(),String> {
         let mut lock=STATE.lock().map_err(|_|"Escort state unavailable")?;
         let s=lock.as_mut().ok_or("Escort state missing")?;
         s.clock=now;s.participants=participants.clone();
-        if s.next.is_infinite(){if let Some(boss_at)=first_boss_at{s.next=if preview{now+2.}else{boss_at+30.+s.draw(61)as f32};}}
+        if s.next.is_infinite(){if let Some(boss_at)=second_boss_at{s.next=if preview{now+2.}else{boss_at+escort_spawn_delay(|n|s.draw(n))};}}
         if s.ended.is_some_and(|end|now-end>=5.){s.scene=None;s.ended=None}
         let allowed=OPPORTUNITIES.lock().map_err(|_|"Escort budget unavailable")?.allows(Kind::ChickenEscort);
         if s.scene.is_none()&&allowed&&!demon_active&&now>=s.next{

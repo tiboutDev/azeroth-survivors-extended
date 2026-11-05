@@ -2,7 +2,7 @@
 use super::event_services::Services;
 use super::{io, Runtime};
 use azsx_game::official::{GoblinDefinition, GoblinHandle};
-use azsx_gameplay::treasure_goblins::{flee_candidates, whole_boss_marks, Director, Resolution};
+use azsx_gameplay::treasure_goblins::{flee_candidates, Director, Resolution};
 use std::{
     cell::Cell,
     sync::{
@@ -498,11 +498,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
                         .filter(|a| a.phase != azsx_gameplay::Phase::Inactive)
                         .map(|a| (a.slot, a.guid))
                         .collect::<Vec<_>>();
-                    let marks =
-                        r.events_goblin_marks_amount(game)?;
-                    let marks =
-                        whole_boss_marks(marks).ok_or("Invalid goblin boss mark amount")? as f32;
-                    rewards::queue(game, id, marks, &ids);
+                    rewards::queue(game, id, &ids);
                     r.events_info(&format!(
                         "treasure goblin rewarded: guid={id} recipients={}",
                         ids.len()

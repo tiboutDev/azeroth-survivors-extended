@@ -21,14 +21,14 @@ Use the supported game version first in the GitHub title. The next release is:
 | Identity | Value |
 | --- | --- |
 | Native game | `0.141.0` |
-| AZSX version | `0.141.0-r2` |
-| GitHub release title | **0.141.0 — AZSX Update 2** |
-| Git tag | `v0.141.0-r2` |
-| Versioned archive | `azsx-0.141.0-r2.zip` |
+| AZSX version | `0.141.0-r3` |
+| GitHub release title | **0.141.0 — AZSX Update 3** |
+| Git tag | `v0.141.0-r3` |
+| Versioned archive | `azsx-0.141.0-r3.zip` |
 | Stable download | `AZSX.zip` |
 
 Increment the revision for each later AZSX release on the same native version:
-`0.141.0-r3`, titled **0.141.0 — AZSX Update 3**. Reset it to `r1` when the
+`0.141.0-r4`, titled **0.141.0 — AZSX Update 4**. Reset it to `r1` when the
 supported game version changes. Fixes and features use the same counter.
 The signed feed's `SEQUENCE` is separate: it must increase across all releases,
 including native version changes. Preserve historical versions, tags and assets.

@@ -8,8 +8,9 @@ not a reason to ship replacement resources.
 
 ## Encounter
 
-The first placement attempt is scheduled 30–90 simulation seconds after the
-first completed native boss encounter. Elapsed time alone never opens the
+The first placement attempt is scheduled 120–180 simulation seconds after the
+second completed native boss encounter, in solo and co-op. This follows Sayge’s
+15–90-second appearance window and its initial 20-second presence requirement. Elapsed time alone never opens the
 escort. Unsuccessful attempts recur after a random 45–75 seconds. A successful
 reservation is the only escort of that run. Each attempt examines up to four
 independent map-wide native ground sites and eight headings per site. Failed

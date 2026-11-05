@@ -100,7 +100,6 @@ pub(super) trait Services {
     fn events_goblin_arena(&self, g: u64) -> Result<azsx_gameplay::treasure_goblins::Arena>;
     unsafe fn events_goblin_clip(&self, g: u64, o: [f32; 3], d: [f32; 3]) -> Result<[f32; 3]>;
     fn events_goblin_elite(&self, g: u64, h: &mut GoblinHandle) -> Result<()>;
-    fn events_goblin_marks_amount(&self, g: u64) -> Result<f32>;
     unsafe fn events_goblin_name(&self, g: u64) -> Result<()>;
     fn events_goblin_run(&self, game: u64) -> Result<Option<PartyObservation>>;
     fn events_goblin_snapshot(
@@ -460,10 +459,6 @@ impl Services for Runtime {
             g,
             h,
         )
-    }
-    fn events_goblin_marks_amount(&self, g: u64) -> Result<f32> {
-        self.adapter
-            .goblin_marks_amount(&self.local, self.local.base as u64, g)
     }
     unsafe fn events_goblin_name(&self, g: u64) -> Result<()> {
         unsafe {

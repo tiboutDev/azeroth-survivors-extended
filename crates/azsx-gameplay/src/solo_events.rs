@@ -19,6 +19,10 @@ impl Kind {
         else { vec![Self::BanishedDemon] }
     }
 }
+/// First chicken attempt follows the second boss, after Sayge's 15..=90-second window.
+pub fn escort_spawn_delay(mut draw: impl FnMut(u32) -> u32) -> f32 {
+    (120 + draw(61)) as f32
+}
 /// A one-minute upper bound on large maps; smaller arenas get shorter routes.
 pub const ESCORT_SEGMENTS: usize = 120;
 pub const ESCORT_SEGMENT_LENGTH: f32 = 1.5;
@@ -71,7 +75,8 @@ pub struct RunOpportunities {
     run: Option<(u64, u64)>,
     last: f32,
     escort_used: bool,
-    first_boss_at: Option<f32>,
+    completed_bosses: u8,
+    second_boss_at: Option<f32>,
 }
 impl RunOpportunities {
     pub const fn new() -> Self {
@@ -79,7 +84,8 @@ impl RunOpportunities {
             run: None,
             last: 0.,
             escort_used: false,
-            first_boss_at: None,
+            completed_bosses: 0,
+            second_boss_at: None,
         }
     }
     pub fn observe(&mut self, run: u64, owner: u64, now: f32) -> bool {
@@ -89,27 +95,31 @@ impl RunOpportunities {
         if self.run != Some((run, owner)) || now < self.last {
             self.run = Some((run, owner));
             self.escort_used = false;
-            self.first_boss_at = None;
+            self.completed_bosses = 0;
+            self.second_boss_at = None;
         }
         self.last = now;
         true
     }
-    /// Only the selected native completed-encounter callback opens this gate.
+    /// Only the second completed native boss opens the gate; later callbacks
+    /// cannot move its timestamp or restore an already consumed escort.
     pub fn encounter(&mut self, run: u64, owner: u64, now: f32) -> bool {
-        if !self.observe(run, owner, now) || self.first_boss_at.is_some() {
+        if !self.observe(run, owner, now) || self.second_boss_at.is_some() {
             return false;
         }
-        self.first_boss_at = Some(now);
+        self.completed_bosses += 1;
+        if self.completed_bosses < 2 { return false; }
+        self.second_boss_at = Some(now);
         true
     }
-    pub fn first_boss_at(&self, run: u64, owner: u64) -> Option<f32> {
-        (self.run == Some((run, owner))).then_some(self.first_boss_at).flatten()
+    pub fn second_boss_at(&self, run: u64, owner: u64) -> Option<f32> {
+        (self.run == Some((run, owner))).then_some(self.second_boss_at).flatten()
     }
     pub fn allows(&self, kind: Kind) -> bool {
-        self.run.is_some() && (kind != Kind::ChickenEscort || self.first_boss_at.is_some() && !self.escort_used)
+        self.run.is_some() && (kind != Kind::ChickenEscort || self.second_boss_at.is_some() && !self.escort_used)
     }
     pub fn reserve_escort(&mut self, run: u64, owner: u64) -> bool {
-        if self.run != Some((run, owner)) || self.first_boss_at.is_none() || self.escort_used {
+        if self.run != Some((run, owner)) || self.second_boss_at.is_none() || self.escort_used {
             return false;
         }
         self.escort_used = true;
@@ -431,6 +441,13 @@ impl Equipment {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn escort_delay_stays_after_sayges_window_and_initial_channel() {
+        let delays=(0..61).map(|ticket|escort_spawn_delay(|n|{assert_eq!(n,61);ticket})).collect::<Vec<_>>();
+        assert_eq!((delays[0],delays[30],delays[60]),(120.,150.,180.));
+        let latest_sayge=crate::rituals::spawn_delay(|n|n-1);
+        assert!(delays[0] > latest_sayge + crate::rituals::HOLD_SECONDS);
+    }
     fn proofs() -> Proofs {
         Proofs {
             assets: true,
@@ -490,21 +507,27 @@ mod tests {
         assert!(!budget.allows(Kind::ChickenEscort));
         assert!(!budget.reserve_escort(1, 11)); // elapsed time alone cannot open the gate
         assert!(!budget.encounter(1, 22, f32::NAN));
-        assert!(budget.encounter(1, 11, 180.));
-        assert!(!budget.encounter(1, 11, 181.));
-        assert_eq!(budget.first_boss_at(1, 11), Some(180.));
+        assert!(!budget.encounter(1, 11, 180.));
+        assert!(!budget.allows(Kind::ChickenEscort));
+        assert!(!budget.reserve_escort(1, 11));
+        assert_eq!(budget.second_boss_at(1, 11), None);
+        assert!(budget.encounter(1, 11, 360.));
+        assert!(!budget.encounter(1, 11, 361.));
+        assert_eq!(budget.second_boss_at(1, 11), Some(360.));
         assert!(!budget.reserve_escort(1, 22));
         assert!(budget.reserve_escort(1, 11));
-        for now in [182., 200., 600.] {
+        for now in [362., 400., 600.] {
             assert!(budget.observe(1, 11, now));
             assert!(!budget.allows(Kind::ChickenEscort));
             assert!(!budget.reserve_escort(1, 11));
             assert!(budget.allows(Kind::BanishedDemon));
         }
         assert!(budget.observe(1, 11, 0.)); // next run reuses native addresses
-        assert_eq!(budget.first_boss_at(1, 11), None);
+        assert_eq!(budget.second_boss_at(1, 11), None);
         assert!(!budget.reserve_escort(1, 11));
-        assert!(budget.encounter(1, 11, 190.));
+        assert!(!budget.encounter(1, 11, 190.));
+        assert!(!budget.reserve_escort(1, 11));
+        assert!(budget.encounter(1, 11, 390.));
         assert!(budget.reserve_escort(1, 11));
         assert!(budget.observe(2, 11, 0.));
         assert!(!budget.allows(Kind::ChickenEscort));

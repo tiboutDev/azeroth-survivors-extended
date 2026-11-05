@@ -1,6 +1,10 @@
 //! Personal run-local supplies: deterministic catalog, claims, tiers and bounded stacking.
 use std::collections::{BTreeMap,BTreeSet};
-pub const MAX_BUFF_SECONDS:f32=120.;
+pub const MAX_BUFF_SECONDS:f32=60.;
+pub const FIRST_SPAWN_SECONDS:f32=30.;
+/// Uniform 45..=75 simulation seconds: both mean and median are one minute.
+/// Callers supply an unbiased draw in 0..31; no separate success roll.
+pub fn spawn_delay(draw:u32)->f32{45.+(draw%31)as f32}
 pub const SUPPLY_SECONDS:f32=90.;
 pub const PICKUP_RADIUS:f32=2.;
 #[derive(Clone,Copy,Debug,PartialEq,Eq,PartialOrd,Ord)]#[repr(u8)]
@@ -17,13 +21,13 @@ impl Family{
  pub fn stat(self)->Option<u32>{[Some(1),Some(3),Some(5),Some(2),Some(4),Some(8),None,None][self as usize]}
  fn catalog(self)->&'static [Item]{
   match self{
-   Self::Recovery=>const { &[timed("Elixir of Wisdom","INV_Potion_06",0.08,60),timed("Elixir of Greater Intellect","INV_Potion_10",0.12,75),timed("Flask of Distilled Wisdom","INV_Potion_97",0.16,120)] },
-   Self::Critical=>const { &[timed("Elixir of Lesser Agility","INV_Potion_92",0.04,60),timed("Elixir of Greater Agility","INV_Potion_94",0.07,75),timed("Elixir of the Mongoose","INV_Potion_32",0.10,90)] },
-   Self::Defense=>const { &[timed("Elixir of Defense","INV_Potion_64",0.03,60),timed("Elixir of Greater Defense","INV_Potion_65",0.05,75),timed("Elixir of Superior Defense","INV_Potion_66",0.07,90)] },
-   Self::Vitality=>const { &[timed("Elixir of Fortitude","INV_Potion_43",0.20,60),timed("Elixir of Brute Force","INV_Potion_40",0.30,75),timed("Flask of the Titans","INV_Potion_62",0.40,120)] },
-   Self::Ferocity=>const { &[timed("Minor Wizard Oil","INV_Poison_MindNumbing",0.20,60),timed("Wizard Oil","INV_Potion_104",0.35,75),timed("Brilliant Wizard Oil","INV_Potion_105",0.50,90)] },
-   Self::Reach=>const { &[timed("Elixir of Giant Growth","INV_Potion_10",0.25,60)] },
-   Self::Swiftness=>const { &[timed("Swiftness Potion","INV_Potion_95",0.20,15)] },
+   Self::Recovery=>const { &[timed("Elixir of Wisdom","INV_Potion_06",0.08,30),timed("Elixir of Greater Intellect","INV_Potion_10",0.12,38),timed("Flask of Distilled Wisdom","INV_Potion_97",0.16,60)] },
+   Self::Critical=>const { &[timed("Elixir of Lesser Agility","INV_Potion_92",0.04,30),timed("Elixir of Greater Agility","INV_Potion_94",0.07,38),timed("Elixir of the Mongoose","INV_Potion_32",0.10,45)] },
+   Self::Defense=>const { &[timed("Elixir of Defense","INV_Potion_64",0.03,30),timed("Elixir of Greater Defense","INV_Potion_65",0.05,38),timed("Elixir of Superior Defense","INV_Potion_66",0.07,45)] },
+   Self::Vitality=>const { &[timed("Elixir of Fortitude","INV_Potion_43",0.20,30),timed("Elixir of Brute Force","INV_Potion_40",0.30,38),timed("Flask of the Titans","INV_Potion_62",0.40,60)] },
+   Self::Ferocity=>const { &[timed("Minor Wizard Oil","INV_Poison_MindNumbing",0.20,30),timed("Wizard Oil","INV_Potion_104",0.35,38),timed("Brilliant Wizard Oil","INV_Potion_105",0.50,45)] },
+   Self::Reach=>const { &[timed("Elixir of Giant Growth","INV_Potion_10",0.25,30)] },
+   Self::Swiftness=>const { &[timed("Swiftness Potion","INV_Potion_95",0.20,8)] },
    Self::Healing=>const { &[potion("Healing Potion","INV_Potion_51",0.20),potion("Superior Healing Potion","INV_Potion_53",0.30),potion("Major Healing Potion","INV_Potion_54",0.40)] },
   }
  }
@@ -69,7 +73,8 @@ impl Reward{
  pub fn rarity(self)->u8{match self{Self::Buff(c)=>c.tier-1,Self::Material{rarity,..}=>rarity}}
  pub fn text(self)->String{match self{Self::Buff(c)=>match c.seconds(){Some(seconds)=>format!("{} for {seconds} sec",c.text()),None=>c.text()},_=>"Automatically sold for gold".into()}}
  pub fn nominal_gold(self,bosses:u32)->u32{match self{Self::Buff(_)=>0,Self::Material{rarity,..}=>{
-  // Normalized rarity mean=1.64. Faster generation keeps the original expected gold/minute.
+  // Normalized rarity mean=1.64. Keep per-pile values from the 0.75/min balance;
+  // the 1/min cadence increases expected material gold/minute by one third.
   let n=10*(1+bosses.min(5))*200*[1,2,4,8][rarity as usize];(n+246)/492
  }}}
 }
@@ -78,7 +83,7 @@ impl Reward{
 pub enum Costume { Skeleton, Small, Pirate, Ninja }
 
 impl Costume {
- pub const SECONDS:f32=60.;
+ pub const SECONDS:f32=30.;
  pub fn roll(mut draw:impl FnMut(u32)->u32)->Option<Self>{
   if draw(100)>=8 {return None}
   Some(match draw(4){0=>Self::Skeleton,1=>Self::Small,2=>Self::Pirate,_=>Self::Ninja})
@@ -88,7 +93,7 @@ impl Costume {
 }
 #[derive(Clone,Copy,Debug)]pub struct Discovery{pub event:u64,pub reward:Reward,pub gold:u32,pub bonus:Option<Costume>}
 impl Discovery{
- pub fn text(self)->String{let text=self.reward.text();match self.bonus{Some(b)=>format!("{text} + {} ({} for 60 sec)",b.item(),b.label()),None=>text}}
+ pub fn text(self)->String{let text=self.reward.text();match self.bonus{Some(b)=>format!("{text} + {} ({} for {} sec)",b.item(),b.label(),Costume::SECONDS as u16),None=>text}}
 }
 #[derive(Clone,Debug)]pub struct Supply{pub event:u64,pub position:[f32;3],pub expires:f32,pub reward:Reward,pub gold:u32,eligible:BTreeSet<(u32,u64)>,claimed:BTreeSet<(u32,u64)>,bonuses:BTreeMap<(u32,u64),Costume>,personal:BTreeMap<(u32,u64),(Reward,u32)>}
 impl Supply{
@@ -127,6 +132,24 @@ impl Buffs{
 }
 #[cfg(test)]mod tests{
  use super::*;
+ #[test]fn spawn_intervals_have_one_minute_mean_and_median_without_failed_rolls(){
+  let delays=(0..31).map(spawn_delay).collect::<Vec<_>>();
+  assert_eq!((delays[0],delays[15],delays[30]),(45.,60.,75.));
+  assert_eq!(delays.iter().sum::<f32>()/delays.len()as f32,60.);
+  // Every balanced draw rotation gives 30 opportunities in a 30-minute run.
+  for offset in 0..31{let mut at=FIRST_SPAWN_SECONDS;let mut count=0;while at<=1800.{at+=spawn_delay((offset+count)%31);count+=1;}assert_eq!(count,30);}
+ }
+ #[test]fn every_timed_item_uses_the_halved_rounded_duration_and_expires_at_its_deadline(){
+  for (family,durations)in [(Family::Recovery,[30,38,60]),(Family::Critical,[30,38,45]),(Family::Defense,[30,38,45]),(Family::Vitality,[30,38,60]),(Family::Ferocity,[30,38,45]),(Family::Reach,[30;3]),(Family::Swiftness,[8;3])]{
+   for tier in 1..=3{let c=Consumable::new(family,tier).unwrap();let seconds=durations[tier as usize-1];assert_eq!(c.seconds(),Some(seconds));assert!(f32::from(seconds)<=MAX_BUFF_SECONDS);
+    let mut buffs=Buffs::default();buffs.accept(10.,Reward::Buff(c));let end=10.+f32::from(seconds);assert!(!buffs.expire(end-0.01));assert!(buffs.expire(end));assert!(buffs.is_empty());
+   }
+  }
+  assert_eq!(MAX_BUFF_SECONDS,60.);
+  assert_eq!(Costume::SECONDS,30.);
+  let d=Discovery{event:1,reward:buff(Family::Recovery,1),gold:0,bonus:Some(Costume::Skeleton)};
+  assert_eq!(d.text(),"+8% cooldown recovery for 30 sec + Noggenfogger Elixir (Skeleton for 30 sec)");
+ }
  #[test]fn balance_tiers_refresh_and_expiry_keep_exact_bonus_budget(){
   for (family,values) in [(Family::Recovery,[0.08,0.12,0.16]),(Family::Vitality,[0.20,0.30,0.40]),(Family::Defense,[0.03,0.05,0.07])]{
    let mut buffs=Buffs::default();
@@ -139,7 +162,7 @@ impl Buffs{
 
  fn buff(f:Family,t:u8)->Reward{Reward::Buff(Consumable::new(f,t).unwrap())}
  #[test]fn speed_and_cosmetic_quality_are_independent_of_gameplay_tiers(){
-  for tier in 1..=3{let c=Consumable::new(Family::Swiftness,tier).unwrap();assert_eq!(c.name(),"Swiftness Potion");assert_eq!((c.tier,c.value(),c.seconds()),(1,0.20,Some(15)));assert_eq!(Reward::Buff(c).quality(),1);assert_eq!(c.family.stat(),None);}
+  for tier in 1..=3{let c=Consumable::new(Family::Swiftness,tier).unwrap();assert_eq!(c.name(),"Swiftness Potion");assert_eq!((c.tier,c.value(),c.seconds()),(1,0.20,Some(8)));assert_eq!(Reward::Buff(c).quality(),1);assert_eq!(c.family.stat(),None);}
   let mut families=BTreeSet::new();for draw in 0..700{if let Reward::Buff(c)=Reward::roll(0,0,0,draw){families.insert(c.family);}}assert_eq!(families.len(),8);
   for family in Family::ALL{for tier in 1..=3{assert_eq!(Reward::Buff(Consumable::new(family,tier).unwrap()).quality(),1);}}
   for rarity in 0..4{for variant in 0..3{assert_eq!(Reward::Material{rarity,variant}.quality(),if rarity==3{2}else{1});}}
@@ -185,7 +208,7 @@ impl Buffs{
  #[test]fn personal_rolls_cannot_be_farmed_by_rejoining_or_reveal_a_shared_reward(){let mut s=Supply::new(1,0.,[0.;3],&[(0,10),(1,20)],buff(Family::Critical,1),0).unwrap();assert!(s.personal_rewards(&[((0,10),buff(Family::Critical,1)),((1,20),buff(Family::Defense,2))],0));assert_eq!(s.claim(1.,(0,10),[0.;3],true).unwrap().reward,buff(Family::Critical,1));assert!(!s.available((0,10)));assert!(s.available((1,20)));s.retain(&[(0,10)]);assert!(s.complete());assert!(s.claim(2.,(1,21),[0.;3],true).is_none());}
  #[test]fn claims_are_fixed_at_spawn_and_bound_to_identity(){let mut s=Supply::new(1,0.,[0.;3],&[(0,10),(1,20)],buff(Family::Critical,1),0).unwrap();assert!(s.claim(1.,(0,10),[0.;3],true).is_some());assert!(s.claim(2.,(0,10),[0.;3],true).is_none());assert!(s.claim(2.,(1,21),[0.;3],true).is_none());assert!(s.claim(2.,(1,20),[0.;3],true).is_some());assert!(s.complete());}
  #[test]fn ninety_second_deadline_death_and_distance_do_not_consume_claim(){let mut s=Supply::new(1,0.,[0.;3],&[(0,10)],buff(Family::Recovery,1),0).unwrap();assert!(s.claim(1.,(0,10),[3.,0.,0.],true).is_none());assert!(s.claim(1.,(0,10),[0.;3],false).is_none());assert!(s.claim(90.,(0,10),[0.;3],true).is_none());assert!(s.claim(89.9,(0,10),[0.;3],true).is_some());}
- #[test]fn families_coexist_without_repeated_stacking_or_downgrades(){let mut b=Buffs::default();b.accept(0.,buff(Family::Critical,3));b.accept(1.,buff(Family::Defense,2));b.accept(2.,buff(Family::Critical,1));assert_eq!(b.values().len(),2);assert_eq!(b.0[&Family::Critical].consumable.tier,3);assert_eq!(b.0[&Family::Critical].expires,92.);assert!(!b.expire(2.));assert!(b.expire(76.));assert_eq!(b.values().len(),1);assert!(b.expire(92.));assert!(b.is_empty());}
+ #[test]fn families_coexist_without_repeated_stacking_or_downgrades(){let mut b=Buffs::default();b.accept(0.,buff(Family::Critical,3));b.accept(1.,buff(Family::Defense,2));b.accept(2.,buff(Family::Critical,1));assert_eq!(b.values().len(),2);assert_eq!(b.0[&Family::Critical].consumable.tier,3);assert_eq!(b.0[&Family::Critical].expires,47.);assert!(!b.expire(2.));assert!(b.expire(39.));assert_eq!(b.values().len(),1);assert!(b.expire(47.));assert!(b.is_empty());}
  #[test]fn tier_boundaries_and_endless_cap(){assert_eq!((tier(0),tier(1),tier(2),tier(3),tier(4),tier(999)),(1,1,2,2,3,3));}
- #[test]fn faster_supplies_preserve_expected_material_gold_budget(){for boss in 0..=5{let sum:f64=(0..100).map(|r|Reward::roll(boss,99,r,0).nominal_gold(boss)as f64).sum();let new_per_min=0.75*0.10*sum/100.;let old_per_min=0.2*0.25*(10*(1+boss))as f64;assert!((new_per_min-old_per_min).abs()<0.04);}}
+ #[test]fn one_per_minute_keeps_material_values_and_increases_expected_income_by_one_third(){for boss in 0..=5{let sum:f64=(0..100).map(|r|Reward::roll(boss,99,r,0).nominal_gold(boss)as f64).sum();let new_per_min=0.10*sum/100.;let old_per_min=0.2*0.25*(10*(1+boss))as f64;assert!((new_per_min-old_per_min*4./3.).abs()<0.05);}}
 }

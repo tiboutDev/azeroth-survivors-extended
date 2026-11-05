@@ -135,24 +135,16 @@ pursuer. The active goblin is excluded from native distant-horde recycling, whic
 would otherwise teleport it back near the party. Other enemies retain recycling.
 It takes spell damage but rejects AZSX taunts.
 
-A killing blow reserves personal rewards for the participants still present:
-one native selection of three distinct amulets, where the eligible pool permits,
-and marks equivalent to an ordinary native boss of the map. The native amulet
-rarity, exclusion and card builders remain responsible; Crystal Resonance bonuses apply independently of amulet rewards.
-Marks are credited even while the recipient is down or choosing. Amulet requests
-wait until that actor can choose and has finished any current selection rather
-than overwrite it. Native selection and group-pause behavior remain in charge.
+A killing blow reserves one personal native selection of three distinct amulets
+for each participant still present, where the eligible pool permits. Goblins do
+not grant class marks. Native amulet rarity, exclusion and card builders remain
+responsible; Crystal Resonance bonuses apply independently of amulet rewards.
+Requests wait until that actor can choose and has finished any current selection
+rather than overwrite it. Native selection and group-pause behavior remain in charge.
 
-Marks use the reviewed native map, Heroic and endless coefficients, snapshotted
-at the kill, then rounded down to whole marks with no minimum. Map progression
-retains the native table bound: later zones use its last reward row rather than
-reading adjacent data. A result of zero
-grants no marks and does not prevent the amulet selection. Each recipient receives
-a positive amount once through native pending
-personal progression, with no party division or gold multiplier. No boss clear,
-kill counter, equipment drop or pity reward is fabricated. Escape grants nothing;
-there is no goblin gold reward. Event identity is scoped to GUID and run.
-Native boss encounters and Fortunes are unaffected.
+No boss clear, kill counter, equipment drop or pity reward is fabricated. Escape
+grants nothing; there is no goblin gold reward. Event identity is scoped to GUID
+and run. Native boss and guardian marks, other rewards and Fortunes are unaffected.
 
 The host launcher reads optional `AZSX/options.json`: `{"treasure_goblins":false}`
 disables local event generation at the next launch. The host controls generation
@@ -208,8 +200,10 @@ reference. No gameplay event listeners, velocity prediction or map/entity scans.
 ## Lost Supplies
 
 The reserve uses the native DeadMine Cargo Boxes pile (display 36), scale 1.
-It is independently optional through `lost_supplies` in either mode. First attempt at 30 simulation seconds, then every 30–50
-seconds, with fixed 50% success and no pity. Reserves may coexist and each lasts
+It is independently optional through `lost_supplies` in either mode. First opportunity at 30 simulation seconds, then one every 45–75 seconds, uniformly
+drawn. Both mean and median interval are 60 seconds, targeting one appearance per
+minute in solo and co-op, not one per participant. There is no additional success
+roll. Failed native placement still consumes that opportunity; no immediate retry. Reserves may coexist and each lasts
 90 simulation seconds. The native pause/choice state freezes deadlines. A living
 player collects within two yards. Content and power are fixed at appearance;
 claims reserve slot/GUID/event identity before native IO and never reroll.
@@ -218,18 +212,18 @@ claims reserve slot/GUID/event identity before native IO and never reroll.
 
 | Family | 0–1 completed bosses | 2–3 completed bosses | 4+ completed bosses |
 | --- | --- | --- | --- |
-| Cooldown recovery | Elixir of Wisdom, 8% · 60s | Elixir of Greater Intellect, 12% · 75s | Flask of Distilled Wisdom, 16% · 120s |
-| Critical strike chance | Elixir of Lesser Agility, 4 points · 60s | Elixir of Greater Agility, 7 points · 75s | Elixir of the Mongoose, 10 points · 90s |
-| Damage reduction | Elixir of Defense, 3 points · 60s | Elixir of Greater Defense, 5 points · 75s | Elixir of Superior Defense, 7 points · 90s |
-| Maximum health | Elixir of Fortitude, 20% · 60s | Elixir of Brute Force, 30% · 75s | Flask of the Titans, 40% · 120s |
-| Critical strike damage | Minor Wizard Oil, 20% · 60s | Wizard Oil, 35% · 75s | Brilliant Wizard Oil, 50% · 90s |
-| Area of effect | Elixir of Giant Growth, 25% · 60s | Same item | Same item |
-| Movement speed | Swiftness Potion, 20% · 15s | Same item | Same item |
+| Cooldown recovery | Elixir of Wisdom, 8% · 30s | Elixir of Greater Intellect, 12% · 38s | Flask of Distilled Wisdom, 16% · 60s |
+| Critical strike chance | Elixir of Lesser Agility, 4 points · 30s | Elixir of Greater Agility, 7 points · 38s | Elixir of the Mongoose, 10 points · 45s |
+| Damage reduction | Elixir of Defense, 3 points · 30s | Elixir of Greater Defense, 5 points · 38s | Elixir of Superior Defense, 7 points · 45s |
+| Maximum health | Elixir of Fortitude, 20% · 30s | Elixir of Brute Force, 30% · 38s | Flask of the Titans, 40% · 60s |
+| Critical strike damage | Minor Wizard Oil, 20% · 30s | Wizard Oil, 35% · 38s | Brilliant Wizard Oil, 50% · 45s |
+| Area of effect | Elixir of Giant Growth, 25% · 30s | Same item | Same item |
+| Movement speed | Swiftness Potion, 20% · 8s | Same item | Same item |
 | Emergency healing | Healing Potion, 20% max HP | Superior Healing Potion, 30% max HP | Major Healing Potion, 40% max HP |
 
 Healing potions arm one personal charge until used, death or run end. A duplicate retains the stronger charge. At or below 35% health a living, playing owner consumes the charge and gains the listed percentage of current maximum health, including when claimed below the threshold. Potion healing is independent of spells and leech.
 
-At the production rate of 0.75 supply opportunities per minute, a player collecting every pile expects about 1.27 healing potion rewards per 15 minutes before placement losses. Nominal timed-effect coverage is about 0.53, 0.63 or 0.82 active effects per player at the three stages before duplicate refreshes and missed pickups.
+At the production target of one supply per minute, a player collecting every pile expects about 1.69 healing potion rewards per 15 minutes before placement losses. Timed durations are halved, rounded up to whole seconds, with a 60-second cap. Nominal timed-effect coverage is about 0.35, 0.43 or 0.55 active effects per player at the three stages before duplicate refreshes and missed pickups. Costume bonuses also last 30 seconds; healing charges and 90-second pile lifetimes are unchanged.
 
 Defense uses generic native stat input 5: damage reduction only, with no maximum-health contribution. This input is distinct from jewelry kind 5 (Archimtiros), whose item-specific conversion also grants health. No compensating negative-health input is applied.
 
@@ -244,9 +238,9 @@ is 60/30/9/1% Common/Uncommon/Rare/Epic with relative values 1/2/4/8. These are 
 discovery rarities, not claims about the original items' WoW quality. Three
 variants per rarity cover herbs, cloth, ores and rare reagents.
 Nominal gold is rounded from `10*(1+min(encounters,5))*200*rarityMultiplier/492`.
-This normalizes the 1.64 rarity mean and compensates for faster appearance:
-expected nominal gold/minute stays approximately at the previous prototype's
-budget. Native personal gold modifiers still apply once; the discovery shows
+This normalizes the 1.64 rarity mean and retains the existing per-pile sale
+values. The one-per-minute target raises expected material gold per minute by
+one third compared with the previous 0.75/minute cadence. Native personal gold modifiers still apply once; the discovery shows
 actual credited gold. There are no fractional gold, crafting inventories or
 permanent collection/save entries. Balance values are prototype tuning.
 
@@ -433,7 +427,7 @@ entries and the same projection as cache/event pins. Explicit pin layers put
 Sayge above active guardians, Supplies, caches and returning guardians. The
 native HUD flag preference is restored when pins/projection are unavailable.
 
-Swiftness Potion grants +20% personal movement speed for 15 seconds. Native reconstruction resets its baseline; the bounded
+Swiftness Potion grants +20% personal movement speed for 8 seconds. Native reconstruction resets its baseline; the bounded
 post-rebuild addition must not accumulate across refreshes and disappears on
 expiry. The eight aura families have unique personal slots.
 

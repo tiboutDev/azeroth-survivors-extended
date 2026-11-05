@@ -266,12 +266,12 @@
         "official-party-ui",
         "azsxui"
       ],
-      "scope_note": "Portable route, group-presence, identity, reward and large-footprint interior-clearance policy; exact 0.138.0 native byte/field review; Lua 5.1 variable-route schema and Windows ABI checks. Scene movement, native participant effects and extraction rewards require artifact-scoped live solo and two-client coop trials.",
+      "scope_note": "Portable route, group-presence, identity, reward and large-footprint interior-clearance policy; historical 0.138.0 native byte/field review with selected-client compatibility checks; Lua 5.1 variable-route schema and Windows ABI checks. The second-boss gate and 120–180-second delay have portable checks. Scene movement, native participant effects and extraction rewards require artifact-scoped live solo and two-client coop trials.",
       "targeted_scenario": {
         "profile": "official",
-        "trigger": "In isolated 0.138.0 solo and two-client coop runs, approach one native Mechanical Chicken, test one participant leaving and returning, then reach its Goblin Teleporter.",
+        "trigger": "In isolated 0.141.0 solo and two-client coop runs, approach one native Mechanical Chicken, test one participant leaving and returning, then reach its Goblin Teleporter.",
         "expected": "At most one escort per run; native chicken, teleporter and scenery appear for both clients; progress pauses if any active participant is absent or downed and resumes without reset; extraction removes the scene and grants one individual gadget to each current participant exactly once. Variable route totals retain the whole AZSX UI state; start and extraction footprints reject blocked interior native navigation cells.",
-        "limit": "A bounded trial may not exercise all six random gadgets or observe a full normal post-boss route; report these separately from portable and diagnostic evidence. Purely visual tree models absent from native navigation require separate scenery evidence.",
+        "limit": "A bounded trial may not exercise all four random gadgets or observe the normal second-boss schedule or a full normal route; report these separately from portable and diagnostic evidence. Purely visual tree models absent from native navigation require separate scenery evidence.",
         "live_status": "requires-artifact-scoped-receipt-and-visual-review-where-applicable"
       }
     },
@@ -303,7 +303,7 @@
       "profiles": [
         "official"
       ],
-      "scope_note": "Table checks cover every specialization and set mapping. All 41 selected display IDs were found in the live native item display catalog. Diagnostic solo and party captures cover Earthshatter Enhancement and starter Protection Warrior. The Earthshatter Enhancement preview was captured in the Armory and on the main menu. The native Armory writes the explicit Worn piece choice to the profile. A separate solo run loaded this choice and displayed the native Earthshatter hands. The host and guest both recorded two-handed special strikes for the Enhancement melee fixture. The native main-hand autoattack selector was replayed with the captured weapon descriptors. Individual spell attribution and the full visual set matrix were not captured."
+      "scope_note": "Table checks cover every specialization and set mapping. The original 41 selected display IDs and nine additional Tier 0.5/Lawbringer IDs have live native item display catalog evidence. Diagnostic solo and party captures cover Earthshatter Enhancement and starter Protection Warrior. The Earthshatter Enhancement preview was captured in the Armory and on the main menu. The native Armory writes the explicit Worn piece choice to the profile. A separate solo run loaded this choice and displayed the native Earthshatter hands. The host and guest both recorded two-handed special strikes for the Enhancement melee fixture. The native main-hand autoattack selector was replayed with the captured weapon descriptors. Individual spell attribution and the full visual set matrix were not captured."
     }
   }
 }

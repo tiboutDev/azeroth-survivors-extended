@@ -30,9 +30,10 @@ def assess(logs, disabled=False):
             taunts_excluded_with_normal_control=bool(re.search(r"treasure goblin taunt control: normal=(?:true|false) goblin=false", host)) if len(logs) == 1 else "treasure goblin taunt control: normal=true goblin=false" in host,
         )
         awards=re.findall(r"treasure goblin amulets: event=(\d+) slot=(\d+) guid=(\d+) count=(\d+) marks=([\d.]+) keys=(\[[^\r\n]+\])",host)
-        checks["personal_amulets_and_marks"] = bool(rewards) and all(
-            {(int(slot)) for event,slot,guid,count,marks,keys in awards if event==reward and int(count)==3 and float(marks)>=0 and float(marks).is_integer()}==set(range(len(logs)))
+        checks["personal_amulets_no_marks"] = bool(rewards) and all(
+            {(int(slot)) for event,slot,guid,count,marks,keys in awards if event==reward and int(count)==3 and float(marks)==0}==set(range(len(logs)))
             for reward,_ in rewards)
+        checks["no_goblin_mark_credit"] = all(float(row[4])==0 for row in awards) and all("treasure goblin marks:" not in text for text in logs)
         checks["personal_rewards_unique"] = len(awards)==len({(event,slot,guid)for event,slot,guid,_,_,_ in awards})
         samples = {}
         for guid, pose in re.findall(r"treasure goblin native: guid=(\d+).*position=(\[[^\r\n]+\])", host):

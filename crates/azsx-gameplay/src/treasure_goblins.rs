@@ -1,12 +1,5 @@
 //! Optional run events. No native identities, transport or wall-clock timers.
 pub const ARRIVAL_SECONDS: f32 = 1.5;
-/// Native ordinary-boss amount, awarded only as whole marks. Never round up
-/// or manufacture a minimum reward on a map/difficulty yielding less than one.
-pub fn whole_boss_marks(amount: f32) -> Option<u32> {
-    (amount.is_finite() && (0.0..=10_000_000.0).contains(&amount))
-        .then(|| amount.floor() as u32)
-}
-
 /// The native circular arena, with a small clearance for the enlarged creature.
 #[derive(Clone, Copy, Debug)]
 pub struct Arena {
@@ -515,19 +508,5 @@ mod tests {
         assert!(goals[0][0] > 0. && goals[0][1] > 0.);
         assert!(goals.iter().all(|p| p.iter().all(|v| v.is_finite())));
         assert!(flee_candidates([f32::NAN, 0., 0.], &[], [0.; 2]).is_empty());
-    }
-}
-
-#[cfg(test)]
-mod mark_reward_tests {
-    use super::whole_boss_marks;
-    #[test]
-    fn native_boss_amount_has_no_minimum_or_fractional_goblin_credit() {
-        for (native, expected) in [(0.,0), (0.5,0), (1.,1), (1.25,1), (1.5,1), (2.,2), (7.5,7)] {
-            assert_eq!(whole_boss_marks(native), Some(expected));
-        }
-        for invalid in [-1., f32::NAN, f32::INFINITY, 10_000_001.] {
-            assert_eq!(whole_boss_marks(invalid), None);
-        }
     }
 }

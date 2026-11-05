@@ -3,7 +3,7 @@
 Use the [compatibility checklist](COMPATIBILITY-CHECKLIST.md) for execution order; this catalog owns the expected behavior criteria.
 
 Maintained acceptance reference for **current main source**. Native integration
-targets official **0.140.0**. Covers AZSX-01–AZSX-34, including disabled and upstream-owned behavior.
+targets official **0.141.0**. Covers AZSX-01–AZSX-34, including disabled and upstream-owned behavior.
 This is not proof that an installed DLL or published archive passes these requirements.
 Uncommitted source fixes are not automatically in a prepared release.
 The turret experiment remains outside this baseline.
@@ -412,8 +412,8 @@ Candidate profiles: `rules`, `official`. [Scenario mappings and limits](../../co
 | --- | --- | --- |
 | AZSX-26.01 | First opportunity | Never before first boss; pre-final bad-luck protection (25%, 1/3, 50%, 100% on five-boss maps), then 20–40-second placement delay. Not fixed early; short run/placement failure can prevent actual appearance. |
 | AZSX-26.02 | Active goblin | Max one, native model/transport, 150% guardian-base native health scaling, no attack/ordinary loot, taunt immune. Template bounds and immutable storage cover every selected native map, including the last zone after a map is inserted. Selected native health, death and motion fields determine its live state; retired fields cannot mark a fresh spawn dead. Flee within terrain/arena without distant-recycling teleport; 25 simulation seconds including arrival delay, pause freezes deadline. |
-| AZSX-26.03 | Kill/escape | Kill reserves personal native amulet choice and native-scaled whole marks per present participant, distinct amulets where possible. Preserve native map-table bounds, including later maps beyond the final reward row. Escape retires the selected native health/death fields without altering unrelated creature data. Escape/missing instance grants nothing; no gold/fabricated boss or pity progression. |
-| AZSX-26.04 | Downed/choosing recipient | Marks credit once; amulet request waits without replacing current choice; native pause remains authoritative. |
+| AZSX-26.03 | Kill/escape | Kill reserves a personal native amulet choice per present participant, distinct amulets where possible. No class marks are granted or queued; native boss and guardian rewards remain unchanged. Escape retires the selected native health/death fields without altering unrelated creature data. Escape/missing instance grants nothing; no gold/fabricated boss or pity progression. |
+| AZSX-26.04 | Downed/choosing recipient | Amulet request waits without replacing current choice; no marks are credited while waiting; native pause remains authoritative. |
 | AZSX-26.05 | Disable/failure/presentation | Host optional setting controls generation; no uncertain spawn retry. Native announcement/HP bar, no automatic skull. |
 
 ### AZSX-27 — Lost Supplies
@@ -424,12 +424,12 @@ Candidate profiles: `rules`, `diagnostics`, `official-party-ui`. [Scenario mappi
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-27.01 | Generation | Map-wide native cargo, first attempt 30 seconds then every 30–50 with 50% chance; multiple 90-second reserves. Pause freezes time, no player-near fallback. |
+| AZSX-27.01 | Generation | Map-wide native cargo, first opportunity at 30 seconds then every 45–75 seconds with no extra success roll (60-second mean and median), same global cadence in solo/coop; multiple 90-second reserves. Pause freezes time, no player-near fallback. |
 | AZSX-27.02 | Host and guest claim same reserve | Fixed personal reward per appearance-time identity, once each. Hide only for collector; other can still collect. All claims/expiry remove globally, late/reused identities excluded. |
-| AZSX-27.03 | Consumables | Eight equiprobable personal families. Use distinct Classic items for encounter-based upgrades. Giant Growth grants 25% area for 60s and Swiftness 20% speed for 15s at all stages. Elixirs and oils last 60–90s, flasks 120s. One healing potion charge restores 20/30/40% of its living owner’s maximum HP at or below 35%. |
+| AZSX-27.03 | Consumables | Eight equiprobable personal families. Use distinct Classic items for encounter-based upgrades. Giant Growth grants 25% area for 30s and Swiftness 20% speed for 8s at all stages. Elixirs and oils last 30/38/45s, flasks 60s; durations are halved and rounded up, powers unchanged. One healing potion charge restores 20/30/40% of its living owner’s maximum HP at or below 35%. |
 | AZSX-27.04 | Refresh/rebuild/expiry | Different families coexist; same refreshes without stacking time/power or downgrading stronger tier. No rebuild accumulation/free max-HP heal; expire owned aura rows. |
 | AZSX-27.05 | Materials | Immediate whole-gold sale once per personal claim to shared wallet, usual strongest contributions/no skip division. Show actual credited amount, no crafting inventory. |
-| AZSX-27.06 | Quality/options/aura independence | Cosmetic reference item quality independent of tier/sale bucket. lost_supplies controls generation; no choice/pause. Projection works without Fortune/fatigue active.  Deviate pirate and ninja must each render a visible, textured actor on the supported client. Costume expiry restores each actor's current native form, including a guest held in private Actor storage. |
+| AZSX-27.06 | Quality/options/aura independence | Cosmetic reference item quality independent of tier/sale bucket. lost_supplies controls generation; no choice/pause. Projection works without Fortune/fatigue active.  Deviate pirate and ninja must each render a visible, textured actor on the supported client. Costumes last 30 simulation seconds. Expiry restores each actor's current native form, including a guest held in private Actor storage. |
 
 ### AZSX-28 — Sayge's Trial
 
@@ -495,7 +495,7 @@ Candidate profiles: `rules`, `official`, `official-party-ui`, `azsxui`. [Scenari
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-30.01 | Solo scheduling and placement | No placement before the first completed native boss; first attempt 30–90 simulation seconds afterward. One successful reservation per run at most; route length scales with the native map radius (maximum 180 yards), with four candidate ground sites and eight headings each. Every segment and the interiors of the start and five-yard extraction footprints must be walkable and reject native liquid samples. Native Mechanical Chicken at scale 4.5 and Goblin Teleporter, plus up to four ground-checked native gnomish debris objects behind the start; missing debris never blocks the escort. All owned objects retire together, with no external assets. Failed placement may retry without spending the quota; the host creates at most one shared escort in coop. |
+| AZSX-30.01 | Scheduling and placement | No placement before the second completed native boss; first attempt 120–180 simulation seconds afterward, after Sayge’s initial appearance window. Host-down completions still count in coop; placement waits for the party to be alive and playing. One successful reservation per run at most; route length scales with the native map radius (maximum 180 yards), with four candidate ground sites and eight headings each. Every segment and the interiors of the start and five-yard extraction footprints must be walkable and reject native liquid samples. Native Mechanical Chicken at scale 4.5 and Goblin Teleporter, plus up to four ground-checked native gnomish debris objects behind the start; missing debris never blocks the escort. All owned objects retire together, with no external assets. Failed placement may retry without spending the quota; the host creates at most one shared escort in coop. |
 | AZSX-30.02 | Presence and movement | Invulnerable chicken advances by native spline only while every active participant is alive and within six yards. Leaving suspends cumulative progress without reset; native pause freezes time. |
 | AZSX-30.03 | Extraction and failure | Arrival reserves one independently drawn gadget per current participant exactly once, removes chicken and portal; expiry, invalid route or cleanup grants nothing; a downed participant suspends the escort. No uncertain native commit is retried. |
 | AZSX-30.04 | Engineering reward | Each participant receives one of four unranked, run-local utility/cosmetic gadgets: Net, Rocket Boots, Stun Grenade or Shrink Ray. The optional UI lists the escort beneath the minimap, marks its native position while active, and keeps the gadget in the status row below health; a versioned detached API works without AZSXUI. Variable route totals from 8 to 120 must never invalidate the full AZSX payload or hide unrelated UI. The requested Egg_05 icon is absent in 0.138.0, so the verified native EngGizmos icon is used. |

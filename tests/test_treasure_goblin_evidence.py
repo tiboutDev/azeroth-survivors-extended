@@ -18,8 +18,8 @@ class GoblinEvidenceTests(unittest.TestCase):
             "treasure goblin fine motion: guid=11 samples=800 min_projection=-0.001 max_gap=0.03",
             "treasure goblin escaped: guid=10",
             "treasure goblin rewarded: guid=11 recipients=2",
-            'treasure goblin amulets: event=11 slot=0 guid=70 count=3 marks=1 keys=["a", "b", "c"]',
-            'treasure goblin amulets: event=11 slot=1 guid=71 count=3 marks=1 keys=["d", "e", "f"]',
+            'treasure goblin amulets: event=11 slot=0 guid=70 count=3 marks=0 keys=["a", "b", "c"]',
+            'treasure goblin amulets: event=11 slot=1 guid=71 count=3 marks=0 keys=["d", "e", "f"]',
             "treasure goblin taunt control: normal=true goblin=false",
             "treasure goblin native: guid=10 clock=18 elite=true pursuers=[[-2,0,0]] position=[0,0,0]",
             "treasure goblin native: guid=10 clock=20 pursuers=[[-2,0,0]] position=[10,0,0]",
@@ -32,7 +32,7 @@ class GoblinEvidenceTests(unittest.TestCase):
 
     def test_solo_and_party_require_actual_lifecycle(self):
         host, guest = self.fixture()
-        self.assertTrue(assess([host.replace('treasure goblin amulets: event=11 slot=1 guid=71 count=3 marks=1 keys=["d", "e", "f"]', "")])["passed"])
+        self.assertTrue(assess([host.replace('treasure goblin amulets: event=11 slot=1 guid=71 count=3 marks=0 keys=["d", "e", "f"]', "")])["passed"])
         self.assertTrue(assess([host, guest])["passed"])
         self.assertFalse(assess(["AZSX active:"])["passed"])
         self.assertFalse(assess([])["passed"])
@@ -74,7 +74,9 @@ class GoblinEvidenceTests(unittest.TestCase):
         host, guest = self.fixture()
         self.assertFalse(assess([host.replace("position=[10,0,0]", "position=[121,0,0]"), guest])["passed"])
 
-    def test_zero_marks_preserve_amulet_reward_and_fractions_are_rejected(self):
+    def test_any_goblin_marks_reject_the_result_even_with_valid_amulets(self):
         host, guest = self.fixture()
-        self.assertTrue(assess([host.replace("marks=1", "marks=0"), guest])["passed"])
-        self.assertFalse(assess([host.replace("marks=1", "marks=0.5"), guest])["passed"])
+        self.assertTrue(assess([host, guest])["passed"])
+        for amount in ["1", "0.5", "-1", "nan"]:
+            self.assertFalse(assess([host.replace("marks=0", "marks="+amount), guest])["passed"])
+        self.assertFalse(assess([host+"\ntreasure goblin marks: event=11 slot=0 guid=70 amount=1",guest])["passed"])

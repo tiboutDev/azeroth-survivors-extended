@@ -14,8 +14,6 @@ struct Request {
     event: u64,
     slot: u32,
     guid: u64,
-    marks: f32,
-    marks_sent: bool,
 }
 #[derive(Default)]
 struct State {
@@ -157,7 +155,7 @@ pub(super) fn reset() {
         *s = State::default();
     }
 }
-pub(super) fn queue(game: u64, event: u64, marks: f32, actors: &[(u32, u64)]) {
+pub(super) fn queue(game: u64, event: u64, actors: &[(u32, u64)]) {
     if let Ok(mut s) = STATE.lock() {
         for &(slot, guid) in actors {
             s.pending.push_back(Request {
@@ -165,8 +163,6 @@ pub(super) fn queue(game: u64, event: u64, marks: f32, actors: &[(u32, u64)]) {
                 event,
                 slot,
                 guid,
-                marks,
-                marks_sent: marks == 0.,
             });
         }
     }
@@ -186,40 +182,6 @@ pub(super) fn finish(r: &Runtime, game: u64, actors: &[(u32, u64)]) -> Result<()
         .collect::<Vec<_>>();
     for request in pending {
         let present = actors.contains(&(request.slot, request.guid));
-        if present && !request.marks_sent {
-            let reserve = STATE.lock().ok().is_some_and(|mut s| {
-                let Some(a) = s.pending.iter_mut().find(|a| {
-                    a.game == game
-                        && a.event == request.event
-                        && a.slot == request.slot
-                        && a.guid == request.guid
-                }) else {
-                    return false;
-                };
-                if a.marks_sent {
-                    return false;
-                }
-                a.marks_sent = true;
-                true
-            });
-            if reserve {
-                let m = io::Access {
-                    local: &r.local,
-                    adapter: r.adapter,
-                };
-                r.adapter.goblin_credit_marks(
-                    &m,
-                    game,
-                    request.slot,
-                    request.guid,
-                    request.marks,
-                )?;
-                r.log.info(&format!(
-                    "treasure goblin marks: event={} slot={} guid={} amount={}",
-                    request.event, request.slot, request.guid, request.marks
-                ));
-            }
-        }
         let ready = present
             && r.adapter
                 .goblin_reward_ready(&r.local, game, request.slot, request.guid)?;
@@ -248,18 +210,17 @@ pub(super) fn finish(r: &Runtime, game: u64, actors: &[(u32, u64)]) -> Result<()
             local: &r.local,
             adapter: r.adapter,
         };
-        let (keys, marks) = unsafe {
+        let keys = unsafe {
             r.adapter.goblin_open_amulets(
                 &m,
                 r.local.base as u64,
                 game,
                 request.slot,
                 request.guid,
-                request.marks,
             )
         }?;
         r.log.info(&format!(
-            "treasure goblin amulets: event={} slot={} guid={} count={} marks={marks} keys={keys:?}",
+            "treasure goblin amulets: event={} slot={} guid={} count={} marks=0 keys={keys:?}",
             request.event,
             request.slot,
             request.guid,

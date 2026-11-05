@@ -2,7 +2,7 @@
 use super::event_services::Services;
 use super::RUNTIME;
 use azsx_game::official::{EventObject,StatInputLoan};
-use azsx_gameplay::{Phase,supplies::{Supply,Reward,Buffs,Consumable,Family,Discovery}};
+use azsx_gameplay::{Phase,supplies::{Supply,Reward,Buffs,Consumable,Family,Discovery,FIRST_SPAWN_SECONDS,spawn_delay}};
 use std::{cell::{Cell,RefCell},collections::BTreeMap,sync::{Mutex,atomic::{AtomicBool,Ordering}}};
 static ENABLED:AtomicBool=AtomicBool::new(false);
 struct Reserve{rules:Supply,object:EventObject}
@@ -33,13 +33,13 @@ fn notice(r:&dyn Services,game:u64,text:&str){if let Err(e)=unsafe{r.events_noti
 pub(super) fn potion_fixture()->bool{cfg!(feature="test-hooks") && std::env::var("AZSX_TEST_SUPPLY_POTION").as_deref()==Ok("1")}
 fn tick(r:&dyn Services,game:u64)->Result<(),String>{
  let Some(p)=r.events_solo_run(game)?else{return Ok(())};let Some(actor)=p.actors.first()else{return Ok(())};let now=p.clock;
- let old={let mut state=STATE.lock().map_err(|_|"Supplies state unavailable")?;if state.as_ref().is_none_or(|s|s.game!=game||s.owner!=actor.guid||now<s.clock){let old=state.take();*state=Some(State{look:Default::default(),game,owner:actor.guid,clock:now,next:now+30.,sequence:0,rng:game^actor.guid^std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos()as u64,bosses:0,reserves:vec![],buffs:Buffs::default(),discovery:None,auras:BTreeMap::new(),fixture:0});old}else{None}};if let Some(old)=old{cleanup(r,&old)}
+ let old={let mut state=STATE.lock().map_err(|_|"Supplies state unavailable")?;if state.as_ref().is_none_or(|s|s.game!=game||s.owner!=actor.guid||now<s.clock){let old=state.take();*state=Some(State{look:Default::default(),game,owner:actor.guid,clock:now,next:now+FIRST_SPAWN_SECONDS,sequence:0,rng:game^actor.guid^std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos()as u64,bosses:0,reserves:vec![],buffs:Buffs::default(),discovery:None,auras:BTreeMap::new(),fixture:0});old}else{None}};if let Some(old)=old{cleanup(r,&old)}
  let(remove,mut discovery,refresh,spawn,potion,look)={
   let mut state=STATE.lock().map_err(|_|"Supplies state unavailable")?;let s=state.as_mut().ok_or("Supplies state missing")?;s.clock=now;let ended=actor.phase==Phase::Inactive||actor.hp<=0.;let mut refresh=s.buffs.expire(now);if ended{refresh|=s.buffs.clear()}
   let mut discovery=None;if !ended&&actor.phase==Phase::Playing{for reserve in &mut s.reserves{if let Some(d)=reserve.rules.claim(now,(0,actor.guid),actor.position,true){discovery=Some(d);break}}}
   if let Some(d)=discovery{refresh|=s.buffs.accept(now,d.reward)}// Keep the last owned slots until the native aura boundary retires expired rows.
   let mut remove=vec![];let mut i=0;while i<s.reserves.len(){if ended||now>=s.reserves[i].rules.expires||s.reserves[i].rules.complete(){let item=s.reserves.remove(i);remove.push(item.object)}else{i+=1}}
-  let mut spawn=false;if !ended&&actor.phase==Phase::Playing&&now>=s.next{s.next=now+30.+s.draw(21)as f32;spawn=s.draw(100)<50&&!fixture_enabled()}
+  let mut spawn=false;if !ended&&actor.phase==Phase::Playing&&now>=s.next{s.next=now+spawn_delay(s.draw(31));spawn=!fixture_enabled()}
   #[cfg(feature="test-hooks")]if fixture_enabled()&&!ended&&actor.phase==Phase::Playing{let times=[6.,8.,20.,20.25,20.5,20.75,21.,21.25,24.,25.,28.];let ready=if super::scenario_steps::enabled(){super::scenario_steps::supply_ready(s.fixture,s.reserves.len(),s.discovery.map(|d|d.event))}else{(s.fixture as usize)<times.len()&&now>=times[s.fixture as usize]};if ready{s.fixture+=1;spawn=true}}
   let spawn=if spawn&&s.reserves.len()<8{s.sequence=s.sequence.saturating_add(1);let draws=(0..32).map(|_|(s.draw(u32::MAX),s.draw(u32::MAX))).collect::<Vec<_>>();let(a,b,c)=(s.draw(100),s.draw(100),s.draw(u32::MAX));let mut reward=Reward::roll(s.bosses,a,b,c);
    #[cfg(feature="test-hooks")]if fixture_enabled(){reward=match s.fixture{3..=8=>Reward::Buff(Consumable::new(Family::ALL[(s.fixture-3)as usize],((s.fixture-3)%3+1)as u8).unwrap()),9=>Reward::Material{rarity:0,variant:0},10=>Reward::Material{rarity:3,variant:1},11=>Reward::Buff(Consumable{family:Family::Recovery,tier:3}),_=>Reward::Material{rarity:0,variant:1}};}

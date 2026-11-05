@@ -7,7 +7,7 @@ use azsx_gameplay::{
     Phase,
     blessings::Blessing,
     rituals::{Outcome, Ritual},
-    supplies::{Buffs, Consumable, Discovery, Family, Reward, Supply},
+    supplies::{Buffs, Consumable, Discovery, Family, Reward, Supply, FIRST_SPAWN_SECONDS, spawn_delay},
 };
 use std::{collections::BTreeMap, sync::Mutex};
 type Id = (u32, u64);
@@ -342,7 +342,7 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
                     .unwrap_or_default()
                     .as_nanos() as u64,
             stage: 0,
-            next_supply: now + 30.,
+            next_supply: now + FIRST_SPAWN_SECONDS,
             next_ritual: None,
             sequence: 0,
             reserves: vec![],
@@ -432,8 +432,8 @@ fn tick(r: &dyn Services, game: u64) -> Result<(), String> {
                 .any(|a| a.hp > 0. && a.phase == Phase::Playing)
             && now >= s.next_supply;
         let supply = if supply {
-            s.next_supply = now + 30. + s.draw(21) as f32;
-            (s.draw(100) < 50 || fixture_enabled()) && s.reserves.len() < 8
+            s.next_supply = now + spawn_delay(s.draw(31));
+            s.reserves.len() < 8
         } else {
             false
         };

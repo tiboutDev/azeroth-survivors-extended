@@ -574,7 +574,7 @@ mod consumable_aura_tests {
         };
         let a = Adapter::select(crate::current::SHA256).unwrap();
         let buffs = [(Family::Recovery, 60.), (Family::Critical, 59.)];
-        assert!(a.project_consumable_auras(&m,&frame,&[(Family::Critical,120.1)]).is_err());
+        assert!(a.project_consumable_auras(&m,&frame,&[(Family::Critical,60.1)]).is_err());
         let first = a.project_consumable_auras(&m, &frame, &buffs).unwrap();
         assert_eq!(first, vec![(Family::Recovery, 1), (Family::Critical, 2)]);
         let second = a.project_consumable_auras(&m, &frame, &buffs).unwrap();

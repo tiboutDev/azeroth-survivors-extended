@@ -255,11 +255,10 @@ first opportunity before the final boss. Short runs or unavailable native
 placement can prevent an appearance. Further goblins become rarer, including
 in endless; there are no guaranteed additional spawns.
 
-Defeat the goblin within **25 seconds** for a personal native choice of amulets
-and class marks based on an ordinary boss of the current map and difficulty,
-including native endless scaling. If the eligible pool allows it, the choice
-contains three distinct amulets. Whole-mark rounding can yield zero marks; the
-amulet choice still applies. Each participant receives personal rewards.
+Defeat the goblin within **25 seconds** for a personal native choice of amulets.
+If the eligible pool allows it, the choice contains three distinct amulets.
+Goblins no longer grant class marks. Each participant receives a personal choice;
+ordinary boss and guardian rewards are unchanged.
 
 The goblin ignores taunts and cannot attack. Its health uses the first native
 guardian's base multiplied by 1.5, with native time, difficulty and party scaling. Group pauses
@@ -272,7 +271,9 @@ ordinary boss or guardian rewards.
 
 Cargo piles appear independently across the playable zone, with minimap markers,
 and remain for **90 seconds**. Reach one for a personal reward, without a choice
-screen or group pause. Several reserves can coexist.
+screen or group pause. The first appears around 30 seconds, followed by a random
+45–75-second interval: about one pile per minute, shared across the party.
+Several reserves can coexist.
 
 In co-op, each participant present at appearance has their own fixed reward.
 Claiming a pile hides it and its marker only for you; others can still collect
@@ -283,18 +284,18 @@ Lost Supplies can grant a personal healing potion or a timed bonus. Item names c
 
 | Family | 0–1 completed bosses | 2–3 completed bosses | 4+ completed bosses |
 | --- | --- | --- | --- |
-| Cooldown recovery | Elixir of Wisdom, 8% · 60s | Elixir of Greater Intellect, 12% · 75s | Flask of Distilled Wisdom, 16% · 120s |
-| Critical strike chance | Elixir of Lesser Agility, 4 points · 60s | Elixir of Greater Agility, 7 points · 75s | Elixir of the Mongoose, 10 points · 90s |
-| Damage reduction | Elixir of Defense, 3 points · 60s | Elixir of Greater Defense, 5 points · 75s | Elixir of Superior Defense, 7 points · 90s |
-| Maximum health | Elixir of Fortitude, 20% · 60s | Elixir of Brute Force, 30% · 75s | Flask of the Titans, 40% · 120s |
-| Critical strike damage | Minor Wizard Oil, 20% · 60s | Wizard Oil, 35% · 75s | Brilliant Wizard Oil, 50% · 90s |
-| Area of effect | Elixir of Giant Growth, 25% · 60s | Same item | Same item |
-| Movement speed | Swiftness Potion, 20% · 15s | Same item | Same item |
+| Cooldown recovery | Elixir of Wisdom, 8% · 30s | Elixir of Greater Intellect, 12% · 38s | Flask of Distilled Wisdom, 16% · 60s |
+| Critical strike chance | Elixir of Lesser Agility, 4 points · 30s | Elixir of Greater Agility, 7 points · 38s | Elixir of the Mongoose, 10 points · 45s |
+| Damage reduction | Elixir of Defense, 3 points · 30s | Elixir of Greater Defense, 5 points · 38s | Elixir of Superior Defense, 7 points · 45s |
+| Maximum health | Elixir of Fortitude, 20% · 30s | Elixir of Brute Force, 30% · 38s | Flask of the Titans, 40% · 60s |
+| Critical strike damage | Minor Wizard Oil, 20% · 30s | Wizard Oil, 35% · 38s | Brilliant Wizard Oil, 50% · 45s |
+| Area of effect | Elixir of Giant Growth, 25% · 30s | Same item | Same item |
+| Movement speed | Swiftness Potion, 20% · 8s | Same item | Same item |
 | Emergency healing | Healing Potion, 20% max HP | Superior Healing Potion, 30% max HP | Major Healing Potion, 40% max HP |
 
 At 35% health or less, your armed healing potion is consumed automatically. You can hold one charge and keep the stronger potion on a duplicate pickup. The charge lasts until used, death or the end of the run. Timed buffs from the same family refresh the stronger effect. Native pauses freeze timers.
 
-Each personal reward also has an independent 8% chance to include a 60-second disguise. Noggenfogger Elixir makes the collector a skeleton or shrinks them. Savory Deviate Delight uses Mr. Smite for its pirate disguise and the masked Edwin VanCleef for its ninja disguise. A new disguise replaces the previous one. The skeleton can cover a druid's bear or cat form while its abilities remain active.
+Each personal reward also has an independent 8% chance to include a 30-second disguise. Noggenfogger Elixir makes the collector a skeleton or shrinks them. Savory Deviate Delight uses Mr. Smite for its pirate disguise and the masked Edwin VanCleef for its ninja disguise. A new disguise replaces the previous one. The skeleton can cover a druid's bear or cat form while its abilities remain active.
 
 Materials sell immediately for whole gold, into the shared wallet in co-op.
 The pickup popup shows the amount actually credited, including applicable
@@ -415,12 +416,13 @@ continue to describe nominal bonuses. This rule does not change enemy scaling.
 
 Hover the kill counter to see current party members ranked by their personal run kills. Tied players share a rank. The circular Run information button shows N for Normal or H1–H5 for Heroic. Hover or click to see your class’s missing set pieces from all five bosses in this zone. In co-op, the same panel also explains the shared rules.
 
-## Solo engineering escort
+## Engineering escort
 
 **Status: Playtesting**
 
-In solo runs, a damaged Mechanical Chicken can appear somewhere on the map
-after the first boss is defeated. Stay within six yards while it travels to a
+In solo or cooperative runs, a damaged Mechanical Chicken can appear somewhere
+on the map after the second boss is defeated. Its first attempt is delayed by
+120–180 simulation seconds, after Sayge’s initial 15–90-second appearance window. Stay within six yards while it travels to a
 Goblin Teleporter. If you leave, it waits
 and your progress resumes when you return. A completed escort gives one
 engineering gadget for the rest of the run. The route adapts to the map's

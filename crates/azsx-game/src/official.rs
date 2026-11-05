@@ -1756,9 +1756,8 @@ impl SelectedAdapter {
         g: u64,
         s: u32,
         id: u64,
-        a: f32,
-    ) -> Result<(Vec<String>, f32)> {
-        self.native.goblin_open_amulets(io, b, g, s, id, a)
+    ) -> Result<Vec<String>> {
+        self.native.goblin_open_amulets(io, b, g, s, id)
     }
 }
 
