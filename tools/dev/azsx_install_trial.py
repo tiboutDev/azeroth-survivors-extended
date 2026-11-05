@@ -4,6 +4,9 @@ from pathlib import Path
 from client_registry import VERSION
 ROOT=Path(__file__).resolve().parents[2]
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def package_version_matches(version,game_version):
+    return isinstance(version,str)and re.fullmatch(re.escape(game_version)+r"(?:-r[1-9][0-9]*|-azsx\.[1-9][0-9]*)",version)is not None
+
 def initial_check_passed(code,before,after,projected_hash,old_hash,new_hash):
     """Read-only check may report the old owned DLL pending replacement."""
     expected=0 if old_hash is not None and old_hash==new_hash else 1
@@ -38,7 +41,7 @@ def run(seconds,game_version=VERSION,package_path=None,legacy_package=None):
     if package_path is None:raise ValueError("An explicit prepared package is required")
     package=Path(package_path)
     proof=json.loads(package.with_name("PREPARATION.json").read_text())
-    if not proof["version"].startswith(game_version+"-azsx."):raise ValueError("Packaged trial version differs")
+    if not package_version_matches(proof["version"],game_version):raise ValueError("Packaged trial version differs")
     if sha(package)!=proof["archive_sha256"]:raise ValueError("Package differs")
     output=ROOT/"test-results"/("azsx-install-"+uuid.uuid4().hex[:8]);output.mkdir()
     prepare=writer(exe);children=[];streams=[];folders=[];environments=[];checks={}

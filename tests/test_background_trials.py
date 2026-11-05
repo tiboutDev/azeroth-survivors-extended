@@ -146,3 +146,11 @@ class BackgroundTrials(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class PackageVersionTests(unittest.TestCase):
+    def test_revision_and_legacy_names_require_the_exact_native_version(self):
+        from azsx_install_trial import package_version_matches
+        for version in ("0.141.0-r1","0.141.0-r2","0.141.0-azsx.1"):
+            self.assertTrue(package_version_matches(version,"0.141.0"))
+        for version in ("0.140.0-r1","0.141.0-r0","0.141.0-r1-extra","0.141.0-azsx.",None):
+            self.assertFalse(package_version_matches(version,"0.141.0"))
