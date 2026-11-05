@@ -63,6 +63,9 @@ These labels describe feature maturity, not exhaustive validation of every class
 
 **Windows 64-bit · Use the game version specified by your AZSX release.**
 
+Release names put compatibility first: **0.141.0 — AZSX Update 1** means AZSX
+`0.141.0-r1` for game **0.141.0**.
+
 1. Close the game.
 2. Extract the compatible AZSX archive into your game folder, beside `AzerothSurvivors.exe`.
 3. Run **`start-azsx.cmd`**. It installs the included AZSXUI addon and starts AZSX automatically.

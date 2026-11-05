@@ -9,13 +9,13 @@ ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location("publication",ROOT/"tools/build/azsx_verify_publication.py")
 publication=importlib.util.module_from_spec(spec);spec.loader.exec_module(publication)
 class PublicationTests(unittest.TestCase):
- def prepare(self,legacy=False):
+ def prepare(self,legacy=False,version="0.125.0-azsx.2"):
   temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup);root=Path(temp.name);(root/"UPLOAD").mkdir()
   key=Ed25519PrivateKey.generate();archive=b"static hash fixture, not an executable archive"
-  feed=json.dumps(dict(product="azeroth-survivors-extended",sequence=12,manifest=dict(version="0.125.0-azsx.2"),package=dict(asset="azsx-0.125.0-azsx.2.zip",sha256=publication.digest(archive)))).encode()
-  data={"AZSX.zip":archive,"azsx-0.125.0-azsx.2.zip":archive,"azsx-latest.json":feed,"azsx-latest.json.sig":key.sign(feed)}
+  feed=json.dumps(dict(product="azeroth-survivors-extended",sequence=12,manifest=dict(version=version),package=dict(asset="azsx-"+version+".zip",sha256=publication.digest(archive)))).encode()
+  data={"AZSX.zip":archive,"azsx-"+version+".zip":archive,"azsx-latest.json":feed,"azsx-latest.json.sig":key.sign(feed)}
   if legacy:data.update({"latest.json":b"legacy feed","latest.json.sig":key.sign(b"legacy feed"),"coop-old.zip":b"legacy archive"})
-  meta=dict(repository="example/azsx",tag="v0.125.0-azsx.2",version="0.125.0-azsx.2",sequence=12,public_key=base64.b64encode(key.public_key().public_bytes(serialization.Encoding.Raw,serialization.PublicFormat.Raw)).decode(),assets={n:dict(size=len(b),sha256=publication.digest(b))for n,b in data.items()})
+  meta=dict(repository="example/azsx",tag="v"+version,version=version,sequence=12,public_key=base64.b64encode(key.public_key().public_bytes(serialization.Encoding.Raw,serialization.PublicFormat.Raw)).decode(),assets={n:dict(size=len(b),sha256=publication.digest(b))for n,b in data.items()})
   for n,b in data.items():(root/"UPLOAD"/n).write_bytes(b)
   (root/"PUBLICATION.json").write_text(json.dumps(meta));return root,meta
  def test_minimal_four_files_verify_without_network_or_legacy_assets(self):
@@ -41,8 +41,8 @@ class ReleaseLayoutTests(PublicationTests):
   sys.path.insert(0,str(ROOT/'tools/build'))
   import azsx_release_layout
   return azsx_release_layout
- def release(self):
-  root,meta=self.prepare()
+ def release(self,version="0.125.0-azsx.2"):
+  root,meta=self.prepare(version=version)
   for name in ('README-PREPARATION.md','RELEASE-NOTES.md','PUBLISH-ON-GITHUB.md'):(root/name).write_text(name)
   (root/'VALIDATION.json').write_text('{"technical_validation_passed":true,"reference_approved":true}')
   (root/'test.log').write_bytes(b'complete preserved evidence')
@@ -59,6 +59,25 @@ class ReleaseLayoutTests(PublicationTests):
   self.assertFalse((root/'LOCAL-VERIFICATION.json').exists())
   self.layout().finalize(root,evidence)
   self.assertEqual(inventory,(evidence/'layout-inventory.json').read_bytes())
+ def test_revision_titles_and_assets_survive_finalization_without_renaming_history(self):
+  for version,title in (
+   ("0.141.0-r1","0.141.0 — AZSX Update 1"),
+   ("0.141.0-r2","0.141.0 — AZSX Update 2"),
+   ("0.142.0-r1","0.142.0 — AZSX Update 1"),
+   ("0.139.2-azsx.1","AZSX 0.139.2-azsx.1"),
+  ):
+   with self.subTest(version=version):
+    root,meta=self.release(version);evidence=root.parent/(root.name+'-evidence')
+    self.addCleanup(__import__('shutil').rmtree,evidence,True)
+    before={p.name:p.read_bytes()for p in(root/'UPLOAD').iterdir()}
+    self.layout().finalize(root,evidence)
+    self.assertTrue((root/'README-PREPARATION.md').read_text().startswith("# "+title+"\n"))
+    guide=(root/'PUBLISH-ON-GITHUB.md').read_text()
+    self.assertIn("GitHub release title: **"+title+"**.",guide)
+    self.assertIn("Prepared tag **v"+version+"**, sequence **12**.",guide)
+    self.assertEqual((root/'RELEASE-NOTES.md').read_text(),'RELEASE-NOTES.md')
+    self.assertEqual(before,{p.name:p.read_bytes()for p in(root/'UPLOAD').iterdir()})
+    self.assertEqual(json.loads((evidence/'PUBLICATION.json').read_text()),meta)
  def test_conflicting_evidence_does_not_remove_any_original(self):
   root,_=self.release();evidence=root.parent/(root.name+'-evidence');evidence.mkdir();self.addCleanup(__import__('shutil').rmtree,evidence,True)
   (evidence/'test.log').write_bytes(b'previous different proof')

@@ -122,6 +122,13 @@ native progression or unrelated files.
 
 ## Release preparation
 
+New releases use `<game-version>-r<revision>`, starting with `0.141.0-r1`.
+Their GitHub title is **0.141.0 — AZSX Update 1**; the versioned archive is
+`azsx-0.141.0-r1.zip`. Later AZSX releases for that game increment the revision;
+a new game version starts at `r1`. The signed feed sequence keeps increasing
+across game versions. Older version strings remain accepted for existing
+installations and authenticated historical archives.
+
 Use the current `azsx/` code and `tools/build/azsx_*.py` helpers. Signing requires an
 explicitly supplied key whose public part matches the trust list; never discover
 or bundle private keys. Public release assets are the stable `AZSX.zip` alias,

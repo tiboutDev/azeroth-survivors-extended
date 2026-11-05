@@ -16,6 +16,29 @@ or the complete signing configuration. Do not discover credentials automatically
 
 ## 1. Freeze scope and release identity
 
+Use the supported game version first in the GitHub title. The next release is:
+
+| Identity | Value |
+| --- | --- |
+| Native game | `0.141.0` |
+| AZSX version | `0.141.0-r1` |
+| GitHub release title | **0.141.0 — AZSX Update 1** |
+| Git tag | `v0.141.0-r1` |
+| Versioned archive | `azsx-0.141.0-r1.zip` |
+| Stable download | `AZSX.zip` |
+
+Increment the revision for each later AZSX release on the same native version:
+`0.141.0-r2`, titled **0.141.0 — AZSX Update 2**. Reset it to `r1` when the
+supported game version changes. Fixes and features use the same counter.
+The signed feed's `SEQUENCE` is separate: it must increase across all releases,
+including native version changes. Preserve historical versions, tags and assets.
+
+`azsx_package.py` defaults to `<game-version>-r1`; it does not discover previous
+releases or choose the next revision/sequence. Supply `--version` and `--sequence`
+explicitly after reviewing prior records. PREPARATION.json includes the derived
+`title`; the finalizer writes it into the preparation README and publication guide.
+No tool creates a Git tag or GitHub release.
+
 ```sh
 git status --short --branch
 git log -1 --format='%H %an <%ae> / %cn <%ce>'
@@ -210,6 +233,7 @@ invented replacement approval.
 ## 8. Finalize the minimal preparation folder
 
 Write RELEASE-NOTES.md, README-PREPARATION.md and PUBLISH-ON-GITHUB.md in English.
+Use the GitHub release title as the release-notes heading.
 Include required native version, AZSXUI inclusion and applicable migration/repair
 instructions. Write VALIDATION.json with honest `technical_validation_passed`,
 `reference_approved`, actual hashes, scenario scope and limitations. Update

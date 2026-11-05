@@ -4,6 +4,8 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/"azsx"))
 import core
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from azsx_release_identity import default_version,release_title
 def zip_bytes(files,m):
     stream=io.BytesIO()
     with zipfile.ZipFile(stream,"w",compression=zipfile.ZIP_DEFLATED,compresslevel=6)as z:
@@ -14,7 +16,7 @@ def zip_bytes(files,m):
 def build(output,dll,runtime,version=None,key=None,sequence=1,game_version=None):
     games=json.loads((ROOT/"azsx/supported-games.json").read_text())["games"]
     game_version=game_version or max(games,key=lambda v:tuple(map(int,v.split("."))))
-    version=version or game_version+"-azsx.1"
+    version=version or default_version(game_version)
     if type(sequence)is not int or not 1<=sequence<=2**53:raise ValueError("Invalid AZSX release sequence")
     if not core.VERSION.fullmatch(version):raise ValueError("Invalid AZSX version")
     game=games.get(game_version)
@@ -54,8 +56,8 @@ def build(output,dll,runtime,version=None,key=None,sequence=1,game_version=None)
     if signing is not None:
         feed={"schema":1,"product":core.PRODUCT,"sequence":sequence,"manifest":m,"package":{"asset":target.name,"size":len(archive),"sha256":core.digest(archive)}}
         raw=core.encoded(feed);(output/"azsx-latest.json").write_bytes(raw);(output/"azsx-latest.json.sig").write_bytes(signing.sign(raw))
-    (output/"PREPARATION.json").write_bytes(core.encoded({"product":core.PRODUCT,"version":version,"archive":target.name,"archive_sha256":core.digest(archive),"dll_sha256":core.digest(files["AZSX/App/Bin/avrt.dll"]),"file_count":len(files),"signed":key is not None,"published":False,"live_validation":False,"runtime_updates":"Compatible signed updates install automatically, including detached runtime replacement. Transition from the .2 layout requires complete archive extraction while closed."}))
+    (output/"PREPARATION.json").write_bytes(core.encoded({"product":core.PRODUCT,"version":version,"title":release_title(version),"archive":target.name,"archive_sha256":core.digest(archive),"dll_sha256":core.digest(files["AZSX/App/Bin/avrt.dll"]),"file_count":len(files),"signed":key is not None,"published":False,"live_validation":False,"runtime_updates":"Compatible signed updates install automatically, including detached runtime replacement. Transition from the .2 layout requires complete archive extraction while closed."}))
     return target
 if __name__=="__main__":
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument("--output",type=Path,required=True);p.add_argument("--dll",type=Path,required=True);p.add_argument("--runtime",type=Path,required=True);p.add_argument("--version");p.add_argument("--private-key",type=Path);p.add_argument("--sequence",type=int,default=1);p.add_argument("--game-version")
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument("--output",type=Path,required=True);p.add_argument("--dll",type=Path,required=True);p.add_argument("--runtime",type=Path,required=True);p.add_argument("--version",help="AZSX version (default: <game-version>-r1); increment rN for later releases");p.add_argument("--private-key",type=Path);p.add_argument("--sequence",type=int,default=1);p.add_argument("--game-version")
     a=p.parse_args();print(build(a.output,a.dll,a.runtime,a.version,a.private_key,a.sequence,a.game_version))

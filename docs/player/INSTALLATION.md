@@ -13,6 +13,10 @@
 AZSX does not include the original game. These pages describe the current source;
 check the release notes for the features and exact compatibility of your download.
 
+GitHub release titles show the supported game version first: **0.141.0 — AZSX
+Update 1** supports game **0.141.0**. Its AZSX version is `0.141.0-r1`; `r2`
+would be the next AZSX update for that same game version.
+
 ## Install and launch
 
 1. Download **AZSX.zip**, or the equivalent versioned AZSX archive, from the [AZSX releases page](https://github.com/tiboutDev/azeroth-survivors-extended/releases).

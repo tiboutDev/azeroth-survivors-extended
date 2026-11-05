@@ -673,7 +673,7 @@ class NativeCompatibilityTests(unittest.TestCase):
  def test_only_current_registry_entry_and_manifest_exact_hash(self):
   games=json.loads((ROOT/"azsx/supported-games.json").read_text())["games"]
   self.assertEqual(list(games),["0.141.0"])
-  m={"schema":1,"product":core.PRODUCT,"version":"0.141.0-azsx.1","game":{"version":"0.141.0","sha256":games["0.141.0"]["sha256"],"archives":["Data/patch.MPQ"]},"files":{}}
+  m={"schema":1,"product":core.PRODUCT,"version":"0.141.0-r1","game":{"version":"0.141.0","sha256":games["0.141.0"]["sha256"],"archives":["Data/patch.MPQ"]},"files":{}}
   required=["start-azsx.cmd","README-AZSX.txt","AZSX/App/Bin/avrt.dll","AZSX/App/Launcher/launch.py","AZSX/App/Launcher/supported-games.json","AZSX/App/AddOns/AZSX.toc","AZSX/App/AddOns/Presentation.lua","AZSX/App/Defaults/channel.json"]
   m["files"]={name:{"size":0,"sha256":"0"*64}for name in required}
   self.assertIs(core.validate(m),m)
