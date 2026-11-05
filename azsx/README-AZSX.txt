@@ -13,7 +13,7 @@ AZSX FEATURES
 - Ring enchantments at ring ranks 2 / 4 / 7 / 10 / 14.
 - Personal colored world crystals replace amulet gems; Crystal Resonance tracks run-long bonuses.
 - Sayge's Trials grant Dark Fortunes: Luck, Experience or Gold.
-- Solo Mechanical Chicken escort: guide it to extraction for one run-local engineering gadget.
+- Solo/co-op Mechanical Chicken escort, after the second boss: guide it to extraction for a personal engineering gadget.
 - Resurrection Sickness: temporary damage/healing penalties after revival.
 - Native enemy difficulty, density and Heroic levels.
 - Native personal marks replace AZSX in-run gold for duplicate boss drops.
