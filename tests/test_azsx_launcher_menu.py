@@ -23,10 +23,11 @@ class MenuTests(unittest.TestCase):
     def menu(self,answers):
         with patch("builtins.input",side_effect=answers),patch.object(launch.core,"manifest",return_value={"version":"0.130.0-azsx.1","game":{"version":"0.130.0"}}):
             return launch.menu(ROOT)
-    def test_enter_plays_and_invalid_input_reprompts(self):
-        self.assertEqual(self.menu(["wrong",""]),"play")
+    def test_maintenance_menu_defaults_to_exit_and_invalid_input_reprompts(self):
+        self.assertIsNone(self.menu(["wrong",""]))
+        self.assertEqual(self.menu(["1"]),"check")
     def test_destructive_choices_require_explicit_confirmation(self):
-        for option,action in (("6","rollback"),("7","uninstall")):
+        for option,action in (("3","rollback"),("4","uninstall")):
             self.assertEqual(self.menu([option,""]),"menu")
             self.assertEqual(self.menu([option,"1"]),action)
     def test_end_of_input_exits_without_action(self):

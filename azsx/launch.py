@@ -3,7 +3,7 @@ import argparse,json,os,shutil,subprocess,sys,threading,time,uuid,zipfile
 from contextlib import contextmanager,ExitStack
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
-import core,updates,maintenance,layout,native_update
+import core,updates,maintenance,layout,native_update,housekeeping
 INPUT_ACTIVE=threading.Event()
 @contextmanager
 def operation(label):
@@ -41,9 +41,9 @@ def disable_owned_ui(root):
 def treasure_goblins_enabled(root):
     return optional_event_enabled(root,"treasure_goblins","Treasure Goblins")
 
-def child_environment(root,env,session,native_upgrade=False):
+def child_environment(root,env,session):
     result={k:v for k,v in env.items()if not k.upper().startswith(("AZCOOP_","COOP_","AZSX_"))}
-    result.update(AZSX_ACTIVE="1",AZCOOP_ENGINE="official",AZCOOP_NATIVE_LOG_DIRECTORY=str(session),AZSX_READY_FILE=str(session/"ready.json"),WOW_ROGUE_UPDATE="1" if native_upgrade else "0",WOW_ROGUE_UPDATE_AUTO="1" if native_upgrade else "0")
+    result.update(AZSX_ACTIVE="1",AZCOOP_ENGINE="official",AZCOOP_NATIVE_LOG_DIRECTORY=str(session),AZSX_READY_FILE=str(session/"ready.json"),WOW_ROGUE_UPDATE="0",WOW_ROGUE_UPDATE_AUTO="0")
     result["AZSX_TREASURE_GOBLINS"]="1" if treasure_goblins_enabled(root) else "0"
     result["AZSX_LOST_SUPPLIES"]="1" if optional_event_enabled(root,"lost_supplies","Lost Supplies") else "0"
     result["AZSX_DARKMOON_TRIALS"]="1" if optional_event_enabled(root,"darkmoon_trials","Sayge's Trial") else "0"
@@ -51,7 +51,13 @@ def child_environment(root,env,session,native_upgrade=False):
 def backup(root,save):
     if not save.is_file():return None
     target=core.path(root,"AZSX/Data/Backups/Progression/"+time.strftime("%Y%m%d-%H%M%S-")+uuid.uuid4().hex[:8]+".txt")
-    core.atomic(target,save.read_bytes());return target
+    raw=save.read_bytes()
+    for p in housekeeping.children(root,"AZSX/Data/Backups/Progression"):
+        if not housekeeping.SESSION.fullmatch(p.stem)or p.suffix!=".txt":continue
+        p=core.path(root,p.relative_to(Path(root).resolve()).as_posix())
+        if p.is_file()and core.sha(p)==core.digest(raw):
+            p.touch();housekeeping.best_effort(root);return None
+    core.atomic(target,raw);housekeeping.best_effort(root);return target
 
 def export(root):
     folder=core.path(root,"AZSX/Data/Logs");target=core.path(root,"AZSX/Data/Reports/azsx-diagnostics-"+time.strftime("%Y%m%d-%H%M%S")+".zip")
@@ -88,53 +94,57 @@ def run(root,offline=False,check=False,update_only=False,confirm_update=None,ret
     with ExitStack() as stack:
         stack.enter_context(core.locked(root))
         if pending_recovery(root):
-            if not confirm_repair(["Recover interrupted installation"]):raise ValueError("Recovery required; use --recover.")
             if core.recover(root):
                 print("[ AZSX ] Restarting the recovered launcher...",flush=True)
                 return 75
-        callback=None # Compatible signed updates never ask for confirmation.
-        if update_only:
-            if offline:raise ValueError("Updates need a network connection. Use --repair with a signed local archive for offline repair.")
-            try:status=updates.automatic(root,core.inspect(root),confirm=callback,retry=retry,approve=confirm_files)
-            except UpdateCancelled:
-                print("[ AZSX ] Update cancelled.",flush=True);return 0
-            print("[ AZSX ] Update result: "+status+".",flush=True)
-            return 0 if status=="handoff" else 75 if status=="installed" else (0 if status in ("current","deferred","disabled","no AZSX release published") else 1)
-        save,home=core.native_paths(root,os.environ)
-        if any(os.environ.get(k)for k in("WOW_CAPTURE","WOW_UNATTENDED","WOW_PROBE","WOW_RIG")):
-            print("[ WARNING ] Native unattended/capture overrides are active; game startup may differ.",flush=True)
-        stack.enter_context(core.profile_lock(save))
-        m=core.manifest(root)
-        print("[ AZSX ] AZSX "+m["version"]+" | Supported game: "+m["game"]["version"],flush=True)
+        housekeeping.best_effort(root)
         actual=core.inspect(root)
-        # An unsupported installed release may still discover an authenticated
-        # compatible update, without projecting its old DLL into the new game.
-        if not offline:
-            try:
-                with operation("Checking signed AZSX updates"):
-                    status=updates.automatic(root,actual,confirm=callback,approve=confirm_files)
-                print("[ AZSX ] Updates: "+status+".",flush=True)
-                if status=="installed":return 75
-                if status=="handoff":return 0
-            except UpdateCancelled:
-                print("[ AZSX ] Launch cancelled. No update was installed.",flush=True);return 0
-            except Exception as error:
-                print("[ AZSX ] Update failed or unavailable: "+str(error)+". Checking the installed version before continuing.",flush=True)
+        with operation("Checking AZSX installation"):
+            try:m=core.manifest(root)
+            except (ValueError,OSError,KeyError,TypeError):
+                result=maintenance.repair(root,lambda _:True,offline=offline,automatic=True)
+                return 0 if result=="handoff" else 75
+        if update_only and offline:raise ValueError("Updates need a network connection.")
+        try:
+            with operation("Checking compatible updates"):
+                status=native_update.synchronize(root,actual,offline=offline)
+            print("[ AZSX ] Updates: "+status+".",flush=True)
+        except Exception as error:
+            # An unexpected client after a staged native update must not fall
+            # through to old-mod activation, even if discovery is unavailable.
+            pending=core.get(root,native_update.PENDING,{})
+            if pending and actual!=pending.get("previous"):raise
+            if update_only:raise
+            print("[ AZSX ] Update unavailable: "+str(error)+". Checking the installed version before continuing.",flush=True)
+            status="unavailable"
+        if status=="installed":return 75
+        if status=="handoff":return 0
+        if update_only and status!="native update ready":return 0
+        save,home=core.native_paths(root,os.environ)
+        stack.enter_context(core.profile_lock(save))
+        if status=="native update ready":
+            try:backup(root,save)
+            except OSError as error:print("[ WARNING ] Progression backup unavailable: "+str(error),flush=True)
+            return native_update.run(root,os.environ)
+        print("[ AZSX ] AZSX "+m["version"]+" | Supported game: "+m["game"]["version"],flush=True)
         core.inspect(root,m)
-        native_upgrade=None
-        if not offline:
-            try:
-                native_upgrade=native_update.compatible(root,actual)
-                if native_upgrade:print("[ AZSX ] A native update is supported by a signed AZSX release; enabling the official updater.",flush=True)
-            except Exception as error:
-                print("[ AZSX ] Native update check unavailable: "+str(error)+". The installed game remains unchanged.",flush=True)
-        with operation("Checking critical AZSX files"):data=core.sources(root,m,tolerant=True,launch=True)
+        try:
+            with operation("Checking critical AZSX files"):data=core.sources(root,m,tolerant=True,launch=True)
+        except (ValueError,OSError):
+            result=maintenance.repair(root,lambda _:True,offline=offline,automatic=True)
+            return 0 if result=="handoff" else 75
         optional={}
         for name in m['files']:
             if name.startswith(core.AZSXUI_SOURCE):
                 p=core.path(root,name);spec=m['files'][name]
                 if not p.is_file()or p.stat().st_size!=spec['size']or core.sha(p)!=spec['sha256']:
                     if core.file_role(name)=='documentation':continue
+                    try:
+                        repaired=maintenance.repair(root,lambda _:True,offline=offline,automatic=True)
+                        if repaired=="handoff":return 0
+                        if repaired=="installed":return 75
+                    except (ValueError,OSError)as error:
+                        print("[ WARNING ] Optional AZSXUI repair deferred: "+str(error),flush=True)
                     disable_owned_ui(root);optional={};print('[ WARNING ] AZSXUI unavailable; native interface remains enabled.',flush=True);break
                 optional[name]=p.read_bytes()
         data.update(optional)
@@ -146,25 +156,27 @@ def run(root,offline=False,check=False,update_only=False,confirm_update=None,ret
         except (ValueError,OSError,TypeError,KeyError):version_changed=False
         if needs_preparation or version_changed:
             core.adopt(root,m,data)
-            with operation("Preparing owned AZSX files"):core.apply(root,m,data,manual=True,launch=True,approve=lambda names:all(core.ui_target(n)for n in names)and confirm_files(names))
+            with operation("Preparing owned AZSX files"):core.apply(root,m,data,manual=True,launch=True,approve=lambda names:all(n in core.installed(root)["owned"]for n in names))
         report=maintenance.launch_report(root,m);maintenance.print_report(report)
-        if not report["ready"]:raise ValueError("Repair required. Use --repair; --check shows all problems.")
+        if not report["ready"]:
+            result=maintenance.repair(root,lambda _:True,offline=offline,automatic=True)
+            return 0 if result=="handoff" else 75
         try:
             with operation("Backing up native progression"):backup(root,save)
         except OSError as error:print("[ WARNING ] Progression backup unavailable: "+str(error),flush=True)
         session=core.path(root,"AZSX/Data/Logs/"+time.strftime("%Y%m%d-%H%M%S-")+uuid.uuid4().hex[:8]);session.mkdir(parents=True)
         core.atomic(session/"session.json",core.encoded({"product":core.PRODUCT,"version":m["version"],"game_sha256":actual,"profile":"native","started":time.strftime("%Y-%m-%dT%H:%M:%S%z")}))
+        housekeeping.best_effort(root)
         out=(session/"game-output.log").open("wb")
         child=None
         try:
             with operation("Starting Azeroth Survivors Extended"):
-                child=subprocess.Popen([str(root/"AzerothSurvivors.exe")],cwd=root,env=child_environment(root,os.environ,session,native_upgrade is not None),stdout=out,stderr=subprocess.STDOUT)
+                child=subprocess.Popen([str(root/"AzerothSurvivors.exe")],cwd=root,env=child_environment(root,os.environ,session),stdout=out,stderr=subprocess.STDOUT)
                 metadata=core.read_json((session/"session.json").read_bytes());metadata["game_pid"]=child.pid
                 core.atomic(session/"session.json",core.encoded(metadata))
                 until=time.monotonic()+120
                 while time.monotonic()<until:
                     if child.poll()is not None:
-                        if native_upgrade and core.inspect(root)==native_upgrade:return 75
                         raise ValueError("The game closed during startup. See AZSX/Data/Logs.")
                     ready=session/"ready.json"
                     if ready.exists():
@@ -176,7 +188,6 @@ def run(root,offline=False,check=False,update_only=False,confirm_update=None,ret
                 else:raise ValueError("AZSX could not activate safely. See AZSX/Data/Logs. The owned game process will close.")
             print("[ AZSX ] AZSX is active. Progression and settings are shared with the native game.",flush=True)
             code=child.wait();print("[ AZSX ] Game closed. Logs: "+str(session),flush=True)
-            if native_upgrade and core.inspect(root)==native_upgrade:return 75
             return code
         finally:
             if child and child.poll()is None:
@@ -184,10 +195,7 @@ def run(root,offline=False,check=False,update_only=False,confirm_update=None,ret
                 try:child.wait(timeout=15)
                 except subprocess.TimeoutExpired:child.kill();child.wait(timeout=5)
             out.close()
-
-class UpdateCancelled(Exception):
-    """Player cancellation before downloading or applying an update."""
-
+            housekeeping.best_effort(root)
 
 def choose(prompt,choices,default=None):
     while True:
@@ -219,19 +227,14 @@ def menu(root):
         print("AZSX "+m["version"]+" | Supported game: "+m["game"]["version"])
     except (ValueError,OSError) as error:
         print("Installation needs attention: "+str(error))
-    print("\n  1. Play AZSX (Enter)\n  2. Play AZSX offline (skip update check)"
-          "\n  3. Update AZSX without starting the game\n  4. Check installation (offline)"
-          "\n  5. Export diagnostic report\n  6. Restore previous AZSX version"
-          "\n  7. Uninstall AZSX\n  8. Repair installed AZSX version\n  9. Recover interrupted operation\n  0. Exit")
-    answer=choose("Choose [1]: ",("1","2","3","4","5","6","7","8","9","0"),"1")
-    if answer in (None,"0"):return None
-    if answer in ("6","7"):
-        message=("Restore the previous AZSX version? The game and progression will not be rolled back."
-                 if answer=="6" else "Remove AZSX? Native progression and settings will be preserved.")
-        print(message+"\n  1. Continue\n  0. Cancel")
-        if choose("Choose [0]: ",("1","0"),"0")!="1":return "menu"
-    return {"1":"play","2":"offline","3":"update-only","4":"check",
-            "5":"export-diagnostics","6":"rollback","7":"uninstall","8":"repair","9":"recover"}[answer]
+    print("\n  1. Check installation (offline)\n  2. Export diagnostic report"
+          "\n  3. Restore previous AZSX version\n  4. Uninstall AZSX\n  0. Exit")
+    answer=choose("Choose [0]: ",("1","2","3","4","0"),"0")
+    if answer in(None,"0"):return None
+    if answer in("3","4"):
+        print("Restore the previous AZSX version?"if answer=="3"else"Remove AZSX? Native progression and settings will be preserved.")
+        if choose("Continue? 1=Yes, 0=Cancel [0]: ",("1","0"),"0")!="1":return "menu"
+    return {"1":"check","2":"export-diagnostics","3":"rollback","4":"uninstall"}[answer]
 
 
 def execute(root,action,offline=False,interactive=False,archive=None,feed=None,signature=None):
@@ -247,7 +250,6 @@ def execute(root,action,offline=False,interactive=False,archive=None,feed=None,s
         if core.game_running(root):raise ValueError("Close the game first.")
         with core.locked(root):
             if not pending_recovery(root):print("[ AZSX ] No interrupted operation.");return 0
-            if not confirm_repair(["Restore interrupted transaction"]):return 0
             return 75 if core.recover(root) else 0
     if action in ("rollback","uninstall"):
         if core.game_running(root):raise ValueError("Close the game first.")
@@ -272,6 +274,7 @@ def main():
     parser.add_argument("--feed",type=Path,help="Signed release feed for local repair")
     parser.add_argument("--signature",type=Path,help="Detached signature for local repair")
     a=parser.parse_args()
+    os.environ.setdefault("AZSX_LAUNCH_ID",uuid.uuid4().hex)
     if any((a.archive,a.feed,a.signature)) and (not a.repair or not all((a.archive,a.feed,a.signature))):
         parser.error("Local repair requires --repair --archive --feed --signature together")
     root=Path(__file__).resolve().parents[3]

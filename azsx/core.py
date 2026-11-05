@@ -137,7 +137,7 @@ def file_role(name):
     return "critical"
 
 def launch_required(name):
-    return name=="AZSX/App/Bin/avrt.dll"or name in tuple("AZSX/App/Launcher/"+n for n in ("launch.py","core.py","updates.py","maintenance.py","layout.py","migration.py","native_update.py","supported-games.json"))
+    return name=="AZSX/App/Bin/avrt.dll"or name in tuple("AZSX/App/Launcher/"+n for n in ("launch.py","core.py","updates.py","maintenance.py","layout.py","migration.py","native_update.py","housekeeping.py","supported-games.json"))
 
 def sources(root,m,tolerant=False,launch=False):
     out={}
@@ -223,7 +223,7 @@ def recover(root):
                 restore(root,d.name)
                 restored=True
     return restored
-def apply(root,m,data,manual=False,fault=lambda n:None,launch=False,trusted=False,approve=None,repair=False,detached_runtime=False):
+def apply(root,m,data,manual=False,fault=lambda n:None,launch=False,trusted=False,approve=None,repair=False,detached_runtime=False,automatic_repair=False):
     validate(m,reviewed=not trusted)
     if layout.manifest(m)!=m:raise ValueError("Legacy-layout release: close AZSX and extract its complete archive; existing files preserved")
     m=layout.manifest(m);data={layout.name(n):b for n,b in data.items()};inspect(root,m)
@@ -256,7 +256,7 @@ def apply(root,m,data,manual=False,fault=lambda n:None,launch=False,trusted=Fals
                 if approve is None:raise ValueError("A managed AZSX file was changed; preserved: "+name)
                 conflicts.append(name)
         elif expected!=current:
-            if ui_target(name)and (launch or not repair):
+            if ui_target(name)and (launch or not repair or automatic_repair):
                 new.pop(name,None);continue
             if ui_target(name)and file_role(name)=="optional-ui"and approve is None:
                 raise ValueError("Existing addon preserved; explicit repair required: "+name)
@@ -297,6 +297,10 @@ def apply(root,m,data,manual=False,fault=lambda n:None,launch=False,trusted=Fals
 def rollback(root):
     state=installed(root);tx=state.get("rollback")
     if not tx:raise ValueError("There is no previous AZSX version to restore.")
+    journal=get(root,"AZSX/Data/Updates/Transactions/"+tx+"/journal.json")
+    previous_game=(journal.get("state")or{}).get("game",{})
+    if previous_game.get("sha256")and inspect(root)!=previous_game["sha256"]:
+        raise ValueError("The previous AZSX release requires a different native client; the game is not rolled back.")
     for name,h in state["owned"].items():
         p=path(root,name)
         if p.exists()and sha(p)!=h:
@@ -309,6 +313,7 @@ def rollback(root):
         if file_role(name)!="critical" and p.is_file() and sha(p)!=expected:
             atomic(path(root,"AZSX/Data/Backups/Files/"+uuid.uuid4().hex+"/"+name),p.read_bytes())
     restore(root,tx)
+    restored=installed(root);restored["rollback"]=None;put(root,STATE,restored)
     history=get(root,"AZSX/Data/State/updates.json",{"sequence":0})
     history["held_sequence"]=history["sequence"]
     put(root,"AZSX/Data/State/updates.json",history)
@@ -370,3 +375,20 @@ def legacy_locked(root):
         try:yield
         finally:
             if os.name=="nt":f.seek(0);msvcrt.locking(f.fileno(),msvcrt.LK_UNLCK,1)
+
+def process_alive(pid):
+    """Conservative liveness check for our detached updater cleanup."""
+    if type(pid)is not int or pid<=0:return True
+    if os.name!="nt":
+        try:os.kill(pid,0);return True
+        except ProcessLookupError:return False
+        except PermissionError:return True
+    k=ctypes.WinDLL("kernel32",use_last_error=True)
+    k.OpenProcess.argtypes=[ctypes.c_ulong,ctypes.c_int,ctypes.c_ulong];k.OpenProcess.restype=ctypes.c_void_p
+    h=k.OpenProcess(0x1000,False,pid)
+    if not h:return ctypes.get_last_error()!=87
+    try:
+        code=ctypes.c_ulong()
+        k.GetExitCodeProcess.argtypes=[ctypes.c_void_p,ctypes.POINTER(ctypes.c_ulong)]
+        return not k.GetExitCodeProcess(h,ctypes.byref(code))or code.value==259
+    finally:k.CloseHandle.argtypes=[ctypes.c_void_p];k.CloseHandle(h)

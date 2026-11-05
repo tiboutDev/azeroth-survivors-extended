@@ -46,7 +46,11 @@ owned or removed. The bundled AZSXUI source and its projected addon files are di
 
 ## Launcher interaction and file policy
 
-No-argument startup launches automatically. `--menu` opens maintenance choices.
+No-argument startup launches automatically. `--menu` exposes only read-only
+diagnosis, report export, previous-release rollback and uninstall.
+Interrupted current-layout transactions recover automatically before the launcher
+restarts. Failed updates get one new attempt at the next launch; restarts within
+one invocation never repeatedly retry a failed attempt.
 A signed update for the installed native executable installs automatically,
 including `--update-only`, retry and noninteractive use. No update confirmation
 is requested. Invalid signatures, incompatible native hashes, unsafe paths and
@@ -61,8 +65,11 @@ longer hashes all bundled Python libraries or runs the exhaustive diagnostic.
 Documentation and update metadata do not block launching an intact compatible
 installation. A missing/incomplete AZSXUI source falls back to native UI: only a
 verifiably owned TOC is backed up and disabled; user addon code and SavedVariables
-remain intact. Missing documentation does not disable AZSXUI. Optional files can
-be restored by repair. Invalid receipts/history block unsafe maintenance writes,
+remain intact. Missing documentation does not disable AZSXUI. Missing/damaged
+owned files are repaired automatically from an available signed same-version
+package. Foreign projections remain preserved; unavailable optional
+UI falls back to the native interface. Invalid receipts/history block unsafe
+maintenance writes,
 not verified existing activation. Backup write failures warn without blocking
 play. The native activation acknowledgement may take up to 120 seconds; wrong
 acknowledgements or failure to activate still close the owned game process.
@@ -76,15 +83,18 @@ local hashes are consistency checks, not authentication of already imported code
 `--repair` authenticates a same-version package from cache, the channel or an
 explicit local archive/feed/signature triple. It presents a plan and requires
 consent. Modified documentation is preserved; updates back it up before replacing
-it. Missing documentation can be restored. Owned critical conflicts require
-consent and backups. Lost receipts allow guided internal AZSX reconstruction, never
+it. Missing documentation can be restored. Automatic repair backs up modified
+owned files before replacement. Explicit repair still requests consent for
+ownership recovery or foreign-addon takeover. Lost receipts allow guided
+internal AZSX reconstruction, never
 implicit adoption of an unknown root loader or projected addon. Invalid channel
 configuration can use the embedded official trust root for approved recovery.
-Runtime-changing updates on Windows use a private copied interpreter, wait for the current launcher to close, reverify the signed cached package, acquire the installation lock, apply the transaction and restart the launcher automatically. A damaged interpreter that cannot start still requires complete-archive repair.
+Runtime-changing updates on Windows use a private copied interpreter, wait for the current launcher to close, reverify the signed cached package, acquire the installation lock, apply the transaction and restart the launcher automatically. A running interpreter can repair its runtime through that helper; an interpreter
+that cannot start still requires complete-archive repair.
 
 Maintenance transactions retain the previous-release rollback pointer. Update
 history records the sequence high-water mark, installed release and attempt
-status separately. Failed attempts require `--retry-update`; rollback holds the
+status separately. Failed attempts retry once at the next launch; a voluntary rollback holds the
 same release sequence. Repair can restore the rolled-back version without lowering
 the update high-water mark. Authenticated packages are cached for offline repair;
 all archive checks run again on cache use. Native saves and settings are excluded.
@@ -97,7 +107,9 @@ unsupported executable. The DLL retains its exact native checks after restart.
 ## Native profile and addon activation
 
 Preserve the native save and settings environment, including an existing native
-save override. Back up progression before launch without rewriting it. Native
+save override. Back up progression before launch only when its content differs
+from the retained snapshots, without rewriting the native save. Keep the five
+newest distinct snapshots. Native
 settings stay with the game; AZSX does not recreate the retired isolated-profile
 launcher. Concurrent use of the same progression path is rejected.
 
@@ -204,15 +216,47 @@ the new layout generation.
 
 ## Official native updates
 
-Before normal online play, the launcher reads the bounded official
-`https://wow.aethus.pl/exe/latest.json` announcement. It enables the game's
-own updater only if the announced executable SHA-256 differs from the installed
-client and the signed AZSX release feed explicitly supports that exact SHA-256
-and version. The native updater owns the client download and replacement; AZSX
-never packages native executable or MPQ files. After the native executable changes,
-the launcher restarts and installs the signed compatible AZSX package through its
-usual transaction. If either announcement or signed feed is unavailable, the
-installed native client remains in use. Offline play never checks either feed.
+The normal launch and `--update-only` use the same coordinator. Read the signed
+AZSX feed once. A newer native target is eligible only when the bounded official
+`https://wow.aethus.pl/exe/latest.json` announcement matches its version and
+executable SHA-256. No native downgrade or unrelated latest version is requested.
+
+Before starting the official updater, download, authenticate and validate the
+complete AZSX package and its registry, cache it, and persist the pending native
+transition. Keep the old AZSX files in place. Launch the native executable with
+AZSX activation absent and the official automatic updater enabled. The game owns
+all native downloads/replacement; AZSX never packages or writes native assets.
+
+After that owned process exits, require the exact expected executable hash and
+restart the launcher. Authenticate the cached package again and install AZSX
+before normal activation. This completion works offline after the native update;
+a Python change uses the same detached runtime transaction. Unexpected native
+bytes block mod activation and preserve the pending package. An unchanged client
+after a failed update can be retried on the next invocation.
+
+Offline mode starts no new native update. If the announced official target does
+not match the signed AZSX target, or discovery is unavailable, retain the
+compatible installed client. A rollback restores only the previous mod release
+for the same native executable; it never downgrades the game.
+
+## Automatic history cleanup
+
+Cleanup runs under the installation lock before maintenance and around owned
+game sessions. It is best-effort and never blocks otherwise valid play.
+
+- Keep the **five newest distinct progression snapshots** and **five newest
+  AZSX-generated sessions**, including native-updater sessions.
+- Keep cached packages for the installed release, its one retained previous
+  release, and any pending native transition or active runtime worker.
+- Keep the current rollback transaction and every applying transaction. Remove
+  completed/restored older transactions only when their files match the generated
+  inventory; clear the rollback chain after a voluntary rollback.
+- Remove identified runtime worker copies after their process has exited.
+  Unknown historical jobs without a usable process identity are preserved.
+- Preserve preferences, SavedVariables, user-file/migration backups, manually
+  exported reports and unknown files. Links are never followed for cleanup.
+
+No manual cleanup command or additional user settings are needed.
 
 ## Updating from the font-bearing .5 bundle
 

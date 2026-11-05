@@ -3,7 +3,7 @@
   "features": [
     {
       "id": "AZSX-01",
-      "contract": "Exact-build activation and required native entry/byte checks. The native virtual script reader initializes the AZSX addon API without an internal addon; AZSXUI is an optional consumer. Unsupported builds fail closed. App/Config/Data layout migrates old ASX preferences and owned files with verified backups. Signed native-compatible updates install automatically through detached runtime replacement. Optional UI and documentation remain nonblocking. Native host lobby names receive one [AZSX] prefix.",
+      "contract": "Exact-build activation and required native entry/byte checks. The native virtual script reader initializes the AZSX addon API without an internal addon; AZSXUI is an optional consumer. Unsupported builds fail closed. App/Config/Data layout migrates old ASX preferences and owned files with verified backups. Signed native-compatible updates install automatically through detached runtime replacement; native transitions stage the complete matching AZSX package before the official updater runs with AZSX inactive. Optional UI and documentation remain nonblocking. Native host lobby names receive one [AZSX] prefix.",
       "mode": "Both",
       "reference": "[Contract](CLIENT-ADAPTER.md)",
       "native_domains": [
@@ -208,7 +208,7 @@
     },
     {
       "id": "AZSX-20",
-      "contract": "Native-folder installer/launcher, exact supported-client registry, normal-DLL checks, owned addon deployment, shared native-save preservation/backups, signed update/rollback, report export and uninstall/restore. No game assets or legacy custom launcher are shipped as AZSX gameplay dependencies.",
+      "contract": "Native-folder installer/launcher, exact supported-client registry, normal-DLL checks, owned addon deployment, shared native-save preservation/backups, signed update/rollback, automatic owned-file repair/interruption recovery, once-per-launch retry, five distinct progression backups/five sessions, bounded package/transaction/worker cleanup, report export and uninstall/restore. No game assets or legacy custom launcher are shipped as AZSX gameplay dependencies.",
       "mode": "Distribution",
       "reference": "[Contract](../release/AZSX-INSTALLATION.md)",
       "native_domains": [

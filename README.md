@@ -70,7 +70,11 @@ Release names put compatibility first: **0.141.0 — AZSX Update 1** means AZSX
 2. Extract the compatible AZSX archive into your game folder, beside `AzerothSurvivors.exe`.
 3. Run **`start-azsx.cmd`**. It installs the included AZSXUI addon and starts AZSX automatically.
 
-AZSXUI needs no separate download. Signed AZSX updates compatible with your installed game install automatically, update the managed addon files and preserve saved preferences.
+AZSXUI needs no separate download. Signed AZSX updates install automatically.
+When a supported native update is needed, AZSX caches its matching package first,
+lets the official updater update the game, then installs the mod and continues.
+Owned-file repair and history cleanup are automatic; five distinct progression
+backups and five session logs are retained. Saved preferences are preserved.
 
 For multiplayer, use the official **Co-op** menu. All participants should use the same compatible game and AZSX versions.
 

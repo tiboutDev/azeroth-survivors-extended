@@ -11,19 +11,20 @@ import uuid
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 import core
 
-def spawn(root,feed,keys):
+def spawn(root,feed,keys,repair=False,automatic_repair=True):
     root=Path(root).resolve();work=core.path(root,'AZSX/Data/Updates/Workers/'+uuid.uuid4().hex)
     runtime=core.path(root,'AZSX/App/Python');work.mkdir(parents=True)
-    # The installed interpreter cannot replace its own Windows image. Reuse a
-    # private copy, never an unverified downloaded helper or system interpreter.
+    job={'schema':1,'automatic_repair':automatic_repair,'parent':os.getpid(),'root':str(root),'version':feed['manifest']['version'],'sequence':feed['sequence'],'keys':keys,'arguments':sys.argv[1:],'repair':repair}
+    core.atomic(work/'job.json',core.encoded(job))
+    # Windows cannot overwrite a running interpreter; the temporary copy is
+    # removed automatically on a later launch after this worker has exited.
     for p in runtime.rglob('*'):
         core.raw_path(root,p.relative_to(root).as_posix())
     shutil.copytree(runtime,work/'Python')
     for name in ('core.py','layout.py','updates.py','update_worker.py','supported-games.json'):
         shutil.copy2(Path(__file__).with_name(name),work/name)
-    job={'parent':os.getpid(),'root':str(root),'version':feed['manifest']['version'],'sequence':feed['sequence'],'keys':keys,'arguments':sys.argv[1:]}
-    core.atomic(work/'job.json',core.encoded(job))
     child=subprocess.Popen([str(work/'Python/python.exe'),'-I','-B',str(work/'update_worker.py'),'--job',str(work/'job.json')],cwd=root)
+    job['worker_pid']=child.pid;core.atomic(work/'job.json',core.encoded(job))
     print('[ AZSX ] Finishing the compatible runtime update automatically; the launcher will restart.',flush=True)
     return child.pid
 
@@ -47,18 +48,18 @@ def finish(job):
         base='AZSX/Data/Updates/Packages/'+version+'/'
         raw=core.path(root,base+'feed.json').read_bytes();sig=core.path(root,base+'feed.sig').read_bytes()
         state=updates.update_state(root)
-        feed=updates.verify(raw,sig,job['keys'],core.inspect(root),state['sequence'])
+        feed=updates.verify(raw,sig,job['keys'],core.inspect(root),0 if job.get('repair')else state['sequence'])
         if feed['sequence']!=job['sequence']or feed['manifest']['version']!=version:raise ValueError('Pending update identity changed')
         files=updates.verified_package(core.path(root,base+'package.zip').read_bytes(),feed)
-        owned=core.installed(root)['owned'];state['attempt']={'sequence':feed['sequence'],'status':'applying'};core.put(root,'AZSX/Data/State/updates.json',state)
-        try:
-            core.apply(root,feed['manifest'],files,trusted=True,approve=lambda names:all(n in owned for n in names),detached_runtime=True)
-            state.update(installed={'version':version,'sequence':feed['sequence']},attempt={'sequence':feed['sequence'],'status':'installed'});state.pop('held_sequence',None)
-        except BaseException:
-            state['attempt']['status']='failed';core.put(root,'AZSX/Data/State/updates.json',state);raise
-        core.put(root,'AZSX/Data/State/updates.json',state)
-    return subprocess.Popen([str(core.path(root,'AZSX/App/Python/python.exe')),'-I','-B','-X','utf8',str(core.path(root,'AZSX/App/Launcher/launch.py')),*job['arguments']],cwd=root).pid
+        updates.install(root,feed,files,job['keys'],detached_runtime=True,repair=job.get('repair',False),automatic_repair=job.get('automatic_repair',True))
+    # Preserve the same bounded restart behavior as start-azsx.cmd, including
+    # source replacement/recovery after the detached runtime handoff.
+    command=[str(core.path(root,'AZSX/App/Python/python.exe')),'-I','-B','-X','utf8',str(core.path(root,'AZSX/App/Launcher/launch.py')),*job['arguments']]
+    for _ in range(5):
+        code=subprocess.Popen(command,cwd=root).wait()
+        if code!=75:return code
+    raise ValueError('AZSX could not finish startup after the runtime update')
 
 if __name__=='__main__':
     import argparse
-    p=argparse.ArgumentParser();p.add_argument('--job',type=Path,required=True);a=p.parse_args();job=json.loads(a.job.read_text());wait_parent(job['parent']);finish(job)
+    p=argparse.ArgumentParser();p.add_argument('--job',type=Path,required=True);a=p.parse_args();job=json.loads(a.job.read_text());wait_parent(job['parent']);raise SystemExit(finish(job))

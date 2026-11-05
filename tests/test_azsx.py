@@ -248,7 +248,7 @@ class AZSXTests(unittest.TestCase):
    updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:self.fail("Untrusted update offered"))
  def test_runtime_handoff_never_launches_game_from_old_parent(self):
   self.install()
-  with patch.object(core,"game_running",return_value=False),patch.object(core,"native_paths",return_value=(self.root/"progression.txt",self.root/"benilla-config")),patch.object(updates,"automatic",return_value="handoff"),patch.object(launch.subprocess,"Popen",side_effect=AssertionError("Cancelled launch started game")):
+  with patch.object(core,"game_running",return_value=False),patch.object(core,"native_paths",return_value=(self.root/"progression.txt",self.root/"benilla-config")),patch.object(launch.native_update,"synchronize",return_value="handoff"),patch.object(launch.subprocess,"Popen",side_effect=AssertionError("Cancelled launch started game")):
    self.assertEqual(launch.run(self.root,confirm_update=lambda feed:self.fail("Unexpected update question")),0)
   self.intact()
  def snapshot(self):
@@ -324,13 +324,16 @@ class AZSXTests(unittest.TestCase):
   (self.root/"README-AZSX.txt").write_bytes(b"personal README")
   self.assertEqual(updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:True),"installed")
   self.assertTrue(any(p.read_bytes()==b"personal README" for p in (self.root/"AZSX/Data/Backups/Files").rglob("README-AZSX.txt")))
- def test_failed_update_requires_explicit_retry(self):
+ def test_failed_update_retries_on_next_launch_without_repeating_in_current_launch(self):
   self.install();self.configure();m,data=self.release(2);raw,sig,archive=self.signed(m,data,2)
   def download(url,limit):return raw if url.endswith("azsx-latest.json") else sig if url.endswith(".sig") else archive
-  with patch.object(core,"apply",side_effect=OSError("disk full")),self.assertRaises(OSError):
-   updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:True)
-  self.assertIn("held",updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:self.fail("automatic retry")))
-  self.assertEqual(updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:True,retry=True),"installed")
+  with patch.dict(os.environ,{"AZSX_LAUNCH_ID":"first-start"}):
+   with patch.object(core,"apply",side_effect=OSError("disk full")),self.assertRaises(OSError):
+    updates.automatic(self.root,core.digest(self.exe),download)
+   self.assertEqual(updates.automatic(self.root,core.digest(self.exe),download),"deferred until next launch")
+  with patch.dict(os.environ,{"AZSX_LAUNCH_ID":"next-start"}):
+   self.assertEqual(updates.automatic(self.root,core.digest(self.exe),download),"installed")
+
  def test_projection_repair_keeps_previous_release_rollback(self):
   self.install();m,data=self.release(2);self.update(self.signed(m,data,2));tx=core.installed(self.root)["rollback"]
   (self.root/"avrt.dll").unlink();core.apply(self.root,m,core.sources(self.root,m,tolerant=True),manual=True,launch=True)
@@ -381,7 +384,7 @@ class AZSXTests(unittest.TestCase):
   self.assertEqual(before,self.snapshot())
  def test_update_failure_exit_is_not_ready_success(self):
   self.install()
-  with patch.object(core,"game_running",return_value=False),patch.object(updates,"automatic",side_effect=OSError("offline")),patch.object(core,"native_paths",side_effect=AssertionError("profile required for update")),self.assertRaises(OSError):
+  with patch.object(core,"game_running",return_value=False),patch.object(launch.native_update,"synchronize",side_effect=OSError("offline")),patch.object(core,"native_paths",side_effect=AssertionError("profile required for update")),self.assertRaises(OSError):
    launch.run(self.root,update_only=True)
  def test_embedded_official_channel_matches_packaged_defaults(self):
   self.assertEqual(updates.DEFAULT_CHANNEL,json.loads((ROOT/"azsx/channel.json").read_text()))
@@ -402,7 +405,7 @@ class AZSXTests(unittest.TestCase):
   self.assertEqual(core.file_role("AZSX/App/Launcher/LICENSE"),"documentation")
  def test_cli_check_works_in_isolated_deployed_layout_without_profile(self):
   import subprocess
-  for module in ("core.py","updates.py","maintenance.py","layout.py","native_update.py"):
+  for module in ("core.py","updates.py","maintenance.py","layout.py","native_update.py","housekeeping.py"):
    name="AZSX/App/Launcher/"+module;raw=(ROOT/"azsx"/module).read_bytes();self.data[name]=raw
    self.m["files"][name]={"size":len(raw),"sha256":core.digest(raw)}
   name="AZSX/App/Launcher/supported-games.json"
@@ -426,7 +429,7 @@ class AZSXTests(unittest.TestCase):
   name="AZSX/App/Python/python.exe";data[name]=b"MZ runtime";m["files"][name]={"size":len(data[name]),"sha256":core.digest(data[name])}
   raw,sig,archive=self.signed(m,data,2)
   def download(url,limit):return raw if url.endswith('azsx-latest.json')else sig if url.endswith('.sig')else archive
-  with patch.object(updates,"os",types.SimpleNamespace(name="nt")),patch.object(update_worker,'spawn',return_value=123)as worker:
+  with patch.object(updates,"os",types.SimpleNamespace(name="nt",environ=os.environ)),patch.object(update_worker,'spawn',return_value=123)as worker:
    self.assertEqual(updates.automatic(self.root,core.digest(self.exe),download,confirm=lambda feed:self.fail('Unexpected question')),'handoff')
   worker.assert_called_once();self.assertTrue((self.root/'AZSX/Data/Updates/Packages/0.125.0-azsx.2/package.zip').is_file())
   self.assertEqual(core.installed(self.root)['version'],self.m['version'])

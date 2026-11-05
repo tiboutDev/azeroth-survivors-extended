@@ -30,7 +30,7 @@ def verify(raw,signature,keys,game_sha,minimum=0):
     f=core.read_json(raw)
     if f.get("schema")!=1 or f.get("product")!=core.PRODUCT or type(f.get("sequence"))is not int or not 1<=f["sequence"]<=2**53:raise ValueError("Wrong AZSX product or release sequence")
     m=core.validate(f.get("manifest",{}),reviewed=False)
-    if m["game"]["sha256"]!=game_sha:raise ValueError("This AZSX release does not support the installed native game build")
+    if game_sha is not None and m["game"]["sha256"]!=game_sha:raise ValueError("This AZSX release does not support the installed native game build")
     if f["sequence"]<minimum:raise ValueError("Older AZSX update refused")
     spec=f.get("package",{})
     if spec.get("asset")!="azsx-"+m["version"]+".zip"or type(spec.get("size"))is not int or not 1<=spec["size"]<=MAX_ZIP or not core.SHA.fullmatch(spec.get("sha256","")):raise ValueError("Invalid signed AZSX archive descriptor")
@@ -98,47 +98,69 @@ def cache(root,raw,signature,data,feed):
         core.atomic(core.path(root,base+name),value)
 
 
-def automatic(root,game_sha,download=fetch,confirm=None,retry=False,approve=None):
-    try:result=offer(root,game_sha,download)
+def prepared(root,result,download=fetch):
+    """Authenticate the complete package before installation or a native update."""
+    cfg,raw,signature,feed=result
+    feed=verify(raw,signature,cfg["keys"],feed["manifest"]["game"]["sha256"],update_state(root)["sequence"])
+    base="AZSX/Data/Updates/Packages/"+feed["manifest"]["version"]+"/"
+    cached=core.path(root,base+"package.zip")
+    if cached.is_file():
+        try:
+            data=cached.read_bytes();files=verified_package(data,feed)
+        except (ValueError,OSError,zipfile.BadZipFile):data=None
+    else:data=None
+    if data is None:
+        data=download(cfg["base"]+urllib.parse.quote(feed["package"]["asset"]),MAX_ZIP)
+        files=verified_package(data,feed)
+    cache(root,raw,signature,data,feed)
+    return files
+
+def runtime_changes(root,feed,files):
+    runtime={n:b for n,b in files.items()if n.startswith("AZSX/App/Python/")}
+    return any(not core.path(root,n).is_file()or core.sha(core.path(root,n))!=core.digest(b)for n,b in runtime.items())or any(n.startswith("AZSX/App/Python/")and n not in runtime for n in core.installed(root)["owned"])
+
+def install(root,feed,files,keys,detached_runtime=False,repair=False,automatic_repair=True):
+    state=update_state(root);seq=feed["sequence"];installed=core.installed(root)
+    attempt={"sequence":seq,"status":"applying","launch_id":os.environ.get("AZSX_LAUNCH_ID")}
+    state=dict(state,sequence=max(seq,state["sequence"]),attempt=attempt)
+    core.put(root,"AZSX/Data/State/updates.json",state)
+    try:
+        if os.name=="nt"and not detached_runtime and runtime_changes(root,feed,files):
+            import update_worker
+            update_worker.spawn(root,feed,keys)
+            state["attempt"]["status"]="handoff";core.put(root,"AZSX/Data/State/updates.json",state)
+            return "handoff"
+        status=core.apply(root,feed["manifest"],files,trusted=True,repair=repair,
+                          approve=lambda names:(repair and not automatic_repair)or all(n in installed["owned"]for n in names),detached_runtime=detached_runtime,automatic_repair=repair and automatic_repair)
+        state.update(installed={"version":feed["manifest"]["version"],"sequence":seq},
+                     attempt=dict(attempt,status="installed"))
+        if not repair:state.pop("held_sequence",None)
+        core.put(root,"AZSX/Data/State/updates.json",state)
+        return status
+    except BaseException:
+        state["attempt"]["status"]="failed";core.put(root,"AZSX/Data/State/updates.json",state)
+        raise
+
+def automatic(root,game_sha,download=fetch,confirm=None,retry=False,approve=None,offered=None):
+    try:result=offered if offered is not None else offer(root,game_sha,download)
     except urllib.error.HTTPError as error:
         if error.code==404:return "no AZSX release published"
         raise
     if result is None:return "disabled"
     cfg,raw,signature,feed=result
+    # Also reverify supplied/cached offers. Discovery without a game hash never
+    # authorizes installing on an incompatible executable.
+    feed=verify(raw,signature,cfg["keys"],game_sha,update_state(root)["sequence"])
     state=update_state(root);seq=feed["sequence"]
-    installed=core.installed(root)
-    if seq==state["sequence"]:
-        if state.get("held_sequence")==seq:return "held after rollback"
-        attempt=state.get("attempt",{})
-        if attempt.get("status") in ("failed","applying","handoff") and not retry:return "held after failed update; use --retry-update"
-        if installed.get("version")==feed["manifest"]["version"]:return "current"
-        if not retry:return "held after rollback or failed update"
-    if installed.get("version")==feed["manifest"]["version"]:return "current"
-    runtime_changed=False
-    if os.name=="nt":
-        runtime={core.layout.name(n):spec for n,spec in feed["manifest"]["files"].items() if core.layout.name(n).startswith("AZSX/App/Python/")}
-        changed=any(not core.path(root,n).is_file() or core.path(root,n).stat().st_size!=spec["size"] or core.sha(core.path(root,n))!=spec["sha256"] for n,spec in runtime.items())
-        removed=any(n.startswith("AZSX/App/Python/") and n not in runtime for n in installed["owned"])
-        runtime_changed=changed or removed
-    # Compatible signed releases install automatically, including noninteractive launch.
-    # Foreign-file replacement still uses the separate ownership/conflict gate.
-    state=dict(state,sequence=seq,attempt={"sequence":seq,"status":"downloading"})
-    core.put(root,"AZSX/Data/State/updates.json",state)
+    if state.get("held_sequence")==seq:return "held after rollback"
+    if core.installed(root).get("version")==feed["manifest"]["version"]:return "current"
+    attempt=state.get("attempt",{});launch_id=os.environ.get("AZSX_LAUNCH_ID")
+    if launch_id and attempt.get("launch_id")==launch_id and attempt.get("status")in("failed","applying","handoff"):
+        return "deferred until next launch"
+    core.put(root,"AZSX/Data/State/updates.json",dict(state,sequence=seq,attempt={"sequence":seq,"status":"downloading","launch_id":launch_id}))
     try:
-        data=download(cfg["base"]+urllib.parse.quote(feed["package"]["asset"]),MAX_ZIP)
-        files=verified_package(data,feed)
-        cache(root,raw,signature,data,feed)
-        if runtime_changed:
-            import update_worker
-            update_worker.spawn(root,feed,cfg['keys'])
-            state['attempt']['status']='handoff';core.put(root,'AZSX/Data/State/updates.json',state)
-            return 'handoff'
-        state["attempt"]["status"]="applying";core.put(root,"AZSX/Data/State/updates.json",state)
-        status=core.apply(root,feed["manifest"],files,trusted=True,approve=lambda names:all(n in installed["owned"]for n in names))
-        state.update(installed={"version":feed["manifest"]["version"],"sequence":seq},attempt={"sequence":seq,"status":"installed"})
-        state.pop("held_sequence",None)
-        core.put(root,"AZSX/Data/State/updates.json",state)
-        return status
+        files=prepared(root,result,download)
+        return install(root,feed,files,cfg["keys"])
     except BaseException:
-        state["attempt"]["status"]="failed";core.put(root,"AZSX/Data/State/updates.json",state)
+        state=update_state(root);state["attempt"]["status"]="failed";core.put(root,"AZSX/Data/State/updates.json",state)
         raise

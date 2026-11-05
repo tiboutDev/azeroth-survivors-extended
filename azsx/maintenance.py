@@ -62,7 +62,8 @@ def bounded_read(file,limit):
     return data
 
 
-def repair(root,confirm,archive=None,feed_path=None,signature_path=None,download=updates.fetch,offline=False):
+def repair(root,confirm,archive=None,feed_path=None,signature_path=None,download=None,offline=False,automatic=False):
+    download=download or updates.fetch
     # Caller owns installation lock and has handled interrupted transactions.
     try:installed=core.manifest(root)["version"]
     except (ValueError,OSError,KeyError,TypeError):
@@ -111,8 +112,6 @@ def repair(root,confirm,archive=None,feed_path=None,signature_path=None,download
         if p.exists() and core.file_role(name)=="documentation":
             changes.append("Preserve modified documentation: "+name);continue
         changes.append(("Back up and replace: " if p.exists() else "Restore: ")+name)
-    if os.name=="nt" and any(name.startswith("AZSX/App/Python/") and (not core.path(root,name).is_file() or core.sha(core.path(root,name))!=core.digest(b)) for name,b in new.items()):
-        raise ValueError("Manual installation required: close AZSX and extract the complete verified archive to restore the Python runtime.")
     print("[ AZSX ] Repair AZSX "+m["version"]+(" (recovering installation identity)" if installed is None else ""),flush=True)
     for line in changes:print("  "+line,flush=True)
     if receipt_bad or receipt_missing:print("  Recover ownership receipt; unknown projected files will not be adopted.",flush=True)
@@ -120,7 +119,9 @@ def repair(root,confirm,archive=None,feed_path=None,signature_path=None,download
     if not receipt_bad and not receipt_missing and not reset_channel and installed is not None and not any(not line.startswith("Preserve ") for line in changes):
         print("[ AZSX ] Installed release is already intact; documentation warnings are nonblocking.",flush=True)
         return "current"
-    if not confirm(changes):return "cancelled"
+    if automatic and (receipt_bad or receipt_missing):
+        raise ValueError("Automatic repair requires a valid ownership receipt; use --repair to recover installation identity.")
+    if not automatic and not confirm(changes):return "cancelled"
     updates.cache(root,raw,sig,data,feed)
     if reset_channel:
         channel=core.path(root,"AZSX/Config/channel.json")
@@ -132,7 +133,11 @@ def repair(root,confirm,archive=None,feed_path=None,signature_path=None,download
         core.atomic(core.path(root,"AZSX/Data/Backups/Files/"+uuid.uuid4().hex+"/install.json"),old_raw)
         p.unlink()
     try:
-        status=core.apply(root,m,files,trusted=True,approve=lambda names:True,repair=True)
+        if os.name=="nt"and updates.runtime_changes(root,feed,files):
+            import update_worker
+            update_worker.spawn(root,feed,cfg["keys"],repair=True,automatic_repair=automatic)
+            return "handoff"
+        status=core.apply(root,m,files,trusted=True,approve=lambda names:not automatic or all(n in receipt["owned"]for n in names),repair=True,automatic_repair=automatic)
         return status
     except BaseException:
         if old_raw is not None:core.atomic(core.path(root,core.STATE),old_raw)

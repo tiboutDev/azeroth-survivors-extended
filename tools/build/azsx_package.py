@@ -35,7 +35,7 @@ def build(output,dll,runtime,version=None,key=None,sequence=1,game_version=None)
         trusted=json.loads((ROOT/"azsx/channel.json").read_text())["keys"]
         if public not in trusted:raise ValueError("Signing key does not match the packaged AZSX trust keys")
     files={"AZSX/App/Bin/avrt.dll":raw,"start-azsx.cmd":(ROOT/"azsx/start-azsx.cmd").read_bytes().replace(b"\r\n",b"\n").replace(b"\n",b"\r\n"),"README-AZSX.txt":(ROOT/"azsx/README-AZSX.txt").read_bytes().replace(b"{GAME_VERSION}",game_version.encode()),"AZSX/App/Defaults/channel.json":(ROOT/"azsx/channel.json").read_bytes(),"AZSX/App/Launcher/LICENSE":(ROOT/"LICENSE").read_bytes(),"AZSX/App/Launcher/supported-games.json":(ROOT/"azsx/supported-games.json").read_bytes()}
-    for name in("core.py","updates.py","maintenance.py","launch.py","remove.py","remove.ps1","layout.py","migration.py","native_update.py","update_worker.py"):files["AZSX/App/Launcher/"+name]=(ROOT/"azsx"/name).read_bytes()
+    for name in("core.py","updates.py","maintenance.py","launch.py","remove.py","remove.ps1","layout.py","migration.py","native_update.py","update_worker.py","housekeeping.py"):files["AZSX/App/Launcher/"+name]=(ROOT/"azsx"/name).read_bytes()
     for name in core.AZSXUI_FILES:
         source=ROOT/"addons/AZSXUI"/name
         if any(part.is_symlink()for part in (source,source.parent,ROOT/"addons",ROOT/"addons/AZSXUI")):raise ValueError("Bundled addon links cannot be distributed")

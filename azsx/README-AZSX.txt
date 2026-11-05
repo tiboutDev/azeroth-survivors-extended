@@ -27,19 +27,22 @@ No separate AZSXUI download is required.
 
 Both launches use your existing native progression and settings. No import or
 save synchronization is needed. Use one game at a time for the same profile.
-A progression backup is kept in AZSX/Data/Backups before each AZSX launch.
+The five latest distinct progression backups and five session logs are retained
+automatically. Obsolete cached packages, completed transactions and exited runtime
+workers are cleaned up; preferences and user-file backups are preserved.
 
 Signed AZSX updates compatible with the installed native game install automatically.
 Use --menu for maintenance choices, or --offline to skip update discovery.
 No update confirmation is needed, including without an interactive console. Runtime
 updates restart the launcher automatically through a private copied interpreter.
-If the official game updates first, AZSX may need a compatible release; you can
-keep playing the native game. A damaged interpreter needs complete-archive repair.
+When a newer supported game is needed, AZSX verifies and caches its matching
+package first, lets the official updater update AZS with the mod inactive, then
+installs AZSX and continues automatically. --update-only uses the same sequence. A damaged interpreter needs complete-archive repair.
 
 Read-only offline diagnosis: start-azsx.cmd --check
 Repair the same release (signed package and confirmation required): start-azsx.cmd --repair
-Recover an interrupted operation: start-azsx.cmd --recover
-Retry a failed update automatically: start-azsx.cmd --retry-update
+Interrupted operations recover automatically; --recover is also available.
+Failed updates retry once at the next launch; --retry-update remains available.
 Explicit launch: start-azsx.cmd --play
 To skip an update check: start-azsx.cmd --offline
 Restore the previous mod version: start-azsx.cmd --rollback
@@ -47,7 +50,8 @@ Remove AZSX: start-azsx.cmd --uninstall
 Create a local report: start-azsx.cmd --export-diagnostics
 Documentation warnings do not block play. Modified documentation is preserved
 during repair and backed up before replacement during updates. Critical files
-require repair. Python/runtime damage may require the complete trusted archive.
+are repaired automatically from an available signed same-version package.
+Python/runtime damage that prevents startup requires the complete trusted archive.
 Logs: AZSX/Data/Logs. Reports may include player names and run details; review before
 sharing. Nothing is uploaded automatically. Native saves/settings are preserved.
 

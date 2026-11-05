@@ -29,7 +29,8 @@ If a signed AZSX update matches your installed native executable, it installs au
 
 Use `start-azsx.cmd` whenever you want to play with AZSX, in solo or co-op.
 
-Your existing progression and settings are reused. The launcher creates a progression backup before each AZSX launch.
+Your existing progression and settings are reused. AZSX retains the five latest
+distinct progression backups and the five latest session logs automatically.
 
 ## Included addons and preferences
 
@@ -72,9 +73,9 @@ To update without starting the game:
 start-azsx.cmd --update-only
 ```
 
-A failed update is not retried automatically. After resolving its cause, use
-`start-azsx.cmd --retry-update`; no confirmation is required. A rollback remains
-held at that release sequence, including explicit retry; a newer release can be offered.
+Failed updates retry automatically at the next launch, once per invocation.
+A voluntary rollback stays held at that release sequence; a newer release can
+still be offered. Interrupted installation transactions recover automatically.
 
 After an official game update, check the AZSX release notes for compatibility before playing with the mod.
 
@@ -96,7 +97,8 @@ This is an offline, read-only diagnosis. It lists all detected problems, does no
 recover transactions, write installation files, download updates or start the game.
 Missing or modified documentation and the CMD bootstrap are warnings; they do not
 block an already running launcher. Missing or modified critical DLL, launcher or
-internal AZSX presentation files require repair. If the bundled AZSXUI is unavailable,
+internal AZSX presentation files are repaired automatically when a signed
+same-version package is available. If the bundled AZSXUI is unavailable,
 AZSX can use the native interface; repair can restore the optional addon. Foreign
 loaders and addons are never silently replaced.
 
@@ -123,8 +125,8 @@ The known AZSXUI addon can be migrated only with consent and a backup. An invali
 configuration can be restored to the official channel during an approved repair,
 with its old contents backed up.
 
-For an interrupted transaction, use `start-azsx.cmd --recover`. Recovery requires
-confirmation and restarts the launcher if client files were restored.
+Interrupted transactions recover automatically and restart the launcher before
+using restored code. `--recover` remains available for explicit recovery.
 
 Normal signed compatible updates can replace the Python runtime automatically
 through the detached update helper. If Python or the launcher is damaged and
@@ -140,7 +142,8 @@ After a supported automatic update, you can restore the previous mod version wit
 start-azsx.cmd --rollback
 ```
 
-This rolls back AZSX, not the original game.
+This restores one previous AZSX release when it supports the installed game.
+It does not roll back the original game or expose an older rollback chain.
 
 ## Uninstall
 
@@ -182,7 +185,8 @@ with the game closed; startup migrates existing settings and evidence automatica
 The old published archive remains unchanged. Later compatible updates are automatic.
 
 An unavailable bundled AZSXUI or changed README does not block the native interface.
-Use --check for exhaustive read-only diagnostics and --repair for guided repair.
+Ordinary owned-file repairs and history cleanup are automatic. Use --check for
+exhaustive read-only diagnostics and --repair for guided recovery when needed.
 Installation conflicts are preserved. A failed progression backup warns; it does
 not prevent playing an otherwise intact installation.
 
@@ -190,5 +194,9 @@ not prevent playing an otherwise intact installation.
 
 When an official game update is available, AZSX first checks that a signed AZSX
 release supports the exact new game build. Only then does it let the game's own
-updater install that build; the launcher restarts to update AZSX afterward.
+updater install that build. AZSX downloads and verifies its complete matching
+package **before** that step. The updater runs with AZSX inactive; after verifying
+the updated client, the launcher installs the cached mod and continues
+automatically. Completion can use the cache even if the connection is then lost.
+`--update-only` performs the same AZS → AZSX sequence without starting normal play.
 If AZSX support is not yet published, you can keep playing the installed build.
