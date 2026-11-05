@@ -391,6 +391,13 @@ unsafe extern "system" fn apply(game: u64, descriptor: u64) {
             if before.slot != delivery.target || before.hp <= 0.0 {
                 return;
             }
+            let shield_before = match runtime.adapter.support_shield_pool(&runtime.local, game, delivery.spell) {
+                Ok(value) => value,
+                Err(error) => {
+                    runtime.log.warn(&format!("Official shield observation rejected: {error}"));
+                    return;
+                }
+            };
             // The native consumer copies this POD descriptor; its original Vec is also
             // destroyed in the same world pass. No descriptor pointer escapes the call.
             #[cfg(feature="test-hooks")]
@@ -405,6 +412,16 @@ unsafe extern "system" fn apply(game: u64, descriptor: u64) {
             let Ok(after) = runtime.adapter.support_caster(&runtime.local, game) else {
                 return;
             };
+            // A reentrant callback may have rebound the native actor. The
+            // completed native commit is never retried against another identity.
+            if (after.slot, after.guid) != (before.slot, before.guid) { return; }
+            let shield_after = match runtime.adapter.support_shield_pool(&runtime.local, game, delivery.spell) {
+                Ok(value) => value,
+                Err(error) => {
+                    runtime.log.warn(&format!("Official completed shield observation rejected: {error}"));
+                    return;
+                }
+            };
             if delivery.duration > 0.0 || delivery.shield {
                 match runtime.adapter.effect_owner(
                     &runtime.local,
@@ -416,9 +433,8 @@ unsafe extern "system" fn apply(game: u64, descriptor: u64) {
                 ) {
                     Ok(owner) => {
                         if let Ok(mut owners) = OWNERS.lock() {
-                            owners.retain(|o| !owner.replaces(o));
-                            if owners.len() < 64 {
-                                owners.push(owner)
+                            if let Err(error) = owner.record(&mut owners, shield_before.zip(shield_after)) {
+                                runtime.log.warn(&format!("Official shield ownership commit rejected: {error}"));
                             }
                         }
                     }
@@ -548,6 +564,11 @@ pub fn finish(runtime: &Runtime, game: u64) {
     }
 }
 pub fn hooks(adapter: Adapter) -> Vec<crate::install::HookSpec> {
+    let hurt_detour = match adapter.hurt_source_layout() {
+        0 => hurt as *const () as usize,
+        1 => hurt_borrowed as *const () as usize,
+        _ => panic!("Unreviewed native hurt hook ABI"),
+    };
     let mut hooks = vec![
         crate::install::HookSpec{name:"official-necklace-leech",target:local_base()+adapter.necklace_leech_entry().rva as usize,detour:necklace_leech as *const () as usize,trampoline:&LEECH_ORIGINAL},
         crate::install::HookSpec{name:"official-support-talent-condition",target:local_base()+adapter.talent_condition_entry().rva as usize,detour:talent_condition as *const () as usize,trampoline:&CONDITION_ORIGINAL},
@@ -555,7 +576,7 @@ pub fn hooks(adapter: Adapter) -> Vec<crate::install::HookSpec> {
         crate::install::HookSpec {
             name: "official-support-retaliation",
             target: local_base() + adapter.hurt_entry().rva as usize,
-            detour: hurt as *const () as usize,
+            detour: hurt_detour,
             trampoline: &HURT_ORIGINAL,
         },
         crate::install::HookSpec {
@@ -759,14 +780,13 @@ fn receipt(
         local: &runtime.local,
         adapter: runtime.adapter,
     };
-    if let Err(e) = runtime
-        .adapter
-        .support_overheal(&io, game, talents, raw, effective)
-    {
-        runtime
-            .log
-            .warn(&format!("Official support overheal rejected: {e}"));
-    }
+    let absorbed = match runtime.adapter.support_overheal(&io, game, talents, raw, effective) {
+        Ok(amount) => amount,
+        Err(e) => {
+            runtime.log.warn(&format!("Official support overheal rejected: {e}"));
+            0.0
+        }
+    };
     if talents.nature_coefficient <= 0.0 {
         return;
     }
@@ -776,6 +796,8 @@ fn receipt(
             .find(|p| p.caster_guid == guid && p.target_guid == target.guid && p.spell == spell)
         {
             p.raw = (p.raw + raw).min(1e12);
+            p.effective = (p.effective + effective).min(1e12);
+            p.absorbed = (p.absorbed + absorbed).min(1e12);
             p.origin = target.position;
         } else if pending.len() < 64 {
             pending.push(SupportReceipt {
@@ -785,6 +807,7 @@ fn receipt(
                 spell,
                 raw,
                 effective,
+                absorbed,
                 origin: target.position,
                 talents,
             });
@@ -948,18 +971,31 @@ pub(super) fn observe_combat_damage(game: u64, enemy: u64, amount: f32, spell: u
 }
 
 type Hurt = azsx_game::official::NativeHurtCall;
-unsafe extern "system" fn hurt(game: u64, amount: f32, enemy: u64, melee: bool,native_kind:u32,native_spell:u32) {
+unsafe extern "system" fn hurt(game: u64, amount: f32, enemy: u64, melee: bool, kind: u32, spell: u32) {
+    let native: Hurt = std::mem::transmute(HURT_ORIGINAL.load(Ordering::Acquire));
+    dispatch_hurt(game, amount, enemy, melee, u64::from(kind), spell,
+                  |game, amount, enemy, melee| native(game, amount, enemy, melee, kind, spell));
+}
+unsafe extern "system" fn hurt_borrowed(game: u64, amount: f32, enemy: u64, melee: bool, source: *const u8) {
+    let native: azsx_game::official::NativeHurtBorrowedCall =
+        std::mem::transmute(HURT_ORIGINAL.load(Ordering::Acquire));
+    dispatch_hurt(game, amount, enemy, melee, source as u64, 0,
+                  |game, amount, enemy, melee| native(game, amount, enemy, melee, source));
+}
+unsafe fn dispatch_hurt(game: u64, amount: f32, enemy: u64, melee: bool, source_word: u64,
+                        source_spell: u32, mut forward: impl FnMut(u64, f32, u64, bool)) {
     #[cfg(feature="test-hooks")]
     if std::env::var("AZCOOP_TEST_BLESSINGS").as_deref()==Ok("1"){return;}
-    let original: Hurt = std::mem::transmute(HURT_ORIGINAL.load(Ordering::Acquire));
-    let original=|game,amount,enemy,melee|{original(game,amount,enemy,melee,native_kind,native_spell);if let Some(r)=RUNTIME.get().filter(|r|r.rules){combat::observe_immunity(r,game);}};
+    let mut original=|game,amount,enemy,melee|{forward(game,amount,enemy,melee);if let Some(r)=RUNTIME.get().filter(|r|r.rules){combat::observe_immunity(r,game);}};
     if let Some(r) = RUNTIME.get().filter(|r| r.rules) {
         // No native coop context exists in a solo run. Keep its original hit
         // path; foreign aura isolation only applies to a captured coop party.
         let coop=r.party.lock().map(|party|party.is_some()).unwrap_or(false);
         if !coop {return original(game,amount,enemy,melee);}
-        if combat::redirect_melee(r, game, amount, enemy, melee,native_kind,native_spell) {
-            return;
+        if melee && enemy != 0 {
+            if let Ok(source) = r.adapter.capture_hurt_source(&r.local, source_word, source_spell) {
+                if combat::redirect_melee(r, game, amount, enemy, melee, source) { return; }
+            }
         }
     }
     let Some(r) = RUNTIME.get().filter(|r| r.rules && melee && enemy != 0) else {
@@ -1044,6 +1080,28 @@ unsafe extern "system" fn effect_hit(game:u64,enemy:u64,effect:u64,damage:f32,sp
   struct Restore(usize);impl Drop for Restore{fn drop(&mut self){HURT_ORIGINAL.store(self.0,Ordering::SeqCst);}}let _restore=Restore(previous);
   for melee in [false,true]{let args=(0x123456789abcdef0,1.25,0xf130000012345678,melee,0x11223344,0x55667788);unsafe{hurt(args.0,args.1,args.2,args.3,args.4,args.5)}assert_eq!(*ARGS.lock().unwrap(),Some(args));}
  }
+}
+
+
+#[cfg(test)]
+mod borrowed_hurt_forwarding_tests {
+    use super::*;
+    static ARGS: std::sync::Mutex<Option<(u64, f32, u64, bool, u64)>> = std::sync::Mutex::new(None);
+    unsafe extern "system" fn native(game: u64, amount: f32, enemy: u64, melee: bool, source: *const u8) {
+        *ARGS.lock().unwrap() = Some((game, amount, enemy, melee, source as u64));
+    }
+    #[test]
+    fn inactive_forwarding_retains_the_full_fifth_argument_pointer() {
+        let previous = HURT_ORIGINAL.swap(native as *const () as usize, Ordering::SeqCst);
+        struct Restore(usize);
+        impl Drop for Restore { fn drop(&mut self) { HURT_ORIGINAL.store(self.0, Ordering::SeqCst); } }
+        let _restore = Restore(previous);
+        for melee in [false, true] {
+            let args = (0x123456789abcdef0, 1.25, 0xf130000012345678, melee, 0x1234567887654321);
+            unsafe { hurt_borrowed(args.0, args.1, args.2, args.3, args.4 as *const u8); }
+            assert_eq!(*ARGS.lock().unwrap(), Some(args));
+        }
+    }
 }
 
 thread_local! {static SHIELD_CONTEXT:std::cell::Cell<Option<(u64,u32,u64)>>=const{std::cell::Cell::new(None)};}

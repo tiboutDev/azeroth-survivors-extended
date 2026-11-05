@@ -1,6 +1,6 @@
 # Native world and reward presentation
 
-AZSX enriches the reviewed 0.138.0 client without replacing world rendering,
+AZSX enriches the [selected native client](../compatibility/CLIENT-COMPATIBILITY.md) without replacing world rendering,
 combat logs, nameplate health updates or the native marker transport.
 
 ## Standalone presentation: AZSXUI
@@ -39,11 +39,11 @@ deferred; there is no Lua renderer or guessed target matching.
 AZSXUI leaves the world-number font to the client.
 No outgoing size CVar or `FontString` option is claimed to control world text.
 
-AZSXUI `Minimap.lua` renders custom supplies/trials and native `AZS_CHESTS` caches
+AZSXUI `Minimap.lua` renders custom supplies/trials and native cache anchors (`AZS_CHESTS` fallback)
 with the same circular portrait/tracking-ring style. The retained AZSX Lua code
 exposes the versioned `AZSX_GetState(1)` contract (validated current personal
 events, exact projection and session identity). It creates no minimap widgets. Accurate panning
-and ping inversion still require this bridge; the standalone HUD, nameplates, native boss bars and guardian objectives run directly on the 0.138.0 client.
+and ping inversion still require this bridge; the standalone HUD, nameplates, native boss bars and guardian objectives run directly on the supported native client.
 The addon hides pins when projection is absent/stale, outside a run or disabled,
 and retires old local-ping references on session change. Native cache purchases,
 scenes, availability, raid markers and minimap controls remain untouched.

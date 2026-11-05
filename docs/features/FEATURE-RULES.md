@@ -144,7 +144,9 @@ wait until that actor can choose and has finished any current selection rather
 than overwrite it. Native selection and group-pause behavior remain in charge.
 
 Marks use the reviewed native map, Heroic and endless coefficients, snapshotted
-at the kill, then rounded down to whole marks with no minimum. A result of zero
+at the kill, then rounded down to whole marks with no minimum. Map progression
+retains the native table bound: later zones use its last reward row rather than
+reading adjacent data. A result of zero
 grants no marks and does not prevent the amulet selection. Each recipient receives
 a positive amount once through native pending
 personal progression, with no party division or gold multiplier. No boss clear,
@@ -289,14 +291,24 @@ hit does not consume a producer's reserve or trigger that producer's damage.
 
  Eligible Shield
 Slam, Hammer of Justice and Shred hits establish persistent ordinary pursuit/
-attack ownership under their talent and successful-hit checks. Special targeting
+attack ownership under their talent and successful-hit checks. Shred requires
+the active bear form produced by Leader of the Pack. Special targeting
 and already-cast projectiles retain native ownership. Enemy/player life changes,
 departure and run reset retire old associations.
+
+Deferred melee hits retain their original damage source and custom name through delivery or fallback, even after native storage is reused.
 
 Temporary immunity excludes ordinary aggro candidates and discards prior taunts;
 a fresh eligible taunt can still establish ownership. Restore scoped native
 candidate flags. Absorb shields and ordinary damage reduction are not aggro wipes.
 Rules: `support.rs`, `periodic.rs`, `marks.rs`, `taunts.rs`, `immunity_aggro.rs`.
+
+Shield ownership follows the native replacement rule. Where PW:S retains the
+stronger same-spell shield, a weaker or equal refresh does not take its producer's
+proc attribution; native aura expiry can still refresh. Separate absorb families
+remain separate, including PW:S in a native auxiliary pool. A failed allied cast
+restores the borrowed source aura and shield; changed source identities cannot
+receive that rollback.
 
 ## Resurrection fatigue
 
@@ -497,7 +509,7 @@ Cooperative eight-piece armor effects use the wearer's equipment. An allied kill
 
 A legendary necklace can trigger its explosion when a teammate finishes an enemy carrying your matching damage-over-time spell. The Power Word: Shield necklace bursts around the player you protected using your area bonus. Holy Light and Regrowth necklaces shield the player you heal for up to 40% of your maximum health. Vampiric Renew and Vampiric Rejuvenation grant the healed player 5% leech on their own damage for 10 and 12 seconds respectively.
 
-In the Armory and during solo or cooperative runs, the Talents panel adds a short Co-op note below selected talent descriptions to explain ally targeting, shield ownership and control effects. Fortified and Ardent Defender combine their taunt trigger and allied shield condition in one note. Dire Bear Form identifies Shred as its taunt.
+In the Armory and during solo or cooperative runs, the Talents panel adds a short Co-op note below selected talent descriptions to explain ally targeting, shield ownership and control effects. Fortified and Ardent Defender combine their taunt trigger and allied shield condition in one note. Leader of the Pack identifies Shred as its bear-form taunt.
 
 ## Set weapon appearance
 

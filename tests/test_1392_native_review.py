@@ -588,12 +588,15 @@ class Native1392Review(unittest.TestCase):
         roles = dict(self.values["ADDRESSES"])
         builder = self.image.owner(roles[0x5b8e99b])
         callers = self.values["SET_DOT_OWNER_CALLERS"]
-        self.assertEqual([slot for _, slot in callers], [0, 0x1a0, 0x1a0, 0x1b8, 0x1b8])
-        for address, slot in callers:
+        self.assertEqual(self.values["SET_DOT_STACK_FIELDS"], [0xe8, 0xb0])
+        self.assertEqual(self.values["SET_DOT_ROW_REGISTER"], 1)
+        self.assertEqual([(kind, slot) for _, kind, slot in callers],
+                         [(0, 0xc0), (1, 0x1a0), (1, 0x1a0), (1, 0x1b8), (1, 0x1b8)])
+        for address, kind, slot in callers:
             body = self.body(self.image.owner(address))
             self.assertEqual((body[address-5].mnemonic, body[address-5].operands[0].imm),
                              ("call", builder))
-            self.assertIn(f"qword ptr [rbp + {slot:#x}], r15" if slot else "rsi, rcx",
+            self.assertIn(f"qword ptr [rbp + {slot:#x}], r15" if kind else "rsi, rcx",
                           [op.op_str for a, op in body.items() if a < address])
 
     def test_retained_pause_callbacks_still_target_pause_controls(self):

@@ -13,11 +13,9 @@ Run the project check runner from the repository root:
 
 ```sh
 sh tools/dev/check.sh --profile full
-sh tools/dev/check.sh --profile official-party-ui
 ```
 
-The first includes current Rust/Python tests and Clippy.
-The second runs required Lua 5.1 behavior separately. These commands do not
+This includes Rust, Python, Lua 5.1 through pinned lupa and Clippy. It does not
 compile a DLL, deploy or launch a game. See [testing](TESTING.md) for smaller scopes.
 
 `tools/dev/env.sh` respects normal Cargo/Rustup environment variables. An optional
@@ -36,8 +34,8 @@ cargo xwin check --locked --target x86_64-pc-windows-msvc -p azeroth-coop-native
 
 Native Windows can use `cargo check` with the same target/package/features.
 Windows unit tests use stand-ins and should run serially; cross-compiling alone
-is not execution evidence. Current Rust integration targets are `client_binding`
-`jewelry` and `enemies`.
+is not execution evidence. Current Rust integration targets are `client_binding`,
+`jewelry`, `enemies`, `presentation` and `wiring`.
 
 ## Intentional artifacts
 

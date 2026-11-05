@@ -1,0 +1,1273 @@
+{
+  "schema": 1,
+  "version": "0.140.0",
+  "native_sha256": "27c8df53c87e38a98d474bf7106d2444e11e7634ca70dbffc5c2b0aecb894fd9",
+  "scope": "Indirect selected-field source coverage. Expected native values, extents, ownership and calling conventions are independently validated by pinned-image and adapter tests.",
+  "reviews": [
+    {
+      "owner": "official_native.blessings.apply_fortune_stat",
+      "source_sha256": "7ce2cd96d92a66f70da262ad78f5fe6c6743fd74c66d2f419198653847a6ce0d",
+      "uses": [
+        {
+          "target": "field117",
+          "arguments": [
+            "field"
+          ],
+          "cases": [
+            {
+              "namespace": "FIELD117_RESOLVED_FIELDS",
+              "key": 1204
+            },
+            {
+              "namespace": "FIELD117_RESOLVED_FIELDS",
+              "key": 1208
+            },
+            {
+              "namespace": "FIELD117_RESOLVED_FIELDS",
+              "key": 1212
+            },
+            {
+              "namespace": "FIELD117_RESOLVED_FIELDS",
+              "key": 1228
+            },
+            {
+              "namespace": "FIELD117_RESOLVED_FIELDS",
+              "key": 1232
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.blessings.blessing_stat_values",
+      "source_sha256": "1c8183ffad95f7865bf7f63ca8ff0012547f7442efb5165f0380c8b70941161d",
+      "uses": [
+        {
+          "target": "field117",
+          "arguments": [
+            "*offset"
+          ],
+          "cases": [
+            {
+              "namespace": "FIELD117_RESOLVED_FIELDS",
+              "key": 1204
+            },
+            {
+              "namespace": "FIELD117_RESOLVED_FIELDS",
+              "key": 1208
+            },
+            {
+              "namespace": "FIELD117_RESOLVED_FIELDS",
+              "key": 1212
+            },
+            {
+              "namespace": "FIELD117_RESOLVED_FIELDS",
+              "key": 1228
+            },
+            {
+              "namespace": "FIELD117_RESOLVED_FIELDS",
+              "key": 1232
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.combat.hurt_actor_tagged",
+      "source_sha256": "063cded986f1ce18c06d80dbf1f8310a76529d17bc9933ded22cc55bd945c461",
+      "uses": [
+        {
+          "target": "row_field",
+          "arguments": [
+            "slot == 0",
+            "if slot == 0 { 0xc46 } else { 0x97c }"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 2428
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3142
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.enchantments.ring_stat_values",
+      "source_sha256": "1be32205da6333309d3eb3cc1a36dc41a5be4caed5ffd5b0cc7f15f8fb4f5557",
+      "uses": [
+        {
+          "target": "field1201",
+          "arguments": [
+            "at"
+          ],
+          "cases": [
+            {
+              "namespace": "FIELD1201_RESOLVED_FIELDS",
+              "key": 1184
+            },
+            {
+              "namespace": "FIELD1201_RESOLVED_FIELDS",
+              "key": 1188
+            },
+            {
+              "namespace": "FIELD1201_RESOLVED_FIELDS",
+              "key": 1192
+            },
+            {
+              "namespace": "FIELD1201_RESOLVED_FIELDS",
+              "key": 1196
+            },
+            {
+              "namespace": "FIELD1201_RESOLVED_FIELDS",
+              "key": 1200
+            },
+            {
+              "namespace": "FIELD1201_RESOLVED_FIELDS",
+              "key": 1216
+            },
+            {
+              "namespace": "FIELD1201_RESOLVED_FIELDS",
+              "key": 1220
+            },
+            {
+              "namespace": "FIELD1201_RESOLVED_FIELDS",
+              "key": 1224
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.escort.supply_display",
+      "source_sha256": "51c3e4b1d838d3841f482ffea553a17fdf534e6f79e9a08beeece72932e990ab",
+      "uses": [
+        {
+          "target": "row_field",
+          "arguments": [
+            "row==game",
+            "at"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 813
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1144
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 813
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1144
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.experience.downed_xp_continuation",
+      "source_sha256": "d9fa711ba4bd63f4e649eb7b7dbf7d3feb3304ad17bca7ca38d66c8904d4d6d5",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "offset"
+          ],
+          "cases": [
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1144
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2880
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3137
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3142
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.goblin_rewards.goblin_reward_ready",
+      "source_sha256": "d9e4d2a49a072511e3c0a119c054e31c342c5d9a203baf61d65c1dee670ba4c4",
+      "uses": [
+        {
+          "target": "row_field",
+          "arguments": [
+            "slot == 0",
+            "if slot == 0 { 0xc46 } else { 0x97c }"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 2428
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3142
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.layout.game_field",
+      "source_sha256": "bac263abdd068a6c2e7feac05e733c90672d28eab3829758d5150a446879b611",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "old"
+          ],
+          "status": "forwarder",
+          "reason": "Selected namespace forwarder; all Rust method and free-function callers are enumerated by the AST inventory."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.layout.row_field",
+      "source_sha256": "9885ea3a438e96f412a1f4ca1c151dc44da3d0f399b7ead78c0ce81e74bbcf7d",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "old"
+          ],
+          "status": "forwarder",
+          "reason": "Selected namespace forwarder; all Rust method and free-function callers are enumerated by the AST inventory."
+        },
+        {
+          "target": "actor_field",
+          "arguments": [
+            "old"
+          ],
+          "status": "forwarder",
+          "reason": "Selected namespace forwarder; all Rust method and free-function callers are enumerated by the AST inventory."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.layout.read_context",
+      "source_sha256": "e1ad211d69042084d32e340b351de8e827f187a7d39515deef9262ca5b3367cd",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "HOST_PHASE as u64"
+          ],
+          "cases": [
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3142
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        },
+        {
+          "target": "row_field",
+          "arguments": [
+            "host",
+            "start as u64"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 0
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 3
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 812
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 813
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1144
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1151
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1168
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1171
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1196
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1199
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1216
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1219
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1248
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1259
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1264
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1275
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1280
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1283
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 2428
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 0
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 812
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 813
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1144
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1151
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1168
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1171
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1196
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1199
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1216
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1219
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1248
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1259
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1264
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1275
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1280
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1283
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2104
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2119
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2432
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2447
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2880
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2887
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2972
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2975
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3137
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3142
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        },
+        {
+          "target": "row_field",
+          "arguments": [
+            "host",
+            "(end - 1) as u64"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 0
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 3
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 812
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 813
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1144
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1151
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1168
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1171
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1196
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1199
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1216
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1219
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1248
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1259
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1264
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1275
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1280
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1283
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 2428
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 0
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 812
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 813
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1144
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1151
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1168
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1171
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1196
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1199
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1216
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1219
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1248
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1259
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1264
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1275
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1280
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1283
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2104
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2119
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2432
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2447
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2880
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2887
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2972
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2975
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3137
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3142
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.polymorph.polymorph_owned",
+      "source_sha256": "80aa09ae0f864137844f39639332a741e5d7af8d89f62f7f079645a415e82b90",
+      "uses": [
+        {
+          "target": "row_field",
+          "arguments": [
+            "row == game",
+            "at"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1144
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1272
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1144
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1272
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.support.effects.deliver_elite_item",
+      "source_sha256": "709ad139aaea9a407b786e632f7cf1abe66fc8b268b4d2299937f06351cc184f",
+      "uses": [
+        {
+          "target": "row_field",
+          "arguments": [
+            "slot == 0",
+            "if slot == 0 { 0xc46 } else { 0x97c }"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 2428
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3142
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        },
+        {
+          "target": "row_field",
+          "arguments": [
+            "slot == 0",
+            "if slot == 0 { 0xbb4 } else { 0x92c }"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 2348
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2996
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.support.effects.capture_aura",
+      "source_sha256": "52fd5efcf5d51852a548f80bc572125a23859106577b1b7cdd26c60d765b7bef",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "0x190"
+          ],
+          "status": "retired",
+          "guard": {
+            "constant": "STRONGEST_SHIELD_POOLS",
+            "value": 496
+          },
+          "reason": "Only the retired shield-pool branch reads canonical0x190; selected native strongest-pool layout excludes it."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.support.effects.restore_aura",
+      "source_sha256": "61bc31dbbb5853c33afd7da359ef3bd55e58d209847851de975a83bfc593a016",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "0x190"
+          ],
+          "status": "retired",
+          "guard": {
+            "constant": "STRONGEST_SHIELD_POOLS",
+            "value": 496
+          },
+          "reason": "Only the retired shield-pool branch reads canonical0x190; selected native strongest-pool layout excludes it."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.support.talents.active_proc",
+      "source_sha256": "909eee9a0f9549c66d5f4ebd7b7ff08a3adeda584e429f4709d99c1ce0d48d3b",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "at"
+          ],
+          "cases": [
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 32
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 40
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2104
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2112
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.support.talents.route_necklace_absorb",
+      "source_sha256": "abde5d01869e596ab8dd0080bfa180eec2f171adb889b7be13877c71f5951935",
+      "uses": [
+        {
+          "target": "row_field",
+          "arguments": [
+            "target == game",
+            "off"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1144
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1272
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1276
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1144
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1272
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1276
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.support.talents.talent_condition_override",
+      "source_sha256": "e854d0adb08cefd3a35d168a8405905f0392e6be36cb4070fcf144b80a3dc16d",
+      "uses": [
+        {
+          "target": "row_field",
+          "arguments": [
+            "target==game",
+            "n"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1144
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1168
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1248
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1272
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1144
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1168
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1248
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1272
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.wallet.conversion_ready",
+      "source_sha256": "d711d8db2b13a22b2a03aca8ceb097142db35bfbef98acc3c39a495a93eb9105",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "offset"
+          ],
+          "cases": [
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 678
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3140
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3142
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.wallet.chest_state",
+      "source_sha256": "d4491770a04eaa35cd158eb0b48df878ecf66cb1afcfd4250aa2430d965dd817",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "offset"
+          ],
+          "cases": [
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1968
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2880
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3060
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.wallet.project_current_chest",
+      "source_sha256": "8bd7e6165362c75af1c9e1cf5b99ab5aa3d90b59f957baed7be381dfaec4b45f",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "offset"
+          ],
+          "cases": [
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1968
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3060
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.wallet.deliver_chests",
+      "source_sha256": "005f9fd3778c1b6aa3a0f948ca5cf21bc07299c51c1620887f3673c0d19aaadb",
+      "uses": [
+        {
+          "target": "row_field",
+          "arguments": [
+            "slot == 0",
+            "if slot == 0 { 0xc46 } else { 0x97c }"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 2428
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3142
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        },
+        {
+          "target": "row_field",
+          "arguments": [
+            "slot == 0",
+            "bank"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 2348
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2996
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        },
+        {
+          "target": "row_field",
+          "arguments": [
+            "slot == 0",
+            "offset"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1776
+            },
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 2412
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1968
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3060
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.wallet.current_gold",
+      "source_sha256": "04c98f02347af0da2a7a00d3b48b8d7ee07e61b868f43383ddfffe3116d19a9d",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "offset"
+          ],
+          "cases": [
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 813
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1216
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1280
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.wallet.project_wallet",
+      "source_sha256": "2df0b314850b058c63a084bf7aefe3d3b9cab21f94a6fbaad3c15b220632f136",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "0x980"
+          ],
+          "cases": [
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2432
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        },
+        {
+          "target": "row_field",
+          "arguments": [
+            "row == game",
+            "0x500"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1280
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        },
+        {
+          "target": "row_field",
+          "arguments": [
+            "row == game",
+            "0x8c0"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 2240
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        },
+        {
+          "target": "row_field",
+          "arguments": [
+            "row == game",
+            "0x6ec"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 1772
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.wallet.present_pending_item",
+      "source_sha256": "dc723d1249ca6eb6f826f264bc2bec6e185261da194db92e5b4782e5537c4f89",
+      "uses": [
+        {
+          "target": "row_field",
+          "arguments": [
+            "row==game",
+            "if slot==0{0xc46}else{0x97c}"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 2428
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3142
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        },
+        {
+          "target": "row_field",
+          "arguments": [
+            "row==game",
+            "if slot==0{0xbb4}else{0x92c}"
+          ],
+          "cases": [
+            {
+              "namespace": "ACTOR_RESOLVED_FIELDS",
+              "key": 2348
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2996
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.normalize_xp",
+      "source_sha256": "231c6e99e5eb8d90d2ccf4e2a80e8a02c6a4b05be517f2304970c5b553e8f93f",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "offset"
+          ],
+          "cases": [
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 1268
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2448
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2880
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3137
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.hud_actor",
+      "source_sha256": "7e3a4136694cce487367061af0f07b1988937a355e721acbb1a058f61b15ea12",
+      "uses": [
+        {
+          "target": "game_field",
+          "arguments": [
+            "offset"
+          ],
+          "cases": [
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 2880
+            },
+            {
+              "namespace": "GAME_RESOLVED_FIELDS",
+              "key": 3137
+            }
+          ],
+          "reason": "Bounded canonical arguments reviewed through the closure callers, loop/static array, or host/private branch in this exact method body."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.field117",
+      "source_sha256": "3975da3a67879427a9e89c8050c58479624d42b3087cc438b302ba2ac1bf7f3b",
+      "uses": [
+        {
+          "target": "field117",
+          "arguments": [
+            "native"
+          ],
+          "status": "forwarder",
+          "reason": "Selected namespace forwarder; all Rust method and free-function callers are enumerated by the AST inventory."
+        }
+      ]
+    },
+    {
+      "owner": "official_native.field1201",
+      "source_sha256": "91ce81cf445f6ed849de467e611458f60d16cb11d0a93547c88e5b37583b46ac",
+      "uses": [
+        {
+          "target": "field1201",
+          "arguments": [
+            "n"
+          ],
+          "status": "forwarder",
+          "reason": "Selected namespace forwarder; all Rust method and free-function callers are enumerated by the AST inventory."
+        }
+      ]
+    }
+  ]
+}

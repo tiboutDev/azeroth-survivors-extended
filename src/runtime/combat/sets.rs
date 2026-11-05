@@ -115,20 +115,19 @@ unsafe extern "system" fn proc(game: u64, event: u64, corpse: u64) {
 }
 crate::context_stub_rw!(clone_entry, 0, filter_clone, CLONE);
 unsafe extern "system" fn filter_clone(c: &mut crate::stub::Context) {
-    let Some(f) = FILTER
-        .with(Cell::get)
-        .filter(|f| f.game == c.r15 && f.event == c.r13)
-    else {
-        return;
-    };
+    let Some(f) = FILTER.with(Cell::get) else { return };
     let Some(r) = RUNTIME.get() else { return };
+    let Ok((game, event, pointer, count)) =
+        r.adapter.set_clone_context(&r.local, c.rbp, [c.r15, c.r13, c.r14, c.rbx])
+    else { return };
+    if (f.game, f.event) != (game, event) { return; }
     let io = io::Access {
         local: &r.local,
         adapter: r.adapter,
     };
     if let Err(e) = r
         .adapter
-        .set_filter_clone(&io, c.r14, c.rbx, f.mask, f.only)
+        .set_filter_clone(&io, pointer, count, f.mask, f.only)
     {
         r.log.warn(&format!("Native set perk clone rejected: {e}"));
     }
@@ -146,9 +145,7 @@ unsafe extern "system" fn spread_owner(c: &mut crate::stub::Context) {
         &io,
         c.rsp_entry,
         r.local.base as u64,
-        c.rax,
-        c.rcx,
-        c.rdi as u32,
+        [c.rax, c.rcx, c.rdx, c.rdi],
     ) {
         r.log.warn(&format!("Native set DoT owner rejected: {e}"));
     }

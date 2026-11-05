@@ -32,12 +32,17 @@ class ReviewMachine:
         elif image.sha == "0bb6c557c5f6cfeea212761a33554f9a5647ce7cb7e03b8a163b95489496e908":
             crt = (0x634b1ab, 0x634b1b1, 0x634b1b7, 0x634b1bd, 0x634b1e1, 0x634b1e7,
                    0x634b20b, 0x634b1f3, 0x634b22f, 0x634a670)
+        elif image.sha == "27c8df53c87e38a98d474bf7106d2444e11e7634ca70dbffc5c2b0aecb894fd9":
+            crt = (0x63abb31, 0x63abb2b, 0x63abb3d, 0x63abb37, 0x63abb5b, 0x63abb85,
+                   0x63abb7f, 0x63abb8b, 0x63abbbb, 0x63aafc0)
         else:
             raise ValueError("Unknown offline executable")
         self.services = dict(zip(crt, ("copy", "copy", "compare", "fill", "sin", "cos",
                                        "ceil", "round", "floor", "stack")))
         if crt[0] == 0x634b1ab:
             self.services[0x60519b0] = "local transport"
+        elif crt[0] == 0x63abb31:
+            self.services[0x60b2350] = "local transport"
         for address in (0x21c0, 0x21d0, 0x21e0, 0x21f0, *self.services):
             at = self.base + address
             self.cpu.hook_add(UC_HOOK_CODE, self.service, begin=at, end=at)
@@ -154,7 +159,7 @@ class CatalogMachine(ReviewMachine):
         self.image_word(tls.AddressOfIndex, "I", 0)
         self.last_error = 0
         services = {b"SetLastError", b"GetLastError", b"GetEnvironmentVariableW", b"ProcessPrng",
-                    b"GetModuleFileNameW", b"CreateFileW", b"trunc", b"round", b"powf", b"atan2f", b"fmodf"}
+                    b"GetModuleFileNameW", b"CreateFileW", b"trunc", b"truncf", b"round", b"powf", b"atan2f", b"fmodf", b"_hypotf"}
         address = teb + 0x6000
         for dll in pe.DIRECTORY_ENTRY_IMPORT:
             for imp in dll.imports:
@@ -204,9 +209,13 @@ class CatalogMachine(ReviewMachine):
                 fmt = "<d"
                 x = scalar(reg.UC_X86_REG_XMM0, fmt)
                 result = math.trunc(x) if name == b"trunc" else math.copysign(math.floor(abs(x) + 0.5), x)
+            elif name == b"truncf":
+                fmt = "<f"
+                x = scalar(reg.UC_X86_REG_XMM0, fmt)
+                result = x if not math.isfinite(x) else math.copysign(math.trunc(abs(x)), x)
             else:
                 fmt = "<f"
-                function = {b"powf": math.pow, b"atan2f": math.atan2, b"fmodf": math.fmod}[name]
+                function = {b"powf": math.pow, b"atan2f": math.atan2, b"fmodf": math.fmod, b"_hypotf": math.hypot}[name]
                 result = function(scalar(reg.UC_X86_REG_XMM0, fmt), scalar(reg.UC_X86_REG_XMM1, fmt))
             cpu.reg_write(reg.UC_X86_REG_XMM0, int.from_bytes(struct.pack(fmt, result), "little"))
             return

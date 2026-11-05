@@ -667,9 +667,9 @@ mod event_packet_tests {
             freed: RefCell::new(vec![]),
         };
         for (at, v) in [
-            (0x10700, 4u64),
-            (0x10708, 0x11000),
-            (0x10710, 2),
+            (0x10810, 4u64),
+            (0x10818, 0x11000),
+            (0x10820, 2),
             (0x11020, BODY.len() as u64),
             (0x11028, 0x12000),
             (0x11030, BODY.len() as u64),
@@ -688,7 +688,7 @@ mod event_packet_tests {
             a.take_created_event_packet(&m, 0x10000, 1, GUID).unwrap(),
             BODY
         );
-        assert_eq!(q(&m, 0x10710).unwrap(), 1);
+        assert_eq!(q(&m, 0x10820).unwrap(), 1);
         assert_eq!(*m.freed.borrow(), vec![(0x12000, BODY.len())]);
         assert!(a.take_created_event_packet(&m, 0x10000, 1, GUID).is_err());
         assert_eq!(m.freed.borrow().len(), 1);
@@ -698,16 +698,16 @@ mod event_packet_tests {
         let m = queue();
         let a = Adapter::select(crate::current::SHA256).unwrap();
         assert!(a.take_created_event_packet(&m, 0x10000, 1, GUID + 1).is_err());
-        assert_eq!(q(&m, 0x10710).unwrap(), 2);
+        assert_eq!(q(&m, 0x10820).unwrap(), 2);
         assert!(m.freed.borrow().is_empty());
     }
     #[test]
     fn changed_queue_is_never_truncated_or_freed() {
         let m = queue();
-        m.write(0x10710, &3u64.to_le_bytes()).unwrap();
+        m.write(0x10820, &3u64.to_le_bytes()).unwrap();
         let a = Adapter::select(crate::current::SHA256).unwrap();
         assert!(a.take_created_event_packet(&m, 0x10000, 1, GUID).is_err());
-        assert_eq!(q(&m, 0x10710).unwrap(), 3);
+        assert_eq!(q(&m, 0x10820).unwrap(), 3);
         assert!(m.freed.borrow().is_empty());
     }
 }

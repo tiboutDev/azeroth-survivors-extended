@@ -9,7 +9,7 @@ impl Adapter {
     pub fn downed_xp_entries(self) -> Vec<Entry> {
         crate::current::DOWNED_XP_GUARDS.iter().flat_map(|g| [
             Entry { rva: g.0, bytes: g.2 }, Entry { rva: g.1, bytes: g.3 }
-        ]).collect()
+        ]).chain(crate::current::DOWNED_XP_PREREQUISITES.iter().map(|&(rva, bytes)| Entry { rva, bytes })).collect()
     }
     /// Native actors are temporarily borrowed into Game, including remote
     /// actors. Never traverse the lent-out player vector at this boundary.
@@ -40,7 +40,7 @@ impl Adapter {
         }
         if kind >= 5 {
             let at=if kind==5 {
-                registers[5].checked_add(crate::current::DOWNED_XP_HOST_REWARD_SLOT).ok_or("Host reward frame overflow")?
+                host_reward_address(mem, registers[5], crate::current::DOWNED_XP_HOST_REWARD_SLOT, crate::current::DOWNED_XP_HOST_REWARD_ABI)?
             } else {
                 let field=registers[4].checked_add(8).ok_or("Remote reward owner overflow")?;
                 u64::from_le_bytes(mem.read(field,8)?.try_into().map_err(|_| "Truncated reward owner")?)
@@ -52,4 +52,40 @@ impl Adapter {
         Ok(Some(crate::current::DOWNED_XP_GUARDS[kind].1))
     }
 
+}
+
+/// Native direct frame word or a pointer spilled below the frame base. Resolve
+/// the exact selected source before admitting a producer; no receipt is replayed.
+fn host_reward_address(mem: &dyn Mem, frame: u64, slot: u64, abi: u8) -> Result<u64> {
+    match abi {
+        0 => frame.checked_add(slot).ok_or("Host reward frame overflow".into()),
+        1 => {
+            let address = frame.checked_sub(slot).filter(|at| *at >= 0x10000).ok_or("Host reward spill underflow")?;
+            let bytes = mem.read(address, 8)?;
+            let pointer = u64::from_le_bytes(bytes.try_into().map_err(|_| "Truncated host reward spill")?);
+            if pointer < 0x10000 { return Err("Invalid host reward receipt".into()); }
+            Ok(pointer)
+        }
+        _ => Err("Unreviewed host reward ABI".into()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    struct Spill;
+    impl Mem for Spill {
+        fn read(&self, at: u64, n: usize) -> Result<Vec<u8>> {
+            if (at, n) != (0x20000 - 0x48, 8) { return Err("Unexpected receipt read".into()); }
+            Ok(0x345678u64.to_le_bytes().to_vec())
+        }
+    }
+    #[test]
+    fn host_level_receipts_use_the_selected_direct_or_indirect_frame_source() {
+        assert_eq!(host_reward_address(&Spill, 0x20000, 0x1688, 0).unwrap(), 0x21688);
+        assert_eq!(host_reward_address(&Spill, 0x20000, 0x48, 1).unwrap(), 0x345678);
+        assert!(host_reward_address(&Spill, 0x20, 0x48, 1).is_err());
+        assert!(host_reward_address(&Spill, u64::MAX, 1, 0).is_err());
+        assert!(host_reward_address(&Spill, 0x20000, 0x48, 2).is_err());
+    }
 }

@@ -264,7 +264,7 @@ mod tests {
         }
         let expected_register = match crate::current::VERSION {
             "0.131.0" => 7,
-            "0.133.0" | "0.135.1" | "0.138.0" | "0.139.2" => 8,
+            "0.133.0" | "0.135.1" | "0.138.0" | "0.139.2" | "0.140.0" => 8,
             _ => panic!("Fresh-size fixture requires native register review"),
         };
         assert_eq!(crate::current::DAMAGE_TEXT_XMM, expected_register);

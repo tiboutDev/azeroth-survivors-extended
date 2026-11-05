@@ -85,6 +85,7 @@ def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,im
  if players not in (1,2):raise ValueError("One solo client or two cooperative clients only")
  coop_events=os.environ.get("AZSX_TEST_COOP_EVENTS")=="1"
  if coop_events and (players!=2 or normal):raise ValueError("Cooperative event fixture requires two diagnostic clients")
+ if os.environ.get("AZSX_TEST_TALENT_PANEL") in ("1","armory"):raise ValueError("Retired talent selection injector; inspect the native talent window without this fixture")
  visual=os.environ.get("AZSX_TEST_VISUAL")=="1"
  polish=supplies and os.environ.get("AZSX_TEST_EVENT_POLISH")=="1"
  persistence=ritual and os.environ.get("AZSX_TEST_RITUAL_PERSISTENCE")=="1"
@@ -351,18 +352,6 @@ end)
     env["WOW_ROGUE_SHOTS"]=str(folder/"shots")
     if env.get("AZSX_TEST_ESCORT_PREVIEW")=="1" or demon_preview:env["WOW_ROGUE_SHOTS_EVERY"]="8"
    if os.environ.get("AZSX_TEST_HUD_STARTUP")=="1":env["WOW_ROGUE_SHOTS_EVERY"]="2"
-   if os.environ.get("AZSX_TEST_TALENT_PANEL") in ("1","armory"):
-    if not visual:raise ValueError("Talent panel review requires native captures")
-    env={k:v for k,v in env.items() if not k.startswith("AZCOOP_TEST_")}
-    (addon/"AZSXAudit.toc").write_text(chr(10).join(("## Interface: 11200","## Title: AZSX","")))
-    env["AZSX_TEST_TALENT_PANEL"]="1"
-    if os.environ["AZSX_TEST_TALENT_PANEL"]=="armory":
-     if players!=1:raise ValueError("Armory inspection requires one client")
-     env.pop("WOW_ROGUE_AUTOSTART",None);env.pop("WOW_ROGUE_AUTOPLAY",None)
-     env["WOW_ROGUE_ARMORY"]="1"
-     env["WOW_ROGUE_TAPS"]="541,103;493,330;493,330"
-    else:env["WOW_ROGUE_KEY"]="n@18"
-    env["WOW_ROGUE_SHOTS_EVERY"]="8"
    if os.environ.get("AZSX_TEST_SUPPLY_COSTUME") in ("skeleton","pirate","ninja","small"):
     if normal:raise ValueError("Costume preview requires diagnostic clients")
     env={k:v for k,v in env.items() if not k.startswith(("AZCOOP_TEST_","AZSX_TEST_"))}
@@ -699,10 +688,6 @@ end)
                   demon_group_pause_resume=any(sequence[i:i+3]==["true","false","true"] for i in range(len(sequence)-2)),
                   demon_reward_once=host.count("Banished Demon Banish granted once:")==1,
                   demon_guest_api=all(any(row.get("available") is True and isinstance(row.get("event"),dict) and row["event"].get("kind")=="banished_demon" for row in rows) for rows in demon_rows))
-   if os.environ.get("AZSX_TEST_TALENT_PANEL") in ("1","armory"):
-    checks={k:checks[k] for k in ("clients_alive","started","clean_scripts","clean_adapter","ui_captures_available","startup_ack","coop_joined") if k in checks}
-    if os.environ["AZSX_TEST_TALENT_PANEL"]=="armory":
-     checks={k:v for k,v in checks.items() if k in ("clients_alive","clean_scripts","clean_adapter","ui_captures_available")}
    if weapon_visual:
     checks={k:checks[k] for k in ("clients_alive","started","clean_scripts","clean_adapter","ui_captures_available","startup_ack","coop_joined") if k in checks}
     if os.environ.get("AZSX_TEST_WEAPON_ARMORY") in ("1","menu"):

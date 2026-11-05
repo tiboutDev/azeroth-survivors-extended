@@ -270,7 +270,7 @@ pub fn observe_support_cast(runtime: &Runtime, game: u64, ability: u64) {
     if actor.slot > 2 {
         return;
     }
-    let Ok(bytes) = runtime.local.read(ability as usize, 0x68) else {
+    let Ok(bytes) = runtime.adapter.fixture_cast_snapshot(&runtime.local, ability) else {
         return;
     };
     if let Ok(mut prototype) = SUPPORT_PROTOTYPE.lock() {
@@ -878,7 +878,7 @@ fn scaling_tick(r: &Runtime, server: u64) {
     let Ok(Some(p)) = r.adapter.party(&r.local, server) else {
         return;
     };
-    if p.actors.len() != 3
+    if p.actors.len() != 2
         || p.clock < 2.
         || !p
             .actors

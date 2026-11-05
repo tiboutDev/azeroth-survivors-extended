@@ -36,7 +36,7 @@ pub(crate) mod official125;
 
 // All active native consumers use this boundary. Versioned descriptors retain
 // their exact identities; switching the selected build never relabels old data.
-pub use official1392 as current;
+pub use official1400 as current;
 
 // Previous identity remains a test-only reference; it is never selected.
 #[cfg(test)]
@@ -80,5 +80,10 @@ pub(crate) mod official1351;
 #[path = "bindings/official138.rs"]
 pub(crate) mod official138;
 
+#[cfg(test)]
+#[allow(dead_code)]
 #[path = "bindings/official1392.rs"]
-pub mod official1392;
+pub(crate) mod official1392;
+
+#[path = "bindings/official1400.rs"]
+pub mod official1400;

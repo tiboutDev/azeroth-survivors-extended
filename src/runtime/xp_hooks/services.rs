@@ -6,7 +6,7 @@ pub(super) trait Services {
     fn shared_input(&self, request: u64, game: u64) -> Result<u32, String>;
     fn multiplier(&self) -> Option<f32>;
     fn return_site(&self, stack: u64) -> Option<u64>;
-    fn normalize(&self, game: u64, site: u64, registers: [u64; 3], multiplier: f32, shared: Option<u32>)
+    fn normalize(&self, game: u64, site: u64, registers: [u64; 4], multiplier: f32, shared: Option<u32>)
         -> Result<Option<ExperienceAward>, String>;
     fn info(&self, message: &str);
     fn warn(&self, message: &str);
@@ -28,7 +28,7 @@ impl Services for Runtime {
         let stack: [u8; 8] = stack.try_into().ok()?;
         u64::from_le_bytes(stack).checked_sub(self.local.base as u64)
     }
-    fn normalize(&self, game: u64, site: u64, registers: [u64; 3], multiplier: f32, shared: Option<u32>)
+    fn normalize(&self, game: u64, site: u64, registers: [u64; 4], multiplier: f32, shared: Option<u32>)
         -> Result<Option<ExperienceAward>, String>
     {
         self.adapter.normalize_xp(

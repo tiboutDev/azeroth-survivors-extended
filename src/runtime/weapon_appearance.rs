@@ -10,14 +10,15 @@ unsafe extern "system" fn project(c: &mut crate::stub::Context) {
         local: &r.local,
         adapter: r.adapter,
     };
+    let profile = r.adapter.weapon_run_profile([c.rdi, c.r15]);
     let result = r
         .adapter
-        .weapon_projection(&io, r.local.base as u64, c.rdi, c.rax);
+        .weapon_projection(&io, r.local.base as u64, profile, c.rax);
     #[cfg(feature = "test-hooks")]
     if std::env::var("AZSX_TEST_WEAPONS").is_ok() {
         r.log.info(&format!(
             "weapon look: class={:?} hands={:?} result={result:?}",
-            r.local.read((c.rdi + 0x1a4) as usize, 2),
+            r.local.read((profile + 0x1a4) as usize, 2),
             r.local.read((c.rax + 60) as usize, 8)
         ));
     }

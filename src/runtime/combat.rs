@@ -16,8 +16,7 @@ struct Pending {
     fallback: u32,
     fallback_guid: u64,
     amount: f32,
-    native_kind:u32,
-    native_spell:u32,
+    source: azsx_game::official::NativeHurtSource,
 }
 #[derive(Default)]
 struct State {
@@ -366,7 +365,7 @@ unsafe extern "system" fn basic(c: &mut crate::stub::Context) {
         Err(e) => r.log.warn(&format!("Official basic target rejected: {e}")),
     }
 }
-pub fn redirect_melee(r: &Runtime, game: u64, amount: f32, enemy: u64, melee: bool,native_kind:u32,native_spell:u32) -> bool {
+pub fn redirect_melee(r: &Runtime, game: u64, amount: f32, enemy: u64, melee: bool,source: azsx_game::official::NativeHurtSource) -> bool {
     if !melee || enemy == 0 {
         return false;
     }
@@ -393,7 +392,7 @@ pub fn redirect_melee(r: &Runtime, game: u64, amount: f32, enemy: u64, melee: bo
                 guid,
                 fallback: actor.slot,
                 fallback_guid: actor.guid,
-                amount,native_kind,native_spell,
+                amount,source,
             });
             return true;
         }
@@ -416,7 +415,7 @@ pub fn finish(r: &Runtime, game: u64) {
         }
         match r
             .adapter
-            .hurt_actor_tagged(&io, game, p.target, p.guid, p.amount, p.enemy, true,p.native_kind,p.native_spell)
+            .hurt_actor_tagged(&io, game, p.target, p.guid, p.amount, p.enemy, true,&p.source)
         {
             Ok(Some(effective)) => r.log.info(&format!(
                 "official taunt melee: enemy={} original={} recipient={} effective={effective}",
@@ -433,7 +432,7 @@ pub fn finish(r: &Runtime, game: u64) {
                     p.fallback_guid,
                     p.amount,
                     p.enemy,
-                    true,p.native_kind,p.native_spell,
+                    true,&p.source,
                 );
             }
             Err(e) => r.log.warn(&format!("Official taunt hurt rejected: {e}")),
@@ -648,14 +647,14 @@ unsafe extern "system" fn polymorph_begin(c: &mut crate::stub::Context) {
     // AL contains native rupture eligibility. The actor mode is read by the adapter.
     if c.rax as u8 == 0 { return; }
     let Some(r) = RUNTIME.get().filter(|r| r.rules) else { return; };
-    let game = c.rsi;
+    let Ok((game, enemy)) = r.adapter.polymorph_hit_context(true, [c.rsi, c.r12, c.r13]) else { return; };
     let players = STATE.lock().ok().filter(|s| s.game == game).map(|s|
         s.players.iter().filter(|p| p.phase == azsx_gameplay::Phase::Playing)
             .map(|p| (p.id - 1, p.life)).collect::<Vec<_>>()
     ).unwrap_or_default();
     if players.len() < 2 || POLYMORPH_LOANS.with(|l| l.borrow().contains_key(&c.rbp)) { return; }
     let io = io::Access { local: &r.local, adapter: r.adapter };
-    match r.adapter.polymorph_begin(&io, game, c.r12, &players) {
+    match r.adapter.polymorph_begin(&io, game, enemy, &players) {
         Ok(Some(loan)) => { POLYMORPH_LOANS.with(|l| l.borrow_mut().insert(c.rbp, loan)); }
         Ok(None) => {},
         Err(e) => r.log.warn(&format!("Official Polymorph owner rejected: {e}")),
@@ -728,8 +727,8 @@ unsafe extern "system" fn polymorph_gate(c:&mut crate::stub::Context){
     // the attacker's native hit eligibility is still evaluated at the resume.
     c.rax=0;
     let Some(r)=RUNTIME.get().filter(|r|r.rules)else{return};
-    let game=c.r13;
+    let Ok((game, enemy))=r.adapter.polymorph_hit_context(false,[c.rsi,c.r12,c.r13])else{return};
     let players=STATE.lock().ok().filter(|s|s.game==game).map(|s|s.players.iter().filter(|p|p.phase==azsx_gameplay::Phase::Playing).map(|p|(p.id-1,p.life)).collect::<Vec<_>>()).unwrap_or_default();
     if players.len()<2{return}
-    c.rax=u64::from(r.adapter.polymorph_candidate(&r.local,game,c.r12,&players).is_ok_and(|o|o.is_some()));
+    c.rax=u64::from(r.adapter.polymorph_candidate(&r.local,game,enemy,&players).is_ok_and(|o|o.is_some()));
 }

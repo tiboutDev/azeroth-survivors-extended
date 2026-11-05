@@ -46,10 +46,10 @@ pub trait SupportCalls: CurrencyMemory {
     fn refresh_support(&self, game: u64) -> Result<()>;
     fn support_hit(&self, game: u64, guid: u64, amount: f32, spell: u32) -> Result<()>;
     fn support_hurt(&self, game: u64, amount: f32, enemy: u64, melee: bool) -> Result<()> {
-        self.support_hurt_tagged(game, amount, enemy, melee, u32::from(!melee), 0)
+        self.support_hurt_tagged(game, amount, enemy, melee, &NativeHurtSource::for_hit(melee))
     }
-    /// Preserve both native source words, including redirected basic hits.
-    fn support_hurt_tagged(&self, game: u64, amount: f32, enemy: u64, melee: bool, native_kind: u32, native_spell: u32) -> Result<()>;
+    /// Retain owned native attribution across deferred redirected hits.
+    fn support_hurt_tagged(&self, game: u64, amount: f32, enemy: u64, melee: bool, source: &NativeHurtSource) -> Result<()>;
     fn support_damage(&self, game: u64, guid: u64, amount: f32) -> Result<()>;
     fn shield_proc(
         &self,
@@ -65,10 +65,12 @@ pub trait SupportCalls: CurrencyMemory {
     fn healing_meter(&self, game: u64, spell: u32, amount: f32) -> Result<()>;
 }
 pub use crate::official_native::support::{
-    NativeHealCall, call_native_heal, NativeHurtCall, AuraState, BreakFrame, NativeEffect, OwnedEffect, PeriodicTick, PerkLoan, RetaliationTick,
+    NativeHealCall, call_native_heal, NativeHurtCall, NativeHurtBorrowedCall, NativeHurtSource, AuraState, BreakFrame, NativeEffect, OwnedEffect, PeriodicTick, PerkLoan, RetaliationTick,
     SupportCaster, SupportDelivery, SupportReceipt, SupportTalents,
+    NativeDamageCall, call_native_nature_damage,
 };
 pub use official_native::{
+    call_native_unit_field, native_unit_field_value,
     ActorObservation, BasicFrame, CombatActor, Observation, PartyObservation, Role,
 };
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -193,6 +195,15 @@ impl SelectedAdapter {
     ) -> Result<bool> {
         self.native.fixture_cast_resolved(io, game, slot, ability)
     }
+    pub fn set_clone_context(self, mem: &dyn Mem, frame: u64, registers: [u64; 4]) -> Result<(u64, u64, u64, u64)> {
+        self.native.set_clone_context(mem, frame, registers)
+    }
+    pub fn polymorph_hit_context(self, begin: bool, registers: [u64; 3]) -> Result<(u64, u64)> {
+        self.native.polymorph_hit_context(begin, registers)
+    }
+    pub fn fixture_cast_snapshot(self, mem: &dyn Mem, ability: u64) -> Result<Vec<u8>> {
+        self.native.fixture_cast_snapshot(mem, ability)
+    }
     pub fn fixture_support_definition(self, spell: u32) -> Result<u64> {
         self.native.fixture_support_definition(spell)
     }
@@ -265,7 +276,7 @@ impl SelectedAdapter {
     }
     pub fn fixture_guardian_target(
         self,
-        io: &dyn SupportCalls,
+        io: &dyn Mem,
         game: u64,
     ) -> Result<Option<(u64, f32)>> {
         self.native.fixture_guardian_target(io, game)
@@ -369,7 +380,7 @@ impl SelectedAdapter {
     pub fn scaling_probe_entry(self) -> Entry {
         self.native.scaling_probe_entry()
     }
-    pub fn fixture_scaling_probe(self, io: &dyn SupportCalls, game: u64) -> Result<[f32; 4]> {
+    pub fn fixture_scaling_probe(self, io: &dyn SupportCalls, game: u64) -> Result<[f32; 2]> {
         self.native.fixture_scaling_probe(io, game)
     }
     /// Original native instructions, retained only for read-only integrity checks.
@@ -471,7 +482,7 @@ impl SelectedAdapter {
         t: SupportTalents,
         raw: f32,
         effective: f32,
-    ) -> Result<()> {
+    ) -> Result<f32> {
         self.native.support_overheal(mem, game, t, raw, effective)
     }
     pub fn support_receipt(
@@ -519,6 +530,9 @@ impl SelectedAdapter {
     }
     pub fn restore_aura(self, mem: &dyn MutableMemory, game: u64, state: &AuraState) -> Result<()> {
         self.native.restore_aura(mem, game, state)
+    }
+    pub fn support_shield_pool(self, mem: &dyn Mem, game: u64, spell: u32) -> Result<Option<f32>> {
+        self.native.support_shield_pool(mem, game, spell)
     }
     pub fn effect_owner(
         self,
@@ -713,7 +727,7 @@ impl SelectedAdapter {
         mem: &dyn MutableMemory,
         game: u64,
         return_rva: u64,
-        registers: [u64; 3],
+        registers: [u64; 4],
         multiplier: f32,
         shared_guest: Option<u32>,
     ) -> Result<Option<ExperienceAward>> {
@@ -1423,6 +1437,9 @@ impl SelectedAdapter {
 }
 
 impl SelectedAdapter {
+    pub fn native_encounter_context(self, m: &dyn Mem, frame: u64, registers: [u64; 3], base: u64) -> Result<Option<(u64, u64)>> {
+        self.native.native_encounter_context(m, frame, registers, base)
+    }
     pub fn blessing_event_context(
         self,
         m: &dyn Mem,
@@ -1935,6 +1952,7 @@ impl SelectedAdapter {
     pub fn weapon_two_handed(self,entry:u32)->Option<bool>{self.native.weapon_two_handed(entry)}
     pub fn weapon_button_entries(self)->[Entry;2]{self.native.weapon_button_entries()}
     pub fn weapon_entries(self)->[Entry;10]{self.native.weapon_entries()}
+    pub fn weapon_run_profile(self, registers: [u64; 2]) -> u64 { self.native.weapon_run_profile(registers) }
     pub fn weapon_projection(self,m:&dyn MutableMemory,base:u64,profile:u64,visible:u64)->Result<Option<[u32;2]>>{self.native.weapon_projection(m,base,profile,visible)}
     pub fn weapon_template(self,entry:u32)->Option<u32>{self.native.weapon_template(entry)}
     pub fn weapon_metadata(self,m:&dyn MutableMemory,out:u64,entry:u32)->Result<()>{self.native.weapon_metadata(m,out,entry)}
@@ -2056,8 +2074,8 @@ impl SelectedAdapter{
 }
 
 impl SelectedAdapter {
-    pub fn hurt_actor_tagged(self,io:&dyn SupportCalls,game:u64,slot:u32,guid:u64,amount:f32,enemy:u64,melee:bool,native_kind:u32,native_spell:u32)->Result<Option<f32>> {
-        self.native.hurt_actor_tagged(io,game,slot,guid,amount,enemy,melee,native_kind,native_spell)
+    pub fn hurt_actor_tagged(self,io:&dyn SupportCalls,game:u64,slot:u32,guid:u64,amount:f32,enemy:u64,melee:bool,source:&NativeHurtSource)->Result<Option<f32>> {
+        self.native.hurt_actor_tagged(io,game,slot,guid,amount,enemy,melee,source)
     }
 }
 
@@ -2146,7 +2164,7 @@ impl SelectedAdapter {
     #[cfg(feature="test-hooks")]
     pub fn fixture_sets(self,io:&dyn SupportCalls,game:u64,base:u64,case:u32,drain:impl Fn())->Result<(f32,f32)>{self.native.fixture_sets(io,game,base,case,drain)}
     pub fn set_entries(self)->[Entry;3]{self.native.set_entries()}
-    pub fn set_stamp_dot(self,m:&dyn MutableMemory,stack:u64,base:u64,ptr:u64,offset:u64,spell:u32)->Result<()>{self.native.set_stamp_dot(m,stack,base,ptr,offset,spell)}
+    pub fn set_stamp_dot(self,m:&dyn MutableMemory,stack:u64,base:u64,registers:[u64;4])->Result<()>{self.native.set_stamp_dot(m,stack,base,registers)}
     pub fn set_deaths(self,m:&dyn Mem,event:u64,corpse:u64,killer:u32)->Result<(u16,Vec<(u32,SetDeath)>)>{self.native.set_deaths(m,event,corpse,killer)}
     pub fn set_filter_clone(self,m:&dyn MutableMemory,ptr:u64,count:u64,mask:u16,only:bool)->Result<()>{self.native.set_filter_clone(m,ptr,count,mask,only)}
     pub fn set_actor<T>(self,io:&dyn SupportCalls,game:u64,slot:u32,guid:u64,f:impl FnOnce()->Result<T>)->Result<Option<T>>{self.native.set_actor(io,game,slot,guid,f)}
@@ -2156,3 +2174,17 @@ impl SelectedAdapter {
 }
 
 pub use crate::official_native::weapon_appearance::{WORN_NATIVE,piece_look,selected_piece};
+
+impl SelectedAdapter {
+    pub fn hurt_source_layout(self) -> u8 { self.native.hurt_source_layout() }
+    pub fn capture_hurt_source(self, mem: &dyn Mem, source: u64, spell: u32) -> Result<NativeHurtSource> {
+        self.native.capture_hurt_source(mem, source, spell)
+    }
+    /// # Safety
+    /// `entry` must be the reviewed original incoming-hit routine for the selected
+    /// layout. Game must remain valid; enemy must be a permitted native GUID.
+    pub unsafe fn call_hurt(self, entry: usize, game: u64, amount: f32, enemy: u64, melee: bool,
+                            source: &NativeHurtSource) -> Result<()> {
+        self.native.call_hurt(entry, game, amount, enemy, melee, source)
+    }
+}

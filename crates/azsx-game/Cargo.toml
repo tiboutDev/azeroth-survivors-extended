@@ -23,6 +23,10 @@ path = "tests/current/enemies.rs"
 name = "presentation"
 path = "tests/current/presentation.rs"
 
+[[test]]
+name = "wiring"
+path = "tests/current/wiring.rs"
+
 [dependencies]
 azsx-gameplay.workspace = true
 serde_json = { version = "1", features = ["float_roundtrip"] }

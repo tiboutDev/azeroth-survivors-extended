@@ -12,7 +12,7 @@ impl Adapter {
    m.write(row+self.row_field(row==game,0x4f8),&(actor.maximum*0.85).to_le_bytes())?;
   }
   let(map,_)=self.blessing_map(m,game,base)?;
-  if map>=12{return Err("Invalid fixture map".into())}
+  if map>=v::BLESSING_MAP_COUNT{return Err("Invalid fixture map".into())}
   let table=base+v::GOBLIN_MAP_TABLE+map*240;
   let ptr=word(m,table+0x78)?;let count=word(m,table+0x80)?;
   if !(1..=64).contains(&count)||ptr<base||ptr.checked_add(count*80).is_none_or(|end|end>base+0x8000000){return Err("Invalid fixture horde table".into())}

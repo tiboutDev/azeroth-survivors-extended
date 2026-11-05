@@ -13,7 +13,7 @@ AZSX follows Azeroth Survivors' addon conventions: global tables, matching
 `*_UPDATED` timestamps, `AZSX_Get...` functions and registered Lua handlers.
 This is an AZSX extension, not a replacement for the game's `AZS_*` API. No new
 network transport, outgoing addon message or gameplay command is introduced.
-The currently supported engine is the reviewed 0.138.0 build.
+The [current client boundary](../compatibility/CLIENT-COMPATIBILITY.md) identifies the supported native build.
 
 ## Availability and version
 
@@ -64,7 +64,7 @@ progress, damage or timers.
 
 All fields below are optional except where their enclosing record exists. Only
 the local recipient's AZSX features are public in v1; remote builds are not part
-of this contract. Cache coordinates remain in native `AZS_CHESTS`.
+of this contract. Cache coordinates remain in native world-anchor APIs (`AZS_CHESTS` is the older-API fallback).
 
 | Record | Fields and units |
 |---|---|

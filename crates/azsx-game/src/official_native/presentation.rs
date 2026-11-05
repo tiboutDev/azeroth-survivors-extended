@@ -170,12 +170,13 @@ impl Adapter {
         let Some(slot) = self.run_actor(mem, game)? else {
             return Ok(None);
         };
-        let row = mem.read(ability, 12)?;
-        if row.len() != 12 {
+        let rank_at = crate::current::SPELL_PRESENTATION_RANK_OFFSET as usize;
+        let row = mem.read(ability, rank_at + 4)?;
+        if row.len() != rank_at + 4 {
             return Err("Truncated native spell presentation owner".into());
         }
         let definition = u64::from_le_bytes(row[..8].try_into().unwrap());
-        let rank = u32::from_le_bytes(row[8..].try_into().unwrap());
+        let rank = u32::from_le_bytes(row[rank_at..rank_at + 4].try_into().unwrap());
         if definition < 0x10000 || !(1..=255).contains(&rank) {
             return Err("Invalid native presentation ability".into());
         }
@@ -325,7 +326,7 @@ impl Adapter {
         };
         let mut names=BTreeMap::new();
         let mut lua=String::from("{");
-        for zone in 0..12 {
+        for zone in 0..crate::current::BLESSING_MAP_COUNT as usize {
             let at=map_table+zone as u64*240;
             let (key,len)=slice(at+8)?;
             let (bosses,count)=slice(at+136)?;

@@ -317,7 +317,7 @@ impl Adapter {
         base: u64,
     ) -> Result<(usize, GoblinDefinition)> {
         let (map, _) = self.blessing_map(m, game, base)?;
-        if map >= 12 {
+        if map >= v::BLESSING_MAP_COUNT {
             return Err("Unsupported event map".into());
         }
         let row = base + v::GOBLIN_MAP_TABLE + map * 240;
@@ -435,7 +435,7 @@ impl Adapter {
         let Some(p) = self.goblin_row(m, game, h)? else {
             return Ok(None);
         };
-        let b = m.read(p + 0x178, 60)?;
+        let b = m.read(p + v::ENEMY_HP as u64, 60)?;
         let now = number(&m.read(game + crate::current::EVENT_CLOCK_OFFSET, 4)?, 0);
         let began = number(&b, 52);
         let duration = number(&b, 56);
@@ -453,7 +453,7 @@ impl Adapter {
             return Err("Invalid goblin motion".into());
         }
         Ok(Some(GoblinSnapshot {
-            alive: hp > 0. && m.read(p + 0xb0, 4)? != 1u32.to_le_bytes(),
+            alive: hp > 0. && m.read(p + v::ENEMY_DEAD as u64, 4)? != 1u32.to_le_bytes(),
             hp,
             elite: m.read(p + v::ENEMY_ELITE, 1)? == [1],
             position,
@@ -522,11 +522,15 @@ impl Adapter {
         game: u64,
         h: &mut GoblinHandle,
     ) -> Result<()> {
-        if let Some(p) = self.goblin_row(m, game, h)? {
-            m.write(p + 0xb0, &1u32.to_le_bytes())?;
-            m.write(p + 0x178, &0f32.to_le_bytes())?;
-        }
+        self.retire_goblin(m, game, h)?;
         self.event_broadcast(m, base, game, 0xaa, &h.guid.to_le_bytes())
+    }
+    fn retire_goblin(self, m: &dyn MutableMemory, game: u64, h: &mut GoblinHandle) -> Result<()> {
+        if let Some(p) = self.goblin_row(m, game, h)? {
+            m.write(p + v::ENEMY_DEAD as u64, &1u32.to_le_bytes())?;
+            m.write(p + v::ENEMY_HP as u64, &0f32.to_le_bytes())?;
+        }
+        Ok(())
     }
 }
 #[cfg(test)]
@@ -621,17 +625,17 @@ pub(super) mod tests {
         let a = Adapter::select(v::SHA256).unwrap();
         let m = Memory::default();
         let game = 0x10000;
-        let row = 0x20000;
+        let row = 0x22000;
         let guid = 0xf130f5a001000001u64;
-        for (offset, value) in [(0x640, 1u64), (0x648, row), (0x650, 1)] {
+        for (offset, value) in [(0x6b8, 1u64), (0x6c0, row), (0x6c8, 1)] {
             m.write(game + offset, &value.to_le_bytes()).unwrap();
         }
         m.write(row + v::ENEMY_GUID as u64, &guid.to_le_bytes())
             .unwrap();
-        m.write(row + 0x200, &[0]).unwrap();
+        m.write(row + 0x220, &[0]).unwrap();
         let mut handle = GoblinHandle { guid, index: 0 };
         a.goblin_elite(&m, game, &mut handle).unwrap();
-        assert_eq!(m.read(row + 0x200, 1).unwrap(), [1]);
+        assert_eq!(m.read(row + 0x220, 1).unwrap(), [1]);
         let template = GoblinDefinition::from_native([0u8; 80]);
         assert_eq!(template.0[76], 0);
         assert_eq!(number(&template.0, 40), 2.);
@@ -640,24 +644,56 @@ pub(super) mod tests {
     fn goblin_tracking_uses_selected_stride_at_nonzero_indices_and_rebinds_after_compaction() {
         let a = Adapter::select(v::SHA256).unwrap();
         let m = Memory::default();
-        let (game, rows, guid) = (0x10000, 0x20000, 0xf130f5a001000001u64);
-        for (offset, value) in [(0x640, 3u64), (0x648, rows), (0x650, 3)] {
+        let (game, rows, guid) = (0x10000, 0x22000, 0xf130f5a001000001u64);
+        for (offset, value) in [(0x6b8, 3u64), (0x6c0, rows), (0x6c8, 3)] {
             m.write(game + offset, &value.to_le_bytes()).unwrap();
         }
-        // Independent native fixture: three 520-byte enemy rows, GUID at +0xf0.
-        m.write(rows, &[0; 3 * 520]).unwrap();
-        m.write(rows + 2 * 520 + 0xf0, &guid.to_le_bytes()).unwrap();
+        // Independent native fixture: three 552-byte enemy rows, GUID at +0x110.
+        m.write(rows, &[0; 3 * 552]).unwrap();
+        m.write(rows + 2 * 552 + 0x110, &guid.to_le_bytes()).unwrap();
         let mut h = GoblinHandle { guid, index: 2 };
-        assert_eq!(a.goblin_row(&m, game, &mut h).unwrap(), Some(rows + 2 * 520));
-        m.write(rows + 2 * 520 + 0xf0, &0u64.to_le_bytes()).unwrap();
-        m.write(rows + 520 + 0xf0, &guid.to_le_bytes()).unwrap();
-        assert_eq!(a.goblin_row(&m, game, &mut h).unwrap(), Some(rows + 520));
+        assert_eq!(a.goblin_row(&m, game, &mut h).unwrap(), Some(rows + 2 * 552));
+        m.write(rows + 2 * 552 + 0x110, &0u64.to_le_bytes()).unwrap();
+        m.write(rows + 552 + 0x110, &guid.to_le_bytes()).unwrap();
+        assert_eq!(a.goblin_row(&m, game, &mut h).unwrap(), Some(rows + 552));
         assert_eq!(h.index, 1);
         a.goblin_elite(&m, game, &mut h).unwrap();
-        assert_eq!(m.read(rows + 520 + 0x200, 1).unwrap(), [1]);
-        assert_eq!(m.read(rows + 0x200, 1).unwrap(), [0]);
-        m.write(rows + 520 + 0xf0, &0u64.to_le_bytes()).unwrap();
+        assert_eq!(m.read(rows + 552 + 0x220, 1).unwrap(), [1]);
+        assert_eq!(m.read(rows + 0x220, 1).unwrap(), [0]);
+        m.write(rows + 552 + 0x110, &0u64.to_le_bytes()).unwrap();
         assert_eq!(a.goblin_row(&m, game, &mut h).unwrap(), None);
+    }
+    #[test]
+    fn live_snapshot_and_retirement_use_current_health_death_and_motion() {
+        let a = Adapter::select(v::SHA256).unwrap();
+        let m = Memory::default();
+        let (game, row, guid) = (0x10000, 0x22000, 0xf130f5a001000001u64);
+        for (offset, value) in [(0x6b8, 1u64), (0x6c0, row), (0x6c8, 1)] {
+            m.write(game + offset, &value.to_le_bytes()).unwrap();
+        }
+        m.write(row, &[0; 552]).unwrap();
+        m.write(row + 0x110, &guid.to_le_bytes()).unwrap();
+        m.write(game + 0x1010, &11f32.to_le_bytes()).unwrap();
+        // Actual 0.140.0 row, with conflicting retired HP/death fields.
+        m.write(row + 0xb0, &1u32.to_le_bytes()).unwrap();
+        m.write(row + 0x178, &1234f32.to_le_bytes()).unwrap();
+        m.write(row + 0x198, &80f32.to_le_bytes()).unwrap();
+        for (index, value) in [1f32, 2., 3., 5., 6., 7., 10., 2.].into_iter().enumerate() {
+            m.write(row + 0x1b4 + index as u64 * 4, &value.to_le_bytes()).unwrap();
+        }
+        let mut h = GoblinHandle { guid, index: 0 };
+        let snap = a.goblin_snapshot(&m, game, &mut h).unwrap().unwrap();
+        assert!(snap.alive);
+        assert_eq!(snap.hp, 80.);
+        assert_eq!(snap.position, [3., 4., 5.]);
+        let mut expected = m.read(row, 552).unwrap();
+        expected[0xd0..0xd4].copy_from_slice(&1u32.to_le_bytes());
+        expected[0x198..0x19c].copy_from_slice(&0f32.to_le_bytes());
+        a.retire_goblin(&m, game, &mut h).unwrap();
+        assert_eq!(m.read(row, 552).unwrap(), expected);
+        let dead = a.goblin_snapshot(&m, game, &mut h).unwrap().unwrap();
+        assert!(!dead.alive);
+        assert_eq!(dead.hp, 0.);
     }
     #[test]
     fn recycle_filter_preserves_other_enemies_order_and_native_vector_ownership() {

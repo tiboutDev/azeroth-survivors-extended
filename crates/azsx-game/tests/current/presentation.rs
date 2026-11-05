@@ -67,12 +67,12 @@ fn adapter()->SelectedAdapter{SelectedAdapter::select(azsx_game::current::SHA256
   let value=[32u64,0xe2000,25,0x150];std::ptr::copy_nonoverlapping(value.as_ptr().cast::<u8>(),out,32);out as u64
  }
  let m=memory();let a=adapter();let game=0xe0000;let queue=game+azsx_game::current::HEAL_LOG_QUEUE;
- m.data.borrow_mut().insert(game,vec![0;0x800]);m.data.borrow_mut().insert(0xe1000,vec![0;64]);m.data.borrow_mut().insert(0xe2000,vec![0;32]);
+ m.data.borrow_mut().insert(game,vec![0;0x900]);m.data.borrow_mut().insert(0xe1000,vec![0;64]);m.data.borrow_mut().insert(0xe2000,vec![0;32]);
  m.write(queue,&2u64.to_le_bytes()).unwrap();m.write(queue+8,&0xe1000u64.to_le_bytes()).unwrap();
- let before=m.read(game,0x800).unwrap();let base=packet as *const()as usize-azsx_game::current::HEAL_LOG_PACKET.0 as usize;
+ let before=m.read(game,0x900).unwrap();let base=packet as *const()as usize-azsx_game::current::HEAL_LOG_PACKET.0 as usize;
  unsafe{a.emit_fractional_heal_text(&m,base,game,azsx_game::official_native::HealText{caster:11,target:22,amount:9,critical:false},139)}.unwrap();
  let mut expected=before;let length=(azsx_game::current::HEAL_LOG_QUEUE+16)as usize;expected[length..length+8].copy_from_slice(&1u64.to_le_bytes());
- assert_eq!(m.read(game,0x800).unwrap(),expected);assert_eq!(m.read(0xe1000,32).unwrap(),[32u64,0xe2000,25,0x150].into_iter().flat_map(u64::to_le_bytes).collect::<Vec<_>>());assert_eq!(m.frees.get(),0);
+ assert_eq!(m.read(game,0x900).unwrap(),expected);assert_eq!(m.read(0xe1000,32).unwrap(),[32u64,0xe2000,25,0x150].into_iter().flat_map(u64::to_le_bytes).collect::<Vec<_>>());assert_eq!(m.frees.get(),0);
  assert!(unsafe{a.emit_fractional_heal_text(&m,base,game,azsx_game::official_native::HealText{caster:11,target:22,amount:0,critical:false},139)}.is_err());
 }
 
@@ -104,16 +104,16 @@ fn minimap_projection_needs_no_readable_native_zoom_fields() {
     let aliases=script+azsx_game::current::UI_ALIASES;
     m.data.borrow_mut().insert(aliases+azsx_game::current::UI_SELF_GUID,11u64.to_le_bytes().to_vec());
     m.data.borrow_mut().insert(aliases+azsx_game::current::UI_PARTY_GUIDS,vec![0;32]);
-    m.data.borrow_mut().insert(script+0x6640,[3f32,4.].into_iter().flat_map(f32::to_le_bytes).collect());
-    m.data.borrow_mut().insert(script+0x6648,vec![1]);
-    m.data.borrow_mut().insert(script+0x664c,[10f32,20.].into_iter().flat_map(f32::to_le_bytes).collect());
-    m.data.borrow_mut().insert(script+0x665c,vec![0]);
+    m.data.borrow_mut().insert(script+0x6760,[3f32,4.].into_iter().flat_map(f32::to_le_bytes).collect());
+    m.data.borrow_mut().insert(script+0x6768,vec![1]);
+    m.data.borrow_mut().insert(script+0x676c,[10f32,20.].into_iter().flat_map(f32::to_le_bytes).collect());
+    m.data.borrow_mut().insert(script+0x677c,vec![0]);
     // Both legacy zoom fields deliberately remain unmapped.
     assert!(m.read(script+0x6654,4).is_err());assert!(m.read(script+0x6658,4).is_err());
     let outside=a.event_minimap(&m,script,11).unwrap().unwrap();
     assert_eq!(outside.center,[10.,20.]);assert_eq!(outside.ping,[3.,4.]);
     assert!((outside.radii[0]-233.33333).abs()<0.001);
-    m.write(script+0x665c,&[1]).unwrap();
+    m.write(script+0x677c,&[1]).unwrap();
     let inside=a.event_minimap(&m,script,11).unwrap().unwrap();
     assert_eq!(inside.radii,[150.,120.,90.,60.,40.,25.]);
 }

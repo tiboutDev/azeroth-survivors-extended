@@ -117,10 +117,10 @@ mod current_frame_tests {
         let a = Adapter::select(crate::current::SHA256).unwrap();
         let mut m = Bytes(vec![0; 0x50000]);
         let game = 0x10000;
-        m.0[game + 0xf5e] = 1;
-        m.0[game + 0xf63] = 1;
-        m.0[game + 0x538..game + 0x540].copy_from_slice(&123u64.to_le_bytes());
-        m.0[game + 0xea0..game + 0xea4].copy_from_slice(&42f32.to_le_bytes());
+        m.0[game + 0x10cb] = 1;
+        m.0[game + 0x10d1] = 1;
+        m.0[game + 0x5b0..game + 0x5b8].copy_from_slice(&123u64.to_le_bytes());
+        m.0[game + 0x1010..game + 0x1014].copy_from_slice(&42f32.to_le_bytes());
         m.0[0x30018..0x30020].copy_from_slice(&0x40000u64.to_le_bytes());
         let mut r = [0u64; 15];
         r[0] = game as u64;

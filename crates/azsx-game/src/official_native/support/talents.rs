@@ -25,12 +25,12 @@ impl Adapter {
     }
     pub fn talent_area_entry(self)->Entry{Entry{rva:self.rva(0x5d39516),bytes:self.expected(0x5d39516,&[])}}
     fn active_proc(self, mem:&dyn Mem, game:u64) -> Result<Option<Vec<u8>>> {
-        let q=|at|->Result<u64>{Ok(u64::from_le_bytes(mem.read(game+at,8)?.try_into().map_err(|_|"Truncated talent context")?))};
+        let q=|at|->Result<u64>{Ok(u64::from_le_bytes(mem.read(game+self.game_field(at),8)?.try_into().map_err(|_|"Truncated talent context")?))};
         if q(0x20)?!=1{return Ok(None)}
-        let index=q(0x28)?;let pointer=q(0xa18)?;let count=q(0xa20)?;
+        let index=q(0x28)?;let pointer=q(0x838)?;let count=q(0x840)?;
         if count>512 || index>=count || pointer<0x10000 || pointer.checked_add(count*64).is_none(){return Ok(None)}
         let row=mem.read(pointer+index*64,64)?;
-        if row.len()!=64{return Err("Truncated talent row".into())} Ok(Some(row))
+        Ok(super::super::perks::observe(crate::current::PERK_OBSERVATION_LAYOUT, &row)?.map(Vec::from))
     }
     // Native 5ce49b0 resolves the active perk index into a 40-byte origin.
     // Its icon distinguishes the necklace from the byte-identical Hammer perk.
@@ -38,9 +38,9 @@ impl Adapter {
         let read = |at| -> Result<u64> {
             Ok(u64::from_le_bytes(mem.read(at, 8)?.try_into().map_err(|_| "Truncated perk origin")?))
         };
-        let index = read(game + 0x28)?;
-        let count = read(game + 0xa38)?;
-        let origins = read(game + 0xa30)?;
+        let index = read(game + self.game_field(0x28))?;
+        let count = read(game + crate::current::PERK_ORIGINS_HEADER + 16)?;
+        let origins = read(game + crate::current::PERK_ORIGINS_HEADER + 8)?;
         if count > 512 || index >= count || origins < 65536 || origins.checked_add(count * 40).is_none() {
             return Ok(false);
         }
@@ -144,7 +144,7 @@ mod tests {
     impl Memory{fn put(&mut self,a:u64,b:&[u8]){self.0[a as usize..a as usize+b.len()].copy_from_slice(b)} fn float(&mut self,a:u64,v:f32){self.put(a,&v.to_le_bytes())}fn word(&mut self,a:u64,v:u64){self.put(a,&v.to_le_bytes())}}
     fn fixture()->(Adapter,Memory){
         let a=Adapter::select(crate::current::SHA256).unwrap();let mut m=Memory(vec![0;0x50000]);
-        m.put(GAME+a.game_field(0xc41),&[1]);m.word(GAME+0x20,1);m.word(GAME+0xa18,PERK);m.word(GAME+0xa20,1);
+        m.put(GAME+a.game_field(0xc41),&[1]);m.word(GAME+0x20,1);m.word(GAME+0xb58,PERK);m.word(GAME+0xb60,1);
         m.word(GAME+a.game_field(0x980),ROW);m.word(GAME+a.game_field(0x980)+8,1);
         for(row,guid,hp)in[(GAME,100,100.),(ROW,101,39.)]{
             m.word(row+a.row_field(row==GAME,0x478),guid);m.float(row+a.row_field(row==GAME,0x490),100.);m.float(row+a.row_field(row==GAME,0x4f8),hp);
@@ -152,7 +152,7 @@ mod tests {
         m.float(GAME+a.field1201(crate::current::RING_STAT_OUTPUTS[7]),1.5);
         (a,m)
     }
-    fn burst(m:&mut Memory,hammer:bool){m.put(PERK,&[3,1]);m.float(PERK+4,if hammer{0.5}else{0.1});m.float(PERK+8,10.);m.put(PERK+12,&15237u32.to_le_bytes());m.put(PERK+16,&10u32.to_le_bytes());m.put(COND,&10u32.to_le_bytes());m.put(EVENT+0x1d,&[6]);}
+    fn burst(m:&mut Memory,hammer:bool){m.put(PERK,&15u32.to_le_bytes());m.put(PERK+52,&1u32.to_le_bytes());m.float(PERK+40,if hammer{0.5}else{0.1});m.float(PERK+44,10.);m.put(PERK+48,&15237u32.to_le_bytes());m.put(PERK+8,&10u32.to_le_bytes());m.put(COND,&10u32.to_le_bytes());m.put(EVENT+0x1d,&[6]);}
     #[test]fn shield_producer_rules_distinguish_aegis_hammer_and_lightning(){
         let(a,mut m)=fixture();burst(&mut m,false);
         for(recipient,spell,expected)in[(100,17,true),(101,17,true),(100,324,false),(101,11426,false)]{
@@ -160,19 +160,19 @@ mod tests {
         }
         burst(&mut m,true);
         for(recipient,expected)in[(100,true),(101,false)]{assert_eq!(a.talent_condition_override(&m,GAME,COND,EVENT,Some((17,recipient)),&[]).unwrap(),Some(expected));}
-        m.word(GAME+0xa30,0x38000);m.word(GAME+0xa38,1);
+        m.word(GAME+crate::current::PERK_ORIGINS_HEADER+8,0x38000);m.word(GAME+crate::current::PERK_ORIGINS_HEADER+16,1);
         let icon=b"INV_Jewelry_Necklace_21";m.word(0x38018,KEY);m.word(0x38020,icon.len() as u64);m.put(KEY,icon);
         assert_eq!(a.talent_condition_override(&m,GAME,COND,EVENT,Some((17,101)),&[]).unwrap(),Some(true));
         assert_eq!(a.talent_condition_override(&m,GAME,COND,EVENT,Some((11426,100)),&[]).unwrap(),Some(false));
-        m.float(PERK+4,0.7);assert_eq!(a.talent_condition_override(&m,GAME,COND,EVENT,Some((17,101)),&[]).unwrap(),None,"unrelated burst must retain native behavior");
+        m.float(PERK+40,0.7);assert_eq!(a.talent_condition_override(&m,GAME,COND,EVENT,Some((17,101)),&[]).unwrap(),None,"unrelated burst must retain native behavior");
     }
     #[test]
     fn both_devout_tiers_use_the_shield_producers_area_once() {
         let (a, mut m) = fixture();
         burst(&mut m, false);
-        m.float(PERK+8, 8.0);
+        m.float(PERK+44, 8.0);
         for coefficient in [2.0, 3.0] {
-            m.float(PERK+4, coefficient);
+            m.float(PERK+40, coefficient);
             assert_eq!(a.talent_query_radius(&m,GAME,a.rva(0x5944de9),8.0).unwrap(),12.0);
             for (spell, allowed) in [(17,true),(324,false),(11426,false)] {
                 assert_eq!(a.talent_condition_override(&m,GAME,COND,EVENT,Some((spell,101)),&[]).unwrap(),Some(allowed));
@@ -180,7 +180,7 @@ mod tests {
         }
     }
     #[test]fn swiftmend_requires_eligible_identity_range_health_and_native_event(){
-        let(a,mut m)=fixture();m.word(PERK+16,KEY);m.word(PERK+24,8);m.put(KEY,b"regrowth");m.put(COND,&9u32.to_le_bytes());m.float(COND+4,0.4);m.put(EVENT+0x1d,&[5]);
+        let(a,mut m)=fixture();m.put(PERK,&12u32.to_le_bytes());m.word(PERK+40,KEY);m.word(PERK+48,8);m.put(KEY,b"regrowth");m.put(COND,&9u32.to_le_bytes());m.float(COND+4,0.4);m.put(EVENT+0x1d,&[5]);
         let run=|m:&Memory,players:&[(u32,u64)]|a.talent_condition_override(m,GAME,COND,EVENT,None,players).unwrap();
         assert_eq!(run(&m,&[(0,100),(1,101)]),Some(true));
         assert_eq!(run(&m,&[(1,101)]),None,"missing source identity");
@@ -195,10 +195,10 @@ mod tests {
         assert_eq!(a.talent_query_radius(&m,GAME,a.rva(0x5d39516),12.).unwrap(),18.);
         assert_eq!(a.talent_query_radius(&m,GAME,a.rva(0x5944de9),10.).unwrap(),15.);
         assert_eq!(a.talent_query_radius(&m,GAME,0,12.).unwrap(),12.);
-        m.word(GAME+0xa30,0x38000);m.word(GAME+0xa38,1);
+        m.word(GAME+crate::current::PERK_ORIGINS_HEADER+8,0x38000);m.word(GAME+crate::current::PERK_ORIGINS_HEADER+16,1);
         let icon=b"INV_Jewelry_Necklace_21";m.word(0x38018,KEY);m.word(0x38020,icon.len() as u64);m.put(KEY,icon);
         assert_eq!(a.talent_condition_override(&m,GAME,COND,EVENT,Some((17,101)),&[]).unwrap(),Some(true));
         assert_eq!(a.talent_condition_override(&m,GAME,COND,EVENT,Some((11426,100)),&[]).unwrap(),Some(false));
-        m.float(PERK+4,0.7);assert_eq!(a.talent_query_radius(&m,GAME,a.rva(0x5944de9),10.).unwrap(),10.);
+        m.float(PERK+40,0.7);assert_eq!(a.talent_query_radius(&m,GAME,a.rva(0x5944de9),10.).unwrap(),10.);
     }
 }

@@ -32,6 +32,40 @@ fn scalar(bytes: &[u8], at: usize) -> f32 {
 fn extent(ptr: u64, count: u64, stride: u64) -> bool {
     count <= 512 && (count == 0 || ptr >= 65536 && ptr.checked_add(count * stride).is_some())
 }
+fn dot_owner(m: &dyn Mem, stack: u64, base: u64, slots: [u64; 2], callers: &[(u64, u8, u64)]) -> Result<Option<u64>> {
+    let read = |base: u64, offset| -> Result<u64> {
+        let at = base.checked_add(offset).ok_or("DoT source frame overflow")?;
+        let raw: [u8; 8] = m.read(at, 8)?.try_into().map_err(|_| "Truncated DoT source frame")?;
+        Ok(u64::from_le_bytes(raw))
+    };
+    let Some(caller) = read(stack, slots[0])?.checked_sub(base) else { return Ok(None) };
+    let Some(&(_, kind, offset)) = callers.iter().find(|row| row.0 == caller) else { return Ok(None) };
+    let game = match kind {
+        0 => read(stack, offset)?,
+        1 => read(read(stack, slots[1])?, offset)?,
+        _ => return Err("Unreviewed DoT source carrier".into()),
+    };
+    if game < 0x10000 { return Err("Invalid DoT source Game".into()); }
+    Ok(Some(game))
+}
+fn clone_context(m: &dyn Mem, slots: [u64; 2], frame: u64, registers: [u64; 4]) -> Result<(u64, u64, u64, u64)> {
+    let [game, event, pointer, count] = registers;
+    let [event_slot, count_slot] = slots;
+    let read = |offset| -> Result<u64> {
+        let address = frame.checked_add(offset).ok_or("Set clone frame overflow")?;
+        let bytes: [u8; 8] = m.read(address, 8)?.try_into().map_err(|_| "Truncated set clone frame")?;
+        Ok(u64::from_le_bytes(bytes))
+    };
+    let (event, count) = match (event_slot, count_slot) {
+        (0, 0) => (event, count),
+        (0, _) | (_, 0) => return Err("Unreviewed set clone frame".into()),
+        _ => (read(event_slot)?, read(count_slot)?),
+    };
+    if game < 0x10000 || event < 0x10000 || !extent(pointer, count, 64) {
+        return Err("Invalid private set clone identity or extent".into());
+    }
+    Ok((game, event, pointer, count))
+}
 #[derive(Clone)]
 pub struct SetDeath {
     pub event: [u8; 40],
@@ -50,6 +84,10 @@ impl SetDeath {
     }
 }
 impl Adapter {
+    /// R15/R13/R14/RBX observations immediately after the native private copy.
+    pub fn set_clone_context(self, m: &dyn Mem, frame: u64, registers: [u64; 4]) -> Result<(u64, u64, u64, u64)> {
+        clone_context(m, crate::current::SET_CLONE_FRAME_FIELDS, frame, registers)
+    }
     pub fn set_entries(self) -> [Entry; 3] {
         [0x5d3f30e, 0x5d426d7, 0x5b8e99b].map(|a| Entry {
             rva: self.rva(a),
@@ -123,6 +161,8 @@ impl Adapter {
         ))
     }
     fn set_row_bit(self, m: &dyn Mem, row: &[u8]) -> Result<u16> {
+        let Some(row) = super::perks::observe(crate::current::PERK_OBSERVATION_LAYOUT, row)? else { return Ok(0) };
+        let row = &row[..];
         // Legendary corpse explosions encode both a spell id and a key.
         // Require both so unrelated kill perks remain in the original dispatch.
         if row[..2] == [11, 1] && dword(row, 16) == 2 && row[24] == 1
@@ -174,14 +214,11 @@ impl Adapter {
         }
         let mut rows = m.read(ptr, count as usize * 64)?;
         if only && count > 0 {
-            m.write(ptr, &[0xff])?;
+            m.write(ptr, super::perks::terminator(crate::current::PERK_OBSERVATION_LAYOUT)?)?;
         }
         for row in rows.chunks_exact_mut(64) {
             if (self.set_row_bit(m, row)? & mask != 0) != only {
-                // Native runtime variant 13 advances to the next perk. Set
-                // definition variants 47 and 48 are lowered during build and
-                // are outside the runtime dispatch table.
-                row[0] = 13;
+                super::perks::disable(crate::current::PERK_OBSERVATION_LAYOUT, row)?;
             }
         }
         m.write(ptr, &rows)
@@ -227,22 +264,16 @@ impl Adapter {
         m: &dyn MutableMemory,
         stack: u64,
         base: u64,
-        ptr: u64,
-        offset: u64,
-        spell: u32,
+        registers: [u64; 4],
     ) -> Result<()> {
+        let ptr = registers[0];
+        let offset = *registers.get(crate::current::SET_DOT_ROW_REGISTER).ok_or("Unreviewed DoT row register")?;
+        let spell = registers[3] as u32;
         if !DOTS.iter().any(|d| d.0 == spell) {
             return Ok(());
         }
-        let caller = word(&m.read(stack + 0xe8, 8)?, 0).wrapping_sub(base);
-        let Some((_, frame_slot)) = crate::current::SET_DOT_OWNER_CALLERS
-            .iter().find(|(address, _)| *address == caller) else { return Ok(()) };
-        let game = if *frame_slot == 0 {
-            word(&m.read(stack + 0xc0, 8)?, 0) // saved RSI
-        } else {
-            let frame = word(&m.read(stack + 0xb0, 8)?, 0); // saved RBP
-            word(&m.read(frame + frame_slot, 8)?, 0)
-        };
+        let Some(game) = dot_owner(m, stack, base, crate::current::SET_DOT_STACK_FIELDS,
+                                  crate::current::SET_DOT_OWNER_CALLERS)? else { return Ok(()) };
         let Some((slot, _)) = self.effect_source(m, game)? else {
             return Ok(());
         };
@@ -263,10 +294,18 @@ impl Adapter {
         frame: u64,
         field: u64,
     ) -> Result<(u64, u64, u32, f32, [f32; 2])> {
-        let game = word(&m.read(frame + 0x1b8, 8)?, 0);
-        let spell = dword(&m.read(frame + 0x1b0, 4)?, 0);
-        let enemy = word(&m.read(field - 0x38, 8)?, 0);
-        let values = m.read(field - 8, 8)?;
+        let [game_slot, spell_slot, coefficient] = crate::current::SET_VULNERABILITY_LAYOUT;
+        let game_at = frame.checked_add(game_slot).ok_or("Set Game frame overflow")?;
+        let spell_at = frame.checked_add(spell_slot).ok_or("Set spell frame overflow")?;
+        let distance = coefficient.checked_add(8)
+            .and_then(|at| at.checked_sub(crate::current::ENEMY_GUID as u64))
+            .ok_or("Unreviewed set vulnerability fields")?;
+        let guid_at = field.checked_sub(distance).ok_or("Set enemy field underflow")?;
+        let values_at = field.checked_sub(8).ok_or("Set vulnerability underflow")?;
+        let game = word(&m.read(game_at, 8)?, 0);
+        let spell = dword(&m.read(spell_at, 4)?, 0);
+        let enemy = word(&m.read(guid_at, 8)?, 0);
+        let values = m.read(values_at, 8)?;
         Ok((
             game,
             enemy,
@@ -283,14 +322,15 @@ impl Adapter {
         expected: [f32; 2],
         next: [f32; 2],
     ) -> Result<bool> {
+        let coefficient = crate::current::SET_VULNERABILITY_LAYOUT[2] as usize;
         let (p, rows) = self.combat_rows(m, game)?;
         for (i, r) in rows.chunks_exact(crate::current::ENEMY_STRIDE).enumerate() {
-            if word(r, 0xf0) == enemy
-                && r[0xb0] == 0
-                && [scalar(r, 0x120), scalar(r, 0x124)] == expected
+            if word(r, crate::current::ENEMY_GUID) == enemy
+                && r[crate::current::ENEMY_DEAD] == 0
+                && [scalar(r, coefficient), scalar(r, coefficient + 4)] == expected
             {
                 m.write(
-                    p + (i * crate::current::ENEMY_STRIDE) as u64 + 0x120,
+                    p + (i * crate::current::ENEMY_STRIDE) as u64 + coefficient as u64,
                     &next.map(f32::to_le_bytes).concat(),
                 )?;
                 return Ok(true);
@@ -382,18 +422,20 @@ impl Adapter {
         base: u64,
         run: impl FnOnce() -> Result<T>,
     ) -> Result<T> {
-        let rows: Vec<u8> = rows
-            .chunks_exact(64)
-            .filter(|r| r[0] < 47)
-            .flatten()
-            .copied()
-            .collect();
+        if rows.len() % 64 != 0 { return Err("Truncated set fixture rows".into()); }
+        let mut selected = Vec::with_capacity(rows.len());
+        for row in rows.chunks_exact(64) {
+            if super::perks::dispatch_effect(crate::current::PERK_OBSERVATION_LAYOUT, row)? {
+                selected.extend_from_slice(row);
+            }
+        }
+        let rows = selected;
         let count = rows.len() / 64;
         if count == 0 || count > 32 || rows.len() != count * 64 {
             return Err("Invalid set fixture rows".into());
         }
-        let h = m.read(game + 0xa10, 24)?;
-        let cd = m.read(game + 0x68, 24)?;
+        let h = m.read(game + self.game_field(0x830), 24)?;
+        let cd = m.read(game + self.game_field(0x68), 24)?;
         let mut timers = vec![0f32; count];
         let header = |p: u64| {
             [count as u64, p, count as u64]
@@ -402,13 +444,14 @@ impl Adapter {
         };
         // The native resolver checks the active class and learned abilities.
         // These disposable actors exercise sets from other classes in one run.
-        let learned = m.read(game + 0xb0, 24)?;
+        let stride = crate::current::LEARNED_ABILITY_STRIDE;
+        let learned = m.read(game + self.game_field(0xb0), 24)?;
         let old_len = word(&learned, 16);
-        if !extent(word(&learned, 8), old_len, 96) {
+        if !extent(word(&learned, 8), old_len, stride as u64) {
             return Err("Invalid diagnostic ability list".into());
         }
         let mut definitions = if old_len > 0 {
-            m.read(word(&learned, 8), old_len as usize * 96)?
+            m.read(word(&learned, 8), old_len as usize * stride)?
         } else {
             vec![]
         };
@@ -416,29 +459,29 @@ impl Adapter {
             0x711ca10, 0x711d460, 0x711d988, 0x711e360, 0x711e3d8, 0x711ef90,
             0x6cc4df0, 0x6cc5c78, 0x6cc72f8, 0x6cc7370,
         ] {
-            let mut instance = [0u8; 96];
+            let mut instance = vec![0u8; stride];
             instance[..8].copy_from_slice(&(base + self.rva(rva)).to_le_bytes());
             definitions.extend(instance);
         }
-        let len = definitions.len() as u64 / 96;
+        let len = (definitions.len() / stride) as u64;
         let learned_header = [len, definitions.as_ptr() as u64, len]
             .map(u64::to_le_bytes)
             .concat();
-        m.write(game + 0x68, &header(timers.as_mut_ptr() as u64))?;
-        if let Err(e) = m.write(game + 0xa10, &header(rows.as_ptr() as u64)) {
-            m.write(game + 0x68, &cd)?;
+        m.write(game + self.game_field(0x68), &header(timers.as_mut_ptr() as u64))?;
+        if let Err(e) = m.write(game + self.game_field(0x830), &header(rows.as_ptr() as u64)) {
+            m.write(game + self.game_field(0x68), &cd)?;
             return Err(e);
         }
-        if let Err(e) = m.write(game + 0xb0, &learned_header) {
-            let restored = m.write(game + 0xa10, &h);
-            m.write(game + 0x68, &cd)?;
+        if let Err(e) = m.write(game + self.game_field(0xb0), &learned_header) {
+            let restored = m.write(game + self.game_field(0x830), &h);
+            m.write(game + self.game_field(0x68), &cd)?;
             restored?;
             return Err(e);
         }
         let result = run();
-        let restored_abilities = m.write(game + 0xb0, &learned);
-        let restored = m.write(game + 0xa10, &h);
-        m.write(game + 0x68, &cd)?;
+        let restored_abilities = m.write(game + self.game_field(0xb0), &learned);
+        let restored = m.write(game + self.game_field(0x830), &h);
+        m.write(game + self.game_field(0x68), &cd)?;
         restored_abilities?;
         restored?;
         result
@@ -579,14 +622,14 @@ impl Adapter {
             distant[0] += 40.;
             self.fixture_event_pose(io, game, 0, p.actors[0].guid, distant)?;
             self.fixture_event_pose(io, game, 1, p.actors[1].guid, origin)?;
-            let area = io.read(game + 0x5f4, 4)?;
-            io.write(game + 0x5f4, &1.5f32.to_le_bytes())?;
+            let area = io.read(game + self.game_field(0x4b8), 4)?;
+            io.write(game + self.game_field(0x4b8), &1.5f32.to_le_bytes())?;
             event[29] = 6;
             event[12..24].copy_from_slice(&origin.map(f32::to_le_bytes).concat());
-            let old_origin=io.read(game+0xa28,24)?;
+            let old_origin=io.read(game + crate::current::PERK_ORIGINS_HEADER,24)?;
             let icon=b"INV_Jewelry_Necklace_21";
             let origin_row=[u64::MAX,1,0,icon.as_ptr() as u64,icon.len() as u64];
-            if case==19 {io.write(game+0xa28,&[1,origin_row.as_ptr() as u64,1].map(u64::to_le_bytes).concat())?;}
+            if case==19 {io.write(game + crate::current::PERK_ORIGINS_HEADER,&[1,origin_row.as_ptr() as u64,1].map(u64::to_le_bytes).concat())?;}
             let result = self.fixture_set_scope(io, game, &rows, base, || {
                 io.shield_proc(
                     game,
@@ -596,8 +639,8 @@ impl Adapter {
                     if case == 5 { 324 } else { 17 },
                 )
             });
-            if case==19 {io.write(game+0xa28,&old_origin)?;}
-            io.write(game + 0x5f4, &area)?;
+            if case==19 {io.write(game + crate::current::PERK_ORIGINS_HEADER,&old_origin)?;}
+            io.write(game + self.game_field(0x4b8), &area)?;
             for a in &p.actors {
                 self.fixture_event_pose(io, game, a.slot, a.guid, a.position)?;
             }
@@ -614,9 +657,9 @@ impl Adapter {
                 let (_, v) = self.combat_rows(io, game)?;
                 Ok(scalar(
                     v.chunks_exact(crate::current::ENEMY_STRIDE)
-                        .find(|r| word(r, 0xf0) == id)
+                        .find(|r| word(r, crate::current::ENEMY_GUID) == id)
                         .ok_or("Missing target")?,
-                    0x120,
+                    crate::current::ENEMY_VULNERABILITY,
                 ))
             };
             event[8..12].copy_from_slice(&spell.to_le_bytes());
@@ -638,10 +681,13 @@ impl Adapter {
         if (11..=17).contains(&case) {
             let class = [2, 3, 4, 5, 8, 9, 11][(case - 11) as usize];
             let rows = self.fixture_set_rows(io, base, class, 5, 1.)?;
-            let modifier = rows
-                .chunks_exact(64)
-                .find(|row| row[0] == 47 && row[8] == 18)
-                .ok_or("Missing controlled-target modifier")?;
+            let mut modifier = None;
+            for row in rows.chunks_exact(64) {
+                if let Some((18, value)) = super::perks::stat_modifier(
+                    crate::current::PERK_OBSERVATION_LAYOUT, row,
+                )? { modifier = Some(value); break; }
+            }
+            let modifier = modifier.ok_or("Missing controlled-target modifier")?;
             // The ally runs the ordinary stun impact, then only the wearer's
             // native stat vector changes between the two otherwise equal hits.
             type Impact = unsafe extern "system" fn(u64, u64, *const u8, f32, u32);
@@ -662,16 +708,16 @@ impl Adapter {
             let (_, enemies) = self.combat_rows(io, game)?;
             let witness = enemies
                 .chunks_exact(crate::current::ENEMY_STRIDE)
-                .find(|row| word(row, 0xf0) == id)
+                .find(|row| word(row, crate::current::ENEMY_GUID) == id)
                 .ok_or("Missing stun witness")?;
-            if scalar(witness, 0x1dc) <= self.set_clock(io, game)? {
+            if scalar(witness, crate::current::SOLO_ENEMY_ROOT_UNTIL) <= self.set_clock(io, game)? {
                 return Err("Ally stun has expired on the witness".into());
             }
             let before = hp()?;
             let rng = io.read(game + self.game_field(0xae8), 32)?;
             io.support_hit(game, id, 100., 845)?;
             let after = hp()?;
-            let h = io.read(game + 0x9e0, 24)?;
+            let h = io.read(game + self.game_field(0x800), 24)?;
             let n = word(&h, 16);
             if !extent(word(&h, 8), n, 8) {
                 return Err("Invalid fixture modifier storage".into());
@@ -682,16 +728,16 @@ impl Adapter {
                 io.read(word(&h, 8), n as usize * 8)?
             };
             modifiers.extend(18u32.to_le_bytes());
-            modifiers.extend(&modifier[4..8]);
+            modifiers.extend(modifier.to_le_bytes());
             io.write(
-                game + 0x9e0,
+                game + self.game_field(0x800),
                 &[n + 1, modifiers.as_ptr() as u64, n + 1]
                     .map(u64::to_le_bytes)
                     .concat(),
             )?;
             io.write(game + self.game_field(0xae8), &rng)?;
             let hit = io.support_hit(game, id, 100., 845);
-            io.write(game + 0x9e0, &h)?;
+            io.write(game + self.game_field(0x800), &h)?;
             hit?;
             return Ok((before - after, after - hp()?));
         }
@@ -712,15 +758,55 @@ mod tests {
         }
     }
     #[test]
+    fn dot_sources_distinguish_saved_registers_and_parent_frame_spills() {
+        let mut memory = Memory(vec![0; 0x22000]);
+        let (stack, frame, game, base) = (0x10000u64, 0x18000u64, 0x20000u64, 0x140000000u64);
+        let cases = [
+            ([0xe8, 0xb0], (0x5ec7eee, 0, 0xc0)),
+            ([0xe8, 0xb0], (0x5f55e0f, 1, 0x1b8)),
+            ([0xd8, 0xa0], (0x5fb67ef, 0, 0x98)),
+            ([0xd8, 0xa0], (0x5fbf2ac, 1, 0x1e0)),
+        ];
+        for (slots, caller) in cases {
+            memory.0.fill(0);
+            let put = |memory: &mut Memory, at: u64, value: u64| {
+                memory.0[at as usize..at as usize + 8].copy_from_slice(&value.to_le_bytes());
+            };
+            put(&mut memory, stack + slots[0], base + caller.0);
+            put(&mut memory, stack + slots[1], frame);
+            put(&mut memory, if caller.1 == 0 { stack + caller.2 } else { frame + caller.2 }, game);
+            assert_eq!(dot_owner(&memory, stack, base, slots, &[caller]).unwrap(), Some(game));
+            assert_eq!(dot_owner(&memory, stack, base, slots, &[]).unwrap(), None);
+            assert!(dot_owner(&memory, stack, base, slots, &[(caller.0, 2, caller.2)]).is_err());
+        }
+        assert!(dot_owner(&memory, u64::MAX, base, [0xd8, 0xa0], &[]).is_err());
+    }
+    #[test]
+    fn private_clone_uses_selected_spills_without_confusing_event_and_count() {
+        let mut memory = Memory(vec![0; 0x12000]);
+        let frame = 0x10000;
+        memory.0[frame + 0x1b8..frame + 0x1c0].copy_from_slice(&0x30000u64.to_le_bytes());
+        memory.0[frame + 0x58..frame + 0x60].copy_from_slice(&2u64.to_le_bytes());
+        let registers = [0x20000, 0xdeadbeef, 0x40000, 8];
+        assert_eq!(clone_context(&memory, [0, 0], frame as u64, registers).unwrap(),
+                   (0x20000, 0xdeadbeef, 0x40000, 8));
+        assert_eq!(clone_context(&memory, [0x1b8, 0x58], frame as u64, registers).unwrap(),
+                   (0x20000, 0x30000, 0x40000, 2));
+        assert!(clone_context(&memory, [0, 0x58], frame as u64, registers).is_err());
+        assert!(clone_context(&memory, [0x1b8, 0x58], u64::MAX, registers).is_err());
+        assert!(clone_context(&memory, [0, 0], frame as u64, [42, 0x30000, 0x40000, 2]).is_err());
+        assert!(clone_context(&memory, [0, 0], frame as u64, [0x20000, 0x30000, 0x40000, 513]).is_err());
+    }
+    #[test]
     fn matching_uses_native_tag_bytes_and_ignores_padding() {
         let a = Adapter::select(crate::current::SHA256).unwrap();
         let key = b"serpent_sting";
         let mut m = Memory(vec![0; 0x10100]);
         m.0[0x10000..0x10000 + key.len()].copy_from_slice(key);
         let mut row = [0xdb; 64];
-        row[0] = 14;
-        row[4..8].copy_from_slice(&2u32.to_le_bytes());
-        row[8] = 1;
+        row[..4].copy_from_slice(&26u32.to_le_bytes());
+        row[32..36].copy_from_slice(&2u32.to_le_bytes());
+        row[8..12].copy_from_slice(&1u32.to_le_bytes());
         row[16..24].copy_from_slice(&0x10000u64.to_le_bytes());
         row[24..32].copy_from_slice(&(key.len() as u64).to_le_bytes());
         assert_eq!(a.set_row_bit(&m, &row).unwrap(), 1);

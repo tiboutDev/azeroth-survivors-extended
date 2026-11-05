@@ -20,9 +20,10 @@ static ACTIVE: AtomicBool = AtomicBool::new(false);
 static ORIGINAL: AtomicUsize = AtomicUsize::new(0);
 static DEFINITION_AVAILABLE: AtomicBool = AtomicBool::new(false);
 static SKIN_ORIGINAL: AtomicUsize = AtomicUsize::new(0);
-// Native records retain definition pointers, including after death. These twelve
-// immutable, map-specific templates therefore live for the process lifetime.
-static DEFINITIONS: [OnceLock<GoblinDefinition>; 12] = [const { OnceLock::new() }; 12];
+// Native records retain definition pointers, including after death. Immutable,
+// map-specific templates therefore live for the process lifetime.
+static DEFINITIONS: [OnceLock<GoblinDefinition>; azsx_game::current::BLESSING_MAP_COUNT as usize] =
+    [const { OnceLock::new() }; azsx_game::current::BLESSING_MAP_COUNT as usize];
 thread_local! {static PENDING:Cell<Option<(u64,u64)>>=const{Cell::new(None)};}
 struct State {
     game: u64,

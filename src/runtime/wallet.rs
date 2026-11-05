@@ -194,7 +194,8 @@ unsafe extern "system" fn currency(c: &crate::stub::Context) {
     };
     let result = (|| -> Result<(), String> {
         let (gold, _, _) = runtime.adapter.current_gold(&runtime.local, state.game)?;
-        if gold.checked_mul(10000) != Some(c.r8 as u32) {
+        let value = azsx_game::official::native_unit_field_value(c.r8, c.xmm[2])?;
+        if gold.checked_mul(10000) != Some(value) {
             return Err("Native coinage does not match its wallet balance".into());
         }
         let wallet = state.wallet.native_debit(gold)?;

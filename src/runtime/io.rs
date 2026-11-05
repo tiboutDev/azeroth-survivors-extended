@@ -65,11 +65,14 @@ impl MutableMemory for Access<'_> {
 impl azsx_game::official::CurrencyMemory for Access<'_> {
     fn coinage(&self, map: u64, gold: u32) -> Result<(), String> {
         let copper = gold.checked_mul(10000).ok_or("Native coinage overflow")?;
-        type Set = unsafe extern "system" fn(u64, u16, u32) -> usize;
-        let set: Set = unsafe {
-            std::mem::transmute(self.local.base + self.adapter.currency_entry().rva as usize)
+        unsafe {
+            azsx_game::official::call_native_unit_field(
+                self.local.base + self.adapter.currency_entry().rva as usize,
+                map,
+                0x498,
+                copper,
+            )?
         };
-        unsafe { set(map, 0x498, copper) };
         Ok(())
     }
 }
@@ -163,20 +166,15 @@ impl azsx_game::official::SupportCalls for Access<'_> {
         unsafe { call(game, guid, amount, spell, 3, false, false) };
         Ok(())
     }
-    fn support_hurt_tagged(&self,game:u64,amount:f32,enemy:u64,melee:bool,native_kind:u32,native_spell:u32)->Result<(),String>{
-        let call:azsx_game::official::NativeHurtCall=unsafe{std::mem::transmute(self.local.base+self.adapter.hurt_entry().rva as usize)};
-        unsafe{call(game,amount,enemy,melee,native_kind,native_spell)};Ok(())
+    fn support_hurt_tagged(&self,game:u64,amount:f32,enemy:u64,melee:bool,source:&azsx_game::official::NativeHurtSource)->Result<(),String>{
+        unsafe { self.adapter.call_hurt(self.local.base+self.adapter.hurt_entry().rva as usize,
+                                       game,amount,enemy,melee,source) }
     }
     fn support_damage(&self, game: u64, guid: u64, amount: f32) -> Result<(), String> {
-        type Damage = unsafe extern "system" fn(u64, u64, f32, u32, u32, bool, bool);
-        let call: Damage = unsafe {
-            std::mem::transmute(
-                self.local.base + self.adapter.support_proc_entries()[0].rva as usize,
-            )
+        let call: azsx_game::official::NativeDamageCall = unsafe {
+            std::mem::transmute(self.local.base + self.adapter.support_proc_entries()[0].rva as usize)
         };
-        // The native Nature damage callback itself owns all hit/kill/packet logic.
-        unsafe { call(game, guid, amount, 740, 3, false, false) };
-        Ok(())
+        unsafe { azsx_game::official::call_native_nature_damage(call, self, game, guid, amount) }
     }
     fn shield_proc(
         &self,

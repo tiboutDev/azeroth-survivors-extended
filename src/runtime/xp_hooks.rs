@@ -43,7 +43,7 @@ fn award(services: &dyn Services, context: &mut crate::stub::Context) {
         match services.normalize(
             context.rcx,
             site,
-            [context.rbx, context.rsi, context.r12],
+            [context.rbx, context.rsi, context.r12, context.r15],
             multiplier,
             SHARED_XP_INPUT.with(|value| {
                 value

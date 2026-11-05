@@ -57,7 +57,7 @@ use std::cell::{Cell, RefCell};
 #[derive(Default)]
 struct Probe {
     mode: Cell<u8>,
-    seen: RefCell<Vec<(u64, u64, [u64; 3], f32, Option<u32>)>>,
+    seen: RefCell<Vec<(u64, u64, [u64; 4], f32, Option<u32>)>>,
     warnings: Cell<usize>,
 }
 impl Services for Probe {
@@ -70,7 +70,7 @@ impl Services for Probe {
         assert_eq!(stack, 99);
         (self.mode.get() != 5).then_some(120)
     }
-    fn normalize(&self, game: u64, site: u64, registers: [u64; 3], multiplier: f32, shared: Option<u32>)
+    fn normalize(&self, game: u64, site: u64, registers: [u64; 4], multiplier: f32, shared: Option<u32>)
         -> Result<Option<ExperienceAward>, String>
     {
         self.seen.borrow_mut().push((game, site, registers, multiplier, shared));
@@ -88,7 +88,7 @@ fn context() -> crate::stub::Context {
     // Context contains only integer register/stack snapshots.
     let mut context: crate::stub::Context = unsafe { std::mem::zeroed() };
     context.rcx = 42; context.rdx = 7; context.rsp_entry = 99;
-    context.rbx = 10; context.rsi = 20; context.r12 = 30;
+    context.rbx = 10; context.rsi = 20; context.r12 = 30; context.r15 = 60;
     context.r8 = 40; context.r9 = 50; context.rflags = 0x202;
     context
 }
@@ -100,7 +100,7 @@ fn detached_award_uses_live_input_and_only_rewrites_the_amount() {
     let services = Probe::default(); let mut context = context();
     award(&services, &mut context);
     assert_eq!(context.rdx, 91);
-    assert_eq!(services.seen.borrow()[0], (42, 120, [10, 20, 30], 1.25, Some(73)));
+    assert_eq!(services.seen.borrow()[0], (42, 120, [10, 20, 30, 60], 1.25, Some(73)));
     assert_eq!((context.rcx, context.rbx, context.rsi, context.r12, context.r8, context.r9, context.rflags, context.skip),
         (42, 10, 20, 30, 40, 50, 0x202, 0));
     // A cached sum from another game must never be normalized as this award.

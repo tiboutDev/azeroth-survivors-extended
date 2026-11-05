@@ -44,7 +44,7 @@ def inventory():
     elif isinstance(value,tuple)and len(value)==2 and isinstance(value[0],int)and isinstance(value[1],list):refs.add(value[0])
    contract_domains=sorted(d for d,patterns in domains.items()if any(fnmatch.fnmatch(relative,pattern)for pattern in patterns))or["unclassified"]
    contract_id=relative.removeprefix("crates/azsx-game/src/").removesuffix(".rs").replace("/",".")+"."+method["name"]
-   contracts.append(dict(id=contract_id,method=method["name"],source=relative,domains=contract_domains,native_addresses=sorted(refs),descriptor_constants=named,adapter_source_sha256=hashlib.sha256(body.encode()).hexdigest()))
+   contracts.append(dict(id=contract_id,method=method["name"],source=relative,domains=contract_domains,native_addresses=sorted(refs),descriptor_constants=named,native_accesses=method.get("accesses",[]),local_bindings=method.get("bindings",[]),access_inventory_complete="accesses"in method and"bindings"in method,adapter_source_sha256=hashlib.sha256(body.encode()).hexdigest()))
  contracts,features=apply_attribution(contracts,features,suites)
  return dict(schema=1,client_version=version,client_sha256=client["sha256"],binding_sha256=hashlib.sha256(json.dumps(binding,sort_keys=True).encode()).hexdigest(),contracts=contracts,features=features,approval=False)
 

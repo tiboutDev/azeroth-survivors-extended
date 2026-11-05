@@ -8,7 +8,6 @@ use crate::{
     Result,
 };
 const SAYGE_ENTRY: u32 = 0xa50010;
-type SetField = unsafe extern "system" fn(*mut u64, u16, u32);
 type DropFields = unsafe extern "system" fn(*mut u64);
 type Create =
     unsafe extern "system" fn(*mut u64, u64, u8, u8, *const f32, f32, *const f32, *const u64);
@@ -145,14 +144,14 @@ impl Adapter {
             display,
         );
         self.send_owned_scene_packet(m, base, game, 0x61, packet)?;
-        let set: SetField = std::mem::transmute((base + v::EVENT_UNIT_FIELDS_SET.0) as usize);
+        let set = (base + v::EVENT_UNIT_FIELDS_SET.0) as usize;
         let drop_fields: DropFields =
             std::mem::transmute((base + v::EVENT_UNIT_FIELDS_DROP.0) as usize);
         let create: Create = std::mem::transmute((base + v::EVENT_UNIT_CREATE.0) as usize);
         let pack: Pack = std::mem::transmute((base + v::EVENT_UPDATE_PACKET.0) as usize);
         let mut fields = [0u64; 3];
         for (index, value) in scene_fields(guid, entry, display, scale) {
-            set(fields.as_mut_ptr(), index, value);
+            super::call_native_unit_field(set, fields.as_mut_ptr() as u64, index, value)?;
         }
         let mut block = [0, 1, 0, 0];
         unit_block(create, block.as_mut_ptr(), guid, position, fields.as_ptr());

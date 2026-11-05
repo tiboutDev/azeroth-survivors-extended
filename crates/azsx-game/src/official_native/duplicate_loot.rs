@@ -126,8 +126,8 @@ impl Adapter {
         Ok(value)
     }
     pub fn loot_ui_sink(self, m: &dyn Mem, server: u64) -> Result<(u64, u64)> {
-        let ctx = q(m, server + 0x17d0)?;
-        let vt = q(m, server + 0x17d8)?;
+        let ctx = q(m, server + crate::current::SERVER_UI_SINK)?;
+        let vt = q(m, server + crate::current::SERVER_UI_SINK + 8)?;
         let call = q(m, vt + 24)?;
         if ctx < 0x10000 || call < 0x10000 {
             return Err("Missing native loot UI sink".into());

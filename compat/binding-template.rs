@@ -70,12 +70,13 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 {{MENU_COLOR_FRAME}}
 {{KEPT_TOOLTIP_ROW}}
 {{BASIC_GAME}}
+{{BASIC_DISTANCE_FRAME}}
 {{BASIC_ENEMY}}
 {{BASIC_POSITION}}
 {{BASIC_ORIGIN_XY}}
 {{BASIC_ORIGIN_Z}}
 {{ENCOUNTER_GAME_FRAME}}
-{{ENCOUNTER_DEFINITION_REGISTER}}
+{{ENCOUNTER_CONTEXT}}
 {{ENEMY_STRIDE}}
 {{ENEMY_DEAD}}
 {{ENEMY_GUID}}
@@ -184,6 +185,7 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 
 // Final navigation-adjusted basic movement, before native packet construction.
 {{GOBLIN_FINAL_MOTION}}
+{{GOBLIN_MOTION_XY_XMM}}
 
 {{GOBLIN_AMULET_POOL}}
 {{GOBLIN_REWARD_GAME_FRAME}}
@@ -207,6 +209,7 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 
 /// Native app-data lookup returning the retained Rc<RefCell<UiState>>.
 {{UI_CONTEXT_LOOKUP}}
+{{MINIMAP_STATE_FIELDS}}
 
 // Versioned optional event ABI/data: never infer these from another client.
 {{GOBLIN_OUTFIT_ATLAS}}
@@ -338,6 +341,7 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 {{HEAL_TEXT_TAG}}
 // x86 register numbers for the slot and full entity handle at the visible-item return.
 {{WEAPON_EQUIPMENT_REGISTERS}}
+{{WEAPON_RUN_PROFILE_REGISTER}}
 // Warrior, Paladin and Shaman talent tree bases and lengths in specialization order.
 {{WEAPON_CATALOG_PROBE}}
 {{WEAPON_CATALOG_FRAME}}
@@ -367,6 +371,8 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 
 {{SOLO_ENEMY_ELITE}}
 {{SOLO_ENEMY_ENCOUNTER}}
+{{ENEMY_GUARDIAN_INDEX}}
+{{ENEMY_DEFINITION}}
 {{SOLO_ENEMY_ROOT_UNTIL}}
 {{SOLO_NATIVE_SHIELD}}
 {{SOLO_MORTAR_SPELL}}
@@ -379,3 +385,60 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 {{SOLO_PROJECTILE_CREATE}}
 {{SOLO_PROJECTILE_DELAY_READ}}
 {{SOLO_PROJECTILE_ORIGIN_READ}}
+
+{{UNIT_FIELD_VALUE_ABI}}
+
+{{PERK_ORIGINS_HEADER}}
+
+// Perk observation layout; copies are never native dispatcher input.
+{{PERK_OBSERVATION_LAYOUT}}
+
+// Healing budget: retained raw-heal contract or health restored plus absorb gained.
+{{NATURE_HEALING_BUDGET}}
+
+// Optional reviewed RNG, chance, multiplier and two proc-guard field offsets.
+{{NATURE_CRITICAL_FIELDS}}
+
+// Native map-pair marks table extent; later zones retain its last reward row.
+{{BOSS_MARKS_ROW_COUNT}}
+
+// Zero retains the historical additive support attribution policy.
+{{STRONGEST_SHIELD_POOLS}}
+
+{{DOWNED_XP_HOST_REWARD_ABI}}
+
+{{DOWNED_XP_PREREQUISITES}}
+
+{{ACTOR_PERKS_HEADER}}
+
+{{ABILITY_STRIDE}}
+{{LEARNED_ABILITY_STRIDE}}
+
+{{ABILITY_MODIFIERS_OFFSET}}
+{{SPELL_MODIFIERS_SIZE}}
+
+{{MARK_POWER_FIELDS}}
+
+{{CAST_ABILITY_SIZE}}
+
+// Selected native sheep ownership headers and enemy expiry.
+{{POLYMORPH_OWNERS_FIELDS}}
+{{ENEMY_POLYMORPH_EXPIRY}}
+
+// Indexes into RSI/R12/R13: scan Game, rupture Game, enemy GUID.
+{{POLYMORPH_HIT_REGISTERS}}
+
+// Native set-proc frame Game/spell and enemy coefficient/expiry pair.
+{{SET_VULNERABILITY_LAYOUT}}
+// Zero retains direct event/count registers at the private clone seam.
+{{SET_CLONE_FRAME_FIELDS}}
+
+// Native DoT append return/saved-frame slots and row-offset register in RAX/RCX/RDX/RDI.
+{{SET_DOT_STACK_FIELDS}}
+{{SET_DOT_ROW_REGISTER}}
+
+{{HURT_SOURCE_LAYOUT}}
+
+{{SPELL_PRESENTATION_RANK_OFFSET}}
+
+{{XP_EFFECT_REGISTER}}

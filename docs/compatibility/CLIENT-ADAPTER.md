@@ -1,154 +1,139 @@
-# Selected native client boundary
+# Selected native client contract
 
-AZSX source supports only official **0.139.2**. `SelectedAdapter::select` accepts
-only the reviewed executable SHA-256. A version label or a similar instruction
-sequence cannot enable another client. Selection does not bypass entry-byte,
-image-bound or native-layout verification.
+The [client registry](../../azsx/supported-games.json) and
+[current client notes](CLIENT-COMPATIBILITY.md) identify the supported image.
+`SelectedAdapter::select` accepts its exact SHA-256. Version labels and approximate
+instruction matches do not select another client.
 
 ## Ownership
 
 | Layer | Responsibility |
 | --- | --- |
-| `crates/azsx-gameplay/src/` | Portable rules, identities and copied semantic values |
-| `crates/azsx-game/src/official.rs` | Selected native facade used by the DLL |
-| `crates/azsx-game/src/official_native/` | Native translation, memory validation, call shapes and hook contracts |
-| `crates/azsx-game/src/bindings/official1392.rs` | Exact current-image identity and descriptor choices |
-| `crates/azsx-game/src/memory.rs`, `enemies.rs` | Neutral memory interface and exact enemy parsing used by current support |
-| `src/runtime/` | Feature coordination and bounded production service bindings |
+| `azsx-gameplay` | Portable rules, identities and copied semantic values |
+| `azsx-game/src/official.rs` | Facade used by the DLL |
+| `azsx-game/src/official_native/` | Native schemas, memory IO, calls and hook contracts |
+| `compat/clients/`, binding template | Reviewed native literals and generated selected descriptor |
+| `src/runtime/` | Coordination, lifecycle and bounded production service bindings |
 
-Active native consumers resolve descriptor data through the `azsx_game::current`
-re-export. The alias currently points to `official1392`; it does not select or
-authorize an executable. Exact hash selection remains explicit in the adapter.
-Event appearance stack slots and native marks tables also belong to that
-descriptor, rather than to feature coordination.
+Production consumers use `azsx_game::current`. Its generated translations are
+self-contained; historical descriptors are test references, not selectable clients
+or chained production fallbacks. Offsets and native container layouts stay inside
+the adapter. Services expose operations and copied/owned results rather than
+Runtime, memory accessors or mutable backing containers.
 
-The selected descriptor is generated from `compat/clients/0.139.2.json` and
-`compat/binding-template.rs`. Its field translations are resolved, including
-explicit invalid gaps; they do not invoke older descriptors. Historical modules
-are test-only comparison references. Reviewed canonical keys are retained where
-call sites require them, with translation owned by the current adapter.
+## Complete wiring review
 
-Run `python3 tools/dev/azsx_dev.py check` to verify generated source and the feature
-inventory. Generation never discovers or approves a new ABI. Exact selection,
-entry guards, call-shape review and private-image checks remain required.
+For a port, review all consumed contacts and schemas before candidate DLLs or live
+trials. Include entry guards, callers, register/stack carriers, return values,
+vector strides, enums, field extents, source/recipient ownership and cleanup.
+Instruction similarity is a candidate match, not ABI proof.
 
-## Native calls and state
+`compat/field-uses.json` pins indirect arguments and host/private namespaces to
+Rust method fingerprints. `field_audit.py` covers closures, arrays and UFCS/free
+calls as well as direct calls. It rejects missing or stale field reviews. Raw
+native buffers and call semantics still need independent expected-output checks.
 
-Native game callbacks can reenter synchronously. Copy observations or remove
-pending deliveries before calling native code; never retain a mutable runtime
-borrow, gameplay-state mutex or map entry across a callback-capable call. Preserve
-partial commits, mutation-before-call order, slot plus GUID identity and cleanup
-when a callback rejects or fails. An uncertain native commit must not be retried.
+Generate with `binding_registry.py --write`; verify generated bindings and the
+feature inventory with `azsx_dev.py check`. Generation never discovers an ABI.
+Current layout details belong in [CLIENT-COMPATIBILITY.md](CLIENT-COMPATIBILITY.md),
+not in copied historical instructions throughout the docs.
 
-Keep offsets, native row/register layouts and native helper addresses in selected
-game access. Feature services expose bounded operations and copied/owned results;
-they do not expose Runtime, Local, mutable containers, Deref or Any escapes.
-Session has separate command, world, update and HUD ports. Other feature modules
-still have direct Runtime dependencies: local service extraction is not a claim
-that every domain has a complete native-free API.
+## Calls, identities and reentry
 
-The reviewed Hurt call has six arguments: Game, amount, enemy, melee flag,
-native source kind and native spell. The final two words occupy Windows x64
-stack arguments five and six; the native consumers read both. The selected
-adapter owns `NativeHurtCall`. Original forwarding and queued taunt redirection,
-including fallback to the original actor, preserve both words. Generated support
-hits use an explicit source kind and spell zero. The support-call interface
-requires the tagged implementation so an adapter cannot silently discard them.
-A Windows stand-in verifies independent nonzero values for both stack words.
-Dead-actor progression uses seven separately guarded native phase checks: two
-shared-XP consumers, two whole-level receipt producers and three queued
-whole-level reward consumers. The selected adapter owns their
-registers and continuations. Only an authoritative coop host with a bounded
-current slot and nonzero GUID may rejoin native scaling/award after the dead
-check. No actor-vector traversal occurs while it is lent out. Native award
-updates XP, levels and pending choices without changing the dead phase; native
-Playing eligibility still controls opening choices. No deferred bank is replayed.
+Native callbacks can reenter synchronously. Copy observations or reserve/remove
+pending work before a native call. Release state locks, RefCell borrows and map
+entries; preserve FIFO/key order, mutation-before-call order and partial commits.
+Never retry an uncertain grant or replace the whole runtime to avoid borrowing.
 
-The reviewed 0.133 healing/meter consumer additionally reads a fifth argument:
-a borrowed native source descriptor. `call_native_heal` supplies the native
-unspecified-source tag used by lifesteal, allowing native attribution from the
-active actor and spell. It preserves the four existing values and bounds the
-source lifetime to the call. The earlier 0.131 callee ignores the extra argument.
-The Windows stand-in checks the source pointer contents as well as the original
-arguments. This contract is independent of executable activation and live proof.
+Bind actors by slot plus GUID and run/session lifetime. Reject inactive or reused
+identities, rebind after callbacks and restore borrowed contexts on every exit.
+Native five-player capacity remains unchanged. Private support route tags use
+three low bits for the slot and bit 3 for hybrid group delivery; reject invalid
+sixth-slot targets.
 
-The retired lobby menu-cache extension has no runtime consumer. Its two unused
-facade/adapter seams are removed rather than becoming 0.133 compatibility
-dependencies. Retained reward-card construction and owner tooltips keep their
-separate active entries.
+Game, private Actor and inherited canonical field namespaces are distinct. Verify
+both ends and the complete byte extent of a translated span. A common shift,
+matching start key or valid pointer alone does not establish a layout.
 
-At the reviewed Hurt absorb-clear seam, RBX owns Game and R15 owns the
-consumed shield spell. R12 still holds the incoming damage kind and must never
-be used as that spell. A register fixture distinguishes the two values explicitly
-and checks the clamped absorbed amount. The 0.131 descriptor is corrected as well;
-the same register ownership was independently checked in the 0.133 consumer.
+Temporary native inputs are loans: preserve unrelated state, reconstruct through
+the native path and restore against current validated storage. A rejected cast
+may shorten a vector; rollback must use its capacity and re-resolved owner, not
+assume the previous length or pointer remains valid.
 
-World-number rendering selects its fresh-size register explicitly: XMM7 in
-0.131 and XMM8 in the reviewed 0.133 renderer, with R14 still owning the entry.
-The Windows probe preserves both registers' upper lanes, the other size register,
-flags, non-damage categories and healing. Native healing event tags are checked
-before borrowing payloads. The 0.133 GUID resolver is split into a three-argument
-native query predicate and a lookup borrowing a pointer to the map reference;
-stand-ins verify both argument lists and reject lookup after a failed query.
-The selected 0.133 descriptor binds these contracts; runtime validation remains a separate gate.
+## Native call shapes
 
-The hybrid heal queue emitter is bound by its actual descriptor kind and native
-cast callers. In 0.133 it additionally snapshots native healing-source metadata
-before appending kind 14. The nearby kind-15 shield emitter retains a similar ABI
-and shorter body; matching that prolog would silently produce the wrong effect.
-An exact-image semantic test checks kind 14, fraction/duration stores and a real
-native cast call edge, independently of the selected entry guard. Cooperative
-qualification must not require synthetic Holy Nova or Holy Shock ally receipts: those
-spells now retain native cast/impact behavior. The retired group-delivery tag is
-rejected. The native healing emitter remains a reviewed native cast dependency,
-not an AZSX hybrid-emission API.
+Unit fields carry opaque 32-bit payloads. Select the reviewed integer-register or
+raw XMM-bit ABI without arithmetic conversion. A two-word setter would also change
+the neighboring field. Windows stand-ins verify payload bits and preservation.
 
-## Compatibility review
+Incoming Hurt and native healing have independently selected source descriptors.
+Deferred hits copy borrowed metadata and custom text before native storage is
+reused, then build a call-scoped descriptor. Refused observations retain original
+native delivery; fallback keeps the same source. Preserve every native argument,
+including damage kind, critical/proc scope and attribution.
 
-Read [the stable feature inventory](AZSX-FEATURES.md) and
-[the current descriptor notes](CLIENT-COMPATIBILITY.md). Account for every feature
-ID, including disabled or upstream-native behavior. Compare exact build data,
-source policy and artifact validation separately. Matched call sites provide
-candidate references only: they do not establish the callee ABI or the target
-data layout. The offline comparer keeps those candidates separate from aligned
-instructions and refuses checkpoints created with the previous reference-inference
-policy; retain old evidence and start a fresh comparison instead. Use the profiles in
-[testing](../development/TESTING.md); run Windows stand-ins when native register/stack wrappers
-or generated code change. Current tests cover the selected 0.133 path;
-the full gate additionally enables that graph to preserve its tests.
+Runtime abilities, learned rows, cast arguments and owner formatter inputs have
+separate extents and rank/modifier fields. Validate native construction, lookup
+and destruction; do not reuse a layout merely because two rows look alike.
 
-See [Rust architecture](../development/RUST-ARCHITECTURE.md) for workspace boundaries and
-[party presentation](../features/OFFICIAL-PARTY-UI.md) for owner-data and retained-widget rules.
+Perk observations normalize only reviewed variants into owned copies. Those copies
+never go back into the native perk vector or dispatcher. Unknown/new variants
+stay native-owned. Stat-only rows must not enter effect dispatch.
 
-Native callable entry guards must account for AZSX-owned hooks without accepting
-arbitrary jumps. The hook installer retains the exact original and installed
-five-byte prefix for each successful hook. The shared item presenter accepts
-that recorded patch only at its registered address, with the reviewed original
-prefix and an unchanged remaining guard. It still calls the hooked entry so
-optional goblin reward scopes retain their native forwarding behavior. Unknown
-patches or changes to the guard tail fail closed; uninstall clears ownership.
+Basic pursuit and final movement use independent selected carriers. Modify only
+the intended scalar/candidate, preserve the other registers/lanes/flags and restore
+borrowed origin poses before later native logic. Ordinary NPC ownership, AI,
+scaling, schedules and allocation remain native.
 
-Native queued whole-level rewards are also consumed while dead. Their native
-threshold-deficit calculation runs at receipt time; only the resulting choices
-wait for revival. The three native consumers retain separate Playing-only choice
-gates. These level-fill awards never enter the shared-XP multiplier/receipt path.
+## Effects and progression
 
-The two whole-level producers originally discarded receipts when the current
-native actor was dead. Their guarded continuations preserve just the native
-level counter addition; item, gold and other reward eligibility is not widened.
-The adapter validates the bounded host stack or remote receipt payload before
-rejoining, without writing phase/HP, inventing XP or retrying uncertain awards.
+- Foreign HoTs, shields, retaliation and death bursts keep their producer,
+  beneficiary, native coefficients, counters and meter ownership. Do not run a
+  foreign heal through the recipient's outgoing talents.
+- Strongest same-spell shields keep the retained pool's producer and native
+  refreshed expiry, including auxiliary pools. A foreign refresh does not acquire
+  ownership of an untracked native personal shield. Loans preserve unrelated absorb.
+- Tranquility uses the selected native restored-health/Tree-absorb budget,
+  throttling and critical/proc behavior. Separate healing-meter credit from damage
+  fuel; retain RNG changes across nested callbacks while restoring borrowed scope.
+- Polymorph borrows its living producer only around the native burst. Keep the
+  triggering hit with the attacker, restore context before later on-hit effects
+  and retain native eligibility checks. Do not duplicate the burst or Faerie Fire.
+- Set/necklace clone hooks select their Game, event, identity and count carriers
+  independently. DoT owner writes retain native sentinels and already assigned
+  owners. Vulnerability reads/writes use one coefficient/expiry pair.
+- Dead participants gain native shared XP and whole-level receipts immediately;
+  native choice eligibility still waits for revival. Review producers, queued
+  consumers and phase continuations independently. Preserve raw XP carriers and
+  rounding; whole-level deficit awards do not enter ordinary XP normalization.
+- Personal reward acknowledgements commit before another actor's callback-capable
+  grant. Preserve card order and native currency/stat reconstruction. No XP bank,
+  duplicate loot compensation or replay of an already granted receipt.
 
+## Retained presentation and hooks
 
-The selected Polymorph rupture scope begins after the triggering damage
-has committed and ends at the common join before subsequent on-hit procs.
-Both interior seams are guarded. A separately guarded entry bypasses the native
-attacker ability-kind scan only for a unique active foreign sheep; the native
-hit-eligibility checks still run before borrowing the producer. This allows an
-ally without a special ability to rupture the sheep. The native ownership GUID list is read from
-Game+ad8/ae0 or Actor+9d0/9d8, independently verified against the native swap.
-The adapter normalizes guest-to-guest transitions through the host, rebinds
-slot/GUID, and restores the attacker after native burst completion. The runtime
-keys outstanding loans by native frame to preserve nested callback ownership;
-no state borrow spans a native call. The native explosion itself is not replaced.
-Selected-memory and exact-image checks do not establish live gameplay parity.
+Use native owner formatting, rank and identity for tooltips. Keep its owned text
+intact; missing/ambiguous data is hidden rather than replaced by viewer values.
+Publish the addon provider through the selected virtual script reader, preserving
+native initialization and string allocation. AZSXUI is an optional consumer;
+no internal installed addon or MPQ scanning is required.
+
+Native text categories, direct/periodic event tags, GUID lookup predicates and
+message writers retain separate contracts. A similar shield/heal emitter prologue
+can produce the wrong effect. Check real native construction and callers. Holy
+Nova and Holy Shock retain native behavior; retired hybrid group routes stay off.
+
+`src/install.rs` owns one hook per native target, including optional batches.
+Rollback affects only the failed batch. Guards accept a recorded installed prefix
+only at its owned address with the reviewed original and unchanged tail. Shared
+presenters forward through that registered entry; they do not install a second hook.
+Unknown jumps remain invalid, and teardown clears ownership.
+
+## Validation scope
+
+Use [TESTING.md](../development/TESTING.md) and the
+[compatibility checklist](COMPATIBILITY-CHECKLIST.md). Review every feature's
+active, disabled or upstream disposition. Code checks establish wiring/contracts;
+exact-artifact live observations establish the remaining integration behavior;
+visual claims need inspected captures. Keep these scopes and any failures explicit
+without repeating already valid checks.

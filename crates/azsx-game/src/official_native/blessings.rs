@@ -188,7 +188,10 @@ impl Adapter {
             .chunks_exact(layout::ENEMY_STRIDE)
             .filter(|row| {
                 row[layout::ENEMY_DEAD] == 0
-                    && u64::from_le_bytes(row[0x18..0x20].try_into().unwrap()) != u64::MAX
+                    && u64::from_le_bytes(
+                        row[layout::SOLO_ENEMY_ENCOUNTER..layout::SOLO_ENEMY_ENCOUNTER + 8]
+                            .try_into().unwrap(),
+                    ) != u64::MAX
             })
             .map(|row| {
                 u64::from_le_bytes(
@@ -267,6 +270,25 @@ impl Adapter {
 }
 
 impl Adapter {
+    /// Registers are [R12, R13, R15]; a nonzero selected frame slot owns
+    /// the definition when the native compiler spills it instead.
+    pub fn native_encounter_context(
+        self, m: &dyn Mem, frame: u64, registers: [u64; 3], base: u64,
+    ) -> Result<Option<(u64, u64)>> {
+        let [game_register, definition_register, definition_frame] = crate::current::ENCOUNTER_CONTEXT;
+        let game = match game_register {
+            12 => registers[0], 13 => registers[1],
+            _ => return Err("Unreviewed native encounter Game carrier".into()),
+        };
+        let definition = if definition_frame != 0 {
+            q(m, frame.checked_add(definition_frame as u64).ok_or("Encounter definition frame overflow")?)?
+        } else if definition_register == 15 {
+            registers[2]
+        } else {
+            return Err("Unreviewed native encounter definition carrier".into());
+        };
+        self.blessing_event_context(m, [frame, definition, game], base)
+    }
     pub fn blessing_event_context(
         self,
         m: &dyn Mem,
@@ -274,9 +296,8 @@ impl Adapter {
         base: u64,
     ) -> Result<Option<(u64, u64)>> {
         let [frame, definition, game] = registers;
-        // The selected completion branch keeps the boss definition in R15,
-        // and the game in R13. The frame slot formerly holding the definition
-        // is now an unrelated native log queue reference.
+        // Require the selected frame spill to agree with the independently
+        // captured Game carrier before inspecting the native completion phase.
         if q(m, frame.checked_add(crate::current::ENCOUNTER_GAME_FRAME)
             .ok_or("Encounter frame overflow")?)? != game {
             return Err("Encounter game context changed".into());

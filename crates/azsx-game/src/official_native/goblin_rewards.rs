@@ -8,6 +8,11 @@ fn q(m: &dyn Mem, a: u64) -> Result<u64> {
             .map_err(|_| "Goblin reward pointer")?,
     ))
 }
+/// The native reward table groups map pairs and caps newer zones at its last row.
+fn marks_offset(map: u64, rows: u64) -> Result<u64> {
+    if rows == 0 || rows > 64 { return Err("Invalid native boss marks table extent".into()); }
+    Ok((map / 2).min(rows - 1) * 4)
+}
 impl Adapter {
     pub fn goblin_reward_entries(self) -> [Entry; 3] {
         [
@@ -101,7 +106,8 @@ impl Adapter {
                     .map_err(|_| "Native mark coefficient")?,
             ))
         };
-        let mut amount = f(base + crate::current::BOSS_MARKS_TABLE + (map & !1) * 2)?;
+        let offset = marks_offset(map, crate::current::BOSS_MARKS_ROW_COUNT)?;
+        let mut amount = f(base + crate::current::BOSS_MARKS_TABLE + offset)?;
         if m.read(game + crate::current::EVENT_ENDLESS_OFFSET, 1)? != [0] {
             let repeats = u32::from_le_bytes(
                 m.read(game + crate::current::GOBLIN_ENDLESS_KILLS_OFFSET, 4)?
@@ -238,6 +244,18 @@ impl Adapter {
 mod tests {
     use super::super::treasure_goblins::tests::Memory;
     use super::*;
+    #[test]
+    fn mark_rows_preserve_existing_pairs_and_bound_new_final_maps() {
+        for map in 0..12 {
+            assert_eq!(marks_offset(map, 6).unwrap(), (map & !1) * 2);
+        }
+        assert_eq!(marks_offset(10, 6).unwrap(), 20);
+        assert_eq!(marks_offset(11, 6).unwrap(), 20);
+        assert_eq!(marks_offset(12, 6).unwrap(), 20);
+        assert_eq!(marks_offset(u64::MAX, 6).unwrap(), 20);
+        assert!(marks_offset(0, 0).is_err());
+        assert!(marks_offset(0, 65).is_err());
+    }
     #[test]
     fn scoped_pool_retains_allocation_ownership_and_does_not_touch_other_generators() {
         let a = Adapter::select(crate::current::SHA256).unwrap();

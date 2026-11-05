@@ -3,6 +3,7 @@
 use crate::{memory::Mem, Result};
 mod combat;
 mod polymorph;
+mod perks;
 mod sets;
 pub use sets::SetDeath;
 pub use polymorph::PolymorphLoan;
@@ -18,6 +19,8 @@ pub use menu_icons::{MenuAssets, MenuBindings};
 mod experience;
 pub(crate) mod support;
 mod wallet;
+mod unit_fields;
+pub use unit_fields::{call_native_unit_field, native_unit_field_value};
 pub use combat::{BasicFrame, CombatActor};
 /// Wire/context extent of this reviewed native build, not a product admission policy.
 pub const NATIVE_PLAYERS: usize = 5;
@@ -69,7 +72,7 @@ pub struct Adapter {
 impl Adapter {
     pub fn select(hash: &str) -> Result<Self> {
         let revision = match hash {
-            crate::current::SHA256 => Revision::V1392,
+            crate::current::SHA256 => Revision::V1400,
             _ => return Err("No reviewed official-engine adapter for this executable".into()),
         };
         Ok(Self { revision })
@@ -175,13 +178,13 @@ impl Adapter {
         mem: &dyn super::official::MutableMemory,
         game: u64,
         return_rva: u64,
-        registers: [u64; 3],
+        registers: [u64; 4],
         multiplier: f32,
         shared_guest: Option<u32>,
     ) -> Result<Option<super::official::ExperienceAward>> {
         let (source, raw) = match self.baseline_rva(return_rva) {
             0x595e653 => ("pickup", registers[0] as u32),
-            0x5949b3b => ("effect", registers[2] as u32),
+            0x5949b3b => ("effect", effect_xp_raw::<{ crate::current::XP_EFFECT_REGISTER }>(registers)),
             0x59763dd => ("reward", registers[0] as u32),
             0x58fa00b => ("shared", registers[1] as u32),
             0x58dac9f => (
@@ -771,15 +774,13 @@ mod tests {
     }
     impl Mem for Memory {
         fn read(&self, a: u64, n: usize) -> Result<Vec<u8>> {
-            let bytes = match a {
-                0xc58 => self.role.to_le_bytes().to_vec(),
-                0xc98 => self.count.to_le_bytes().to_vec(),
-                0xf49 => vec![self.connected],
-                0xf78 => self.role.to_le_bytes().to_vec(),
-                0xfb8 => self.count.to_le_bytes().to_vec(),
-                0x13b5 => vec![self.connected],
-                _ => return Err("Unexpected union read".into()),
-            };
+            let bytes = if a == crate::current::SERVER_ROLE {
+                self.role.to_le_bytes().to_vec()
+            } else if a == crate::current::SERVER_PEERS {
+                self.count.to_le_bytes().to_vec()
+            } else if a == crate::current::SERVER_GAME_STREAM {
+                vec![self.connected]
+            } else { return Err("Unexpected union read".into()); };
             if bytes.len() != n {
                 return Err("Wrong read extent".into());
             }
@@ -849,17 +850,17 @@ mod tests {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Revision {
-    V1392,
+    V1400,
 }
 impl Adapter {
     pub fn name(self) -> &'static str {
         match self.revision {
-            Revision::V1392 => "official-coop-0.139.2",
+            Revision::V1400 => "official-coop-0.140.0",
         }
     }
     pub fn version(self) -> &'static str {
         match self.revision {
-            Revision::V1392 => "0.139.2",
+            Revision::V1400 => "0.140.0",
         }
     }
     fn rva(self, baseline: u64) -> u64 {
@@ -960,3 +961,19 @@ pub use event_placement::EventMinimap;
 
 #[cfg(feature="test-hooks")]
 mod world_ui_fixture;
+
+
+// [RBX, RSI, R12, R15] snapshots belong to the selected native XP callers.
+fn effect_xp_raw<const REGISTER: usize>(registers: [u64; 4]) -> u32 {
+    const { assert!(REGISTER == 12 || REGISTER == 15); }
+    registers[if REGISTER == 12 { 2 } else { 3 }] as u32
+}
+#[cfg(test)]
+mod xp_carrier_tests {
+    #[test]
+    fn effect_xp_uses_its_native_raw_input_instead_of_an_unrelated_saved_register() {
+        let registers = [17, 19, 23, 29];
+        assert_eq!(super::effect_xp_raw::<12>(registers), 23);
+        assert_eq!(super::effect_xp_raw::<15>(registers), 29);
+    }
+}

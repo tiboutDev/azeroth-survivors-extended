@@ -5,6 +5,7 @@ archives and their recorded validation have their own scope.
 
 ## Start here
 
+- [Make a focused change](development/DEVELOPMENT.md): source ownership, implementation, proportionate checks and stopping.
 - [Port AZSX to a native client update](compatibility/COMPATIBILITY-CHECKLIST.md): ordered review, tests, solo/coop validation and evidence.
 - [Prepare a release](release/RELEASE-CHECKLIST.md): reproducible builds, signing, exact-archive trials, approval and final handoff.
 - [Check expected AZSX behavior](compatibility/AZSX-BEHAVIOR.md): stable acceptance criteria and recurring regressions.
@@ -25,6 +26,9 @@ archives and their recorded validation have their own scope.
 
 Update the authoritative contract with the corresponding implementation. Keep
 operational checklists linked to detailed rules instead of copying their values.
+The development guide owns the daily sequence, TESTING.md owns check selection,
+and each checklist owns only its compatibility or release steps. Keep past debug
+notes and run status in ignored evidence.
 The feature inventory is generated from `compat/features.json` and its template;
 regenerate it with `python3 tools/dev/feature_catalog.py --write-doc`.
 

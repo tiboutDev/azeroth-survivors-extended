@@ -34,36 +34,11 @@ unsafe extern "system" fn panel(c: &mut crate::stub::Context) {
         r.log.warn(&format!("Talent panel note rejected: {e}"));
     }
 }
-#[cfg(feature="test-hooks")]
-mod panel_probe {
-    use super::*;
-    static ORIGINAL: AtomicUsize = AtomicUsize::new(0);
-    crate::context_stub_rw!(probe, 0, select, ORIGINAL);
-    unsafe extern "system" fn select(c: &mut crate::stub::Context) {
-        let Some(r) = super::super::RUNTIME.get() else { return };
-        if r.local.read(c.rsp_entry as usize,8).ok().as_deref()
-            != Some(&(r.local.base as u64 + 0x40c8dc).to_le_bytes())
-            || r.local.read(c.rsp_entry as usize+0x40,1).ok().as_deref()!=Some(&[1]) { return; }
-        // The native detail builder only borrows the hovered key at +0x70/+0x78.
-        // Supply that key without modifying the panel, the catalog or its text.
-        static SELECTION: std::sync::OnceLock<[usize;16]> = std::sync::OnceLock::new();
-        let selection=SELECTION.get_or_init(|| {
-            let mut state=[0;16];
-            state[14]=b"fortified".as_ptr() as usize;
-            state[15]=b"fortified".len();
-            state
-        });
-        c.r9=selection.as_ptr() as u64;
-    }
-    pub(super) fn install(r:&Runtime)->Result<(),String>{
-        let target=r.local.base+0x1dbb60;
-        if r.local.read(target,5)?!=[0x55,0x41,0x57,0x41,0x56]{return Err("Native talent inspection probe changed".into());}
-        crate::install::install(&[crate::install::HookSpec{name:"fixture-inspected-talent",target,detour:probe as *const() as usize,trampoline:&ORIGINAL}])
-    }
-}
 pub fn install(r:&Runtime)->Result<(),String>{
  #[cfg(feature="test-hooks")]
- if std::env::var("AZSX_TEST_TALENT_PANEL").as_deref()==Ok("1"){panel_probe::install(r)?;}
+ if std::env::var("AZSX_TEST_TALENT_PANEL").as_deref()==Ok("1"){
+  return Err("Retired native talent selection probe; use the native talent window without fixture injection".into());
+ }
  let p=r.adapter.talent_panel_entry();
  if r.local.read(r.local.base+p.rva as usize,p.bytes.len())?!=p.bytes{return Err("Native talent panel changed".into())}
  let e=r.adapter.ui_context_entry();

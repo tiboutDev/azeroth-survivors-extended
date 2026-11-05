@@ -2,8 +2,8 @@
 
 Use the [compatibility checklist](COMPATIBILITY-CHECKLIST.md) for execution order; this catalog owns the expected behavior criteria.
 
-Maintained acceptance reference for **current main source**, reviewed against
-official **0.138.0**. Covers AZSX-01–AZSX-34, including disabled and upstream-owned behavior.
+Maintained acceptance reference for **current main source**. Native integration
+targets official **0.140.0**. Covers AZSX-01–AZSX-34, including disabled and upstream-owned behavior.
 This is not proof that an installed DLL or published archive passes these requirements.
 Uncommitted source fixes are not automatically in a prepared release.
 The turret experiment remains outside this baseline.
@@ -151,12 +151,13 @@ Candidate profiles: `support`, `periodic`. [Scenario mappings and limits](../../
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-07.01 | Direct heal/shield | Respect eligibility, range, missing health/pressure and native limits; do not duplicate an upstream delivery. |
+| AZSX-07.01 | Direct heal/shield | Respect eligibility, range, missing health/pressure and native limits; do not duplicate an upstream delivery. Where native PW:S retains the stronger same-spell pool, a weaker/equal refresh keeps that pool's producer and native refreshed expiry, including when PW:S occupies an auxiliary pool. |
 | AZSX-07.02 | Foreign periodic effect | Retain original caster coefficients, talents, counters, aura lifetime and remaining budget across recipient context changes. Concurrent Rejuvenation producers keep separate ownership records; refreshing one must not evict another. Renew keeps its spell-level replacement rule. |
 | AZSX-07.03 | Source/recipient dies, departs or aura replaced | Retire appropriate identities/effects; no ticks reach reused slots or another run. |
 | AZSX-07.04 | Swiftmend / Tree of Life on allies | Swiftmend may select an eligible ally below 40% HP within support range; native producer cooldown remains 8 seconds. Tree of Life may heal allies; its overheal cap uses the producer maximum HP. |
 | AZSX-07.05 | Ancestral Fortitude | The native Stormstrike counter casts one free half-power Healing Wave using ordinary support targeting. |
-| AZSX-07.06 | Inspect an annotated talent in the Armory or during a solo or cooperative run | Append the English Co-op note below the native current-rank text on host and guest. Fortified and Ardent Defender combine taunt and absorb-shield information under one Co-op label. Dire Bear Form identifies Shred as its taunt. The same note appears below the native description in every mode. |
+| AZSX-07.06 | Inspect an annotated talent in the Armory or during a solo or cooperative run | Append the English Co-op note below the native current-rank text on host and guest. Fortified and Ardent Defender combine taunt and absorb-shield information under one Co-op label. Leader of the Pack identifies Shred as its bear-form taunt. The same note appears below the native description in every mode. |
+| AZSX-07.07 | Temporary source shield isolation / rejected cast | Restore the borrowed source aura using existing native capacity, even if the cast appended no aura. Reject changed source identity. Selected auxiliary PW:S loans preserve unrelated absorption gained during the native call. |
 
 ### AZSX-08 — Hybrid support and retaliation
 
@@ -191,8 +192,8 @@ Candidate profiles: `combat`. [Scenario mappings and limits](../../compat/featur
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-10.01 | Eligible successful hits | Shield Slam/Fortified, Hammer of Justice/Ardent Defender and Shred/Dire Bear Form establish persistent ordinary pursuit/basic-attack ownership. |
-| AZSX-10.02 | Miss/no required talent/dead enemy/goblin | No taunt assignment. |
+| AZSX-10.01 | Eligible successful hits | Shield Slam/Fortified, Hammer of Justice/Ardent Defender and Shred with the active bear form from Leader of the Pack establish persistent ordinary pursuit/basic-attack ownership. Deferred melee hits retain original native source attribution and custom names after native storage is reused. |
+| AZSX-10.02 | Miss/no required talent/cat form/dead enemy/goblin | No taunt assignment. |
 | AZSX-10.03 | Competing tanks/death/departure | New valid taunt replaces old; invalid ownership clears. Special casts/projectiles and NPC ownership remain native. |
 
 ### AZSX-11 — Immunity and aggro
@@ -322,7 +323,7 @@ Candidate profiles: `azsx-install`, `tooling`. [Scenario mappings and limits](..
 | AZSX-20.07 | Update/interruption/retry/rollback | Bounded signed inventories/hashes/journals/backups; retain sequence high-water mark and rollback pointer. No reinstall loop; failed attempts need explicit retry. |
 | AZSX-20.08 | Code/runtime replacement/uninstall | Restart before using replaced launcher code; runtime uses the detached verified transaction. Remove only owned matching files, preserve progression/unrelated addons. |
 | AZSX-20.09 | Official native update | Read the bounded official announcement; enable the official updater only when a signed AZSX release matches the announced version and exact executable SHA-256. Restart the launcher after the native executable changes. Offline/unavailable/unsupported announcements do not enable a native update. |
-| AZSX-20.09 | Release | Normal artifact, approved reproducibility reference and exact signed archive are separate gates. No implicit commit/push/publication/installation. |
+| AZSX-20.10 | Release | Normal artifact, approved reproducibility reference and exact signed archive are separate gates. No implicit commit/push/publication/installation. |
 
 ### AZSX-21 — Native marks and duplicate loot
 
@@ -409,8 +410,8 @@ Candidate profiles: `rules`, `official`. [Scenario mappings and limits](../../co
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
 | AZSX-26.01 | First opportunity | Never before first boss; pre-final bad-luck protection (25%, 1/3, 50%, 100% on five-boss maps), then 20–40-second placement delay. Not fixed early; short run/placement failure can prevent actual appearance. |
-| AZSX-26.02 | Active goblin | Max one, native model/transport, 150% guardian-base native health scaling, no attack/ordinary loot, taunt immune. Flee within terrain/arena without distant-recycling teleport; 25 simulation seconds including arrival delay, pause freezes deadline. |
-| AZSX-26.03 | Kill/escape | Kill reserves personal native amulet choice and native-scaled whole marks per present participant, distinct amulets where possible. Escape/missing instance grants nothing; no gold/fabricated boss or pity progression. |
+| AZSX-26.02 | Active goblin | Max one, native model/transport, 150% guardian-base native health scaling, no attack/ordinary loot, taunt immune. Template bounds and immutable storage cover every selected native map, including the last zone after a map is inserted. Selected native health, death and motion fields determine its live state; retired fields cannot mark a fresh spawn dead. Flee within terrain/arena without distant-recycling teleport; 25 simulation seconds including arrival delay, pause freezes deadline. |
+| AZSX-26.03 | Kill/escape | Kill reserves personal native amulet choice and native-scaled whole marks per present participant, distinct amulets where possible. Preserve native map-table bounds, including later maps beyond the final reward row. Escape retires the selected native health/death fields without altering unrelated creature data. Escape/missing instance grants nothing; no gold/fabricated boss or pity progression. |
 | AZSX-26.04 | Downed/choosing recipient | Marks credit once; amulet request waits without replacing current choice; native pause remains authoritative. |
 | AZSX-26.05 | Disable/failure/presentation | Host optional setting controls generation; no uncertain spawn retry. Native announcement/HP bar, no automatic skull. |
 
@@ -427,7 +428,7 @@ Candidate profiles: `rules`, `diagnostics`, `official-party-ui`. [Scenario mappi
 | AZSX-27.03 | Consumables | Eight equiprobable personal families. Use distinct Classic items for encounter-based upgrades. Giant Growth grants 25% area for 60s and Swiftness 20% speed for 15s at all stages. Elixirs and oils last 60–90s, flasks 120s. One healing potion charge restores 20/30/40% of its living owner’s maximum HP at or below 35%. |
 | AZSX-27.04 | Refresh/rebuild/expiry | Different families coexist; same refreshes without stacking time/power or downgrading stronger tier. No rebuild accumulation/free max-HP heal; expire owned aura rows. |
 | AZSX-27.05 | Materials | Immediate whole-gold sale once per personal claim to shared wallet, usual strongest contributions/no skip division. Show actual credited amount, no crafting inventory. |
-| AZSX-27.06 | Quality/options/aura independence | Cosmetic reference item quality independent of tier/sale bucket. lost_supplies controls generation; no choice/pause. Projection works without Fortune/fatigue active.  Deviate pirate and ninja must each render a visible, textured actor on the supported client. |
+| AZSX-27.06 | Quality/options/aura independence | Cosmetic reference item quality independent of tier/sale bucket. lost_supplies controls generation; no choice/pause. Projection works without Fortune/fatigue active.  Deviate pirate and ninja must each render a visible, textured actor on the supported client. Costume expiry restores each actor's current native form, including a guest held in private Actor storage. |
 
 ### AZSX-28 — Sayge's Trial
 
@@ -499,7 +500,7 @@ Candidate profiles: `rules`, `official`, `official-party-ui`, `azsxui`. [Scenari
 | AZSX-30.04 | Engineering reward | Each participant receives one of four unranked, run-local utility/cosmetic gadgets: Net, Rocket Boots, Stun Grenade or Shrink Ray. The optional UI lists the escort beneath the minimap, marks its native position while active, and keeps the gadget in the status row below health; a versioned detached API works without AZSXUI. Variable route totals from 8 to 120 must never invalidate the full AZSX payload or hide unrelated UI. The requested Egg_05 icon is absent in 0.138.0, so the verified native EngGizmos icon is used. |
 | AZSX-30.05 | Native effects | Net roots at most three nearest ordinary enemies within eight yards; Boots use native movement reconstruction; Grenade launches a zero-damage native projectile and controls at most three ordinary enemies within three yards at its identified impact. Native immunity/diminishing returns remain authoritative. Shrink Ray changes only visual scale (x0.5/x1/x1.5). |
 | AZSX-30.06 | Retired damaging/shield gadgets | Sapper and Protection Belt are absent from reward draws and active effects. No engineering damage, backlash or shield grant remains. Parachute is unavailable until native movement/visual/replication contracts are reviewed. |
-| AZSX-30.07 | Compatibility boundary | Exact 0.138.0 executable and selected entry bytes, fields, actor identity and source guard activation. Missing or changed contacts disable the escort; do not substitute guessed offsets or synthetic rewards. |
+| AZSX-30.07 | Compatibility boundary | Exact selected executable and reviewed entry bytes, fields, actor identity and source guard activation. Missing or changed contacts disable the escort; do not substitute guessed offsets or synthetic rewards. |
 
 
 ### AZSX-31 — Banished Demon
@@ -516,7 +517,7 @@ Historical profiles: `rules`, `official`, `official-party-ui`, `azsxui`. [Scenar
 | AZSX-31.02 | Group preparation | Every active participant alive and within four yards. Two cumulative seconds release one native hostile demon; departure suspends without resetting. Scene expires after four simulation minutes or on run teardown. |
 | AZSX-31.03 | Reward | A confirmed native death grants exactly one shared native Banish charge, consumed by native card choice. Missing enemy row, expiry, uncertain write and duplicate callback grant nothing extra. No ordinary XP, gold or boss reward from the event definition. |
 | AZSX-31.04 | Presentation | Detached API exposes the current recipient's structured event in solo and coop. Opening announcements do not reveal rewards. Optional AZSXUI shows an objective, native-icon marker and one terminal reward toast; unrelated UI state survives. |
-| AZSX-31.05 | Compatibility boundary | Guard exact 0.138.0 Banish, demon definition, native spawn, world scene and broadcast contacts. Changed contacts disable the encounter rather than guessing. |
+| AZSX-31.05 | Compatibility boundary | Guard selected native Banish, demon definition, native spawn, world scene and broadcast contacts. Changed contacts disable the encounter rather than guessing. |
 
 
 ### AZSX-32 — Allied Polymorph rupture
@@ -540,10 +541,10 @@ Candidate profiles: `combat`, `support`, `official`. [Scenario mappings and limi
 
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
-| AZSX-33.01 | Ally kills a victim carrying Serpent Sting, Rupture, Flame Shock or Curse of Agony | Dispatch the wearer's matching native eight-piece bonus once with that producer's active effect. Preserve the producer of any propagated DoT. |
+| AZSX-33.01 | Ally kills a victim carrying Serpent Sting, Rupture, Flame Shock or Curse of Agony | Dispatch the wearer's matching native eight-piece bonus once with that producer's active effect. Preserve the producer of any propagated DoT. Resolve clone and append identities from their selected native carriers; leave an already assigned native owner intact. |
 | AZSX-33.02 | Execute, Holy Shock, Judgement, Eviscerate or Mind Flay kill | Only the native killing spell and its producer qualify. Keep personal counters, cooldowns and unrelated kill effects. |
 | AZSX-33.03 | Devout Power Word: Shield breaks on self or ally | The priest's set bursts around the recipient at 8 yards times the producer's area factor. Divine Aegis can trigger independently once. Both Devout tiers require an actual PW:S break. |
-| AZSX-33.04 | PvP set debuffs and controlled targets | Mortal Strike and Earth Shock benefit allied attackers and retain the strongest active vulnerability. An ally's control satisfies the seven other PvP set conditions for the wearer only. |
+| AZSX-33.04 | PvP set debuffs and controlled targets | Mortal Strike and Earth Shock benefit allied attackers and retain the strongest active vulnerability. An ally's control satisfies the seven other PvP set conditions for the wearer only. Preserve the native event spell and enemy identity when reconciling the coefficient/expiry pair. |
 | AZSX-33.05 | A teammate finishes an enemy carrying a legendary necklace DoT | Each eligible producer triggers the matching native explosion once. A qualifying set bonus can also trigger. |
 | AZSX-33.06 | A shield or healing necklace targets another player | The Power Word: Shield necklace bursts around the protected player with the caster's area bonus. Holy Light and Regrowth apply an absorb pool capped at 40% of caster maximum health on cast. |
 | AZSX-33.07 | Vampiric Renew or Rejuvenation heals another player | The recipient gains 5% leech on their own damage for 10 or 12 simulation seconds respectively. Recasting the same necklace on the same recipient refreshes its duration. |
@@ -555,6 +556,6 @@ Candidate profile: `official`.
 | Criterion | Trigger / case | Required outcome |
 | --- | --- | --- |
 | AZSX-34.01 | Start a run with Worn piece (spec) | Project the equipped weapon using its set and the unique highest talent tree. This piece (spec) uses the selected owned set piece instead. Preserve actual gear and stats.  The collection marks the selected piece with the native L and names it in the Showing row for either explicit piece look. |
-| AZSX-34.02 | Select a native Look | Keep the explicit hand appearance. Use native appearance for tied or empty trees. |
+| AZSX-34.02 | Select a native Look or an unmapped set | Keep explicit native hand appearance. Use native appearance for tied or empty trees and sets without a reviewed mapping, including Tier 0.5. |
 | AZSX-34.03 | Inspect the Armory character model or main-menu portrait | Resolve both visible hands from the selected class and saved ranks using the same set mapping and Look precedence as the run. |
 | AZSX-34.04 | A melee action requests a one- or two-handed strike while a specialization weapon is visible | Match the requested strike to the visible grip for the attacking entity. With a two-handed Enhancement look, check the animation consumed by the renderer for white hits, Rockbiter and Stormstrike. Preserve spell casts, off-hand hits and native equipment choices. |

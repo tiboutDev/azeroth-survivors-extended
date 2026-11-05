@@ -364,8 +364,8 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools/dev'))
 class SelectedImport(unittest.TestCase):
  def test_exact_import_inventory(self):
   from import_official import NAMES,SHA256
-  self.assertEqual(len(NAMES),12);self.assertEqual(NAMES[-1],'Data/patch-B.MPQ')
-  self.assertEqual(SHA256,'0bb6c557c5f6cfeea212761a33554f9a5647ce7cb7e03b8a163b95489496e908')
+  self.assertEqual(len(NAMES),13);self.assertEqual(NAMES[-1],'Data/patch-C.MPQ')
+  self.assertEqual(SHA256,'27c8df53c87e38a98d474bf7106d2444e11e7634ca70dbffc5c2b0aecb894fd9')
 class ContactInventory130(unittest.TestCase):
  def test_previous_descriptor_includes_tables_and_shared_tooltip_seams(self):
   try:
@@ -384,6 +384,8 @@ class CurrentContactInventory(unittest.TestCase):
   rows=descriptor_inventory(ROOT/client["descriptor"])
   for entry,resume,_,_ in c["DOWNED_XP_GUARDS"]:
    self.assertIn(entry,rows);self.assertIn(resume,rows)
+  for returned,_,_ in c["SET_DOT_OWNER_CALLERS"]:self.assertIn(returned,rows)
+  for stack_slot in (0x98,0xa0,0xb0,0xc0,0x1a0,0x1b8,0x1e0):self.assertNotIn(stack_slot,rows)
   self.assertIn(c["MENU_ESCAPE_QUEUE_RETURN"],rows)
   self.assertNotIn(c["BLESSING_EVENT_RVA"],rows)
   self.assertIn(dict(c["EXTENSION_ADDRESSES"])[c["BLESSING_EVENT_RVA"]],rows)

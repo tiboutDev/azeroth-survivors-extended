@@ -91,18 +91,19 @@ impl Adapter {
             return Err("Truncated combat abilities".into());
         }
         let (p, count) = (q(&header, 0), q(&header, 8));
-        if count > 256 || (count > 0 && (p < 0x10000 || p.checked_add(count * 88).is_none())) {
+        let stride = crate::current::ABILITY_STRIDE;
+        if count > 256 || (count > 0 && (p < 0x10000 || p.checked_add(count * stride as u64).is_none())) {
             return Err("Invalid combat ability extent".into());
         }
         let target = mem.read(game + self.game_field(0x8f0), 8)?;
         let target = q(&target, 0);
         let mut mark = Mark::default();
         if count > 0 && target != 0 {
-            let rows = mem.read(p, count as usize * 88)?;
-            if rows.len() != count as usize * 88 {
+            let rows = mem.read(p, count as usize * stride)?;
+            if rows.len() != count as usize * stride {
                 return Err("Truncated combat abilities".into());
             }
-            for row in rows.chunks_exact(88) {
+            for row in rows.chunks_exact(stride) {
                 let def = q(row, 0);
                 if def < base || def.checked_sub(base).is_none_or(|v| v > 0x8000000 - 0x78) {
                     continue;
@@ -111,7 +112,8 @@ impl Adapter {
                 if d(&id, 0) != 1130 {
                     continue;
                 }
-                let power = f(row, 16) * f(row, 56);
+                let [power_at, modifier_at] = crate::current::MARK_POWER_FIELDS;
+                let power = f(row, power_at) * f(row, modifier_at);
                 if !power.is_finite() || power < 0.0 {
                     return Err("Invalid native mark power".into());
                 }
@@ -140,7 +142,9 @@ impl Adapter {
         }
         let mut talents = Talents::default();
         let (mut justice, mut consecration) = (false, false);
-        for row in rows.chunks_exact(64) {
+        for native in rows.chunks_exact(64) {
+            let Some(perk) = super::perks::observe(crate::current::PERK_OBSERVATION_LAYOUT, native)? else { continue };
+            let row = &perk;
             let key = |at, wanted: &[u8]| -> Result<bool> {
                 if q(row, at + 8) != wanted.len() as u64 {
                     return Ok(false);
@@ -160,7 +164,9 @@ impl Adapter {
                     consecration |= key(32, b"consecration")?;
                 }
                 27 => justice |= key(8, b"hammer_of_justice")?,
-                25 if d(row, 4) == 9634 => talents.dire_bear_form = true,
+                // The learned Leader of the Pack profile produces an active
+                // form perk, not the adjacent native variant.
+                26 if d(row, 4) == 9634 => talents.dire_bear_form = true,
                 _ => {}
             }
         }
@@ -317,7 +323,7 @@ impl Adapter {
         Ok(distance)
     }
     pub fn hurt_actor(self,io:&dyn SupportCalls,game:u64,slot:u32,guid:u64,amount:f32,enemy:u64,melee:bool)->Result<Option<f32>>{
-        self.hurt_actor_tagged(io,game,slot,guid,amount,enemy,melee,u32::from(!melee),0)
+        self.hurt_actor_tagged(io,game,slot,guid,amount,enemy,melee,&crate::official::NativeHurtSource::for_hit(melee))
     }
     pub fn hurt_actor_tagged(
         self,
@@ -328,8 +334,7 @@ impl Adapter {
         amount: f32,
         enemy: u64,
         melee: bool,
-        native_kind:u32,
-        native_spell:u32,
+        source: &crate::official::NativeHurtSource,
     ) -> Result<Option<f32>> {
         if !amount.is_finite()
             || !(0.0..=1e12).contains(&amount)
@@ -356,7 +361,7 @@ impl Adapter {
         let result = (|| {
             let before = f(&io.read(game + self.game_field(0x4f8), 8)?, 0)
                 + f(&io.read(game + self.game_field(0x4fc), 4)?, 0);
-            io.support_hurt_tagged(game, amount, enemy, melee,native_kind,native_spell)?;
+            io.support_hurt_tagged(game, amount, enemy, melee,source)?;
             let after = f(&io.read(game + self.game_field(0x4f8), 8)?, 0)
                 + f(&io.read(game + self.game_field(0x4fc), 4)?, 0);
             io.flush_actor(game)?;
@@ -383,10 +388,10 @@ impl Adapter {
             .find(|(_, r)| {
                 r[layout::ENEMY_DEAD] == 0
                     && f(r, layout::ENEMY_HP) > 0.0
-                    && q(r, 0x18) == u64::MAX
-                    && q(r, 0x58) == u64::MAX
+                    && q(r, layout::SOLO_ENEMY_ENCOUNTER) == u64::MAX
+                    && q(r, layout::ENEMY_GUARDIAN_INDEX) == u64::MAX
                     && q(r, layout::ENEMY_TARGET) != u64::from(avoid_slot)
-                    && (q(r, 0x100) == 0 || mem.read(q(r, 0x100), 1).is_ok_and(|v| v[0] & 1 == 0))
+                    && (q(r, layout::ENEMY_DEFINITION) == 0 || mem.read(q(r, layout::ENEMY_DEFINITION), 1).is_ok_and(|v| v[0] & 1 == 0))
             });
         let Some((i, r)) = selected else {
             return Err(format!(
@@ -395,10 +400,10 @@ impl Adapter {
                     .take(8)
                     .map(|r| (
                         r[layout::ENEMY_DEAD],
-                        q(r, 0x18),
-                        q(r, 0x58),
+                        q(r, layout::SOLO_ENEMY_ENCOUNTER),
+                        q(r, layout::ENEMY_GUARDIAN_INDEX),
                         q(r, layout::ENEMY_TARGET),
-                        q(r, 0x100)
+                        q(r, layout::ENEMY_DEFINITION)
                     ))
                     .collect::<Vec<_>>()
             ));
@@ -441,16 +446,21 @@ impl Adapter {
     }
 }
 
-// Native continuation owns the selected build's nonvolatile distance register.
+// Native distance is either live in XMM15 or spilled to a selected frame slot.
 use std::sync::atomic::AtomicUsize;
 static BASIC_CONTINUATION: AtomicUsize = AtomicUsize::new(0);
 #[unsafe(naked)]
-unsafe extern "C" fn basic_resume() {
-    core::arch::naked_asm!("test rax,rax","jz 2f","movss xmm15,xmm5","2:","jmp qword ptr [rip+{original}]",original=sym BASIC_CONTINUATION);
+unsafe extern "C" fn basic_resume<const FRAME: usize>() {
+    core::arch::naked_asm!(
+        "test rax,rax", "jz 2f",
+        ".if {frame} == 0", "movss xmm15,xmm5",
+        ".else", "movss [rbp+{frame}],xmm5", ".endif",
+        "2:", "jmp qword ptr [rip+{original}]",
+        frame=const FRAME, original=sym BASIC_CONTINUATION);
 }
 impl Adapter {
     pub fn basic_resume_entry(self) -> (usize, &'static AtomicUsize) {
-        (basic_resume as *const () as usize, &BASIC_CONTINUATION)
+        (basic_resume::<{crate::current::BASIC_DISTANCE_FRAME}> as *const () as usize, &BASIC_CONTINUATION)
     }
 }
 #[cfg(test)]
@@ -463,15 +473,28 @@ mod resume_tests {
     }
     static DISTANCE_BITS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
     #[unsafe(naked)]
-    unsafe extern "win64" fn probe(_flag: u64, _old: f32, _new: f32) -> u64 {
-        core::arch::naked_asm!("sub rsp,104","movaps [rsp+32],xmm12","movaps [rsp+48],xmm14","movaps [rsp+64],xmm15","movaps [rsp+80],xmm1","movaps xmm12,xmm1","movaps xmm14,xmm1","movaps xmm15,xmm1","movaps xmm5,xmm2","mov rax,rcx","call {gate}","movd eax,xmm15","mov dword ptr [rip+{distance}],eax","movdqa xmm0,xmm12","pcmpeqb xmm0,[rsp+80]","pmovmskb eax,xmm0","cmp eax,0xffff","jne 2f","movdqa xmm0,xmm14","pcmpeqb xmm0,[rsp+80]","pmovmskb eax,xmm0","cmp eax,0xffff","sete al","movzx eax,al","jmp 3f","2:","xor eax,eax","3:","movaps xmm12,[rsp+32]","movaps xmm14,[rsp+48]","movaps xmm15,[rsp+64]","add rsp,104","ret",gate=sym basic_resume,distance=sym DISTANCE_BITS);
+    unsafe extern "win64" fn probe<const FRAME: usize>(_flag: u64, _old: f32, _new: f32) -> u64 {
+        core::arch::naked_asm!(
+            "push rbp", "sub rsp,1152", "lea rbp,[rsp+160]",
+            "movaps [rsp+32],xmm12", "movaps [rsp+48],xmm14", "movaps [rsp+64],xmm15",
+            "movaps [rsp+80],xmm1", "movaps xmm12,xmm1", "movaps xmm14,xmm1", "movaps xmm15,xmm1",
+            ".if {frame} != 0", "movaps [rbp+{frame}],xmm1", ".endif",
+            "movaps xmm5,xmm2", "mov rax,rcx", "call {gate}",
+            ".if {frame} == 0", "movd eax,xmm15",
+            ".else", "mov eax,[rbp+{frame}]", ".endif",
+            "mov dword ptr [rip+{distance}],eax",
+            "movdqa xmm0,xmm12", "pcmpeqb xmm0,[rsp+80]", "pmovmskb eax,xmm0", "cmp eax,0xffff", "jne 2f",
+            "movdqa xmm0,xmm14", "pcmpeqb xmm0,[rsp+80]", "pmovmskb eax,xmm0", "cmp eax,0xffff",
+            "sete al", "movzx eax,al", "jmp 3f", "2:", "xor eax,eax", "3:",
+            "movaps xmm12,[rsp+32]", "movaps xmm14,[rsp+48]", "movaps xmm15,[rsp+64]",
+            "add rsp,1152", "pop rbp", "ret",
+            frame=const FRAME, gate=sym basic_resume::<FRAME>, distance=sym DISTANCE_BITS);
     }
-    #[test]
-    fn current_native_distance_register_is_selected_and_other_nonvolatiles_survive() {
+    fn verify_distance<const FRAME: usize>() {
         let old = BASIC_CONTINUATION.swap(done as *const () as usize, Ordering::SeqCst);
-        let native = unsafe { probe(0, 3., 7.) };
+        let native = unsafe { probe::<FRAME>(0, 3., 7.) };
         let native_bits = DISTANCE_BITS.load(Ordering::SeqCst);
-        let tank = unsafe { probe(1, 3., 7.) };
+        let tank = unsafe { probe::<FRAME>(1, 3., 7.) };
         let tank_bits = DISTANCE_BITS.load(Ordering::SeqCst);
         BASIC_CONTINUATION.store(old, Ordering::SeqCst);
         assert_eq!((native, tank), (1, 1));
@@ -480,4 +503,10 @@ mod resume_tests {
             (3., 7.)
         );
     }
+    #[test]
+    fn native_distance_register_and_frame_slot_preserve_other_nonvolatiles() {
+        verify_distance::<0>();
+        verify_distance::<0x3b0>();
+    }
+
 }

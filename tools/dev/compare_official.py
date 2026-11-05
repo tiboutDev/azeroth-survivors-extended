@@ -87,12 +87,18 @@ def descriptor_inventory(path):
  Member offsets, stack slots and byte guards are deliberately not addresses.
  """
  path=Path(path);source=path.read_text();out={}
- contacts={int(a,16):int(b,16)for a,b in re.findall(r"\(0x([0-9a-f]+),\s*0x([0-9a-f]+),?\)",source)}
+ contacts={}
  def add(value,label):out.setdefault(int(value,16),[]).append(label)
+ # Only canonical/native translation tables contain address pairs. A tuple
+ # elsewhere may instead describe a return address and a stack-field offset.
+ for name in ("ADDRESSES","EXTENSION_ADDRESSES"):
+  table=re.search(r"\bconst "+name+r"\s*:[^=]+?=\s*(.*?);",source,re.S)
+  if not table:continue
+  for pair in re.finditer(r"\(0x([0-9a-f]+),\s*0x([0-9a-f]+),?\)",table[1]):
+   baseline,native=pair.groups();contacts[int(baseline,16)]=int(native,16)
+   line=source.count("\n",0,table.start(1)+pair.start())+1
+   add(native,f"{path.name}:{line} baseline={baseline}")
  for n,line in enumerate(source.splitlines(),1):
-  pairs=re.finditer(r"\(0x([0-9a-f]+),\s*0x([0-9a-f]+),?\)",line)
-  for pair in pairs:
-   baseline,native=pair.groups();add(native,f"{path.name}:{n} baseline={baseline}")
   named=re.search(r"pub const ([A-Z0-9_]+(?:_RVA|_TABLE|_NATIVE_PAUSE|_CALLER|_RETURN))\s*:\s*u64\s*=\s*0x([0-9a-f]+)",line)
   if named:add(format(contacts.get(int(named[2],16),int(named[2],16)),"x"),f"{path.name}:{n} {named[1]}")
  # Standalone detour RVAs have a same-name byte guard and are already physical.
@@ -103,6 +109,13 @@ def descriptor_inventory(path):
   add(match[2],f"{path.name} {match[1]}")
  for match in re.finditer(r'pub const ([A-Z0-9_]+_CALLERS)\s*:\s*\[u64;\s*\d+\]\s*=\s*\[([^\]]+)\]',source):
   for value in re.findall(r'0x([0-9a-f]+)',match[2]):add(value,f"{path.name} {match[1]}")
+ # Native DoT return carriers are pairs in older descriptors and triples
+ # in the selected schema. Only the first tuple element is a native contact.
+ for name in ("SET_DOT_OWNER_CALLERS",):
+  match=re.search(r"\bconst "+name+r"\s*:[^=]+?=\s*(.*?);",source,re.S)
+  if match:
+   for address in re.findall(r"\(\s*0x([0-9a-f]+)\s*,",match[1]):
+    add(address,f"{path.name} {name}")
  for name in ('KEPT_TOOLTIP_BINDINGS',):
   match=re.search(r'pub const '+name+r'\s*:.*?=(.*?);',source,re.S)
   if match:

@@ -495,6 +495,11 @@ impl Adapter {
         }
         Ok(totals)
     }
+    /// Register pair is [RDI, R15] at the selected native Look result seam.
+    pub fn weapon_run_profile(self, registers: [u64; 2]) -> u64 {
+        const { assert!(matches!(crate::current::WEAPON_RUN_PROFILE_REGISTER, 7 | 15)) };
+        registers[usize::from(crate::current::WEAPON_RUN_PROFILE_REGISTER == 15)]
+    }
     pub fn weapon_projection(
         self,
         m: &dyn MutableMemory,

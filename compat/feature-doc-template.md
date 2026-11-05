@@ -16,7 +16,7 @@ gold compensation. Reserved removed IDs are not reassigned.
 identified acceptance criteria, regression cases and evidence requirements. Keep
 those current with semantic changes; this generated table remains the index.
 
-A native compatibility change must account for AZSX-01 through AZSX-28, including
+A native compatibility change must account for AZSX-01 through AZSX-34, including
 reserved removed IDs and upstream-native behavior. Record the
 native boundary, exact source/artifact identity, checks and limitations. Preserve
 producer/recipient GUIDs, host/private layouts, native ownership, reset and

@@ -19,7 +19,8 @@
     ],
     "wallet": [
       "crates/azsx-game/src/official_native/wallet.rs",
-      "src/runtime/wallet.rs"
+      "src/runtime/wallet.rs",
+      "crates/azsx-game/src/official_native/unit_fields.rs"
     ],
     "rewards": [
       "crates/azsx-game/src/official_native/wallet.rs",
@@ -37,7 +38,8 @@
     "support": [
       "crates/azsx-game/src/official_native/support*.rs",
       "crates/azsx-game/src/official_native/support/*.rs",
-      "crates/azsx-game/src/official_native/combat_text.rs"
+      "crates/azsx-game/src/official_native/combat_text.rs",
+      "crates/azsx-game/src/official_native/perks.rs"
     ],
     "combat": [
       "crates/azsx-game/src/official_native/combat.rs",
@@ -48,7 +50,8 @@
       "crates/azsx-game/src/official_native/demon.rs",
       "crates/azsx-game/src/official_native/polymorph.rs",
       "crates/azsx-game/src/official_native/sets.rs",
-      "src/runtime/combat/sets.rs"
+      "src/runtime/combat/sets.rs",
+      "crates/azsx-game/src/official_native/perks.rs"
     ],
     "auras": [
       "crates/azsx-game/src/official_native/fatigue.rs",
@@ -68,7 +71,8 @@
       "crates/azsx-game/src/official_native/event_placement.rs",
       "crates/azsx-game/src/official_native/scene_units.rs",
       "crates/azsx-game/src/official_native/escort.rs",
-      "crates/azsx-game/src/official_native/demon.rs"
+      "crates/azsx-game/src/official_native/demon.rs",
+      "crates/azsx-game/src/official_native/unit_fields.rs"
     ],
     "spells": [],
     "ui": [

@@ -8,9 +8,15 @@ use crate::{
 mod advanced;
 mod effects;
 mod talents;
+mod nature;
+mod shields;
+mod hurt;
+pub use hurt::{NativeHurtCall, NativeHurtBorrowedCall, NativeHurtSource};
+pub use nature::{NativeDamageCall, call_native_nature_damage};
+
 pub use advanced::{NativeEffect, RetaliationTick};
 pub use effects::{
-    NativeHealCall, call_native_heal, NativeHurtCall, AuraState, BreakFrame, OwnedEffect, PeriodicTick, PerkLoan, SupportReceipt, SupportTalents,
+    NativeHealCall, call_native_heal, AuraState, BreakFrame, OwnedEffect, PeriodicTick, PerkLoan, SupportReceipt, SupportTalents,
 };
 pub const ROUTE: u32 = 0xac115000;
 // Internal descriptor padding only, not native protocol opcodes. Three target
@@ -39,6 +45,13 @@ pub struct SupportDelivery {
     pub row: [u8; 56],
 }
 impl Adapter {
+    /// Copy the selected native cast payload for controlled diagnostics.
+    pub fn fixture_cast_snapshot(self, mem: &dyn Mem, ability: u64) -> Result<Vec<u8>> {
+        let size = crate::current::CAST_ABILITY_SIZE;
+        let bytes = mem.read(ability, size)?;
+        if bytes.len() != size { return Err("Truncated diagnostic ability".into()); }
+        Ok(bytes)
+    }
     pub fn fixture_support_definition(self, spell: u32) -> Result<u64> {
         match spell {
             11426 => Ok(self.contact117(0x72a0ca0)),
@@ -196,7 +209,8 @@ impl Adapter {
             return Err("Truncated support perks".into());
         }
         let mut talents = SupportTalents::default();
-        for perk in perks.chunks_exact(64) {
+        for native in perks.chunks_exact(64) {
+            let Some(perk) = super::perks::observe(crate::current::PERK_OBSERVATION_LAYOUT, native)? else { continue };
             let scalar = |n| f32::from_le_bytes(perk[n..n + 4].try_into().unwrap());
             match perk[0] {
                 0x14 => talents.overheal_cap = scalar(4),
@@ -451,9 +465,13 @@ impl Adapter {
         let row=self.support_row(io,game,slot)?;
         if slot!=0{io.swap_actor(game,row)?;io.write(game+self.game_field(0xb40),&u64::from(slot).to_le_bytes())?;}
         let result=(||{
-            let mut owned=io.read(ability,0x68)?;if owned.len()!=0x68{return Err("Truncated diagnostic ability".into())}
+            let mut owned=self.fixture_cast_snapshot(io,ability)?;
             let definition=u64::from_le_bytes(owned[..8].try_into().unwrap());
-            io.resolve_spell_modifiers(owned.as_mut_ptr()as u64+0x38,game+self.field117(crate::current::SPELL_PERKS),definition)?;
+            let offset=crate::current::ABILITY_MODIFIERS_OFFSET;
+            if offset.checked_add(crate::current::SPELL_MODIFIERS_SIZE).is_none_or(|end|end>owned.len()) {
+                return Err("Native modifiers exceed the diagnostic ability".into());
+            }
+            io.resolve_spell_modifiers(owned.as_mut_ptr()as u64+offset as u64,game+self.field117(crate::current::SPELL_PERKS),definition)?;
             let result=io.cast_actor(game,owned.as_ptr()as u64)?;io.flush_actor(game)?;Ok(result)
         })();
         if slot!=0{let row=self.support_row(io,game,0)?;io.write(game+self.game_field(0xb40),&0u64.to_le_bytes())?;io.swap_actor(game,row)?;}

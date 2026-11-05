@@ -1669,6 +1669,127 @@
     ],
     "official_native.event_placement.drink_supply_potion": [
       "AZSX-27"
+    ],
+    "official_native.unit_fields.write_field": [
+      "AZSX-03",
+      "AZSX-28",
+      "AZSX-31"
+    ],
+    "official_native.unit_fields.call_native_unit_field": [
+      "AZSX-03",
+      "AZSX-28",
+      "AZSX-31"
+    ],
+    "official_native.unit_fields.native_unit_field_value": [
+      "AZSX-03"
+    ],
+    "official_native.perks.observe": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-10",
+      "AZSX-26",
+      "AZSX-27",
+      "AZSX-32",
+      "AZSX-33"
+    ],
+    "official_native.perks.disable": [
+      "AZSX-32",
+      "AZSX-33"
+    ],
+    "official_native.perks.terminator": [
+      "AZSX-32",
+      "AZSX-33"
+    ],
+    "official_native.support.nature.critical": [
+      "AZSX-07",
+      "AZSX-08"
+    ],
+    "official_native.support.nature.strike": [
+      "AZSX-07",
+      "AZSX-08"
+    ],
+    "official_native.support.nature.call_native_nature_damage": [
+      "AZSX-07",
+      "AZSX-08"
+    ],
+    "official_native.goblin_rewards.marks_offset": [
+      "AZSX-21",
+      "AZSX-26"
+    ],
+    "official_native.support.effects.record": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-33"
+    ],
+    "official_native.experience.host_reward_address": [
+      "AZSX-02"
+    ],
+    "official_native.perks.dispatch_effect": [
+      "AZSX-33"
+    ],
+    "official_native.support.shields.id": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-33"
+    ],
+    "official_native.support.shields.amount": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-33"
+    ],
+    "official_native.support.shields.snapshot": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-33"
+    ],
+    "official_native.support.shields.loan": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-33"
+    ],
+    "official_native.support.shields.shield_pools": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-33"
+    ],
+    "official_native.support.shields.commit_shield_loan": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-33"
+    ],
+    "official_native.support.shields.shield_snapshot": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-33"
+    ],
+    "official_native.support.shields.isolate_shield": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-33"
+    ],
+    "official_native.support.shields.restore_shield": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-33"
+    ],
+    "official_native.support.shields.support_shield_pool": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-33"
+    ],
+    "official_native.support.fixture_cast_snapshot": [
+      "AZSX-07",
+      "AZSX-08",
+      "AZSX-09",
+      "AZSX-12",
+      "AZSX-32",
+      "AZSX-33"
+    ],
+    "official_native.polymorph.polymorph_hit_context": [
+      "AZSX-32"
+    ],
+    "official_native.sets.set_clone_context": [
+      "AZSX-33"
     ]
   },
   "evidence": {
@@ -2875,7 +2996,7 @@
       "shared": false
     },
     "official_native.experience.downed_xp_entries": {
-      "reason": "Native dead-actor shared XP and whole-level receipt guards; pending choices remain native.",
+      "reason": "Guard native XP/whole-level entries and continuations, plus any prerequisite receipt-register reload before the selected remote producer hook.",
       "references": [
         "crates/azsx-game/src/official_native/experience.rs",
         "src/runtime/experience.rs"
@@ -5434,6 +5555,264 @@
         "crates/azsx-game/src/official_native/event_placement.rs",
         "src/runtime/event_services.rs",
         "src/runtime/supplies.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.unit_fields.write_field": {
+      "reason": "Selected integer/float-bit insertion ABI shared by currency projection and native decorative Sayge/chicken unit fields; hook observation reads the matching argument register.",
+      "references": [
+        "crates/azsx-game/src/official_native/unit_fields.rs",
+        "crates/azsx-game/src/official_native/scene_units.rs",
+        "src/runtime/io.rs",
+        "src/runtime/wallet.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
+    "official_native.unit_fields.call_native_unit_field": {
+      "reason": "Selected integer/float-bit insertion ABI shared by currency projection and native decorative Sayge/chicken unit fields; hook observation reads the matching argument register.",
+      "references": [
+        "crates/azsx-game/src/official_native/unit_fields.rs",
+        "crates/azsx-game/src/official_native/scene_units.rs",
+        "src/runtime/io.rs",
+        "src/runtime/wallet.rs"
+      ],
+      "role": "native-operation",
+      "shared": true
+    },
+    "official_native.unit_fields.native_unit_field_value": {
+      "reason": "Selected integer/float-bit insertion ABI shared by currency projection and native decorative Sayge/chicken unit fields; hook observation reads the matching argument register.",
+      "references": [
+        "crates/azsx-game/src/official_native/unit_fields.rs",
+        "crates/azsx-game/src/official_native/scene_units.rs",
+        "src/runtime/io.rs",
+        "src/runtime/wallet.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.perks.observe": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Observe selected native perk payloads for allied healing, shield producer rules, tank forms, costume restoration, necklaces and DoT-owner set routing without replacing native enum storage. Unknown variants remain native-owned.",
+      "references": [
+        "crates/azsx-game/src/official_native/perks.rs",
+        "crates/azsx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/support/talents.rs",
+        "crates/azsx-game/src/official_native/sets.rs",
+        "crates/azsx-game/src/official_native/combat.rs",
+        "crates/azsx-game/src/official_native/escort.rs"
+      ]
+    },
+    "official_native.perks.disable": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Respect the selected native enum width when temporarily filtering a private dispatch clone by its foreign DoT producer. Original perk payloads and unrelated native dispatch stay intact.",
+      "references": [
+        "crates/azsx-game/src/official_native/perks.rs",
+        "crates/azsx-game/src/official_native/sets.rs"
+      ]
+    },
+    "official_native.perks.terminator": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Respect the selected native enum width when temporarily filtering a private dispatch clone by its foreign DoT producer. Original perk payloads and unrelated native dispatch stay intact.",
+      "references": [
+        "crates/azsx-game/src/official_native/perks.rs",
+        "crates/azsx-game/src/official_native/sets.rs"
+      ]
+    },
+    "official_native.support.nature.critical": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Translate allied Tranquility strikes through the selected native per-target critical roll, seven-argument Damage call and reentrant proc scope. Keep native RNG commits and restore only borrowed flags.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/nature.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/io.rs"
+      ]
+    },
+    "official_native.support.nature.strike": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Translate allied Tranquility strikes through the selected native per-target critical roll, seven-argument Damage call and reentrant proc scope. Keep native RNG commits and restore only borrowed flags.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/nature.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/io.rs"
+      ]
+    },
+    "official_native.support.nature.call_native_nature_damage": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Translate allied Tranquility strikes through the selected native per-target critical roll, seven-argument Damage call and reentrant proc scope. Keep native RNG commits and restore only borrowed flags.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/nature.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/io.rs"
+      ]
+    },
+    "official_native.goblin_rewards.marks_offset": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Match the selected native map-pair reward lookup and its final-row bound when a new zone extends the map list. Do not read adjacent data as a boss-mark value.",
+      "references": [
+        "crates/azsx-game/src/official_native/goblin_rewards.rs",
+        "docs/features/FEATURE-RULES.md"
+      ]
+    },
+    "official_native.support.effects.record": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Observe main and auxiliary Power Word Shield pools and preserve the actual shield producer through a native weaker/equal refresh. Aura expiry may refresh without transferring proc ownership. Historical additive behavior remains descriptor-selected.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/support.rs"
+      ]
+    },
+    "official_native.experience.host_reward_address": {
+      "role": "native-operation",
+      "shared": false,
+      "reason": "Resolve the selected direct or indirect native host whole-level receipt before admitting its existing pending-level increment. No phase/HP writes, borrowed actor traversal or replay.",
+      "references": [
+        "crates/azsx-game/src/official_native/experience.rs",
+        "src/runtime/experience.rs"
+      ]
+    },
+    "official_native.perks.dispatch_effect": {
+      "role": "native-operation",
+      "shared": false,
+      "reason": "Diagnostic filtering preserves selected native set effect variants, including Tier 0.5, while excluding native stat reconstruction rows. No payload translation is dispatched.",
+      "references": [
+        "crates/azsx-game/src/official_native/perks.rs",
+        "crates/azsx-game/src/official_native/sets.rs"
+      ]
+    },
+    "official_native.support.shields.id": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Observe native main/auxiliary PW:S pools, preserve strongest-pool producer identity, and isolate/restore only the borrowed PW:S while keeping unrelated native absorption commits. Rebind identity and validate existing native capacity before mutation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/shields.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/support.rs"
+      ]
+    },
+    "official_native.support.shields.amount": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Observe native main/auxiliary PW:S pools, preserve strongest-pool producer identity, and isolate/restore only the borrowed PW:S while keeping unrelated native absorption commits. Rebind identity and validate existing native capacity before mutation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/shields.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/support.rs"
+      ]
+    },
+    "official_native.support.shields.snapshot": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Observe native main/auxiliary PW:S pools, preserve strongest-pool producer identity, and isolate/restore only the borrowed PW:S while keeping unrelated native absorption commits. Rebind identity and validate existing native capacity before mutation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/shields.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/support.rs"
+      ]
+    },
+    "official_native.support.shields.loan": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Observe native main/auxiliary PW:S pools, preserve strongest-pool producer identity, and isolate/restore only the borrowed PW:S while keeping unrelated native absorption commits. Rebind identity and validate existing native capacity before mutation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/shields.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/support.rs"
+      ]
+    },
+    "official_native.support.shields.shield_pools": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Observe native main/auxiliary PW:S pools, preserve strongest-pool producer identity, and isolate/restore only the borrowed PW:S while keeping unrelated native absorption commits. Rebind identity and validate existing native capacity before mutation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/shields.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/support.rs"
+      ]
+    },
+    "official_native.support.shields.commit_shield_loan": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Observe native main/auxiliary PW:S pools, preserve strongest-pool producer identity, and isolate/restore only the borrowed PW:S while keeping unrelated native absorption commits. Rebind identity and validate existing native capacity before mutation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/shields.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/support.rs"
+      ]
+    },
+    "official_native.support.shields.shield_snapshot": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Observe native main/auxiliary PW:S pools, preserve strongest-pool producer identity, and isolate/restore only the borrowed PW:S while keeping unrelated native absorption commits. Rebind identity and validate existing native capacity before mutation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/shields.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/support.rs"
+      ]
+    },
+    "official_native.support.shields.isolate_shield": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Observe native main/auxiliary PW:S pools, preserve strongest-pool producer identity, and isolate/restore only the borrowed PW:S while keeping unrelated native absorption commits. Rebind identity and validate existing native capacity before mutation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/shields.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/support.rs"
+      ]
+    },
+    "official_native.support.shields.restore_shield": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Observe native main/auxiliary PW:S pools, preserve strongest-pool producer identity, and isolate/restore only the borrowed PW:S while keeping unrelated native absorption commits. Rebind identity and validate existing native capacity before mutation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/shields.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/support.rs"
+      ]
+    },
+    "official_native.support.shields.support_shield_pool": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Observe native main/auxiliary PW:S pools, preserve strongest-pool producer identity, and isolate/restore only the borrowed PW:S while keeping unrelated native absorption commits. Rebind identity and validate existing native capacity before mutation.",
+      "references": [
+        "crates/azsx-game/src/official_native/support/shields.rs",
+        "crates/azsx-game/src/official_native/support/effects.rs",
+        "src/runtime/support.rs"
+      ]
+    },
+    "official_native.support.fixture_cast_snapshot": {
+      "role": "native-operation",
+      "shared": true,
+      "reason": "Bound diagnostic copies to the selected native cast payload extent. The cast argument and the stored runtime ability row require separately reviewed layouts; copying one does not authorize lending it as the other.",
+      "references": [
+        "crates/azsx-game/src/official_native/support.rs",
+        "crates/azsx-game/src/official_native/polymorph.rs",
+        "src/runtime/fixture.rs"
+      ]
+    },
+    "official_native.polymorph.polymorph_hit_context": {
+      "reason": "Decode native Game and enemy identities at the separately reviewed Polymorph scan and rupture seams.",
+      "references": [
+        "crates/azsx-game/src/official_native/polymorph.rs",
+        "src/runtime/combat.rs"
+      ],
+      "role": "native-operation",
+      "shared": false
+    },
+    "official_native.sets.set_clone_context": {
+      "reason": "Resolve selected native private-copy Game/event identities, pointer and row count before filtering a set proc clone.",
+      "references": [
+        "crates/azsx-game/src/official_native/sets.rs",
+        "src/runtime/combat/sets.rs"
       ],
       "role": "native-operation",
       "shared": false

@@ -51,7 +51,7 @@ pub(super) fn install(r: &Runtime) -> Result<(), String> {
     crate::install::install_optional(crate::install::HookSpec {
         name: "goblin-final-flee-direction",
         target: r.local.base + e.rva as usize,
-        detour: final_entry as *const () as usize,
+        detour: final_entry::<{azsx_game::current::GOBLIN_MOTION_XY_XMM}> as *const () as usize,
         trampoline: &FINAL_ORIGINAL,
     })
 }
@@ -75,12 +75,17 @@ mod tests {
 // Save the native nonvolatile candidate registers separately. The context stub
 // preserves flags and volatile arguments; only the scoped candidate may change.
 #[unsafe(naked)]
-unsafe extern "C" fn final_entry() {
+unsafe extern "C" fn final_entry<const XY: usize>() {
     core::arch::naked_asm!(
-        "lea rsp, [rsp-72]", "movups [rsp+32], xmm13", "movups [rsp+48], xmm14",
-        "call {guard}", "movups xmm13, [rsp+32]", "movups xmm14, [rsp+48]",
-        "lea rsp, [rsp+72]", "jmp qword ptr [rip+{original}]",
-        guard=sym final_guard_entry, original=sym FINAL_ORIGINAL);
+        "lea rsp, [rsp-72]",
+        ".if {xy} == 13", "movups [rsp+32], xmm13",
+        ".elseif {xy} == 10", "movups [rsp+32], xmm10",
+        ".else", ".error \"Unsupported native motion candidate register\"", ".endif",
+        "movups [rsp+48], xmm14", "call {guard}",
+        ".if {xy} == 13", "movups xmm13, [rsp+32]",
+        ".else", "movups xmm10, [rsp+32]", ".endif",
+        "movups xmm14, [rsp+48]", "lea rsp, [rsp+72]", "jmp qword ptr [rip+{original}]",
+        xy=const XY, guard=sym final_guard_entry, original=sym FINAL_ORIGINAL);
 }
 #[unsafe(naked)]
 unsafe extern "C" fn return_to_entry() {
@@ -113,31 +118,41 @@ unsafe extern "system" fn final_guard(c: &mut crate::stub::Context) {
 mod final_tests {
     use super::*;
     #[unsafe(naked)]
-    unsafe extern "C" fn native_candidate() {
+    unsafe extern "C" fn native_candidate<const XY: usize>() {
         core::arch::naked_asm!(
-            "movups [rcx],xmm13",
+            ".if {xy} == 13", "movups [rcx],xmm13", ".else", "movups [rcx],xmm10", ".endif",
             "movups [rcx+16],xmm14",
             "mov rax,rdx",
-            "ret"
+            "ret", xy=const XY
         );
     }
     #[unsafe(naked)]
-    unsafe extern "system" fn invoke(_out: *mut u128, _input: *const u128) -> u64 {
+    unsafe extern "system" fn invoke<const XY: usize>(_out: *mut u128, _input: *const u128) -> u64 {
         core::arch::naked_asm!(
-            "push rbp","sub rsp,64","movups [rsp+32],xmm13","movups [rsp+48],xmm14",
-            "movups xmm13,[rdx]","movups xmm14,[rdx+16]","mov edx,77","call {entry}",
-            "movups xmm13,[rsp+32]","movups xmm14,[rsp+48]","add rsp,64","pop rbp","ret",entry=sym final_entry);
+            "push rbp", "sub rsp,64",
+            ".if {xy} == 13", "movups [rsp+32],xmm13", "movups xmm13,[rdx]",
+            ".else", "movups [rsp+32],xmm10", "movups xmm10,[rdx]", ".endif",
+            "movups [rsp+48],xmm14", "movups xmm14,[rdx+16]", "mov edx,77", "call {entry}",
+            ".if {xy} == 13", "movups xmm13,[rsp+32]", ".else", "movups xmm10,[rsp+32]", ".endif",
+            "movups xmm14,[rsp+48]", "add rsp,64", "pop rbp", "ret",
+            xy=const XY, entry=sym final_entry::<XY>);
+
     }
-    #[test]
-    fn final_motion_wrapper_forwards_both_full_nonvolatile_candidates_and_arguments() {
+    fn verify_candidate<const XY: usize>() {
         let _lock = crate::test_support::TEST_LOCK
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         RETURN.store(return_to_entry as *const () as usize, Ordering::Release);
-        FINAL_ORIGINAL.store(native_candidate as *const () as usize, Ordering::Release);
+        FINAL_ORIGINAL.store(native_candidate::<XY> as *const () as usize, Ordering::Release);
         let input = [0x123456789abcdef0_u128, 0xfedcba9876543210_u128];
         let mut out = [0u128; 2];
-        assert_eq!(unsafe { invoke(out.as_mut_ptr(), input.as_ptr()) }, 77);
+        assert_eq!(unsafe { invoke::<XY>(out.as_mut_ptr(), input.as_ptr()) }, 77);
         assert_eq!(out, input);
     }
+    #[test]
+    fn final_motion_wrapper_forwards_both_selected_candidate_layouts() {
+        verify_candidate::<13>();
+        verify_candidate::<10>();
+    }
+
 }

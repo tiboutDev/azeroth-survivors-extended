@@ -1,6 +1,5 @@
 # Azeroth Survivors Extended
 
-Step-by-step maintainer procedures: [native compatibility](docs/compatibility/COMPATIBILITY-CHECKLIST.md) and [release preparation](docs/release/RELEASE-CHECKLIST.md).
 ### More choices. Deeper builds. Stronger teamwork.
 
 **Home** · [Installation](docs/player/INSTALLATION.md) · [Features](docs/player/FEATURES.md) · [In the workshop](docs/player/WORKSHOP.md)
@@ -96,7 +95,7 @@ Found a bug or an interesting build interaction? Open an [issue](https://github.
 ## Included AZSXUI addon
 
 [AZSXUI](addons/AZSXUI/README.md) independently styles native enemy nameplates,
-preserves the native damage font by default, and renders custom/native-cache
+preserves the native damage font, and renders custom/native-cache
 minimap pins using the AZSX projection bridge. Supplies, Fortune and crystal
 notifications, plus Sayge progress, are configurable AZSXUI widgets with text
 still supplied by AZSX.
@@ -107,16 +106,19 @@ crystal rewards. Position, scale and opacity can be adjusted for each widget.
 
 Nameplate styling requires neither the AZSX gameplay DLL nor its launcher;
 minimap pins require the matching AZSX projection bridge. See its README for
-commands, font licensing and compatibility limits.
+commands and compatibility limits.
 
 The [AZSX addon contract](docs/features/ADDON-API.md) exposes versioned structured values
 and AZSX-authored text using native-style Lua globals/getters/handlers.
 
 ## Development
 
-See the [documentation index](docs/README.md) for player, development, compatibility, release and feature references.
+Start with the [daily development workflow](docs/development/DEVELOPMENT.md).
+Use the [documentation index](docs/README.md) for detailed references, the
+[compatibility checklist](docs/compatibility/COMPATIBILITY-CHECKLIST.md) for a native
+client update, and the [release checklist](docs/release/RELEASE-CHECKLIST.md) for release work.
 
-Source currently targets official **0.139.2**. Normal-artifact and in-game
+Source currently targets official **0.140.0**. Normal-artifact and in-game
 validation of this port remain separate from source checks; published kits
 declare their own supported game version. See
 [client compatibility](docs/compatibility/CLIENT-COMPATIBILITY.md).
@@ -134,8 +136,6 @@ AZSX is free software: you can redistribute it and/or modify it under the terms
 of the [GNU General Public License, version 3](LICENSE).
 AZSX is distributed without any warranty; see the license for details.
 The original game, its assets and third-party dependencies retain their own licenses.
-
-Developer workflow: [compatibility and diagnostic tooling](docs/compatibility/COMPATIBILITY-WORKFLOW.md).
 
 ## Native balance data
 

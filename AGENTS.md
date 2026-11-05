@@ -1,181 +1,104 @@
-# Working scope
+# Working in AZSX
 
-Read [building](docs/development/BUILDING.md) and [development](docs/development/DEVELOPMENT.md).
-Resolve the active checkout and worktrees from Git. Machine paths, pairing,
-editor handoffs and session notes belong in ignored local configuration, not
-project documentation. Never implement source changes in a generated receiver.
+Work from the authoritative WSL checkout. Resolve its branch/worktrees with Git;
+Windows receivers are execution copies. Keep code, UI and documentation in English.
+Preserve existing edits. Use **tiboutDev** for Git identity; commit, push, merge and
+publication require the user's request. Keep installed player games, saves and
+official assets unchanged. Never send messages or control the interactive desktop
+without authorization. Fast mode requires an explicit request.
 
-Keep UI and current documentation in English. Preserve unrelated changes,
-history, reports, results and backups. Do not commit, push, merge, publish,
-modify installed player games/shared kits/official assets, broaden permissions
-or enable Fast without an explicit request. Never send messages to other people
-or control the interactive desktop without current authorization.
+## Read the relevant reference
 
-## Current architecture
+Start with [development](docs/development/DEVELOPMENT.md) and
+[building](docs/development/BUILDING.md). Then read only what the task needs:
 
-The only supported source target is the reviewed official **0.139.2** engine.
-Exact executable hashes and native entry bytes gate activation; version labels
-and approximate signatures do not enable an unknown client. The DLL activates
-only through the explicit official AZSX launcher path. Direct native launch stays
-inert. The custom simulation, transport, lobby and recovery engine is retired;
-never restore it as a fallback or run it beside official simulation.
+| Task | Reference |
+| --- | --- |
+| Native integration | [Adapter contract](docs/compatibility/CLIENT-ADAPTER.md), [current client](docs/compatibility/CLIENT-COMPATIBILITY.md) |
+| Feature change or client port | [Feature index](docs/compatibility/AZSX-FEATURES.md), affected criteria in [expected behavior](docs/compatibility/AZSX-BEHAVIOR.md) |
+| Tests or live trials | [Testing](docs/development/TESTING.md) |
+| Client port | [Compatibility checklist](docs/compatibility/COMPATIBILITY-CHECKLIST.md) |
+| Party UI | [Native party UI](docs/features/OFFICIAL-PARTY-UI.md) |
+| Packaging or release | [Release checklist](docs/release/RELEASE-CHECKLIST.md), [installation contract](docs/release/AZSX-INSTALLATION.md) |
 
-- `crates/azsx-gameplay/` owns portable rules and contracts, with no native
-  layouts, registers, Windows APIs or transport dependencies.
-- `src/runtime/` coordinates features and lifecycle. Keep imports explicit
-  and access bounded rather than exposing the whole runtime.
-- `crates/azsx-game/src/official.rs` forwards selected native operations;
-  `official_native/` and the exact descriptor own schemas, offsets, native calls,
-  hook bytes and field/register translations. Shared inherited tables are not
-  permission to select retired builds or a claim of completed domain migration.
-- `src/presentation/` and `native-ui/` enrich retained native presentation.
-- `azsx/` and `tools/build/azsx_*.py` own the current native-folder distribution.
-  No legacy launcher, helper executable, browser UI or isolated-AppData product
-  is an AZSX runtime dependency. `avrt-probe` remains an independent export probe.
+Update the authoritative contract alongside a semantic change. Keep stable
+acceptance IDs and disabled/upstream dispositions. Generate the feature index
+from `compat/features.json`; do not edit its generated table directly.
 
-Read [CLIENT-ADAPTER.md](docs/compatibility/CLIENT-ADAPTER.md) before native-integration changes
-and [AZSX-FEATURES.md](docs/compatibility/AZSX-FEATURES.md) before feature or compatibility changes.
-Read [AZSX-BEHAVIOR.md](docs/compatibility/AZSX-BEHAVIOR.md), the criterion-by-criterion acceptance
-reference. Update affected stable acceptance IDs in the same change as any new
-feature, semantic fix, retirement or integration, together with the feature
-catalog and detailed/player references. Every compatibility review must account
-for all sections, record artifact-scoped results and retain untested/blocked
-cases explicitly; matching hook bytes never establish behavioral parity.
-Do not infer current source, normal-runtime or published-kit parity from each other.
+## Source boundaries
 
-## Native correctness
+- `crates/azsx-gameplay/`: portable rules and copied semantic values.
+- `crates/azsx-game/`: selected native schemas, addresses, fields, ABIs and hooks.
+- `src/runtime/`: feature coordination and lifecycle.
+- `src/presentation/`, `native-ui/`, `addons/AZSXUI/`: presentation.
+- `azsx/`, `tools/build/`: launcher and native-folder distribution.
 
-Native callbacks are synchronously reentrant. Never hold a state mutex, RefCell
-borrow, map-entry reference or whole-runtime guard across a native call. Copy or
-remove pending work first; allow nested callbacks and preserve FIFO/key order,
-partial commits, mutation-before-call ordering and cleanup after errors. Do not
-use `mem::take` of an entire runtime to avoid proper borrowing boundaries.
+Only the exact client selected in `azsx/supported-games.json` is supported.
+Generated descriptors and `azsx_game::current` own its native data. Historical
+modules are test references. The retired custom simulation, transport and lobby
+must not return as a fallback. Activation remains explicit through the AZSX launcher.
 
-Keep identities scoped to slot plus GUID, session/generation and run lifetime.
-Reject invalid/inactive source contexts before native calls, rebind after
-callbacks, restore host/actor context and retire departed identities. Reset
-through defined lifecycle boundaries, not by guessing from reused addresses.
-Keep native row/layout choices inside the selected adapter; policy consumes
-bounded copied/owned values and domain operations, not native backing containers.
+## Native invariants
 
-Preserve successful per-actor acknowledgements before attempting the next actor.
-Do not retry uncertain native commits, double-grant shared/personal rewards,
-reapply group multipliers or feed replayed credits into new shared receipts.
-Foreign periodic heals/shields/retaliation retain caster/recipient attribution,
-native talent/proc/meter ownership and native budget/cooldown semantics.
-Never process a foreign HoT through the recipient's outgoing talents or meter.
+Native callbacks are synchronously reentrant. Release state locks, mutable
+borrows and container references before native calls. Copy or reserve work first;
+preserve order, partial commits and cleanup. Never retry an uncertain grant.
+Do not take the entire runtime to work around borrowing.
 
-Marks and taunts apply their agreed policies without changing native NPC ownership
-or special-cast targeting. Restore temporary actor poses before subsequent native
-logic. Enemy/boss HP, damage, density, spawn placement/selection/allocation,
-schedules and host options remain native. Do not restore retired difficulty
-interceptions or custom DPS ranking, resurrection UI or replacement party roots.
+Keep actor slot, GUID and run/session identity together. Rebind after callbacks,
+restore borrowed actor contexts and retire departed identities. Native row
+layouts stay in the adapter; services return bounded copied/owned values.
+Foreign effects keep their producer, recipient, native coefficients and meters.
 
-Native capacity remains five players. Use adapter-owned `NATIVE_PLAYERS` for
-bounds; do not alter lobby admission or native vector capacities. Private support
-route tags reserve the low three bits for target slots and bit3 for hybrid group
-delivery; validate producers/consumers and reject invalid sixth-slot targets.
+Native AI, ordinary NPC ownership, scaling, schedules, allocation and networking
+remain native. Restore temporary pursuit poses before subsequent native logic.
+Use selected `NATIVE_PLAYERS` bounds; native capacity is five. Preserve the private
+support-route tag layout and reject invalid recipients.
 
-Native marks replace duplicate-loot gold compensation. Preserve ring/crystal
-identity, shared bonus presentation, reward-card ordering and
-native stat reconstruction. Dead participants receive native shared XP and levels immediately; retain their
-dead phase and pending native choices until revival. Do not restore an XP bank
-or replay already-granted shared receipts.
+Dead participants receive native shared XP and whole-level receipts immediately;
+choices wait for revival. Do not restore an XP bank, duplicate native rewards or
+reapply cooperative multipliers. Native marks replace duplicate-loot compensation.
 
-## Native presentation and activation
+Enrich retained native UI children and preserve owner-formatted tooltip text.
+Publish the addon API through the selected virtual script reader with native
+string ownership. No MPQ scanning, installed internal addon or guessed owner data.
+Native Lua `string.byte` accepts one index; keep stubs consistent.
 
-Read [OFFICIAL-PARTY-UI.md](docs/features/OFFICIAL-PARTY-UI.md) before UI changes. Enrich
-native `PlayerFrame`/`PartyMemberFrame1..4` children only. Native health, death,
-resurrection, lobby, pause and replay/menu authority stay native.
+## Proportionate validation
 
-Owner tooltips must use selected native owner formatting/origins, never viewer
-`SetAction`, guessed names or static formulas. Hide ambiguous/stale/missing owner
-data. Preserve unchanged cosmetic identities through wall-clock heartbeats and
-long common pauses. The native Lua `string.byte` supports one index only; keep
-that restriction in portable stubs. Inspect actual rendered frames for visual
-claims; creation/send logs alone do not prove visibility or tooltip parity.
+Use [TESTING.md](docs/development/TESTING.md) to choose checks once for the change.
+Run focused checks while fixing a block, then `full` once at a compatibility or
+release milestone. Reuse valid results when their inputs are unchanged. Do not
+repeat passing checks or broaden scope without a failure or an uncovered risk.
+Documentation-only edits need no test campaign, DLL build or game launch.
 
-Publish the AZSX addon contract through the exact native virtual script reader.
-Use native-owned string allocations and retain the native initialization prefix.
-No installed internal addon or file-read interception is required. AZSXUI remains
-an optional consumer. Never scan MPQs or modify official assets. Prefix native
-host lobby submissions only; native admission and networking remain authoritative.
-Diagnostic probes remain opt-in and `test-hooks` only.
+For a client port, complete all code wiring and expected-output checks before a
+candidate DLL or live trial: direct/indirect field calls, closures, arrays,
+host/private namespaces, raw buffers and native ABI/ownership. The AST field audit
+checks coverage; native execution and transaction tests check semantics. Group
+fixes instead of discovering missing translations through repeated game launches.
 
-## Validation and artifact policy
+Use bounded live trials only for observations code cannot establish. At most
+**two owned clients**, normal priority and all CPUs, in an isolated receiver.
+Stop them on severe slowdown. Screenshots/interactive desktop use require their
+own scope. A compiler, creation log or shown flag is not a visual review.
 
-Read [docs/development/TESTING.md](docs/development/TESTING.md). Use the smallest current relevant profiles
-through `sh tools/dev/check.sh --profile <name>`; repeat profiles to combine.
-Inspect `--dry-run` when needed. Unknown executable changes select the full
-portable gate; documentation-only changes launch no tests. Retired custom-engine
-profile names and historical recipes are not current instructions.
+Build only when compilation inputs change or a new artifact is requested.
+Diagnostic fixtures stay behind `test-hooks`; retain/restore a normal artifact
+for normal play. Record hashes, actual results and omissions; keep failed attempts.
+A passed retry does not explain an intermittent failure.
 
-State the risk, expected observable result and stop condition before live work.
-Start with portable checks. Check platform-specific source deliberately; execute
-Windows ABI probes when wrappers, registers, stack contracts or generated code
-change. Preserve production forwarding/identity coverage for any retained wrapper.
-Do not write implementation-mirroring tests for reversible low-impact edits.
+## Local state and release scope
 
-Use at most **two simultaneous owned game clients**, normal priority and all
-available CPUs. Never mask slowdown with game-client affinity, quotas, memory
-limits or reduced priority. Stop owned clients immediately if severe slowdown is
-reported. Private jobs may retain kill-on-close cleanup; do not change global or
-player settings. Portable build/check budgets are separate.
+Keep machine paths, handoffs, disassembly, test outputs and work backups in ignored
+local storage; see [LOCAL-STORAGE.md](docs/development/LOCAL-STORAGE.md). Preserve
+unique work before removing obsolete files. Old names needed for migration or
+recorded native-data provenance are not automatically obsolete.
 
-Use at most one relevant bounded live scenario per coherent change unless a
-failure or uncovered risk justifies another. Combat and support are the defaults;
-add recovery only for shared-state/transport/lifecycle risks. No routine unrelated
-installer, boss, UI or repeated normal/diagnostic campaigns. Ordinary observations
-do not enable screenshots; explicit visual trials use sparse captures/probes.
-
-Documentation/Python changes require no DLL build. Reuse an artifact only when it
-contains the relevant source. Diagnostic builds serve controlled fixtures; retain
-or restore a normal artifact after them and state any source it lacks. Build a
-new normal DLL for requested normal play, sharing or an explicit stabilization/
-release milestone, never as an integration-closing ritual. A separate normal live
-trial is required for releases, compatibility updates or materially different
-production conditionals. No test or build runner deploys by default.
-
-Record profiles, reasons, durations, actual binary hashes, evidence and limits.
-Existing logs validate only their exact artifact/scenario. Preserve failed
-attempts and distinguish assessor tests, compilation and live evidence. Skipped
-checks are not passes. Required Lua 5.1 behavior runs through uv/lupa explicitly.
-Use the full portable gate plus relevant checks at release/compatibility milestones;
-full portable checks do not implicitly perform Windows, game or package trials.
-
-## Distribution and publication
-
-Read [AZSX-INSTALLATION.md](docs/release/AZSX-INSTALLATION.md). Current packaging overlays
-`start-azsx.cmd`, `README-AZSX.txt` and owned `AZSX/` files on a supported native
-folder. Use native saves/settings; never redirect AppData or restore legacy
-Coop/UserData installation logic. Never ship native EXEs/MPQs or touch official
-assets. Detect loader collisions before deployment.
-
-Updates, rollback and uninstall use bounded inventories and ownership hashes,
-preserve unknown/modified files and verify signatures before applying content.
-Recovery that replaces imported client code restarts the launcher before using
-restored files. Keep anti-loop sequence behavior and native profile backups.
-No automatic upload or implicit access to real signing credentials. Compatible signed runtime updates use the detached copied-interpreter transaction
-with the game and original launcher closed; damaged bootstrap repair remains an
-explicit complete-archive operation.
-
-Validate the exact signed archive at a release milestone. Source-publication
-hygiene and reproducibility remain required safeguards. Reproducibility requires
-an approved current AZSX artifact reference, not old Coop hashes or a fabricated
-baseline. A passing Markdown audit does not sanitize source, reports or Git
-history. No source push/publication follows implicitly from cleanup or preparation.
-
-Project documentation describes current source and supported workflows.
-Historical checkpoints remain in Git history and private evidence backups;
-they do not supersede these instructions or authorize retired workflows.
-
-Final release preparation must use `tools/build/azsx_release_layout.py`: keep only
-UPLOAD/ and the compact README, release notes and publication guide in the
-publication folder. Preserve reports, hashes, references, source metadata and
-verification receipts under ignored `.local/releases/<version>/` in this project.
-Use the publication verifier's explicit evidence directory after finalization.
-
-Current installed layout: AZSX/App for payload, AZSX/Config for preferences, AZSX/Data
-for mutable state and evidence. Compatible signed AZSX updates install automatically
-without confirmation; preserve ownership, compatibility, anti-loop and transaction
-gates. The published .2 archive must remain untouched during layout development.
+Release signing, ownership, reproducibility and archive validation belong to the
+[release checklist](docs/release/RELEASE-CHECKLIST.md), not routine development.
+No implicit credential discovery, approved-reference replacement or publication.
+Final preparation uses `azsx_release_layout.py`: upload assets and three compact
+guides stay in the preparation folder; technical evidence stays in ignored local
+release storage. Native saves/settings and existing ownership/migration behavior
+remain intact.

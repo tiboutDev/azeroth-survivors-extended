@@ -31,6 +31,23 @@ class OfflineComparison(unittest.TestCase):
             path.write_text("const ADDRESSES: &[(u64,u64)] = &[(0x1000, 0x2100,), (0x2000, 0x3100,), (0x3000, 0x4100)];")
             self.assertEqual(set(comparison.descriptor_inventory(path)), {0x2100, 0x3100, 0x4100})
 
+    def test_inventory_distinguishes_native_dot_returns_from_stack_carriers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "generated.rs"
+            path.write_text("""
+const ADDRESSES: &[(u64,u64)] = &[(0x1000, 0x2100)];
+pub const SET_DOT_OWNER_CALLERS: &[(u64,u8,u64)] =
+ &[(0x3100, 0, 0x98), (0x4100, 1, 0x1e0)];
+pub const MEMBER_PAIRS: &[(u64,u64)] = &[(0x5100, 0x68)];
+""")
+            self.assertEqual(set(comparison.descriptor_inventory(path)), {0x2100, 0x3100, 0x4100})
+            path.write_text("""
+const ADDRESSES: &[(u64,u64)] = &[(0x1000, 0x2100)];
+pub const SET_DOT_OWNER_CALLERS: &[(u64,u64)] =
+ &[(0x3100, 0), (0x4100, 0x1b8)];
+""")
+            self.assertEqual(set(comparison.descriptor_inventory(path)), {0x2100, 0x3100, 0x4100})
+
     def test_inventory_includes_standalone_bootstrap_detours(self):
         root = Path(__file__).resolve().parents[1]
         rows = comparison.descriptor_inventory(root / "crates/azsx-game/src/bindings/official138.rs")

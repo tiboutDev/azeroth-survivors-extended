@@ -106,7 +106,7 @@ class BackgroundTrials(unittest.TestCase):
         mocked = mock.Mock(run=lambda *a, **kw: called.append((a, kw)))
         with mock.patch.dict('sys.modules', {'azsx_install_trial': mocked}):
             background.run_child(args, Path('/tmp/test-results/trial/start'))
-        self.assertEqual(called, [((45,), {'game_version': '0.139.2', 'package_path': Path('prepared.zip'), 'legacy_package': None})])
+        self.assertEqual(called, [((45,), {'game_version': '0.140.0', 'package_path': Path('prepared.zip'), 'legacy_package': None})])
 
     def test_archive_preflight_distinguishes_pending_owned_dll_replacement(self):
         from azsx_install_trial import initial_check_passed

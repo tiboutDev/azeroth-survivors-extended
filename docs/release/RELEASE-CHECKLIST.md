@@ -40,10 +40,14 @@ for both author and committer and verify their identities afterwards.
 
 ## 2. Pass source gates and review documentation
 
+Reuse current compatibility/code results when the relevant source, tests and
+configuration are unchanged. Run only missing or invalidated checks below; `full`
+already includes Lua and installer tests. Do not repeat a completed code gate
+merely because packaging starts.
+
 ```sh
 python3 tools/dev/azsx_dev.py check
-sh tools/dev/check.sh --profile full --profile azsx-install
-sh tools/dev/check.sh --profile official-party-ui
+sh tools/dev/check.sh --profile full
 python3 scripts/hygiene_gate.py
 python3 scripts/audit_local_information.py --history --report "$EVIDENCE/PRIVACY-AUDIT.json"
 git diff --check
@@ -92,12 +96,11 @@ python3 tools/dev/azsx_dev.py stage --receiver "$RECEIVER" --dll "$DLL"
 In the verified receiver, with **Windows Python**:
 
 ```text
-python -I -B tools/dev/azsx_dev.py preflight
 python -I -B tools/dev/azsx_dev.py validate solo-normal
 python -I -B tools/dev/azsx_dev.py validate coop-normal
 ```
 
-Use prior results only when their DLL/source/UI/tool/scenario identities still
+`validate` performs preflight itself. Use prior results only when their DLL/source/UI/tool/scenario identities still
 qualify. Run solo first, then coop with at most two owned clients, private desktop,
 normal priority and all CPUs. Never deploy to a player installation for this gate.
 

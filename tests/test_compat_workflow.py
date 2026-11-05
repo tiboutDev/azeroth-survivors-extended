@@ -17,6 +17,8 @@ class WorkflowTests(unittest.TestCase):
   config=scenario_suites.load_suites()
   with patch.object(scenario_suites,'load_suites',return_value=config):
    before=azsx_dev.validation_fingerprint('solo-events')
+   config['plans']['compatibility'].reverse()
+   self.assertEqual(before,azsx_dev.validation_fingerprint('solo-events'))
    config['suites']['coop-normal']['seconds']+=1
    self.assertEqual(before,azsx_dev.validation_fingerprint('solo-events'))
    config['suites']['solo-events']['seconds']+=1
@@ -44,6 +46,11 @@ class WorkflowTests(unittest.TestCase):
   behavior=(azsx_dev.ROOT/'docs/compatibility/AZSX-BEHAVIOR.md').read_text()
   features=feature_catalog.load_features()
   catalog={feature['id'] for feature in features}
+  # The evidence-record example above the feature sections repeats an ID;
+  # actual acceptance rows must each have one stable, unambiguous identity.
+  sections=behavior[behavior.index('### AZSX-'):]
+  criteria=re.findall(r'^\| (AZSX-\d+\.\d+) \|',sections,re.M)
+  self.assertEqual(len(criteria),len(set(criteria)),'Duplicate acceptance criterion ID')
   self.assertEqual(set(re.findall(r'^#{2,3} (AZSX-\d+) ',behavior,re.M)),catalog)
   self.assertEqual(set(re.findall(r'^\| (AZSX-\d+)\.\d+ ',behavior,re.M)),{f['id'] for f in features if f['mode']!='None'})
  def test_production_native_access_has_no_historical_descriptor_dependency(self):
@@ -51,7 +58,8 @@ class WorkflowTests(unittest.TestCase):
   for path in(root/"crates/azsx-game/src/official_native").rglob('*.rs'):
    source=path.read_text().split('#[cfg(test)]',1)[0]
    self.assertIsNone(re.search(r'crate::official(?:117|120|1201|121|125)\b',source),str(path))
-  current=(root/'crates/azsx-game/src/bindings/official129.rs').read_text()
+  _, selected, _ = binding_registry.load_binding()
+  current=binding_registry.owned_path(selected['descriptor']).read_text()
   self.assertNotIn('super::official',current)
  def test_all_plans_have_solo_before_coop(self):
   config=scenario_suites.load_suites()
@@ -61,6 +69,12 @@ class WorkflowTests(unittest.TestCase):
     suite=config["suites"][name]
     if suite["solo_prerequisite"]:self.assertIn(suite["solo_prerequisite"],seen)
     seen.add(name)
+ def test_plans_group_artifact_kinds_without_repeated_dll_switches(self):
+  config=scenario_suites.load_suites()
+  for names in config['plans'].values():
+   kinds=[config['suites'][name]['kind']for name in names]
+   self.assertLessEqual(sum(a!=b for a,b in zip(kinds,kinds[1:])),1)
+   if 'diagnostic'in kinds and 'normal'in kinds:self.assertEqual(kinds[0],'diagnostic')
  def test_readiness_waits_and_resets_without_claiming_acceptance(self):
   with tempfile.TemporaryDirectory()as folder:
    path=Path(folder)/"log";suite=dict(readiness=[dict(source="log",contains="done",minimum=1)],settle_seconds=2)

@@ -58,6 +58,12 @@ class Plans(unittest.TestCase):
         self.assertFalse(any('--features' in command and 'legacy-inspection' in command
                             for command in m.PROFILES['full']))
 
+    def test_full_discovers_lua_with_pinned_dependency_without_a_second_profile(self):
+        full = m.plan(['full'], [])['commands']
+        discovery = next(c for c in full if 'unittest' in c and 'test_*.py' in c)
+        self.assertIn('lupa==2.6', discovery)
+        self.assertEqual(m.plan(['full', 'official-party-ui', 'azsx-install'], [])['commands'], full)
+
     def test_all_portable_cargo_targets_exist_and_exclude_retired_crates(self):
         portable = {'azsx-game': 'azsx-game', 'azsx-gameplay': 'azsx-gameplay'}
         for profile, commands in m.PROFILES.items():

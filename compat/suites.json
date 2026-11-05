@@ -766,12 +766,12 @@
     "compatibility": [
       "solo-core",
       "solo-events",
-      "solo-normal",
       "coop-core",
       "coop-events",
       "coop-revive-marker",
       "coop-support",
       "coop-pause",
+      "solo-normal",
       "coop-normal"
     ],
     "events": [
@@ -780,8 +780,8 @@
     ],
     "tooling-ui": [
       "solo-events",
-      "solo-normal",
       "coop-events",
+      "solo-normal",
       "coop-normal"
     ]
   },

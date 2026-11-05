@@ -1,10 +1,6 @@
 //! Native aura storage remains opaque to the coordinator. All rows are copied
 //! and rebound after native callbacks; no native pointer survives a call.
 use super::*;
-/// Reviewed 0.131/0.133 Hurt ABI: two native source words follow the melee flag on
-/// the stack. The original consumer reads both; forwarding four args is invalid.
-pub type NativeHurtCall=unsafe extern "system" fn(u64,f32,u64,bool,u32,u32);
-
 /// Reviewed 0.133 healing and meter ABI. The source descriptor is borrowed only
 /// for this call. The older 0.131 callee ignores the additional fifth argument.
 pub type NativeHealCall = unsafe extern "system" fn(u64, f32, u32, *const u64, *const u64);
@@ -32,9 +28,27 @@ pub struct SupportReceipt {
     pub spell: u32,
     pub raw: f32,
     pub effective: f32,
+    /// Actual Tree of Life absorb gained by the recipient, not discarded healing.
+    pub absorbed: f32,
     pub origin: [f32; 3],
     pub talents: SupportTalents,
 }
+impl SupportReceipt {
+    fn nature_budget(&self, mode: u8) -> Result<f32> {
+        if [self.raw, self.effective, self.absorbed].iter()
+            .any(|v| !v.is_finite() || !(0.0..=1e12).contains(v)) {
+            return Err("Invalid support healing receipt".into());
+        }
+        let budget = match mode {
+            0 => self.raw,
+            1 => self.effective + self.absorbed,
+            _ => return Err("Unreviewed Nature healing budget".into()),
+        };
+        if !budget.is_finite() || budget > 1e12 { return Err("Nature healing budget overflow".into()); }
+        Ok(budget)
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct BreakFrame {
     pub game: u64,
@@ -54,9 +68,12 @@ pub struct PerkLoan {
 #[derive(Clone, Debug)]
 pub struct AuraState {
     pub(super) spell: u32,
+    identity: [u8; 8],
     pub(super) rows: Vec<[u8; 32]>,
     pub(super) shield: [u8; 12],
-    pub(super) absorb: [u8; 8],
+    // Retained opaque source state belongs only to the historical layout.
+    legacy_source_state: Option<[u8; 8]>,
+    native_shield: Option<super::shields::ShieldState>,
 }
 #[derive(Clone, Debug)]
 pub struct OwnedEffect {
@@ -68,6 +85,25 @@ pub struct OwnedEffect {
     pub shield: bool,
 }
 impl OwnedEffect {
+    /// Commit copied producer metadata after native delivery. A weaker/equal
+    /// shield refreshes expiry without borrowing the incoming caster's talents.
+    pub fn record(self, owners: &mut Vec<Self>, pools: Option<(f32, f32)>) -> Result<()> {
+        if let Some((old, new)) = pools {
+            if !self.shield || self.spell != 17 || [old, new].iter().any(|v| !v.is_finite() || !(0.0..=1e12).contains(v)) {
+                return Err("Invalid strongest shield ownership observation".into());
+            }
+            if new <= old {
+                if let Some(previous) = owners.iter_mut().find(|o| self.replaces(o)) {
+                    previous.expires = self.expires;
+                }
+                return Ok(());
+            }
+        }
+        owners.retain(|o| !self.replaces(o));
+        if owners.len() < 64 { owners.push(self); }
+        Ok(())
+    }
+
     /// Match the selected native aura replacement rule. Rejuvenation keeps
     /// independent producers; the other routed families replace by spell.
     pub fn replaces(&self, previous: &Self) -> bool {
@@ -115,22 +151,32 @@ impl Adapter {
         } else {
             vec![]
         };
+        // Construct this diagnostic burst in the selected native schema;
+        // observation copies are never sent back to the native dispatcher.
         let mut perk = [0u8; 64];
-        perk[0] = 3;
-        perk[1] = 1;
-        perk[4..8].copy_from_slice(&0.5f32.to_le_bytes());
-        perk[8..12].copy_from_slice(&10f32.to_le_bytes());
-        perk[12..16].copy_from_slice(&17u32.to_le_bytes());
-        // Reviewed native condition variant 10 matches event kind 6 (shield break).
-        perk[16..20].copy_from_slice(&10u32.to_le_bytes());
+        match crate::current::PERK_OBSERVATION_LAYOUT {
+            0 => {
+                perk[..2].copy_from_slice(&[3, 1]);
+                perk[4..8].copy_from_slice(&0.5f32.to_le_bytes());
+                perk[8..12].copy_from_slice(&10f32.to_le_bytes());
+                perk[12..16].copy_from_slice(&17u32.to_le_bytes());
+                perk[16..20].copy_from_slice(&10u32.to_le_bytes());
+            }
+            1 => {
+                perk[..4].copy_from_slice(&15u32.to_le_bytes());
+                perk[8..12].copy_from_slice(&10u32.to_le_bytes());
+                perk[40..44].copy_from_slice(&0.5f32.to_le_bytes());
+                perk[44..48].copy_from_slice(&10f32.to_le_bytes());
+                perk[48..52].copy_from_slice(&17u32.to_le_bytes());
+                perk[52..56].copy_from_slice(&1u32.to_le_bytes());
+            }
+            _ => return Err("Unreviewed diagnostic burst layout".into()),
+        }
         storage.extend_from_slice(&perk);
         if rapture {
             let perk = mem.read(base + self.rva(0x701a618), 64)?;
-            if perk.len() != 64
-                || u32at(&perk, 0) != 0
-                || f32at(&perk, 8) != 15.0
-                || u32at(&perk, 32) != 10
-            {
+            let observed = super::super::perks::observe(crate::current::PERK_OBSERVATION_LAYOUT, &perk)?;
+            if observed.is_none_or(|row| row[0] != 0 || f32at(&row, 8) != 15.0 || u32at(&row, 32) != 10) {
                 return Err("Unexpected native Rapture definition".into());
             }
             storage.extend_from_slice(&perk);
@@ -347,7 +393,7 @@ impl Adapter {
     }
     pub fn fixture_guardian_target(
         self,
-        io: &dyn SupportCalls,
+        io: &dyn Mem,
         game: u64,
     ) -> Result<Option<(u64, f32)>> {
         let h = io.read(game + self.game_field(0x570), 24)?;
@@ -372,9 +418,14 @@ impl Adapter {
                 return Err("Truncated guardian".into());
             }
             if u32at(&r, layout::ENEMY_DEAD) != 1
-                && (u64::from_le_bytes(r[0x18..0x20].try_into().unwrap()) == u64::MAX
-                    || u64::from_le_bytes(r[0x30..0x38].try_into().unwrap()) == 0)
-                && u64::from_le_bytes(r[0x58..0x60].try_into().unwrap()) != u64::MAX
+                && u64::from_le_bytes(
+                    r[layout::SOLO_ENEMY_ENCOUNTER..layout::SOLO_ENEMY_ENCOUNTER + 8]
+                        .try_into().unwrap(),
+                ) == u64::MAX
+                && u64::from_le_bytes(
+                    r[layout::ENEMY_GUARDIAN_INDEX..layout::ENEMY_GUARDIAN_INDEX + 8]
+                        .try_into().unwrap(),
+                ) != u64::MAX
             {
                 let hp = f32at(&r, layout::ENEMY_HP);
                 if !hp.is_finite() || !(0.0..1e10).contains(&hp) {
@@ -468,10 +519,10 @@ impl Adapter {
         talents: SupportTalents,
         raw: f32,
         effective: f32,
-    ) -> Result<()> {
+    ) -> Result<f32> {
         let extra = (raw - effective).max(0.0);
         if extra == 0.0 || talents.overheal_cap <= 0.0 {
-            return Ok(());
+            return Ok(0.0);
         }
         let bytes = mem.read(game + self.game_field(0x4fc), 4)?;
         let old = f32at(&bytes, 0);
@@ -479,10 +530,9 @@ impl Adapter {
         if !old.is_finite() || !cap.is_finite() || cap > 1e12 {
             return Err("Invalid overheal shield bounds".into());
         }
-        mem.write(
-            game + self.game_field(0x4fc),
-            &old.max((old + extra).min(cap)).to_le_bytes(),
-        )
+        let next = old.max((old + extra).min(cap));
+        mem.write(game + self.game_field(0x4fc), &next.to_le_bytes())?;
+        Ok((next - old).max(0.0))
     }
     pub fn support_receipt(
         self,
@@ -490,9 +540,8 @@ impl Adapter {
         game: u64,
         receipt: &SupportReceipt,
     ) -> Result<Option<usize>> {
-        if !receipt.raw.is_finite()
-            || !(0.0..=1e12).contains(&receipt.raw)
-            || receipt.origin.iter().any(|v| !v.is_finite())
+        let budget = receipt.nature_budget(crate::current::NATURE_HEALING_BUDGET)?;
+        if receipt.origin.iter().any(|v| !v.is_finite())
         {
             return Err("Invalid support talent receipt".into());
         }
@@ -522,10 +571,10 @@ impl Adapter {
             if receipt.talents.nature_coefficient <= 0.0 {
                 return Ok(Some(0));
             }
-            if receipt.raw < 1.0 || clock < cooldown {
+            if budget < 1.0 || clock < cooldown {
                 return Ok(None);
             }
-            let amount = receipt.raw * receipt.talents.nature_coefficient;
+            let amount = budget * receipt.talents.nature_coefficient;
             if !amount.is_finite() || amount > 1e12 {
                 return Err("Nature burst overflow".into());
             }
@@ -806,12 +855,16 @@ impl Adapter {
         shield[8..].copy_from_slice(&mem.read(game + self.game_field(0x4fc), 4)?);
         Ok(AuraState {
             spell,
+            identity: mem.read(game + self.game_field(0x478), 8)?.try_into().map_err(|_| "Truncated borrowed aura identity")?,
+            native_shield: self.shield_snapshot(mem, game, spell)?,
             rows: all.into_iter().filter(|r| u32at(r, 12) == spell).collect(),
             shield,
-            absorb: mem
-                .read(game + self.game_field(0x190), 8)?
-                .try_into()
-                .map_err(|_| "Truncated absorb budget")?,
+            legacy_source_state: if crate::current::STRONGEST_SHIELD_POOLS == 0 {
+                Some(mem.read(game + self.game_field(0x190), 8)?
+                    .try_into().map_err(|_| "Truncated historical source state")?)
+            } else {
+                None
+            },
         })
     }
     pub fn prepare_foreign_shield(
@@ -822,6 +875,9 @@ impl Adapter {
     ) -> Result<()> {
         if !matches!(state.spell, 17 | 11426) {
             return Err("Only Power Word Shield needs native self eligibility isolation".into());
+        }
+        if mem.read(game + self.game_field(0x478), 8)? != state.identity {
+            return Err("Borrowed shield source changed".into());
         }
         let (pointer, rows) = self.aura_rows(mem, game)?;
         let filtered = rows
@@ -840,23 +896,29 @@ impl Adapter {
             game + self.game_field(0x3a8),
             &(filtered.len() as u64).to_le_bytes(),
         )?;
-        mem.write(game + self.game_field(0x480), &[0u8; 8])?;
-        mem.write(
-            game + self.game_field(0x4fc),
-            &(total - current).max(0.0).to_le_bytes(),
-        )?;
+        if let Some(shield) = state.native_shield.as_ref() {
+            self.isolate_shield(mem, game, shield)?;
+        } else {
+            mem.write(game + self.game_field(0x480), &[0u8; 8])?;
+            mem.write(game + self.game_field(0x4fc), &(total - current).max(0.0).to_le_bytes())?;
+        }
         Ok(())
     }
     pub fn restore_aura(self, mem: &dyn MutableMemory, game: u64, state: &AuraState) -> Result<()> {
+        if mem.read(game + self.game_field(0x478), 8)? != state.identity {
+            return Err("Borrowed aura source changed".into());
+        }
         let (pointer, all) = self.aura_rows(mem, game)?;
-        let original_len = all.len();
+        let capacity = u64::from_le_bytes(mem.read(game + self.game_field(0x398), 8)?
+            .try_into().map_err(|_| "Truncated aura rollback capacity")?);
         let mut rows = all
             .into_iter()
             .filter(|r| u32at(r, 12) != state.spell)
             .collect::<Vec<_>>();
         rows.extend_from_slice(&state.rows);
-        // Native casts replace or append, so rollback must never grow capacity.
-        if rows.len() > original_len {
+        // Preparation may already have removed the borrowed aura and a rejected
+        // cast need not append it again. Check actual capacity, not current len.
+        if rows.len() as u64 > capacity {
             return Err("Aura rollback cannot grow native storage".into());
         }
         if !rows.is_empty() {
@@ -867,9 +929,15 @@ impl Adapter {
             &(rows.len() as u64).to_le_bytes(),
         )?;
         if matches!(state.spell, 17 | 11426) {
-            mem.write(game + self.game_field(0x480), &state.shield[..8])?;
-            mem.write(game + self.game_field(0x4fc), &state.shield[8..])?;
-            mem.write(game + self.game_field(0x190), &state.absorb)?;
+            if let Some(shield) = state.native_shield.as_ref() {
+                self.restore_shield(mem, game, shield)?;
+            } else {
+                mem.write(game + self.game_field(0x480), &state.shield[..8])?;
+                mem.write(game + self.game_field(0x4fc), &state.shield[8..])?;
+            }
+            if let Some(legacy) = state.legacy_source_state.as_ref() {
+                mem.write(game + self.game_field(0x190), legacy)?;
+            }
         }
         Ok(())
     }
@@ -1103,6 +1171,34 @@ mod effect_ownership_tests {
     }
 
     #[test]
+    fn strongest_shield_keeps_its_producer_through_weaker_and_equal_refreshes() {
+        let mut first = effect(1, 200, 100, 17);
+        first.shield = true;
+        let mut second = effect(2, 300, 100, 17);
+        second.shield = true;
+        second.expires = 24.;
+        for pool in [(50., 50.), (100., 100.)] {
+            let mut owners = vec![first.clone()];
+            second.clone().record(&mut owners, Some(pool)).unwrap();
+            assert_eq!(owners.len(), 1);
+            assert_eq!((owners[0].caster, owners[0].caster_guid, owners[0].expires), (1, 200, 24.));
+        }
+        let mut owners = vec![first.clone()];
+        second.clone().record(&mut owners, Some((50., 75.))).unwrap();
+        assert_eq!((owners[0].caster, owners[0].caster_guid), (2, 300));
+        // Existing native personal shields have no foreign owner to replace.
+        let mut owners = vec![];
+        second.clone().record(&mut owners, Some((50., 50.))).unwrap();
+        assert!(owners.is_empty());
+        // Historical additive delivery keeps its original replacement policy.
+        owners.push(first);
+        second.clone().record(&mut owners, None).unwrap();
+        assert_eq!(owners[0].caster_guid, 300);
+        assert!(second.record(&mut owners, Some((f32::NAN, 50.))).is_err());
+        assert_eq!(owners[0].caster_guid, 300);
+    }
+
+    #[test]
     fn rejuvenation_refresh_preserves_personal_and_other_foreign_producers() {
         let personal = effect(0, 100, 100, 774);
         let first = effect(1, 200, 100, 774);
@@ -1132,5 +1228,104 @@ mod effect_ownership_tests {
             assert!(effect(2, 300, 100, spell).replaces(&old));
             assert!(!effect(2, 300, 101, spell).replaces(&old));
         }
+    }
+}
+
+#[cfg(test)]
+mod healing_budget_tests {
+    use super::*;
+    use std::cell::Cell;
+
+    struct Pool { address: u64, value: Cell<f32> }
+    impl Mem for Pool {
+        fn read(&self, address: u64, size: usize) -> Result<Vec<u8>> {
+            if address != self.address || size != 4 { return Err("Unexpected pool read".into()); }
+            Ok(self.value.get().to_le_bytes().to_vec())
+        }
+    }
+    impl MutableMemory for Pool {
+        fn allocate_native(&self, _: &[u8]) -> Result<u64> { Err("Unexpected pool allocation".into()) }
+        fn free_native(&self, _: u64, _: usize) -> Result<()> { Err("Unexpected pool free".into()) }
+        fn write(&self, address: u64, bytes: &[u8]) -> Result<()> {
+            if address != self.address || bytes.len() != 4 { return Err("Unexpected pool write".into()); }
+            self.value.set(f32at(bytes, 0));
+            Ok(())
+        }
+    }
+    #[test]
+    fn nature_budget_matches_restored_health_and_actual_tree_absorb() {
+        let adapter = Adapter::select(crate::current::SHA256).unwrap();
+        let game = 0x10000;
+        let cases = [
+            (50., 50., 0., 0., 0., 50.),
+            (50., 0., 0., 0., 0., 0.),
+            (300., 0., 0.5, 0., 115., 115.),
+            (600., 0., 0.5, 0., 115., 115.),
+            (50., 0., 0.5, 115., 115., 0.),
+            (300., 10., 0.5, 0., 115., 125.),
+            (300., 0., 0.5, 200., 200., 0.),
+        ];
+        for (raw, effective, cap, old, expected_pool, expected_budget) in cases {
+            let pool = Pool { address: game + adapter.game_field(0x4fc), value: Cell::new(old) };
+            let talents = SupportTalents { overheal_cap: cap, maximum: 230., ..Default::default() };
+            let absorbed = adapter.support_overheal(&pool, game, talents, raw, effective).unwrap();
+            assert_eq!(pool.value.get(), expected_pool);
+            let receipt = SupportReceipt { caster: 0, caster_guid: 100, target_guid: 101,
+                spell: 774, raw, effective, absorbed, origin: [0.; 3], talents };
+            assert_eq!(receipt.nature_budget(1).unwrap(), expected_budget);
+            assert_eq!(receipt.nature_budget(0).unwrap(), raw);
+            assert!(receipt.nature_budget(2).is_err());
+        }
+    }
+}
+
+#[cfg(test)]
+mod aura_rollback_tests {
+    use super::*;
+    use std::cell::RefCell;
+    struct Memory(RefCell<Vec<u8>>);
+    impl Mem for Memory {
+        fn read(&self, at: u64, n: usize) -> Result<Vec<u8>> {
+            self.0.borrow().get(at as usize..at as usize + n).map(Vec::from).ok_or("Outside aura test memory".into())
+        }
+    }
+    impl MutableMemory for Memory {
+        fn write(&self, at: u64, bytes: &[u8]) -> Result<()> {
+            self.0.borrow_mut().get_mut(at as usize..at as usize + bytes.len()).ok_or("Outside aura test memory")?.copy_from_slice(bytes);
+            Ok(())
+        }
+        fn allocate_native(&self, _: &[u8]) -> Result<u64> { Err("Rollback must not allocate".into()) }
+        fn free_native(&self, _: u64, _: usize) -> Result<()> { Err("Rollback must not free".into()) }
+    }
+    #[test]
+    fn failed_cast_restores_the_removed_aura_using_existing_capacity() {
+        let adapter = Adapter::select(crate::current::SHA256).unwrap();
+        let m = Memory(RefCell::new(vec![0; 0x30000]));
+        let game = 0x10000;
+        let at = |field| game + adapter.game_field(field);
+        m.write(at(0x478), &111u64.to_le_bytes()).unwrap();
+        m.write(at(0x398), &[2u64, 0x20000, 2].map(u64::to_le_bytes).concat()).unwrap();
+        m.write(at(0x480), &17u32.to_le_bytes()).unwrap();
+        m.write(at(0x484), &50f32.to_le_bytes()).unwrap();
+        m.write(at(0x4fc), &50f32.to_le_bytes()).unwrap();
+        let mut shield = [0; 32];
+        shield[..4].copy_from_slice(&7u32.to_le_bytes());
+        shield[12..16].copy_from_slice(&17u32.to_le_bytes());
+        shield[16..20].copy_from_slice(&20f32.to_le_bytes());
+        let mut thorns = shield;
+        thorns[..4].copy_from_slice(&13u32.to_le_bytes());
+        thorns[12..16].copy_from_slice(&467u32.to_le_bytes());
+        adapter.write_aura_rows(&m, 0x20000, &[shield, thorns]).unwrap();
+        let saved = adapter.capture_aura(&m, game, 17).unwrap();
+        adapter.prepare_foreign_shield(&m, game, &saved).unwrap();
+        assert_eq!(adapter.aura_rows(&m, game).unwrap().1, vec![thorns]);
+        // Native rejects the cast: no replacement aura was appended.
+        adapter.restore_aura(&m, game, &saved).unwrap();
+        assert_eq!(adapter.aura_rows(&m, game).unwrap().1, vec![thorns, shield]);
+        assert_eq!(m.read(at(0x484), 4).unwrap(), 50f32.to_le_bytes());
+        m.write(at(0x478), &222u64.to_le_bytes()).unwrap();
+        let before = m.0.borrow().clone();
+        assert!(adapter.restore_aura(&m, game, &saved).is_err());
+        assert_eq!(*m.0.borrow(), before);
     }
 }

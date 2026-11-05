@@ -13,20 +13,20 @@ impl Adapter {
             ]),
         }
     }
-    pub fn fixture_scaling_probe(self, io: &dyn SupportCalls, game: u64) -> Result<[f32; 4]> {
+    pub fn fixture_scaling_probe(self, io: &dyn SupportCalls, game: u64) -> Result<[f32; 2]> {
         if self.support_caster(io, game)?.slot != 0 {
             return Err("Scaling probe requires restored host".into());
         }
-        let option = io.read(game + self.game_field(0x2ca), 2)?;
+        // Probe only the real native solo/cooperative paths. The retired HP
+        // option had no effect and must not become a guessed field dependency.
         let flag = io.read(game + self.game_field(0xc41), 1)?;
         let result = (|| {
-            let mut out = [0.; 4];
-            for (i, (coop, hp)) in [(0u8, 100u16), (0, 200), (1, 100), (1, 200)]
+            let mut out = [0.; 2];
+            for (i, coop) in [0u8, 1]
                 .into_iter()
                 .enumerate()
             {
                 io.write(game + self.game_field(0xc41), &[coop])?;
-                io.write(game + self.game_field(0x2ca), &hp.to_le_bytes())?;
                 out[i] = io.native_boss_health(game, 0)?;
                 if !out[i].is_finite() || out[i] <= 0. {
                     return Err("Invalid native scaling probe value".into());
@@ -34,9 +34,7 @@ impl Adapter {
             }
             Ok(out)
         })();
-        let a = io.write(game + self.game_field(0x2ca), &option);
         let b = io.write(game + self.game_field(0xc41), &flag);
-        a?;
         b?;
         result
     }

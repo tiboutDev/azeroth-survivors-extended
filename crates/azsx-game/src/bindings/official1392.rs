@@ -70,12 +70,13 @@ pub const MENU_ATLAS_FRAME: u64 = 0x2b0;
 pub const MENU_COLOR_FRAME: u64 = 0x6b0;
 pub const KEPT_TOOLTIP_ROW: i64 = -0x60;
 pub const BASIC_GAME: u64 = 0x3b0;
+pub const BASIC_DISTANCE_FRAME: usize = 0;
 pub const BASIC_ENEMY: u64 = 0x398;
 pub const BASIC_POSITION: u64 = 0x370;
 pub const BASIC_ORIGIN_XY: u64 = 0x70;
 pub const BASIC_ORIGIN_Z: u64 = 0x24c;
 pub const ENCOUNTER_GAME_FRAME: u64 = 0x958;
-pub const ENCOUNTER_DEFINITION_REGISTER: usize = 15;
+pub const ENCOUNTER_CONTEXT: [usize; 3] = [13, 15, 0];
 pub const ENEMY_STRIDE: usize = 0x208;
 pub const ENEMY_DEAD: usize = 0xb0;
 pub const ENEMY_GUID: usize = 0xf0;
@@ -184,6 +185,7 @@ pub const GOBLIN_OUTFIT_KEY: (u64, &[u8]) = (0x7ef56a, &[0xf6, 0x85, 0xd0, 0xc, 
 
 // Final navigation-adjusted basic movement, before native packet construction.
 pub const GOBLIN_FINAL_MOTION: (u64, &[u8]) = (0x5f1a205, &[0x4c, 0x89, 0xf1, 0xf, 0x28, 0xce, 0xe8, 0x30, 0x55, 0xfb, 0xff]);
+pub const GOBLIN_MOTION_XY_XMM: usize = 13;
 
 pub const GOBLIN_AMULET_POOL: (u64, &[u8]) = (0x5f74887, &[0x48, 0x8b, 0x85, 0xa0, 0x1, 0x0, 0x0, 0x48, 0x89, 0x85, 0xc0, 0x1, 0x0, 0x0]);
 pub const GOBLIN_REWARD_GAME_FRAME: u64 = 0x198;
@@ -338,12 +340,13 @@ pub const TEXT_QUERY: (u64, &[u8]) = (0x13705a0, &[0x56, 0x57, 0x48, 0x83, 0xec,
 pub const HEAL_TEXT_TAG: [u64;2] = [0xc8, 0x2d0];
 // x86 register numbers for the slot and full entity handle at the visible-item return.
 pub const WEAPON_EQUIPMENT_REGISTERS: [u8; 2] = [12, 3];
+pub const WEAPON_RUN_PROFILE_REGISTER: usize = 7;
 // Warrior, Paladin and Shaman talent tree bases and lengths in specialization order.
 pub const WEAPON_CATALOG_PROBE: (u64, &[u8]) = (0x7e0258, &[0xf3, 0x0f, 0x6f, 0x85, 0xd0, 0x0b, 0x00, 0x00]);
 pub const WEAPON_CATALOG_FRAME: u64 = 0xbd0;
 pub(crate) const WEAPON_TALENT_TREES: [[(u64,u64);3];3] = [[(0x7355f00, 13), (0x73571a0, 13), (0x7358780, 14)], [(0x7359920, 13), (0x735af80, 14), (0x735c180, 13)], [(0x73667b0, 13), (0x7367bf8, 13), (0x7368bf0, 13)]];
 pub(crate) const COOP_TALENT_KEYS: [(u64, &str);13] = [(0x7363668, "divine_aegis"), (0x735b8b0, "hammer_righteous"), (0x7363928, "rapture"), (0x73734d8, "swiftmend"), (0x7373a58, "tree_of_life"), (0x7373798, "tranquility"), (0x7368268, "enh_ancestral_fortitude"), (0x7358ea0, "fortified"), (0x735b6a0, "ardent_defender"), (0x7372a20, "leader_of_pack"), (0x735b800, "sacred_duty"), (0x736c298, "shatter"), (0x73629e0, "dirty_deeds")];
-pub const SET_DOT_OWNER_CALLERS: [(u64, u64);5] = [(0x5ec7eee, 0x0), (0x5f46f36, 0x1a0), (0x5f471e1, 0x1a0), (0x5f55512, 0x1b8), (0x5f55e0f, 0x1b8)];
+pub const SET_DOT_OWNER_CALLERS: &[(u64, u8, u64)] = &[(0x5ec7eee, 0, 0xc0), (0x5f46f36, 1, 0x1a0), (0x5f471e1, 1, 0x1a0), (0x5f55512, 1, 0x1b8), (0x5f55e0f, 1, 0x1b8)];
 pub(crate) const WEAPON_PREVIEW_COLLECTION_SLOT: Option<u64> = Some(0x48);
 pub const HEAL_TEXT_DISCRIMINANTS: [u64; 2] = [0x8000_0000_0000_0097, 0x8000_0000_0000_0096];
 pub const HEROIC_LEVEL: u64 = 0x3f7;
@@ -379,3 +382,60 @@ pub const SOLO_PLAYER_SCALE_BASE: f32 = 1.0;
 pub const SOLO_PROJECTILE_CREATE: (u64, &[u8]) = (0x5f49610, &[0x55, 0x41, 0x57, 0x41, 0x56, 0x41, 0x55, 0x41, 0x54, 0x56, 0x57, 0x53, 0x48, 0x81, 0xec, 0x28, 0x1, 0x0, 0x0]);
 pub const SOLO_PROJECTILE_DELAY_READ: (u64, &[u8]) = (0x5f49653, &[0xf3, 0xf, 0x10, 0xbd, 0x20, 0x1, 0x0, 0x0]);
 pub const SOLO_PROJECTILE_ORIGIN_READ: (u64, &[u8]) = (0x5f49ba2, &[0x48, 0x8b, 0x95, 0x28, 0x1, 0x0, 0x0]);
+
+pub const UNIT_FIELD_VALUE_ABI: u8 = 0;
+
+pub const PERK_ORIGINS_HEADER: u64 = 0xa28;
+
+// Perk observation layout; copies are never native dispatcher input.
+pub const PERK_OBSERVATION_LAYOUT: u8 = 0;
+
+// Healing budget: retained raw-heal contract or health restored plus absorb gained.
+pub const NATURE_HEALING_BUDGET: u8 = 0;
+
+// Optional reviewed RNG, chance, multiplier and two proc-guard field offsets.
+pub const NATURE_CRITICAL_FIELDS: &[u64] = &[];
+
+// Native map-pair marks table extent; later zones retain its last reward row.
+pub const BOSS_MARKS_ROW_COUNT: u64 = 6;
+
+// Zero retains the historical additive support attribution policy.
+pub const STRONGEST_SHIELD_POOLS: u64 = 0;
+
+pub const DOWNED_XP_HOST_REWARD_ABI: u8 = 0;
+
+pub const DOWNED_XP_PREREQUISITES: &[(u64, &[u8])] = &[];
+
+pub const ACTOR_PERKS_HEADER: u64 = 0x908;
+
+pub const ABILITY_STRIDE: usize = 88;
+pub const LEARNED_ABILITY_STRIDE: usize = 96;
+
+pub const ABILITY_MODIFIERS_OFFSET: usize = 56;
+pub const SPELL_MODIFIERS_SIZE: usize = 28;
+
+pub const MARK_POWER_FIELDS: [usize; 2] = [16, 56];
+
+pub const CAST_ABILITY_SIZE: usize = 88;
+
+// Selected native sheep ownership headers and enemy expiry.
+pub const POLYMORPH_OWNERS_FIELDS: [u64; 4] = [0xad8, 0xae0, 0x9d0, 0x9d8];
+pub const ENEMY_POLYMORPH_EXPIRY: usize = 0x1d4;
+
+// Indexes into RSI/R12/R13: scan Game, rupture Game, enemy GUID.
+pub const POLYMORPH_HIT_REGISTERS: [usize; 3] = [2, 0, 1];
+
+// Native set-proc frame Game/spell and enemy coefficient/expiry pair.
+pub const SET_VULNERABILITY_LAYOUT: [u64; 3] = [0x1b8, 0x1b0, 0x120];
+// Zero retains direct event/count registers at the private clone seam.
+pub const SET_CLONE_FRAME_FIELDS: [u64; 2] = [0, 0];
+
+// Native DoT append return/saved-frame slots and row-offset register in RAX/RCX/RDX/RDI.
+pub const SET_DOT_STACK_FIELDS: [u64; 2] = [0xe8, 0xb0];
+pub const SET_DOT_ROW_REGISTER: usize = 1;
+
+pub const HURT_SOURCE_LAYOUT: u8 = 0;
+
+pub const SPELL_PRESENTATION_RANK_OFFSET: u64 = 0x8;
+
+pub const XP_EFFECT_REGISTER: usize = 12;

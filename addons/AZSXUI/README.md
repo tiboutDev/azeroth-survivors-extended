@@ -1,6 +1,6 @@
 # AZSXUI
 
-Standalone Lua interface for Azeroth Survivors 0.138.0. The native client supplies the action bar, health, level and experience, combat counters, character stats, nameplates, boss bars and guardian objectives. Camera controls work independently of the mod.
+Standalone Lua interface for the supported native Azeroth Survivors client. The native client supplies the action bar, health, level and experience, combat counters, character stats, nameplates, boss bars and guardian objectives. Camera controls work independently of the mod.
 
 A compatible AZSX addon API enables mod events and map pins, personal equipment details, cooperative rules, shared economy and kill rankings as their data becomes available. Standalone play keeps the game's equipment and loot displays. Native world-number scaling and additional healing numbers require the DLL.
 
@@ -44,7 +44,8 @@ addon files and preserves preferences and unknown files.
   Both keep the same circular mask and tracking ring. A Mechanical Chicken
 escort uses the native `INV_Misc_EngGizmos_06` icon at its current exposed position and
 removes the pin when the scene ends.
-  Native cache coordinates come directly from `AZS_CHESTS`. Native cache opening,
+  Native cache coordinates come from `AZS_GetWorldAnchors`, scoped to the local
+  run/map/space, with `AZS_CHESTS` as the older-API fallback. Native cache opening,
   purchases, event progress and per-recipient availability stay authoritative.
 
 ### Minimap data boundary

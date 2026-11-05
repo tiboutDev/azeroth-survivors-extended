@@ -208,10 +208,11 @@ impl Adapter {
         if script < 0x10000 || self.native_ui_participants(m, script)?.first() != Some(&owner) {
             return Ok(None);
         }
-        if m.read(script + 0x6648, 1)?[0] & 1 == 0 {
+        let [visible, indoor, center_x, center_y, ping_x, ping_y] = v::MINIMAP_STATE_FIELDS;
+        if m.read(script + visible, 1)?[0] & 1 == 0 {
             return Ok(None);
         }
-        let indoor = match m.read(script + 0x665c, 1)?.as_slice() {
+        let indoor = match m.read(script + indoor, 1)?.as_slice() {
             [0] => false,
             [1] => true,
             _ => return Err("Invalid native minimap mode".into()),
@@ -222,9 +223,9 @@ impl Adapter {
             [14., 12., 10., 8., 6., 4.].map(|v| v * 16.666666)
         };
         Ok(Some(EventMinimap {
-            center: [f(m, script + 0x664c)?, f(m, script + 0x6650)?],
+            center: [f(m, script + center_x)?, f(m, script + center_y)?],
             radii,
-            ping: [f(m, script + 0x6640)?, f(m, script + 0x6644)?],
+            ping: [f(m, script + ping_x)?, f(m, script + ping_y)?],
         }))
     }
     /// A personal supply restores native HP directly without casting a healing spell.

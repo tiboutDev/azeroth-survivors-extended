@@ -703,11 +703,15 @@ impl Adapter {
         if !(1..=8).contains(&race){return Err("Invalid costume race".into())}
         let base=[49,51,53,55,57,59,1563,1478][race-1]+u32::from(female);
         if effect==Some(Costume::Skeleton){return Ok(7550)}
-        let h=m.read(field(0x838),16)?;
+        // Game and private Actor use different canonical perk namespaces.
+        // Rebinding a guest must use its reviewed private header, not Game's.
+        let perks=if row==game{game+self.game_field(0x838)}else{row+v::ACTOR_PERKS_HEADER+8};
+        let h=m.read(perks,16)?;
         let ptr=u64::from_le_bytes(h[..8].try_into().unwrap());let n=u64::from_le_bytes(h[8..].try_into().unwrap());
         if n>512 || (n>0 && (ptr<65536 || ptr.checked_add(n*64).is_none())){return Err("Invalid player form vector".into())}
         if n>0 {
-            for perk in m.read(ptr,n as usize*64)?.chunks_exact(64){
+            for native in m.read(ptr,n as usize*64)?.chunks_exact(64){
+                let Some(perk)=super::perks::observe(v::PERK_OBSERVATION_LAYOUT,native)? else {continue};
                 if perk[0]!=26{continue}
                 let horde=(0x164 & (1u32<<race))!=0;
                 match u32::from_le_bytes(perk[4..8].try_into().unwrap()){
