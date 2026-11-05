@@ -19,6 +19,16 @@ extension_spec.loader.exec_module(extensions)
 
 
 class BackgroundTrials(unittest.TestCase):
+    def test_weapon_catalog_requires_every_reviewed_new_display(self):
+        displays=[24756,26494,25036,23825,6798,25133,23836,32782,29171]
+        def log(rows,count=None):
+            return f"Weapon display catalog ({len(rows) if count is None else count}) {rows}"
+        self.assertTrue(extensions.weapon_catalog_available(log(displays+[29698])))
+        for display in displays:
+            self.assertFalse(extensions.weapon_catalog_available(log([v for v in displays if v!=display])))
+        self.assertFalse(extensions.weapon_catalog_available(log(displays,41)))
+        self.assertFalse(extensions.weapon_catalog_available("Weapon display catalog (50)"))
+
     def test_private_pause_movement_pairs_each_key_with_its_release(self):
         import private_trial_focus as focus
         with mock.patch.object(focus, "_post_owned_windows", return_value=2) as post:

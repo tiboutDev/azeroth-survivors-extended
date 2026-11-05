@@ -150,23 +150,25 @@ local function renderedPlayer()
     if run and finite(run.px)and finite(run.py)and finite(run.pf)then return run.px,run.py,run.pf end
 end
 -- Group by projected icon centers, including the clamped minimap rim.
--- Compare with visible representatives so a chain cannot absorb distant pins.
+-- Membership uses the original projected centers, never the moving centroid.
+-- This preserves the merge distance and prevents a chain from growing by drift.
 local function groupPins()
     for n=1,eventPinCount do
-        local pin=eventPins[n];pin.quantity=1;pin.grouped=false
+        local pin=eventPins[n];pin.quantity=1;pin.grouped=false;pin.sumX=pin.projectedX;pin.sumY=pin.projectedY
         for i=1,n-1 do
             local other=eventPins[i]
             if not other.grouped and other.kind==pin.kind and other.priority==pin.priority and other.outside==pin.outside then
-                local dx,dy=pin.x-other.x,pin.y-other.y
+                local dx,dy=pin.projectedX-other.projectedX,pin.projectedY-other.projectedY
                 -- Require the centers of 20-unit portraits to be less than one radius apart.
                 if dx*dx+dy*dy<10*10 then
-                    other.quantity=other.quantity+1;pin.grouped=true;break
+                    other.quantity=other.quantity+1;other.sumX=other.sumX+pin.projectedX;other.sumY=other.sumY+pin.projectedY;pin.grouped=true;break
                 end
             end
         end
     end
     for n=1,eventPinCount do
         local pin=eventPins[n]
+        pin.x=pin.sumX/pin.quantity;pin.y=pin.sumY/pin.quantity
         if hoveredEventPin==pin then
             if pin.grouped then hoveredEventPin=nil;GameTooltip:Hide()
             elseif pin.badgeCount~=pin.quantity then pin.showTip()end
@@ -217,16 +219,22 @@ local function layoutEventPins()
         if pin.outside~=outside then pin.outside=outside;regroup=true end
         if length>edge and length>0 then x=x*edge/length;y=y*edge/length end
         x=x*halfW;y=y*halfH
-        if pin.x~=x or pin.y~=y then regroup=true;pin:ClearAllPoints();pin:SetPoint("CENTER",parent,"CENTER",x,y);pin.x=x;pin.y=y end
+        if pin.projectedX~=x or pin.projectedY~=y then regroup=true;pin.projectedX=x;pin.projectedY=y end
+    end
+    if regroup then groupPins()end
+    for n=1,eventPinCount do
+        local pin=eventPins[n]
+        if pin.drawX~=pin.x or pin.drawY~=pin.y then
+            pin:ClearAllPoints();pin:SetPoint("CENTER",parent,"CENTER",pin.x,pin.y);pin.drawX=pin.x;pin.drawY=pin.y
+        end
         local alpha=pin.outside and 0.65 or 1
         if heroX then
-            local dx,dy=x-heroX,y-heroY
+            local dx,dy=pin.x-heroX,pin.y-heroY
             local distance=math.sqrt(dx*dx+dy*dy)
             alpha=alpha*math.max(0.15,math.min(1,(distance-5)/15))
         end
         if pin.alpha~=alpha then pin:SetAlpha(alpha);pin.alpha=alpha end
     end
-    if regroup then groupPins()end
 end
 function AZSXUI_MinimapReadout()
     local result={};for n,pin in ipairs(eventPins)do if pin.azsxShown then table.insert(result,{event=pin.data.event,kind=pin.data.kind,outside=pin.outside,x=pin.x,y=pin.y,quantity=pin.quantity,priority=pin.priority,level=pin.azsxLevel})end end;return result

@@ -1,4 +1,4 @@
-//! Cosmetic models for the native 0.138.0 generated set weapons.
+//! Reviewed cosmetic models for native generated set weapons, including Tier 0.5.
 use super::Adapter;
 use crate::{
     memory::Mem,
@@ -302,6 +302,72 @@ const THE_HUNGERING_COLD: Model = Model {
     sheath: 3,
 };
 
+// Classic item references and selected-client availability are documented in
+// docs/features/WEAPON-APPEARANCE.md. These values change presentation only.
+const SILENT_FANG: Model = Model {
+    display: 24756,
+    class: 2,
+    subclass: 7,
+    inventory: 21,
+    sheath: 3,
+};
+const MIRAHS_SONG: Model = Model {
+    display: 26494,
+    class: 2,
+    subclass: 7,
+    inventory: 13,
+    sheath: 3,
+};
+const SKULLFORGE_REAVER: Model = Model {
+    display: 25036,
+    class: 2,
+    subclass: 7,
+    inventory: 13,
+    sheath: 1,
+};
+const CREST_OF_RETRIBUTION: Model = Model {
+    display: 23825,
+    class: 4,
+    subclass: 6,
+    inventory: 14,
+    sheath: 4,
+};
+const HAMMER_OF_REVITALIZATION: Model = Model {
+    display: 6798,
+    class: 2,
+    subclass: 4,
+    inventory: 21,
+    sheath: 3,
+};
+const ARGENT_DEFENDER: Model = Model {
+    display: 25133,
+    class: 4,
+    subclass: 6,
+    inventory: 14,
+    sheath: 4,
+};
+const ARGENT_AVENGER: Model = Model {
+    display: 23836,
+    class: 2,
+    subclass: 7,
+    inventory: 13,
+    sheath: 3,
+};
+const JEKLIKS_CRUSHER: Model = Model {
+    display: 32782,
+    class: 2,
+    subclass: 5,
+    inventory: 17,
+    sheath: 1,
+};
+const EMPYREAN_DEMOLISHER: Model = Model {
+    display: 29171,
+    class: 2,
+    subclass: 4,
+    inventory: 21,
+    sheath: 3,
+};
+
 type Hands = (Option<Model>, Option<Model>);
 const FURY: &[Hands] = &[
     (Some(SHORTSWORD), Some(SHORTSWORD)),
@@ -317,6 +383,7 @@ const FURY: &[Hands] = &[
         Some(GRAND_MARSHALS_LONGSWORD),
     ),
     (Some(HIGH_WARLORDS_CLEAVER), Some(HIGH_WARLORDS_CLEAVER)),
+    (Some(SILENT_FANG), Some(MIRAHS_SONG)),
 ];
 const WARRIOR_PROTECTION: &[Hands] = &[
     (Some(SHORTSWORD), Some(SMALL_SHIELD)),
@@ -329,6 +396,7 @@ const WARRIOR_PROTECTION: &[Hands] = &[
     (Some(THE_HUNGERING_COLD), Some(THE_FACE_OF_DEATH)),
     (Some(GRAND_MARSHALS_LONGSWORD), Some(GRAND_MARSHALS_AEGIS)),
     (Some(HIGH_WARLORDS_BLADE), Some(HIGH_WARLORDS_SHIELD_WALL)),
+    (Some(SKULLFORGE_REAVER), Some(CREST_OF_RETRIBUTION)),
 ];
 const HOLY: &[Hands] = &[
     (Some(MACE), Some(SMALL_SHIELD)),
@@ -340,14 +408,16 @@ const HOLY: &[Hands] = &[
         Some(SHIELD_OF_CONDEMNATION),
     ),
     (Some(GRAND_MARSHALS_WARHAMMER), Some(GRAND_MARSHALS_AEGIS)),
+    (Some(HAMMER_OF_REVITALIZATION), Some(ARGENT_DEFENDER)),
 ];
 const PALADIN_PROTECTION: &[Hands] = &[
     (Some(MACE), Some(SMALL_SHIELD)),
     (Some(IRONFOE), Some(DRACONIAN_DEFLECTOR)),
-    (Some(IRONFOE), Some(DRILLBORER_DISK)),
+    (Some(EMPYREAN_DEMOLISHER), Some(DRILLBORER_DISK)),
     (Some(SPINESHATTER), Some(ELEMENTIUM_REINFORCED_BULWARK)),
     (Some(THE_CASTIGATOR), Some(THE_FACE_OF_DEATH)),
     (Some(GRAND_MARSHALS_PUNISHER), Some(GRAND_MARSHALS_AEGIS)),
+    (Some(ARGENT_AVENGER), Some(ARGENT_DEFENDER)),
 ];
 const ENHANCEMENT: &[Hands] = &[
     (Some(LARGE_CLUB), None),
@@ -357,6 +427,7 @@ const ENHANCEMENT: &[Hands] = &[
     (Some(SULFURAS_HAND_OF_RAGNAROS), None),
     (None, None),
     (Some(HIGH_WARLORDS_BATTLE_AXE), None),
+    (Some(JEKLIKS_CRUSHER), None),
 ];
 
 // These entries exist only in visible-item fields. The authoritative equipped
@@ -397,12 +468,13 @@ fn table(class: u8, totals: [u16; 3]) -> Option<&'static [Hands]> {
 }
 fn set_tier(entry: u32, class: u8, index: u32) -> Option<usize> {
     let raw = entry.checked_sub(100000 + u32::from(class) * 1000 + index * 100)?;
-    if raw > 60 || raw % 10 != 0 {
+    if raw > 70 || raw % 10 != 0 {
         return None;
     }
     let tier = (raw / 10) as usize;
     Some(match (class, tier) {
         (2, 6) => 5,
+        (2, 7) => 6,
         (7, 5) => 6,
         _ => tier,
     })
@@ -429,7 +501,10 @@ impl Adapter {
     #[cfg(feature = "test-hooks")]
     pub fn weapon_catalog_probe(self) -> (crate::official::Entry, u64) {
         let (rva, bytes) = crate::current::WEAPON_CATALOG_PROBE;
-        (crate::official::Entry { rva, bytes }, crate::current::WEAPON_CATALOG_FRAME)
+        (
+            crate::official::Entry { rva, bytes },
+            crate::current::WEAPON_CATALOG_FRAME,
+        )
     }
 
     pub fn weapon_melee_animation(self, two_handed: bool, requested: u16) -> Option<u16> {
@@ -454,7 +529,8 @@ impl Adapter {
     }
     pub fn weapon_entries(self) -> [Entry; 10] {
         [
-            0x5ceedf2, 0x5bffe00, 0x3c18e0, 0x5c4b7f0, 0x5bff970, 0x2a2e7a, 0x6d3893, 0xaf0050, 0x2828c0, 0x3c1caf,
+            0x5ceedf2, 0x5bffe00, 0x3c18e0, 0x5c4b7f0, 0x5bff970, 0x2a2e7a, 0x6d3893, 0xaf0050,
+            0x2828c0, 0x3c1caf,
         ]
         .map(|a| Entry {
             rva: self.rva(a),
@@ -497,7 +573,12 @@ impl Adapter {
     }
     /// Register pair is [RDI, R15] at the selected native Look result seam.
     pub fn weapon_run_profile(self, registers: [u64; 2]) -> u64 {
-        const { assert!(matches!(crate::current::WEAPON_RUN_PROFILE_REGISTER, 7 | 15)) };
+        const {
+            assert!(matches!(
+                crate::current::WEAPON_RUN_PROFILE_REGISTER,
+                7 | 15
+            ))
+        };
         registers[usize::from(crate::current::WEAPON_RUN_PROFILE_REGISTER == 15)]
     }
     pub fn weapon_projection(
@@ -648,7 +729,7 @@ mod tests {
     fn selected_looks_only_roundtrip_real_set_pieces_of_the_same_class_and_hand() {
         for class in [1, 2, 7] {
             for slot in [15, 16] {
-                for tier in 0..7 {
+                for tier in 0..8 {
                     let item =
                         100000 + u32::from(class) * 1000 + (slot as u32 - 7) * 100 + tier * 10;
                     let choice = piece_look(class, slot, item).unwrap();
@@ -697,7 +778,7 @@ mod tests {
             (2, [0, 2, 0]),
             (7, [0, 3, 0]),
         ] {
-            for tier in 0..7 {
+            for tier in 0..8 {
                 let t = set_tier(100800 + class as u32 * 1000 + tier * 10, class, 8).unwrap();
                 let (r, l) = table(class, points).unwrap()[t];
                 assert!(r.is_some());

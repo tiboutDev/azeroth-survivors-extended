@@ -56,6 +56,16 @@ def consumable_stat_evidence(text):
  return dict(native_bonus_values=len(observed)==6 and full)
 
 
+def weapon_catalog_available(text):
+ # Check identities rather than a fixed row count: adding models must not make
+ # the probe pass while silently omitting one of the newly selected displays.
+ required={24756,26494,25036,23825,6798,25133,23836,32782,29171}
+ for count,values in re.findall(r"Weapon display catalog \((\d+)\) \[([0-9, ]*)\]",text):
+  rows=[int(value)for value in values.split(",")if value.strip()]
+  if len(rows)==int(count) and required.issubset(rows):return True
+ return False
+
+
 def run(seconds,players=1,normal=False,enchantments=False,reward_wallet=False,immunity=False,gems=False,goblins=False,supplies=False,ritual=False):
  if os.environ.get("AZSX_TEST_CODEX_DISCOVERY")=="1":
   if players!=1 or not normal:raise ValueError("Codex startup requires one normal client")
@@ -702,7 +712,7 @@ end)
      checks["selected_set_over_worn_set"]=any("class=Ok([7," in line and "result=Ok(Some([1784312834, 0]))" in line for log in logs for line in log.splitlines())
     if os.environ.get("AZSX_TEST_WEAPON_MELEE")=="1":
      checks["melee_grip"]=all("Weapon melee animation 57 -> 58" in log for log in logs)
-    checks["weapon_display_catalog"]=all("Weapon display catalog (41)" in t for t in logs)
+    checks["weapon_display_catalog"]=all(weapon_catalog_available(t) for t in logs)
    if os.environ.get("AZSX_TEST_SUPPLY_POTION")=="1":
     checks={k:v for k,v in checks.items() if k in ("clients_alive","started","clean_scripts","clean_adapter","coop_joined")}
     expected="Supply potion readback: slot="+str(players-1)+" tier="+str(players)+" verified=true"

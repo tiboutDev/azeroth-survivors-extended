@@ -168,3 +168,6 @@ fn read_owned(m:&Memory,at:u64)->Vec<u8>{let h=m.read(at,24).unwrap();let ptr=u6
  let m=memory();let a=adapter();let resource=0x30000;let at=resource+azsx_game::current::LOBBY_NAME;
  owned_text(&m,at,"Équipe".as_bytes());a.prefix_lobby_name(&m,resource).unwrap();assert_eq!(read_owned(&m,at),"[AZSX] Équipe".as_bytes());let before=m.allocs.get();a.prefix_lobby_name(&m,resource).unwrap();assert_eq!(m.allocs.get(),before);
 }
+
+#[path = "weapon_appearance.rs"]
+mod weapon_appearance;

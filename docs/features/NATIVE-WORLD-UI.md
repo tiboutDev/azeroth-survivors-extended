@@ -258,7 +258,7 @@ sequential display. The Supplies sale amount remains AZSX-owned and uses the nat
 small gold coin artwork, without converting whole AZSX gold into another currency.
 Quest titles and individual entries have larger gaps than an entry and its timer.
 
-Pins fade to 15% opacity at the player and recover full relative opacity at 20 UI units. Their positions and mouse targets stay available at every opacity. Pins of the same type, priority and rim status share one icon with a count only when their projected centers are less than 10 UI units apart (half a portrait width).
+Pins fade to 15% opacity at the player and recover full relative opacity at 20 UI units. Their positions and mouse targets stay available at every opacity. Pins of the same type, priority and rim status share one icon with a count only when their projected centers are less than 10 UI units apart (half a portrait width). The merged icon sits at the arithmetic mean of its members’ projected centers; player-arrow fading and hover use that displayed center. Merge membership keeps the original projected positions, so recentering does not pull additional markers into a group.
 
 ### Encounter debuff parity
 

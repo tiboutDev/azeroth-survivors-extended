@@ -18,7 +18,10 @@ unsafe extern "system" fn project(c: &mut crate::stub::Context) {
     if std::env::var("AZSX_TEST_WEAPONS").is_ok() {
         r.log.info(&format!(
             "weapon look: class={:?} hands={:?} result={result:?}",
-            r.local.read((profile + 0x1a4) as usize, 2),
+            r.local.read(
+                (profile + azsx_game::current::WEAPON_PROFILE_FIELDS[0]) as usize,
+                2,
+            ),
             r.local.read((c.rax + 60) as usize, 8)
         ));
     }

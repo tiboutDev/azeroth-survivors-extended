@@ -60,6 +60,59 @@ page.frameCurrent=true;draw();friends={};tick();assert(not pin:IsShown() and not
         function Minimap:GetZoom()return 0 end;AZS_CHESTS[2].x=19;AZS_CHESTS[3]=nil;tick()
         assert(AZSXUI_MinimapReadout()[2].quantity==2)
         """)
+    def test_merged_icon_is_at_the_centroid_of_all_member_projections(self):
+        self.run_lua("""
+        AZS_CHESTS={{id=1,x=10,y=20},{id=2,x=16,y=26},{id=3,x=18,y=20}}
+        tick();local pins=AZSXUI_MinimapReadout()
+        assert(table.getn(pins)==1 and pins[1].quantity==3)
+        assert(math.abs(pins[1].x+2)<.0001 and math.abs(pins[1].y-14/3)<.0001)
+        local pin=objects.AZSXEventPin1
+        assert(math.abs(pin.anchor[4]+2)<.0001 and math.abs(pin.anchor[5]-14/3)<.0001)
+        local allocated=allocations
+        for i=1,12 do now=now+1/60;objects.AZSXUIMinimapController.scripts.OnUpdate()
+            pins=AZSXUI_MinimapReadout()
+            assert(table.getn(pins)==1 and pins[1].quantity==3)
+            assert(math.abs(pins[1].x+2)<.0001 and math.abs(pins[1].y-14/3)<.0001)
+        end
+        assert(allocations==allocated)
+        """)
+
+    def test_member_changes_recenter_then_split_and_retire_the_group(self):
+        self.run_lua("""
+        AZS_CHESTS={{id=1,x=10,y=20},{id=2,x=19,y=20},{id=3,x=14,y=20}}
+        tick();assert(math.abs(AZSXUI_MinimapReadout()[1].y-13/3)<.0001)
+        table.remove(AZS_CHESTS,1);tick()
+        local p=AZSXUI_MinimapReadout()
+        assert(table.getn(p)==1 and p[1].quantity==2 and p[1].y==6.5)
+        AZS_CHESTS[2].x=29;tick();p=AZSXUI_MinimapReadout()
+        assert(table.getn(p)==2 and p[1].quantity==1 and p[1].y==9 and p[2].y==19)
+        AZS_CHESTS={};tick();assert(table.getn(AZSXUI_MinimapReadout())==0)
+        """)
+
+    def test_fading_and_hover_follow_the_merged_icon_center(self):
+        self.run_lua("""
+        AZS_RUN.px=33.5;AZS_RUN.py=20;AZS_RUN.pf=0
+        AZS_CHESTS={{id=1,x=10,y=20},{id=2,x=19,y=20}};tick()
+        local pin=objects.AZSXEventPin1
+        assert(math.abs(pin.alpha-14/15)<.0001)
+        GameTooltip.lines={};GameTooltip.AddLine=function(self,text)table.insert(self.lines,text)end
+        enter("AZSXEventPin1")
+        assert(GameTooltip.lines[3]=="Markers here: 2")
+        assert(pin.anchor[5]==4.5 and not objects.AZSXEventPin2:IsShown())
+        """)
+
+    def test_centroid_does_not_change_membership_or_mix_priorities_and_rim_status(self):
+        self.run_lua("""
+        AZS_CHESTS={{id=1,x=10,y=20},{id=2,x=19,y=20},{id=3,x=23,y=20}}
+        tick();local p=AZSXUI_MinimapReadout()
+        assert(table.getn(p)==2 and p[1].quantity==2 and p[1].y==4.5 and p[2].y==13)
+        custom={{event=1,kind=3,x=109,y=20,left=0,active=true},
+                {event=2,kind=3,x=111,y=20,left=0,active=true},
+                {event=3,kind=3,x=109,y=20,left=30,active=false}}
+        AZS_CHESTS={};tick();p=AZSXUI_MinimapReadout()
+        assert(table.getn(p)==3 and p[1].quantity==1 and p[2].outside and p[3].priority~=p[1].priority)
+        """)
+
     def test_cache_and_supply_icons_are_distinct_native_resources(self):
         self.run_lua('custom={{event=1,kind=0,x=10,y=20,left=60}};AZS_CHESTS={{id=1,x=10,y=20}};tick()')
         supply=self.lua.eval('objects.AZSXEventPin1.icon.texture')
