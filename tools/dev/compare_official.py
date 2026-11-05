@@ -116,6 +116,16 @@ def descriptor_inventory(path):
   if match:
    for address in re.findall(r"\(\s*0x([0-9a-f]+)\s*,",match[1]):
     add(address,f"{path.name} {name}")
+ # Named pointer arrays are consumed even when no runtime call references
+ # their first element. Keep counts, key strings and ordinary member arrays out.
+ for name in ("WEAPON_TALENT_TREES", "COOP_TALENT_KEYS"):
+  match=re.search(r"\bconst "+name+r"\s*:[^=]+?=\s*(.*?);",source,re.S)
+  if match:
+   for address in re.findall(r"\(\s*0x([0-9a-f]+)\s*,",match[1]):add(address,f"{path.name} {name}")
+ for name in ("DEMON_DEFINITIONS",):
+  match=re.search(r"\bconst "+name+r"\s*:[^=]+?=\s*(.*?);",source,re.S)
+  if match:
+   for address in re.findall(r"0x([0-9a-f]+)",match[1]):add(address,f"{path.name} {name}")
  for name in ('KEPT_TOOLTIP_BINDINGS',):
   match=re.search(r'pub const '+name+r'\s*:.*?=(.*?);',source,re.S)
   if match:

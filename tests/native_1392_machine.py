@@ -35,6 +35,9 @@ class ReviewMachine:
         elif image.sha == "27c8df53c87e38a98d474bf7106d2444e11e7634ca70dbffc5c2b0aecb894fd9":
             crt = (0x63abb31, 0x63abb2b, 0x63abb3d, 0x63abb37, 0x63abb5b, 0x63abb85,
                    0x63abb7f, 0x63abb8b, 0x63abbbb, 0x63aafc0)
+        elif image.sha == "6ca5f4ba4eb6b26716e4b7d9e03cbd25ddafe7582dcd8e55333e070a28058afa":
+            crt = (0x63a5541, 0x63a553b, 0x63a554d, 0x63a5547, 0x63a556b, 0x63a5595,
+                   0x63a558f, 0x63a559b, 0x63a55cb, 0x63a49d0)
         else:
             raise ValueError("Unknown offline executable")
         self.services = dict(zip(crt, ("copy", "copy", "compare", "fill", "sin", "cos",
@@ -43,6 +46,8 @@ class ReviewMachine:
             self.services[0x60519b0] = "local transport"
         elif crt[0] == 0x63abb31:
             self.services[0x60b2350] = "local transport"
+        elif crt[0] == 0x63a5541:
+            self.services[0x60abae0] = "local transport"
         for address in (0x21c0, 0x21d0, 0x21e0, 0x21f0, *self.services):
             at = self.base + address
             self.cpu.hook_add(UC_HOOK_CODE, self.service, begin=at, end=at)

@@ -198,7 +198,7 @@ impl SelectedAdapter {
     pub fn set_clone_context(self, mem: &dyn Mem, frame: u64, registers: [u64; 4]) -> Result<(u64, u64, u64, u64)> {
         self.native.set_clone_context(mem, frame, registers)
     }
-    pub fn polymorph_hit_context(self, begin: bool, registers: [u64; 3]) -> Result<(u64, u64)> {
+    pub fn polymorph_hit_context(self, begin: bool, registers: [u64; 4]) -> Result<(u64, u64)> {
         self.native.polymorph_hit_context(begin, registers)
     }
     pub fn fixture_cast_snapshot(self, mem: &dyn Mem, ability: u64) -> Result<Vec<u8>> {

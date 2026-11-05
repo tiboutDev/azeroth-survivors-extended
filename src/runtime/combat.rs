@@ -647,7 +647,7 @@ unsafe extern "system" fn polymorph_begin(c: &mut crate::stub::Context) {
     // AL contains native rupture eligibility. The actor mode is read by the adapter.
     if c.rax as u8 == 0 { return; }
     let Some(r) = RUNTIME.get().filter(|r| r.rules) else { return; };
-    let Ok((game, enemy)) = r.adapter.polymorph_hit_context(true, [c.rsi, c.r12, c.r13]) else { return; };
+    let Ok((game, enemy)) = r.adapter.polymorph_hit_context(true, [c.rsi, c.r12, c.r13, c.r15]) else { return; };
     let players = STATE.lock().ok().filter(|s| s.game == game).map(|s|
         s.players.iter().filter(|p| p.phase == azsx_gameplay::Phase::Playing)
             .map(|p| (p.id - 1, p.life)).collect::<Vec<_>>()
@@ -727,7 +727,7 @@ unsafe extern "system" fn polymorph_gate(c:&mut crate::stub::Context){
     // the attacker's native hit eligibility is still evaluated at the resume.
     c.rax=0;
     let Some(r)=RUNTIME.get().filter(|r|r.rules)else{return};
-    let Ok((game, enemy))=r.adapter.polymorph_hit_context(false,[c.rsi,c.r12,c.r13])else{return};
+    let Ok((game, enemy))=r.adapter.polymorph_hit_context(false,[c.rsi,c.r12,c.r13,c.r15])else{return};
     let players=STATE.lock().ok().filter(|s|s.game==game).map(|s|s.players.iter().filter(|p|p.phase==azsx_gameplay::Phase::Playing).map(|p|(p.id-1,p.life)).collect::<Vec<_>>()).unwrap_or_default();
     if players.len()<2{return}
     c.rax=u64::from(r.adapter.polymorph_candidate(&r.local,game,enemy,&players).is_ok_and(|o|o.is_some()));

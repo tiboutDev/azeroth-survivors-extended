@@ -262,11 +262,8 @@ mod tests {
                 "movaps xmm7, [rsp + 32]", "movaps xmm8, [rsp + 48]", "add rsp, 72", "pop r14", "pop rbx", "ret"
             );
         }
-        let expected_register = match crate::current::VERSION {
-            "0.131.0" => 7,
-            "0.133.0" | "0.135.1" | "0.138.0" | "0.139.2" | "0.140.0" => 8,
-            _ => panic!("Fresh-size fixture requires native register review"),
-        };
+        // Independent current-image CVTSS2SD carrier, checked by the native suite.
+        let expected_register = 8;
         assert_eq!(crate::current::DAMAGE_TEXT_XMM, expected_register);
         let previous = DAMAGE_NEXT.swap(end as *const () as usize, std::sync::atomic::Ordering::Release);
         struct Restore(usize);

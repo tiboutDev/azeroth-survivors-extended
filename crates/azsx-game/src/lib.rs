@@ -1,4 +1,4 @@
-//! Selected native integration for official 0.130 and typed readers over a
+//! Selected native integration for the registered exact client and typed readers over a
 //! memory view. Pure: no Windows API and no process access, so everything here
 //! is testable offline against the executables on disk and synthetic memory.
 
@@ -36,7 +36,7 @@ pub(crate) mod official125;
 
 // All active native consumers use this boundary. Versioned descriptors retain
 // their exact identities; switching the selected build never relabels old data.
-pub use official1400 as current;
+pub use official1410 as current;
 
 // Previous identity remains a test-only reference; it is never selected.
 #[cfg(test)]
@@ -85,5 +85,10 @@ pub(crate) mod official138;
 #[path = "bindings/official1392.rs"]
 pub(crate) mod official1392;
 
+#[cfg(test)]
+#[allow(dead_code)]
 #[path = "bindings/official1400.rs"]
-pub mod official1400;
+pub(crate) mod official1400;
+
+#[path = "bindings/official1410.rs"]
+pub mod official1410;

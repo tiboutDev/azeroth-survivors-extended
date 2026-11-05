@@ -118,7 +118,7 @@ Use the [documentation index](docs/README.md) for detailed references, the
 [compatibility checklist](docs/compatibility/COMPATIBILITY-CHECKLIST.md) for a native
 client update, and the [release checklist](docs/release/RELEASE-CHECKLIST.md) for release work.
 
-Source currently targets official **0.140.0**. Normal-artifact and in-game
+Source currently targets official **0.141.0**. Normal-artifact and in-game
 validation of this port remain separate from source checks; published kits
 declare their own supported game version. See
 [client compatibility](docs/compatibility/CLIENT-COMPATIBILITY.md).

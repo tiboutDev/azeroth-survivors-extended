@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "games": {
-    "0.140.0": {
-      "sha256": "27c8df53c87e38a98d474bf7106d2444e11e7634ca70dbffc5c2b0aecb894fd9",
+    "0.141.0": {
+      "sha256": "6ca5f4ba4eb6b26716e4b7d9e03cbd25ddafe7582dcd8e55333e070a28058afa",
       "archives": [
         "Data/patch.MPQ",
         "Data/patch-2.MPQ",
@@ -17,8 +17,8 @@
         "Data/patch-B.MPQ",
         "Data/patch-C.MPQ"
       ],
-      "descriptor": "crates/azsx-game/src/bindings/official1400.rs",
-      "binding_manifest": "compat/clients/0.140.0.json"
+      "descriptor": "crates/azsx-game/src/bindings/official1410.rs",
+      "binding_manifest": "compat/clients/0.141.0.json"
     }
   }
 }

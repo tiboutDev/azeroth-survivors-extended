@@ -48,6 +48,19 @@ pub const SET_DOT_OWNER_CALLERS: &[(u64,u64)] =
 """)
             self.assertEqual(set(comparison.descriptor_inventory(path)), {0x2100, 0x3100, 0x4100})
 
+    def test_inventory_includes_named_native_pointer_arrays_without_counts_or_members(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "generated.rs"
+            path.write_text("""
+const ADDRESSES: &[(u64,u64)] = &[(0x1000, 0x2100)];
+pub const WEAPON_TALENT_TREES: [[(u64,u64);2];1] = [[(0x3100, 0xd), (0x4100, 0xe)]];
+pub const COOP_TALENT_KEYS: [(u64,&str);1] = [(0x5100, "tree_of_life")];
+pub const DEMON_DEFINITIONS: [u64;2] = [0x6100, 0x7100];
+pub const MEMBER_FIELDS: [u64;2] = [0x98, 0x1e0];
+""")
+            self.assertEqual(set(comparison.descriptor_inventory(path)),
+                             {0x2100, 0x3100, 0x4100, 0x5100, 0x6100, 0x7100})
+
     def test_inventory_includes_standalone_bootstrap_detours(self):
         root = Path(__file__).resolve().parents[1]
         rows = comparison.descriptor_inventory(root / "crates/azsx-game/src/bindings/official138.rs")

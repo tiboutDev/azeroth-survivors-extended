@@ -1,12 +1,12 @@
-# Official 0.140.0 client boundary
+# Official 0.141.0 client boundary
 
 The sole source target is the exact Windows x86-64 executable with SHA-256:
 
 ```text
-27c8df53c87e38a98d474bf7106d2444e11e7634ca70dbffc5c2b0aecb894fd9
+6ca5f4ba4eb6b26716e4b7d9e03cbd25ddafe7582dcd8e55333e070a28058afa
 ```
 
-`bindings/official1400.rs`, generated from `compat/clients/0.140.0.json`, owns
+`bindings/official1410.rs`, generated from `compat/clients/0.141.0.json`, owns
 native contacts, complete instruction guards, field translations and carrier
 choices. The launcher registry and private importer use the same identity and
 include `Data/patch-C.MPQ`. Similar code or a version label never enables an
@@ -31,7 +31,12 @@ by a separate normal-artifact trial, as described in the [checklist](COMPATIBILI
 
 ## Native calls and layouts
 
-- Unit-field insertion carries opaque value bits in XMM2. Preserve those bits;
+- The Game/private Actor insertion at +0x2a8 moves the consumed later fields by
+  24 bytes; the independent native swap confirms both namespaces. Saved profile
+  fields move from +0x50 onward. Specialization appearance reads its selected
+  profile fields rather than retaining old literals.
+
+- Unit-field insertion carries opaque value bits in R8D. Preserve those bits;
   the two-word setter is a different operation and must not overwrite a neighbor.
 - At Hurt’s absorb-clear seam, R15 holds the consumed shield spell; R12 is the
   incoming damage kind. Those carriers must remain distinct.
@@ -50,17 +55,17 @@ by a separate normal-artifact trial, as described in the [checklist](COMPATIBILI
   XP receipts use their own 16-byte rows and preserve earlier recipients. Chest
   price, opened-cache count and pending-item banks have separate host/private
   mappings. Character race and gender are separate bytes in both contexts.
-  The native swap exchanges 3,070 bytes of the 0xc08-byte private actor, preserving
+  The native swap exchanges 3,094 bytes of the 0xc20-byte private actor, preserving
   its padding. Review each consumed field independently. The old source-state
   word is unused by the strongest-shield path and deliberately has no new mapping.
 - Native strongest same-spell shields retain their stronger pool. Cooperative
   source loans preserve that producer, unrelated absorption and rollback capacity.
-  Tranquility counts actual restored HP and Tree of Life absorption gained;
-  lost healing does not become damage. Native critical rolls and attribution run.
+  Tranquility counts raw healing, including overheal at full HP or a capped
+  Tree of Life shield. The shield itself still respects its native cap. Native critical rolls and attribution run.
 - Divine Aegis and Tranquility use different radius-query return sites. Trace the
   real native talent path rather than picking the first similar query in a large
   dispatcher. The six-argument query borrows its exclusion slice on the stack.
-- Basic pursuit's distance is spilled at frame +0x3b0. The final goblin movement
+- Basic pursuit's distance is spilled at frame +0x3a0. The final goblin movement
   candidate uses XMM10 for XY and XMM14 for Z. Change only selected carriers;
   native movement, terrain, speed and AI remain authoritative.
 - The native target picker returns the actor slot separately from its pose.
@@ -96,8 +101,8 @@ by a separate normal-artifact trial, as described in the [checklist](COMPATIBILI
   bytes. Scholomance is inserted before Ahn'Qiraj. Late maps must remain within
   native placement, guardian, drop and mark-table bounds. Schedules, new boss
   mechanics and native balance changes remain native.
-- Encounter completion carries Game in R12 and the definition at frame +0x330,
-  with an independent Game spill at +0x358. Observe the native pre-transition
+- Encounter completion carries Game in R15 and the definition at frame +0x310,
+  with an independent Game spill at +0x338. Observe the native pre-transition
   callback; do not widen it to another new boss-controller branch by proximity.
 - Scene creation, unit fields, per-participant delivery, terrain options and
   spline sequencing retain their distinct ABIs. Creation logs do not prove
@@ -119,7 +124,7 @@ by a separate normal-artifact trial, as described in the [checklist](COMPATIBILI
   downed-row copies, map/space scoping, projection request arguments and frame
   handler cleanup. Its low-level camera primitive is a stand-in, so it does not
   establish rendered placement.
-- Aura export uses the actual 48-row allocation via frame +0x10. Aura expiry
+- Aura export uses the actual 48-row allocation via frame +0x38. Aura expiry
   is an absolute simulation timestamp. Fractional healing observes the final
   clamped gain, with separate native source carriers for direct and periodic paths.
 - Run-info missing drops come from native Armory loot and item constructors for

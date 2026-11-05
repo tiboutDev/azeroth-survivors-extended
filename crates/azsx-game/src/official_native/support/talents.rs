@@ -144,7 +144,7 @@ mod tests {
     impl Memory{fn put(&mut self,a:u64,b:&[u8]){self.0[a as usize..a as usize+b.len()].copy_from_slice(b)} fn float(&mut self,a:u64,v:f32){self.put(a,&v.to_le_bytes())}fn word(&mut self,a:u64,v:u64){self.put(a,&v.to_le_bytes())}}
     fn fixture()->(Adapter,Memory){
         let a=Adapter::select(crate::current::SHA256).unwrap();let mut m=Memory(vec![0;0x50000]);
-        m.put(GAME+a.game_field(0xc41),&[1]);m.word(GAME+0x20,1);m.word(GAME+0xb58,PERK);m.word(GAME+0xb60,1);
+        m.put(GAME+a.game_field(0xc41),&[1]);m.word(GAME+0x20,1);m.word(GAME+0xb70,PERK);m.word(GAME+0xb78,1);
         m.word(GAME+a.game_field(0x980),ROW);m.word(GAME+a.game_field(0x980)+8,1);
         for(row,guid,hp)in[(GAME,100,100.),(ROW,101,39.)]{
             m.word(row+a.row_field(row==GAME,0x478),guid);m.float(row+a.row_field(row==GAME,0x490),100.);m.float(row+a.row_field(row==GAME,0x4f8),hp);

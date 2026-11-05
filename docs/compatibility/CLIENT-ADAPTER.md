@@ -93,8 +93,8 @@ scaling, schedules and allocation remain native.
 - Strongest same-spell shields keep the retained pool's producer and native
   refreshed expiry, including auxiliary pools. A foreign refresh does not acquire
   ownership of an untracked native personal shield. Loans preserve unrelated absorb.
-- Tranquility uses the selected native restored-health/Tree-absorb budget,
-  throttling and critical/proc behavior. Separate healing-meter credit from damage
+- Tranquility uses the selected native raw-healing budget, including overheal.
+  Preserve its native throttling and critical/proc behavior. Separate healing-meter credit from damage
   fuel; retain RNG changes across nested callbacks while restoring borrowed scope.
 - Polymorph borrows its living producer only around the native burst. Keep the
   triggering hit with the attacker, restore context before later on-hit effects

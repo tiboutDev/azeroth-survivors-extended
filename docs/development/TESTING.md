@@ -73,7 +73,8 @@ Set only the image inputs needed by the reviewed tests:
 
 | Environment variable | Exact-image suite |
 | --- | --- |
-| `AZSX_REVIEW_IMAGE_1400` | Current native contracts in `test_1400_native_review.py` |
+| `AZSX_REVIEW_IMAGE_1410` | Current native contracts in `test_1410_native_review.py` |
+| `AZSX_REVIEW_IMAGE_1400` | Historical comparison contracts in `test_1400_native_review.py` |
 | `AZSX_REVIEW_IMAGE_1392` | Historical comparison contracts in `test_1392_native_review.py` |
 | `AZSX_REVIEWED_IMAGE_138` | Earlier reviewed catalog/comparison input |
 | `AZSX_REVIEWED_IMAGE_1351` | Recorded native balance/arithmetic reference |

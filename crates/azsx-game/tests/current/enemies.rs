@@ -9,7 +9,7 @@ use azsx_game::{
 const GAME: u64 = 0x10000;
 const RECORDS: u64 = 0x20800;
 fn layout() -> EnemyLayout {
-    // Independent 0.140.0 fixture values, not derived from the descriptor under test.
+    // Independent 0.141.0 fixture values, not derived from the descriptor under test.
     EnemyLayout {
         stride: 0x228,
         guid_offset: 0x110,
@@ -39,11 +39,11 @@ impl Mem for Memory {
 
 fn memory() -> Memory {
     let mut game = vec![0; 0x1200];
-    // Reviewed current Game enemy vector and 0.140.0 native clock.
-    for (at, value) in [(0x6b8, 2u64), (0x6c0, RECORDS), (0x6c8, 2)] {
+    // Reviewed current Game enemy vector and 0.141.0 native clock.
+    for (at, value) in [(0x6d0, 2u64), (0x6d8, RECORDS), (0x6e0, 2)] {
         game[at..at + 8].copy_from_slice(&value.to_le_bytes());
     }
-    game[0x1010..0x1014].copy_from_slice(&11f32.to_le_bytes());
+    game[0x1028..0x102c].copy_from_slice(&11f32.to_le_bytes());
     let stride = 0x228;
     let mut records = vec![0; stride * 2];
     records[0x110..0x110 + 8].copy_from_slice(&123456u64.to_le_bytes());
@@ -79,7 +79,7 @@ fn selected_support_reads_current_health_and_ignores_retired_enemies() {
 fn selected_support_rejects_invalid_extents_and_skips_nonfinite_records() {
     let adapter = SelectedAdapter::select(current::SHA256).unwrap();
     let mut m = memory();
-    m.game[0x6c8..0x6d0].copy_from_slice(&3u64.to_le_bytes());
+    m.game[0x6e0..0x6e8].copy_from_slice(&3u64.to_le_bytes());
     assert!(adapter.support_enemies(&m, GAME).is_err());
     let mut m = memory();
     m.records.pop();
@@ -173,11 +173,11 @@ fn shared_mark_preserves_other_native_amplifiers_and_enemy_state() {
 #[test]
 fn encounter_fixture_never_kills_ordinary_or_event_creatures() {
     let mut m = memory();
-    for at in [0x6b8, 0x6c8] {
+    for at in [0x6d0, 0x6e0] {
         m.game[at..at + 8].copy_from_slice(&4u64.to_le_bytes());
     }
     m.records = vec![0; 4 * 0x228];
-    // Native 0.140.0 encounter IDs are at +0x30. The retired +0x18
+    // Native 0.141.0 encounter IDs are at +0x30. The retired +0x18
     // contains unrelated state, including zero on ordinary/event creatures.
     for (index, (guid, encounter, old_word, dead)) in [
         (101u64, u64::MAX, 0u64, false),
@@ -198,7 +198,7 @@ fn encounter_fixture_never_kills_ordinary_or_event_creatures() {
 #[test]
 fn guardian_fixture_requires_a_live_guardian_and_excludes_bosses_and_events() {
     let mut m = memory();
-    for at in [0x6b8, 0x6c8] {
+    for at in [0x6d0, 0x6e0] {
         m.game[at..at + 8].copy_from_slice(&5u64.to_le_bytes());
     }
     m.records = vec![0; 5 * 0x228];

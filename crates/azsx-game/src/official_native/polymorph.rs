@@ -9,7 +9,7 @@ pub struct PolymorphLoan {
     original: (u32, u64),
     owner: (u32, u64),
 }
-fn hit_context(layout: [usize; 3], begin: bool, registers: [u64; 3]) -> Result<(u64, u64)> {
+fn hit_context(layout: [usize; 3], begin: bool, registers: [u64; 4]) -> Result<(u64, u64)> {
     let game = *registers.get(layout[usize::from(begin)]).ok_or("Unreviewed Polymorph Game register")?;
     let enemy = *registers.get(layout[2]).ok_or("Unreviewed Polymorph enemy register")?;
     if game < 0x10000 || enemy == 0 {
@@ -18,8 +18,8 @@ fn hit_context(layout: [usize; 3], begin: bool, registers: [u64; 3]) -> Result<(
     Ok((game, enemy))
 }
 impl Adapter {
-    /// RSI/R12/R13 snapshots at the selected native scan or rupture seam.
-    pub fn polymorph_hit_context(self, begin: bool, registers: [u64; 3]) -> Result<(u64, u64)> {
+    /// RSI/R12/R13/R15 snapshots at the selected native scan or rupture seam.
+    pub fn polymorph_hit_context(self, begin: bool, registers: [u64; 4]) -> Result<(u64, u64)> {
         hit_context(crate::current::POLYMORPH_HIT_REGISTERS, begin, registers)
     }
     pub fn polymorph_entries(self) -> [Entry; 4] {
@@ -273,10 +273,10 @@ mod tests {
             // Independent reviewed subset of the native swap, including the
             // newly consumed ownership fields absent from the old actor map.
             for (g, a, n) in [
-                (0x5b0, 0x5b0, 8),
-                (0x640, 0x640, 4),
-                (0x5e0, 0x5e0, 4),
-                (0xc18, 0xa78, 16),
+                (0x5c8, 0x5c8, 8),
+                (0x658, 0x658, 4),
+                (0x5f8, 0x5f8, 4),
+                (0xc30, 0xa90, 16),
             ] {
                 let left = self.read(game + g, n)?;
                 let right = self.read(row + a, n)?;
@@ -287,7 +287,7 @@ mod tests {
         }
         fn flush_actor(&self, game: u64) -> Result<()> {
             self.flushed.borrow_mut().push(u64::from_le_bytes(
-                self.read(game + 0x5b0, 8)?.try_into().unwrap(),
+                self.read(game + 0x5c8, 8)?.try_into().unwrap(),
             ));
             if self.fail_flush {
                 Err("injected flush failure".into())
@@ -304,33 +304,33 @@ mod tests {
             fail_flush: false,
         };
         for (at, v) in [
-            (0xcd0, ROWS),
-            (0xcd8, 2),
-            (0x6b8, 1),
-            (0x6c0, ENEMIES),
-            (0x6c8, 1),
+            (0xce8, ROWS),
+            (0xcf0, 2),
+            (0x6d0, 1),
+            (0x6d8, ENEMIES),
+            (0x6e0, 1),
         ] {
             m.write(GAME + at, &v.to_le_bytes()).unwrap();
         }
         m.write(GAME + a.game_field(0xc41), &[1]).unwrap();
-        m.write(GAME + 0x1010, &10f32.to_le_bytes()).unwrap();
+        m.write(GAME + 0x1028, &10f32.to_le_bytes()).unwrap();
         for slot in 0..3 {
             let row = if slot == 0 {
                 GAME
             } else {
                 ROWS + (slot - 1) * a.context_size()
             };
-            m.write(row + 0x5b0, &(100 + slot).to_le_bytes()).unwrap();
+            m.write(row + 0x5c8, &(100 + slot).to_le_bytes()).unwrap();
             m.write(
-                row + if row == GAME { 0x5e0 } else { 0x5e0 },
+                row + if row == GAME { 0x5f8 } else { 0x5f8 },
                 &50f32.to_le_bytes(),
             )
             .unwrap();
-            m.write(row + 0x640, &100f32.to_le_bytes()).unwrap();
+            m.write(row + 0x658, &100f32.to_le_bytes()).unwrap();
         }
         let sheep = ROWS + a.context_size();
-        m.write(sheep + 0xa78, &0x50000u64.to_le_bytes()).unwrap();
-        m.write(sheep + 0xa80, &1u64.to_le_bytes()).unwrap();
+        m.write(sheep + 0xa90, &0x50000u64.to_le_bytes()).unwrap();
+        m.write(sheep + 0xa98, &1u64.to_le_bytes()).unwrap();
         m.write(0x50000, &777u64.to_le_bytes()).unwrap();
         m.write(ENEMIES + 0x110, &777u64.to_le_bytes()).unwrap();
         m.write(ENEMIES + 0x1f4, &20f32.to_le_bytes()).unwrap();
@@ -345,7 +345,7 @@ mod tests {
             let loan = a.polymorph_begin(&m, GAME, 777, PLAYERS).unwrap().unwrap();
             assert_eq!(a.support_caster(&m, GAME).unwrap().guid, 102);
             // Native rupture consumes its owner's list before recursive damage.
-            m.write(GAME + 0xc20, &0u64.to_le_bytes()).unwrap();
+            m.write(GAME + 0xc38, &0u64.to_le_bytes()).unwrap();
             assert!(a.polymorph_begin(&m, GAME, 777, PLAYERS).unwrap().is_none());
             a.polymorph_end(&m, loan).unwrap();
             assert_eq!(
@@ -354,7 +354,7 @@ mod tests {
             );
             assert_eq!(*m.flushed.borrow(), [102]);
             let row = a.support_row(&m, GAME, 2).unwrap();
-            assert_eq!(m.read(row + 0xa80, 8).unwrap(), 0u64.to_le_bytes());
+            assert_eq!(m.read(row + 0xa98, 8).unwrap(), 0u64.to_le_bytes());
         }
     }
     #[test]
@@ -372,15 +372,17 @@ mod tests {
     }
     #[test]
     fn polymorph_seams_decode_their_own_game_and_enemy_registers() {
-        let registers = [0x10000, 777, 0x30000];
+        let registers = [0x10000, 777, 0x30000, 0x40000];
         assert_eq!(hit_context([2, 0, 1], false, registers).unwrap(), (0x30000, 777));
         assert_eq!(hit_context([2, 0, 1], true, registers).unwrap(), (0x10000, 777));
-        assert_eq!(hit_context([1, 1, 0], false, [777, 0x30000, 999]).unwrap(), (0x30000, 777));
-        assert_eq!(hit_context([1, 1, 0], true, [777, 0x30000, 999]).unwrap(), (0x30000, 777));
-        assert!(hit_context([3, 0, 1], false, registers).is_err());
-        assert!(hit_context([0, 0, 3], true, registers).is_err());
-        assert!(hit_context([1, 1, 0], true, [777, 42, 999]).is_err());
-        assert!(hit_context([1, 1, 0], true, [0, 0x30000, 999]).is_err());
+        assert_eq!(hit_context([1, 1, 0], false, [777, 0x30000, 999, 0x40000]).unwrap(), (0x30000, 777));
+        assert_eq!(hit_context([1, 1, 0], true, [777, 0x30000, 999, 0x40000]).unwrap(), (0x30000, 777));
+        assert_eq!(hit_context([3, 3, 1], false, registers).unwrap(), (0x40000, 777));
+        assert_eq!(hit_context([3, 3, 1], true, registers).unwrap(), (0x40000, 777));
+        assert!(hit_context([4, 0, 1], false, registers).is_err());
+        assert!(hit_context([0, 0, 4], true, registers).is_err());
+        assert!(hit_context([1, 1, 0], true, [777, 42, 999, 0x40000]).is_err());
+        assert!(hit_context([1, 1, 0], true, [0, 0x30000, 999, 0x40000]).is_err());
     }
     #[test]
     fn ordinary_hits_do_not_bind_foreign_polymorph_contexts() {
@@ -393,11 +395,11 @@ mod tests {
     #[test]
     fn nested_foreign_explosions_restore_the_outer_producer_before_the_attacker() {
         let (a, m) = fixture();
-        m.write(ROWS + 0xa78, &0x50010u64.to_le_bytes()).unwrap();
-        m.write(ROWS + 0xa80, &1u64.to_le_bytes()).unwrap();
+        m.write(ROWS + 0xa90, &0x50010u64.to_le_bytes()).unwrap();
+        m.write(ROWS + 0xa98, &1u64.to_le_bytes()).unwrap();
         m.write(0x50010, &888u64.to_le_bytes()).unwrap();
-        m.write(GAME + 0x6b8, &2u64.to_le_bytes()).unwrap();
-        m.write(GAME + 0x6c8, &2u64.to_le_bytes()).unwrap();
+        m.write(GAME + 0x6d0, &2u64.to_le_bytes()).unwrap();
+        m.write(GAME + 0x6e0, &2u64.to_le_bytes()).unwrap();
         m.write(ENEMIES + 0x228 + 0x110, &888u64.to_le_bytes())
             .unwrap();
         m.write(ENEMIES + 0x228 + 0x1f4, &20f32.to_le_bytes())

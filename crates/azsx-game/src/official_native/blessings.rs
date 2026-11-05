@@ -277,7 +277,7 @@ impl Adapter {
     ) -> Result<Option<(u64, u64)>> {
         let [game_register, definition_register, definition_frame] = crate::current::ENCOUNTER_CONTEXT;
         let game = match game_register {
-            12 => registers[0], 13 => registers[1],
+            12 => registers[0], 13 => registers[1], 15 => registers[2],
             _ => return Err("Unreviewed native encounter Game carrier".into()),
         };
         let definition = if definition_frame != 0 {

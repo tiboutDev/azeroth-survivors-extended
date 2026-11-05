@@ -512,7 +512,7 @@ class AZSXTests(unittest.TestCase):
   dll=self.root/"normal.dll";dll.write_bytes(b"MZ normal test artifact")
   output=self.root/"release-output"
   with self.assertRaisesRegex(ValueError,"trust keys"):
-   package.build(output,dll,self.root/"unused-runtime",key=keyfile,game_version="0.140.0")
+   package.build(output,dll,self.root/"unused-runtime",key=keyfile,game_version="0.141.0")
   self.assertFalse(output.exists())
  def test_package_refuses_retired_game_before_reading_artifacts_or_creating_output(self):
   spec=importlib.util.spec_from_file_location("azsx_package_retired",ROOT/"tools/build/azsx_package.py")
@@ -672,12 +672,12 @@ if __name__=="__main__":unittest.main()
 class NativeCompatibilityTests(unittest.TestCase):
  def test_only_current_registry_entry_and_manifest_exact_hash(self):
   games=json.loads((ROOT/"azsx/supported-games.json").read_text())["games"]
-  self.assertEqual(list(games),["0.140.0"])
-  m={"schema":1,"product":core.PRODUCT,"version":"0.140.0-azsx.1","game":{"version":"0.140.0","sha256":games["0.140.0"]["sha256"],"archives":["Data/patch.MPQ"]},"files":{}}
+  self.assertEqual(list(games),["0.141.0"])
+  m={"schema":1,"product":core.PRODUCT,"version":"0.141.0-azsx.1","game":{"version":"0.141.0","sha256":games["0.141.0"]["sha256"],"archives":["Data/patch.MPQ"]},"files":{}}
   required=["start-azsx.cmd","README-AZSX.txt","AZSX/App/Bin/avrt.dll","AZSX/App/Launcher/launch.py","AZSX/App/Launcher/supported-games.json","AZSX/App/AddOns/AZSX.toc","AZSX/App/AddOns/Presentation.lua","AZSX/App/Defaults/channel.json"]
   m["files"]={name:{"size":0,"sha256":"0"*64}for name in required}
   self.assertIs(core.validate(m),m)
-  for version,sha in (("0.121.0","22f7938eb4f99f2857dc091b1c57c147bd848eaabfeaa81e444c0a3393ca8150"),("0.140.0","0"*64)):
+  for version,sha in (("0.121.0","22f7938eb4f99f2857dc091b1c57c147bd848eaabfeaa81e444c0a3393ca8150"),("0.141.0","0"*64)):
    rejected=copy.deepcopy(m);rejected["game"].update(version=version,sha256=sha)
    with self.subTest(version=version):
     with self.assertRaisesRegex(ValueError,"exact reviewed native game build"):core.validate(rejected)

@@ -171,7 +171,7 @@ Candidate profiles: `support`, `periodic`. [Scenario mappings and limits](../../
 | AZSX-08.02 | Holy Nova/Holy Shock and healing/shield talents | Holy Nova and Holy Shock retain native casts, impacts and self-healing, without AZSX group heals or target routing. Reject retired synthetic hybrid deliveries. General Resurrection Sickness remains applicable. Other supported healing/shield talent branches preserve caster ownership and native cooldown semantics. |
 | AZSX-08.03 | Ice Barrier | Remains caster-only, never a group shield. |
 | AZSX-08.04 | Absorption breaks | Divine Aegis applies only to the producer's Power Word: Shield, including allies. Hammer of the Righteous applies only to self-produced, self-worn shields. Rapture restores the same PW:S recipient with its producer's native cooldown. Expiry/replacement is not a fabricated break. |
-| AZSX-08.05 | Conditional buffs and talent area | Lightning Shield is retaliation, never absorption; Stormguard requires that specific active effect. Shield-state talents require absorption. Tranquility and reviewed holy shield bursts use the producer's effective area factor exactly once. Allied Tranquility remains centred on the recipient. |
+| AZSX-08.05 | Conditional buffs and talent area | Lightning Shield is retaliation, never absorption; Stormguard requires that specific active effect. Shield-state talents require absorption. Tranquility and reviewed holy shield bursts use the producer's effective area factor exactly once. Allied Tranquility remains centred on the recipient and counts raw healing, including overheal; Tree of Life retains its shield cap. |
 
 ### AZSX-09 — Hunter's Mark
 

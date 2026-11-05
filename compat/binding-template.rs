@@ -342,6 +342,7 @@ pub(crate) fn field1201(offset:u64)->u64{translated(FIELD1201_RESOLVED_FIELDS,of
 // x86 register numbers for the slot and full entity handle at the visible-item return.
 {{WEAPON_EQUIPMENT_REGISTERS}}
 {{WEAPON_RUN_PROFILE_REGISTER}}
+{{WEAPON_PROFILE_FIELDS}}
 // Warrior, Paladin and Shaman talent tree bases and lengths in specialization order.
 {{WEAPON_CATALOG_PROBE}}
 {{WEAPON_CATALOG_FRAME}}

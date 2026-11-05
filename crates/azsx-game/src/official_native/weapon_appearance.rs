@@ -507,14 +507,15 @@ impl Adapter {
         profile: u64,
         visible: u64,
     ) -> Result<Option<[u32; 2]>> {
-        let class = m.read(profile + 0x1a4, 1)?[0];
+        let [class, talents, looks, main_hand] = crate::current::WEAPON_PROFILE_FIELDS;
+        let class = m.read(profile + class, 1)?[0];
         self.project_hands(
             m,
             base,
             class,
-            profile + 0x18,
-            profile + 0x50,
-            profile + 0x18c,
+            profile + talents,
+            profile + looks,
+            profile + main_hand,
             visible,
         )
     }

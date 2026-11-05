@@ -500,7 +500,8 @@ recipients. Hammer of the Righteous requires a self-produced, self-worn
 absorption. Rapture restores the original PW:S recipient and retains the
 producer's native cooldown. Expiration and replacement do not fabricate a break.
 Tranquility remains centred on an allied healed recipient, credited to the
-producer. Its radius and reviewed holy shield bursts apply the producer's
+producer. Its damage budget includes raw healing and overheal; Tree of Life
+keeps its shield cap. Its radius and reviewed holy shield bursts apply the producer's
 effective area factor once; unrelated native queries remain unchanged.
 
 Ancestral Fortitude's free Healing Wave uses normal cooperative target selection at half effectiveness and can heal a wounded ally.

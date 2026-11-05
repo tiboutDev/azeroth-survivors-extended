@@ -2,7 +2,7 @@
 
 Follow the [release preparation checklist](RELEASE-CHECKLIST.md) for ordered commands, evidence and blocking conditions.
 
-AZSX targets only the reviewed official **0.140.0** client. The native selector,
+AZSX targets only the reviewed official **0.141.0** client. The native selector,
 supported-game registry and manifest validator reject other builds. Player steps
 are in [Installation](../player/INSTALLATION.md); this page defines ownership and
 release boundaries.

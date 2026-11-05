@@ -627,7 +627,7 @@ pub(super) mod tests {
         let game = 0x10000;
         let row = 0x22000;
         let guid = 0xf130f5a001000001u64;
-        for (offset, value) in [(0x6b8, 1u64), (0x6c0, row), (0x6c8, 1)] {
+        for (offset, value) in [(0x6d0, 1u64), (0x6d8, row), (0x6e0, 1)] {
             m.write(game + offset, &value.to_le_bytes()).unwrap();
         }
         m.write(row + v::ENEMY_GUID as u64, &guid.to_le_bytes())
@@ -645,7 +645,7 @@ pub(super) mod tests {
         let a = Adapter::select(v::SHA256).unwrap();
         let m = Memory::default();
         let (game, rows, guid) = (0x10000, 0x22000, 0xf130f5a001000001u64);
-        for (offset, value) in [(0x6b8, 3u64), (0x6c0, rows), (0x6c8, 3)] {
+        for (offset, value) in [(0x6d0, 3u64), (0x6d8, rows), (0x6e0, 3)] {
             m.write(game + offset, &value.to_le_bytes()).unwrap();
         }
         // Independent native fixture: three 552-byte enemy rows, GUID at +0x110.
@@ -668,13 +668,13 @@ pub(super) mod tests {
         let a = Adapter::select(v::SHA256).unwrap();
         let m = Memory::default();
         let (game, row, guid) = (0x10000, 0x22000, 0xf130f5a001000001u64);
-        for (offset, value) in [(0x6b8, 1u64), (0x6c0, row), (0x6c8, 1)] {
+        for (offset, value) in [(0x6d0, 1u64), (0x6d8, row), (0x6e0, 1)] {
             m.write(game + offset, &value.to_le_bytes()).unwrap();
         }
         m.write(row, &[0; 552]).unwrap();
         m.write(row + 0x110, &guid.to_le_bytes()).unwrap();
-        m.write(game + 0x1010, &11f32.to_le_bytes()).unwrap();
-        // Actual 0.140.0 row, with conflicting retired HP/death fields.
+        m.write(game + 0x1028, &11f32.to_le_bytes()).unwrap();
+        // Actual 0.141.0 row, with conflicting retired HP/death fields.
         m.write(row + 0xb0, &1u32.to_le_bytes()).unwrap();
         m.write(row + 0x178, &1234f32.to_le_bytes()).unwrap();
         m.write(row + 0x198, &80f32.to_le_bytes()).unwrap();
@@ -746,9 +746,9 @@ pub(super) mod tests {
         assert_eq!(q(&m, frame + 0xc40).unwrap(), u64::MAX);
         assert_eq!(a.goblin_outfit_metadata(&m, frame, 71).unwrap(), None);
         assert!(a.goblin_outfit_key(&m, frame, 71, 72).is_err());
-        m.write(frame + 0x6c0, &[0xa5; 12]).unwrap();
+        m.write(frame + 0x6d8, &[0xa5; 12]).unwrap();
         a.goblin_outfit_key(&m, frame, 71, 71).unwrap();
-        assert_eq!(m.read(frame + 0x6c0, 12).unwrap(), [0xa5; 12]);
+        assert_eq!(m.read(frame + 0x6d8, 12).unwrap(), [0xa5; 12]);
         let key = m.read(frame + 0x680, 64).unwrap();
         assert_eq!(m.read(frame + 0xc58, 6).unwrap(), [9, 0, 0, 0, 0, 0]);
         assert_eq!(

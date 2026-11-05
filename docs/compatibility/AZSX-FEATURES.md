@@ -1,7 +1,7 @@
 # Current AZSX feature contracts
 
 This is the stable engineering inventory for the only supported client,
-**official 0.140.0**. Rows describe contracts to preserve, not universal runtime
+**official 0.141.0**. Rows describe contracts to preserve, not universal runtime
 validation. Source behavior, a built DLL and a distributed archive are different
 evidence scopes. Follow [testing](../development/TESTING.md) for evidence requirements and limits.
 

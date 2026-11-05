@@ -13,21 +13,21 @@ impl Mem for Blocks {
 }
 fn actor(size: usize, class: u8, race: u8, guid: u64) -> Vec<u8> {
     let mut b = vec![0; size];
-    b[0x44c] = class;
-    b[0x44d] = race;
-    for (at, v) in [(0x640, 100f32), (0x65c, 1.1), (0x674, 1.2), (0x5e0, 80.)] {
+    b[0x464] = class;
+    b[0x465] = race;
+    for (at, v) in [(0x658, 100f32), (0x674, 1.1), (0x68c, 1.2), (0x5f8, 80.)] {
         b[at..at + 4].copy_from_slice(&v.to_le_bytes());
     }
-    for (at, v) in [(0x5d8, 7u32), (0x5dc, 18), (0x5f0, 23)] {
+    for (at, v) in [(0x5f0, 7u32), (0x5f4, 18), (0x608, 23)] {
         b[at..at + 4].copy_from_slice(&v.to_le_bytes());
     }
-    b[0x5b0..0x5b8].copy_from_slice(&guid.to_le_bytes());
+    b[0x5c8..0x5d0].copy_from_slice(&guid.to_le_bytes());
     b
 }
 #[test]
 fn revision_capabilities_do_not_disable_shared_jewelry_ui() {
     let a = SelectedAdapter::select(current::SHA256).unwrap();
-    assert_eq!(a.version(), "0.140.0");
+    assert_eq!(a.version(), "0.141.0");
     assert!(!a.duplicate_loot_enabled());
     assert!(a.native_marks_enabled());
     assert!(a.loot_entries().is_empty());
@@ -37,7 +37,7 @@ fn revision_capabilities_do_not_disable_shared_jewelry_ui() {
     assert_eq!(a.bonus_ui_entries().len(), 5);
     assert_eq!(a.blessing_entries().len(), 3);
     assert!(a.native_difficulty_entries().is_empty());
-    assert!(SelectedAdapter::select("0.140.0").is_err());
+    assert!(SelectedAdapter::select("0.141.0").is_err());
     for retired in [
         "eb5fd1c1b96e6180fcf5f3d685d90a61471af28d22e5f060c02b7b7663fbf79e",
         "e8ff033544095e81d74087ff400d50286b26af02291e649f4c5e4d76cbcf8863",
@@ -64,17 +64,17 @@ fn revision_capabilities_do_not_disable_shared_jewelry_ui() {
 fn independent_host_and_private_layouts_keep_identity_phase_and_resources() {
     let a = SelectedAdapter::select(current::SHA256).unwrap();
     let mut root = actor(0x1200, 1, 1, 111);
-    root[0x10cb] = 1;
-    root[0x10d1] = 1;
-    root[0xcd0..0xcd8].copy_from_slice(&0x20000u64.to_le_bytes());
-    root[0xcd8..0xce0].copy_from_slice(&1u64.to_le_bytes());
-    root[0x1010..0x1014].copy_from_slice(&3.5f32.to_le_bytes());
+    root[0x10e3] = 1;
+    root[0x10e9] = 1;
+    root[0xce8..0xcf0].copy_from_slice(&0x20000u64.to_le_bytes());
+    root[0xcf0..0xcf8].copy_from_slice(&1u64.to_le_bytes());
+    root[0x1028..0x102c].copy_from_slice(&3.5f32.to_le_bytes());
     let mut server = vec![0; 0x2100];
     server[0x10..0x10 + root.len()].copy_from_slice(&root);
-    server[0x10e8..0x10ec].copy_from_slice(&3u32.to_le_bytes());
-    server[0x1128..0x1130].copy_from_slice(&1u64.to_le_bytes());
-    let mut guest = actor(0xc08, 3, 3, 222);
-    guest[0xc00] = 2;
+    server[0x1100..0x1104].copy_from_slice(&3u32.to_le_bytes());
+    server[0x1140..0x1148].copy_from_slice(&1u64.to_le_bytes());
+    let mut guest = actor(0xc20, 3, 3, 222);
+    guest[0xc18] = 2;
     let m = Blocks([(0x10000, server), (0x20000, guest)].into());
     let p = a.party(&m, 0x10000).unwrap().unwrap();
     assert_eq!(p.clock, 3.5);
@@ -102,13 +102,13 @@ fn wallet_reads_independently_shifted_scalars() {
 #[test]
 fn native_tooltip_frame_and_diagnostic_focus_are_version_selected() {
     let a = SelectedAdapter::select(current::SHA256).unwrap();
-    assert_eq!(a.kept_tooltip_fixture_focus().unwrap().rva, 0x33e6695);
+    assert_eq!(a.kept_tooltip_fixture_focus().unwrap().rva, 0x33e6c15);
     let native = official_native::Adapter::select(current::SHA256).unwrap();
     assert_eq!(native.kept_tooltip_row(0x10000), Some(0xffa0));
 }
 
 #[test]
-fn basic_pursuit_uses_1400_stack_fields_and_restores_them() {
+fn basic_pursuit_uses_selected_stack_fields_and_restores_them() {
     use azsx_game::official::MutableMemory;
     struct M(std::cell::RefCell<Vec<u8>>);
     impl Mem for M {
@@ -140,10 +140,10 @@ fn basic_pursuit_uses_1400_stack_fields_and_restores_them() {
     let f = 0x10000;
     m.write(f + 0x80, &0xfeedfacecafebeefu64.to_le_bytes())
         .unwrap();
-    m.write(f + 0x3f0, &0x18000u64.to_le_bytes()).unwrap();
-    m.write(f + 0x3e0, &0x20000u64.to_le_bytes()).unwrap();
+    m.write(f + 0x3e0, &0x18000u64.to_le_bytes()).unwrap();
+    m.write(f + 0x3d0, &0x20000u64.to_le_bytes()).unwrap();
     m.write(0x20110, &77u64.to_le_bytes()).unwrap();
-    for (at, v) in [(0x3a0, 3f32), (0x3a4, 4.), (0x3a8, 0.)] {
+    for (at, v) in [(0x390, 3f32), (0x394, 4.), (0x398, 0.)] {
         m.write(f + at, &v.to_le_bytes()).unwrap();
     }
     let frame = a.basic_frame(&m, f).unwrap();
@@ -152,7 +152,7 @@ fn basic_pursuit_uses_1400_stack_fields_and_restores_them() {
         a.prepare_basic_target(&m, &frame, [0., 0., 8.]).unwrap(),
         5.
     );
-    assert_eq!(m.read(f + 0x29c, 4).unwrap(), 8f32.to_le_bytes());
+    assert_eq!(m.read(f + 0x294, 4).unwrap(), 8f32.to_le_bytes());
     assert_eq!(m.read(f + 0x70, 8).unwrap(), [0; 8]);
     assert!(a
         .restore_basic_origin(&m, f, 0x18001, [1., 2., 3.])
@@ -173,18 +173,18 @@ fn basic_pursuit_uses_1400_stack_fields_and_restores_them() {
 fn multiple_private_actors_use_the_selected_native_stride() {
     let a = SelectedAdapter::select(current::SHA256).unwrap();
     let mut host = actor(0x1200, 1, 1, 111);
-    host[0x10cb] = 1;
-    host[0x10d1] = 1;
-    host[0xcd0..0xcd8].copy_from_slice(&0x20000u64.to_le_bytes());
-    host[0xcd8..0xce0].copy_from_slice(&2u64.to_le_bytes());
+    host[0x10e3] = 1;
+    host[0x10e9] = 1;
+    host[0xce8..0xcf0].copy_from_slice(&0x20000u64.to_le_bytes());
+    host[0xcf0..0xcf8].copy_from_slice(&2u64.to_le_bytes());
     let mut server = vec![0; 0x2100];
     server[0x10..0x10 + host.len()].copy_from_slice(&host);
-    server[0x10e8..0x10ec].copy_from_slice(&3u32.to_le_bytes());
-    server[0x1128..0x1130].copy_from_slice(&2u64.to_le_bytes());
-    let mut first = actor(0xc08, 3, 3, 222);
-    first[0xc00] = 1;
-    let mut second = actor(0xc08, 5, 1, 333);
-    second[0xc00] = 2;
+    server[0x1100..0x1104].copy_from_slice(&3u32.to_le_bytes());
+    server[0x1140..0x1148].copy_from_slice(&2u64.to_le_bytes());
+    let mut first = actor(0xc20, 3, 3, 222);
+    first[0xc18] = 1;
+    let mut second = actor(0xc20, 5, 1, 333);
+    second[0xc18] = 2;
     first.extend(second);
     let p = a
         .party(
@@ -242,9 +242,9 @@ fn native_pause_uses_the_distinct_pause_and_unpause_notifications() {
 fn menu_wire_binds_peer_and_rejects_bad_extents() {
     let a = SelectedAdapter::select(current::SHA256).unwrap();
     let mut server = vec![0; 0x2100];
-    server[0x10e8..0x10ec].copy_from_slice(&3u32.to_le_bytes());
-    server[0x1120..0x1128].copy_from_slice(&0x20000u64.to_le_bytes());
-    server[0x1128..0x1130].copy_from_slice(&1u64.to_le_bytes());
+    server[0x1100..0x1104].copy_from_slice(&3u32.to_le_bytes());
+    server[0x1138..0x1140].copy_from_slice(&0x20000u64.to_le_bytes());
+    server[0x1140..0x1148].copy_from_slice(&1u64.to_le_bytes());
     let mut peer = vec![0; 0x870];
     peer[..4].copy_from_slice(&1u32.to_le_bytes());
     peer[8..16].copy_from_slice(&3u64.to_le_bytes());
@@ -277,7 +277,7 @@ fn menu_wire_binds_peer_and_rejects_bad_extents() {
 }
 
 #[test]
-fn owner_spell_formatter_uses_the_selected_1400_game_context() {
+fn owner_spell_formatter_uses_the_selected_game_context() {
     let a = SelectedAdapter::select(current::SHA256).unwrap();
     let mut game = vec![0; 0x1200];
     game[0x10cb] = 1;
@@ -341,15 +341,15 @@ fn owner_spell_text_is_copied_from_native_owned_string_rows() {
 fn private_actor_native_extent_is_checked_before_context_io() {
     let adapter = SelectedAdapter::select(current::SHA256).unwrap();
     let mut host = actor(0x1200, 1, 1, 111);
-    host[0x10cb] = 1;
-    host[0x10d1] = 1;
-    // One normalized row fits here; one actual native0xc08 row overflows.
-    host[0xcd0..0xcd8].copy_from_slice(&(u64::MAX - 0x990).to_le_bytes());
-    host[0xcd8..0xce0].copy_from_slice(&1u64.to_le_bytes());
+    host[0x10e3] = 1;
+    host[0x10e9] = 1;
+    // One normalized row fits here; one actual native0xc20 row overflows.
+    host[0xce8..0xcf0].copy_from_slice(&(u64::MAX - 0x990).to_le_bytes());
+    host[0xcf0..0xcf8].copy_from_slice(&1u64.to_le_bytes());
     let mut server = vec![0; 0x2100];
     server[0x10..0x10 + host.len()].copy_from_slice(&host);
-    server[0x10e8..0x10ec].copy_from_slice(&3u32.to_le_bytes());
-    server[0x1128..0x1130].copy_from_slice(&1u64.to_le_bytes());
+    server[0x1100..0x1104].copy_from_slice(&3u32.to_le_bytes());
+    server[0x1140..0x1148].copy_from_slice(&1u64.to_le_bytes());
     let memory = Blocks([(0x10000, server)].into());
     assert_eq!(
         adapter.party(&memory, 0x10000).unwrap_err(),
@@ -387,24 +387,24 @@ fn completed_encounter_uses_selected_carriers_and_rejects_changed_game_context()
     let a = SelectedAdapter::select(current::SHA256).unwrap();
     let (game, frame, base, defs, name) = (0x10000u64, 0x20000u64, 0x10000000u64, 0x40000u64, 0x50000u64);
     let mut root = actor(0x1200, 1, 1, 111);
-    root[0x10d1] = 1;
-    root[0x3c8..0x3d0].copy_from_slice(&name.to_le_bytes());
-    root[0x3d0..0x3d8].copy_from_slice(&4u64.to_le_bytes());
+    root[0x10e9] = 1;
+    root[0x3e0..0x3e8].copy_from_slice(&name.to_le_bytes());
+    root[0x3e8..0x3f0].copy_from_slice(&4u64.to_le_bytes());
     let mut stack = vec![0; 0x430];
-    stack[0x358..0x360].copy_from_slice(&game.to_le_bytes());
-    stack[0x330..0x338].copy_from_slice(&(defs + 104).to_le_bytes());
+    stack[0x338..0x340].copy_from_slice(&game.to_le_bytes());
+    stack[0x310..0x318].copy_from_slice(&(defs + 104).to_le_bytes());
     let mut map = vec![0; 240];
     map[8..16].copy_from_slice(&name.to_le_bytes());
     map[16..24].copy_from_slice(&4u64.to_le_bytes());
     map[0x88..0x90].copy_from_slice(&defs.to_le_bytes());
     map[0x90..0x98].copy_from_slice(&5u64.to_le_bytes());
-    let mut m = Blocks([(game, root), (frame, stack), (name, b"test".to_vec()), (base + 0x73b5ac0, map)].into());
-    // Actual 0.140.0 carriers: R12 Game, definition at frame+0x330.
-    assert_eq!(a.native_encounter_context(&m, frame, [game, 999, 998], base).unwrap(), Some((game, 5)));
+    let mut m = Blocks([(game, root), (frame, stack), (name, b"test".to_vec()), (base + 0x73a06b0, map)].into());
+    // Actual 0.141.0 carriers: R15 Game, definition at frame+0x310.
+    assert_eq!(a.native_encounter_context(&m, frame, [999, 998, game], base).unwrap(), Some((game, 5)));
     assert_eq!(a.blessing_event_context(&m, [frame, defs + 104, game], base).unwrap(), Some((game, 5)));
-    m.0.get_mut(&game).unwrap()[0xa74..0xa78].copy_from_slice(&1u32.to_le_bytes());
+    m.0.get_mut(&game).unwrap()[0xa8c..0xa90].copy_from_slice(&1u32.to_le_bytes());
     assert_eq!(a.blessing_event_context(&m, [frame, defs + 104, game], base).unwrap(), None);
-    m.0.get_mut(&game).unwrap()[0xa74..0xa78].fill(0);
+    m.0.get_mut(&game).unwrap()[0xa8c..0xa90].fill(0);
     assert!(a.blessing_event_context(&m, [frame, defs + 1, game], base).is_err());
     assert!(a.blessing_event_context(&m, [frame, defs + 104, 999], base).is_err());
     assert!(a.blessing_event_context(&m, [u64::MAX, 0, 0], base).is_err());
@@ -416,12 +416,12 @@ fn dead_shared_xp_uses_the_current_native_actor_without_reading_the_borrowed_vec
     let game=0x10010u64;
     let fixture=|role:u32,coop:u8,phase:u8,slot:u64,guid:u64| {
         let mut server=vec![0;0x2100];
-        server[0x10e8..0x10ec].copy_from_slice(&role.to_le_bytes());
-        server[0x1128..0x1130].copy_from_slice(&1u64.to_le_bytes());
-        let root=&mut server[0x10..];root[0x10cb]=coop;root[0x10d1]=phase;
-        root[0xfc0..0xfc8].copy_from_slice(&slot.to_le_bytes());
-        root[0x5b0..0x5b8].copy_from_slice(&guid.to_le_bytes());
-        root[0x1030..0x1034].copy_from_slice(&17u32.to_le_bytes());
+        server[0x1100..0x1104].copy_from_slice(&role.to_le_bytes());
+        server[0x1140..0x1148].copy_from_slice(&1u64.to_le_bytes());
+        let root=&mut server[0x10..];root[0x10e3]=coop;root[0x10e9]=phase;
+        root[0xfd8..0xfe0].copy_from_slice(&slot.to_le_bytes());
+        root[0x5c8..0x5d0].copy_from_slice(&guid.to_le_bytes());
+        root[0x1048..0x104c].copy_from_slice(&17u32.to_le_bytes());
         // No actor-vector memory is supplied: its ownership is lent out here.
         let mut stack=vec![0;0x1800];stack[0xb8..0xc0].copy_from_slice(&0x50000u64.to_le_bytes());
         let mut request=vec![0;16];request[8..16].copy_from_slice(&0x50000u64.to_le_bytes());
@@ -451,10 +451,10 @@ fn learned_bear_form_drives_production_taunt_eligibility() {
     let adapter = SelectedAdapter::select(current::SHA256).unwrap();
     for (tag, spell, expected) in [(38u32, 9634u32, true), (37, 9634, false), (38, 768, false)] {
         let mut root = actor(0x1200, 11, 1, 111);
-        root[0x10cb] = 1;
-        root[0x10d1] = 1;
-        root[0xb58..0xb60].copy_from_slice(&0x20000u64.to_le_bytes());
-        root[0xb60..0xb68].copy_from_slice(&1u64.to_le_bytes());
+        root[0x10e3] = 1;
+        root[0x10e9] = 1;
+        root[0xb70..0xb78].copy_from_slice(&0x20000u64.to_le_bytes());
+        root[0xb78..0xb80].copy_from_slice(&1u64.to_le_bytes());
         let mut perk = vec![0; 64];
         perk[..4].copy_from_slice(&tag.to_le_bytes());
         perk[4..8].copy_from_slice(&spell.to_le_bytes());
@@ -471,13 +471,13 @@ fn a_guests_native_form_is_restored_from_the_private_perk_header() {
     use azsx_gameplay::supplies::Costume;
     let adapter = SelectedAdapter::select(current::SHA256).unwrap();
     let mut root = actor(0x1200, 1, 1, 111);
-    root[0x10cb] = 1;
-    root[0xcd0..0xcd8].copy_from_slice(&0x20000u64.to_le_bytes());
-    root[0xcd8..0xce0].copy_from_slice(&1u64.to_le_bytes());
-    let mut guest = actor(0xc08, 11, 1, 222);
-    guest[0x9b0..0x9b8].copy_from_slice(&1u64.to_le_bytes());
-    guest[0x9b8..0x9c0].copy_from_slice(&0x30000u64.to_le_bytes());
-    guest[0x9c0..0x9c8].copy_from_slice(&1u64.to_le_bytes());
+    root[0x10e3] = 1;
+    root[0xce8..0xcf0].copy_from_slice(&0x20000u64.to_le_bytes());
+    root[0xcf0..0xcf8].copy_from_slice(&1u64.to_le_bytes());
+    let mut guest = actor(0xc20, 11, 1, 222);
+    guest[0x9c8..0x9d0].copy_from_slice(&1u64.to_le_bytes());
+    guest[0x9d0..0x9d8].copy_from_slice(&0x30000u64.to_le_bytes());
+    guest[0x9d8..0x9e0].copy_from_slice(&1u64.to_le_bytes());
     let mut form = vec![0; 64];
     form[..4].copy_from_slice(&38u32.to_le_bytes());
     form[4..8].copy_from_slice(&9634u32.to_le_bytes());
@@ -492,11 +492,11 @@ fn hunter_mark_observation_reaches_a_nonfirst_runtime_ability() {
     let adapter = SelectedAdapter::select(current::SHA256).unwrap();
     let base = 0x140000000u64;
     let mut root = actor(0x1200, 3, 1, 111);
-    root[0x10cb] = 1;
-    root[0x10d1] = 1;
-    root[0x470..0x478].copy_from_slice(&0x20000u64.to_le_bytes());
-    root[0x478..0x480].copy_from_slice(&2u64.to_le_bytes());
-    root[0xc28..0xc30].copy_from_slice(&77u64.to_le_bytes());
+    root[0x10e3] = 1;
+    root[0x10e9] = 1;
+    root[0x488..0x490].copy_from_slice(&0x20000u64.to_le_bytes());
+    root[0x490..0x498].copy_from_slice(&2u64.to_le_bytes());
+    root[0xc40..0xc48].copy_from_slice(&77u64.to_le_bytes());
     let mut rows = vec![0; 2 * 96];
     rows[..8].copy_from_slice(&(base + 0x73babe0).to_le_bytes());
     rows[96..104].copy_from_slice(&(base + 0x73ba460).to_le_bytes());

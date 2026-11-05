@@ -365,7 +365,7 @@ class SelectedImport(unittest.TestCase):
  def test_exact_import_inventory(self):
   from import_official import NAMES,SHA256
   self.assertEqual(len(NAMES),13);self.assertEqual(NAMES[-1],'Data/patch-C.MPQ')
-  self.assertEqual(SHA256,'27c8df53c87e38a98d474bf7106d2444e11e7634ca70dbffc5c2b0aecb894fd9')
+  self.assertEqual(SHA256,'6ca5f4ba4eb6b26716e4b7d9e03cbd25ddafe7582dcd8e55333e070a28058afa')
 class ContactInventory130(unittest.TestCase):
  def test_previous_descriptor_includes_tables_and_shared_tooltip_seams(self):
   try:

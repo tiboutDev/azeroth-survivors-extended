@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "version": "0.140.0",
-  "native_sha256": "27c8df53c87e38a98d474bf7106d2444e11e7634ca70dbffc5c2b0aecb894fd9",
+  "version": "0.141.0",
+  "native_sha256": "6ca5f4ba4eb6b26716e4b7d9e03cbd25ddafe7582dcd8e55333e070a28058afa",
   "scope": "Indirect selected-field source coverage. Expected native values, extents, ownership and calling conventions are independently validated by pinned-image and adapter tests.",
   "reviews": [
     {
